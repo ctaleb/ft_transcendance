@@ -1,0 +1,20 @@
+services:
+  sql:
+    image: sql
+    container_name: sql
+    init: true
+    build: requirements/sql/.
+  back:
+    depends_on:
+      - sql
+    image: back
+    container_name: back
+    init: true
+    build: requirements/back/.
+  front:
+    depends_on:
+      - back
+    image: front
+    container_name: front
+    init: true
+    build: requirements/front/.
