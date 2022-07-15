@@ -1,0 +1,27 @@
+{
+	"folders": [
+		{
+			"name": "global",
+			"path": "."
+		},
+		{
+			"name": "front",
+			"path": "front"
+		},
+		{
+			"name": "back",
+			"path": "back"
+		}
+	],
+	"extensions": {
+		"recommendations": [
+			"pkief.material-icon-theme",
+			"VisualStudioExptTeam.vscodeintellicode"
+		]
+	},
+	"settings": {
+		"material-icon-theme.activeIconPack": "nest",
+		"prettier.useTabs": true,
+		"prettier.tabWidth": 2
+	},
+}

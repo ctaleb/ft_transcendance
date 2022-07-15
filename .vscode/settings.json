@@ -1,0 +1,6 @@
+{
+	"files.exclude": {
+		"back": true,
+		"front": true
+	}
+}

@@ -1,0 +1,8 @@
+{
+	"recommendations": [
+		"vue.volar",
+		"formulahendry.auto-rename-tag",
+		"esbenp.prettier-vscode",
+		"dbaeumer.vscode-eslint"
+	]
+}
