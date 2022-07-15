@@ -1,11 +1,11 @@
 all:
-	docker-compose -f srcs/docker-compose.yml up -d --build
+	docker-compose up -d --build
 
 stop:
-	docker-compose -f srcs/docker-compose.yml down
+	docker-compose down
 
 ps:
-	docker-compose -f srcs/docker-compose.yml ps
+	docker-compose ps
 
 clean:
-	docker-compose -f srcs/docker-compose.yml down --rmi all
+	docker-compose down --rmi all

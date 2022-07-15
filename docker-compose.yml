@@ -1,20 +1,31 @@
 services:
-  sql:
-    image: sql
-    container_name: sql
+  database:
+    image: postgres:14-bullseye
+    container_name: database
     init: true
-    build: requirements/sql/.
+    ports:
+      - 5432:5432
+    restart: always
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    # volumes:
+    #   - db:/var/lib/postgresql/
   back:
     depends_on:
-      - sql
+      - database
     image: back
     container_name: back
     init: true
-    build: requirements/back/.
+    build: back/.
   front:
     depends_on:
       - back
     image: front
     container_name: front
     init: true
-    build: requirements/front/.
+    build: front/.
+# volumes:
+#   db:
+#     name: db
+#     driver: local
