@@ -3,14 +3,23 @@ services:
     image: postgres:14-bullseye
     container_name: database
     init: true
-    ports:
-      - 5432:5432
-    restart: always
+    # default port but probably not needed in our case, since already exposed for the docker network in the official image
+    # ports:
+    #   - 5432:5432
+    restart: unless-stopped
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     # volumes:
-    #   - db:/var/lib/postgresql/
+    #   - db:/var/lib/postgresql/data/
+  adminer:
+    image: adminer
+    container_name: adminer
+    init: true
+    restart: unless-stopped
+    # http://localhost:8080/
+    ports:
+      - 8080:8080
   back:
     depends_on:
       - database
@@ -18,6 +27,7 @@ services:
     container_name: back
     init: true
     build: back/.
+    restart: unless-stopped
   front:
     depends_on:
       - back
@@ -25,6 +35,7 @@ services:
     container_name: front
     init: true
     build: front/.
+    restart: unless-stopped
 # volumes:
 #   db:
 #     name: db
