@@ -1,5 +1,4 @@
 <template>
-  <test-component :name="'test'" />
   <p class="greeting" @click="increment()">{{ number }}</p>
   <input type="text" name="hey" id="ho" v-model="text" />
   <h2>{{ text }}</h2>

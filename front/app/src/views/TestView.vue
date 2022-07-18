@@ -1,10 +1,10 @@
 <template>
-	<game-component />
+	<test-component />
 </template>
 
 <script setup lang="ts">
 import { ref } from "vue";
-import GameComponent from "../components/GameComponent.vue";
+import TestComponent from "../components/TestComponent.vue";
 </script>
 
 <style scoped>
