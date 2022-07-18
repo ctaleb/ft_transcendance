@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { deepStrictEqual } from 'assert';
 import { Request, Response } from 'express';
+import { CreateUserDto } from 'src/users/dtos/CreateUser.dto';
 import { UsersService } from '../../services/users/users.service';
 
 @Controller('users')
@@ -31,7 +32,7 @@ export class UsersController {
   }
 
   @Post('create')
-  createUser(@Body() createUserDto) {
-    return this.usersService.createUser();
+  createUser(@Body() createUserDto: CreateUserDto) {
+    this.usersService.createUser(createUserDto);
   }
 }

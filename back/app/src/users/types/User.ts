@@ -1,5 +1,4 @@
-export class CreateUserDto {
-  id: number;
+export interface IUser {
   firstName: string;
   lastName: string;
 }
