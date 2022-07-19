@@ -8,11 +8,14 @@ services:
     #   - 5432:5432
     restart: unless-stopped
     environment:
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_PORT=${POSTGRES_PORT}
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-    # volumes:
-    #   - db:/var/lib/postgresql/data/
+      # - PGDATA=/var/lib/postgresql/data
+    volumes:
+      - db:/var/lib/postgresql/data/
   adminer:
     image: adminer
     container_name: adminer
@@ -45,7 +48,7 @@ services:
     init: true
     build: front/.
     restart: unless-stopped
-# volumes:
-#   db:
-#     name: db
-#     driver: local
+volumes:
+  db:
+    name: db
+    driver: local
