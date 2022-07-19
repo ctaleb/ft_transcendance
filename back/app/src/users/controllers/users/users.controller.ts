@@ -9,6 +9,8 @@ import {
   Post,
   Req,
   Res,
+  UsePipes,
+  ValidationPipe
 } from '@nestjs/common';
 import { deepStrictEqual } from 'assert';
 import { Request, Response } from 'express';
@@ -32,6 +34,7 @@ export class UsersController {
   }
 
   @Post('create')
+  @UsePipes(ValidationPipe)
   createUser(@Body() createUserDto: CreateUserDto) {
     this.usersService.createUser(createUserDto);
   }

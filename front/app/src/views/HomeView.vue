@@ -4,7 +4,7 @@
   <h2>{{ text }}</h2>
 </template>
 
-<script>
+<script lang="ts">
 import TestComponent from "../components/TestComponent.vue";
 export default {
   components: {
@@ -15,11 +15,6 @@ export default {
       text: "",
       number: 1,
     };
-  },
-  methods: {
-    increment() {
-      this.number++;
-    },
   },
 };
 </script>

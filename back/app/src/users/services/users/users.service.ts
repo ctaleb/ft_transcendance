@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from 'src/users/dtos/CreateUser.dto';
+import { User } from 'src/users/types/User';
 
 @Injectable()
 export class UsersService {
-  users = [
+  private users: User[] = [
     {
       id: 1,
       firstName: 'John',
@@ -30,6 +31,11 @@ export class UsersService {
   }
 
   createUser(userDto: CreateUserDto) {
-    this.users.push(userDto);
+    let user: User = {
+      id: this.users.length + 1,
+      firstName: userDto.firstName,
+      lastName: userDto.lastName,
+    };
+    this.users.push(user);
   }
 }
