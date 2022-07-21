@@ -10,16 +10,10 @@ const ballImg = new Image(); ballImg.src = ballUrl;
 
 const canvas = ref<HTMLCanvasElement | null>(null);
 
-const barHeight = 10;
-const barWidth = 100;
-const barSpeed = 5;
-const padding = 15;
-let barMoving = 0;
-let counter = 0;
-let gameOn = true;
-
 let leftMovement = false,
   rightMovement = false;
+let gameOn = true;
+let padding = 15;
 
 interface IPoint {
   x: number;
@@ -30,6 +24,17 @@ interface IBall extends IPoint {
   speed: IPoint;
   radius: number;
   rotation: number;
+}
+
+interface IBar {
+	height: number;
+	width: number;
+	padding: number;
+	speed: number;
+	moving: number;
+	counter: number;
+	gameOn: boolean;
+	topLeftCorner: IPoint;
 }
 
 function drawPlayground(ctx: CanvasRenderingContext2D) {
@@ -58,7 +63,7 @@ function ballMove(ball: IBall, topBar: IPoint) {
     ball.x = canvas.value!.width - ball.radius;
   }
   if (ball.y > canvas.value!.height - padding - ball.radius - barHeight || ball.y <= barHeight + ball.radius + padding) {
-    if (ball.x > topBar.x && ball.x < topBar.x + barWidth) {
+    if (ball.x > topBar.x && ball.x < topBar.x + width) {
       ball.speed.y *= 1.1;
       ball.speed.y *= -1;
       ball.rotation = (20 * ball.speed.y) * barMoving;
@@ -77,12 +82,14 @@ function ballMove(ball: IBall, topBar: IPoint) {
 }
 
 function barMove(topBar: IPoint, bottomBar: IPoint) {
+  topBar.speed *= 1.1;
+  bottomBar.speed *= 1.1;
   if (leftMovement && topBar.x > 0) {
     topBar.x -= barSpeed;
     bottomBar.x -= barSpeed;
     barMoving = -1;
   }
-  if (rightMovement && topBar.x < canvas.value!.width - barWidth) {
+  if (rightMovement && topBar.x < canvas.value!.width - width) {
     topBar.x += barSpeed;
     bottomBar.x += barSpeed;
     barMoving = 1;
@@ -92,16 +99,28 @@ function barMove(topBar: IPoint, bottomBar: IPoint) {
 onMounted(() => {
   let ctx = canvas.value?.getContext("2d");
   if (ctx) {
-    let topBar: IPoint, bottomBar: IPoint;
+    console.log("coucou");
+    console.trace();
+    let topBar: IBar, bottomBar: IBar;
     let ball: IBall;
 
     topBar = {
-      x: canvas.value!.width / 2 - barWidth / 2,
-      y: padding,
+      height: 10,
+      width: 100,
+      speed: 5,
+      moving: 0,
+      counter: 0,
+      x: canvas.value!.width / 2 - 100 / 2,
+      y: 15,
     };
     bottomBar = {
-      x: canvas.value!.width / 2 - barWidth / 2,
-      y: canvas.value!.height - barHeight - padding,
+      height: 10,
+      width: 100,
+      speed: 5,
+      moving: 0,
+      counter: 0,
+      x: canvas.value!.width / 2 - 100 / 2,
+      y: canvas.value!.height - 10 - 15,
     };
     ball = {
       x: canvas.value!.width / 2,
@@ -127,7 +146,8 @@ onMounted(() => {
         drawPlayground(ctx);
 
         if (gameOn === true) {
-          barMoving = 0;
+          topBar.Moving = 0;
+          bottomBar.Moving = 0;
           barMove(topBar, bottomBar);
           ballMove(ball, topBar);
         }
@@ -137,8 +157,8 @@ onMounted(() => {
 
         // Draw the bars
         ctx.fillStyle = "black";
-        ctx.fillRect(topBar.x, topBar.y, barWidth, barHeight);
-        ctx.fillRect(bottomBar.x, bottomBar.y, barWidth, barHeight);
+        ctx.fillRect(topBar.x, topBar.y, width, barHeight);
+        ctx.fillRect(bottomBar.x, bottomBar.y, width, barHeight);
 
         requestAnimationFrame(loop);
       };
