@@ -1,11 +1,10 @@
 <template>
-  <test-component :name="'test'" />
   <p class="greeting" @click="increment()">{{ number }}</p>
   <input type="text" name="hey" id="ho" v-model="text" />
   <h2>{{ text }}</h2>
 </template>
 
-<script>
+<script lang="ts">
 import TestComponent from "../components/TestComponent.vue";
 export default {
   components: {
@@ -16,11 +15,6 @@ export default {
       text: "",
       number: 1,
     };
-  },
-  methods: {
-    increment() {
-      this.number++;
-    },
   },
 };
 </script>
