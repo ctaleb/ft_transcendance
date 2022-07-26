@@ -1,11 +1,15 @@
-import { Entity, Column } from 'typeorm';
-import { BaseEntity } from './base.entity';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity({ name: 'user' })
-export class Item extends BaseEntity {
-  @Column({ type: 'varchar', length: 300 })
-  name: string;
+class User {
+  @PrimaryGeneratedColumn()
+  public id: number;
 
-  @Column({ type: 'varchar', length: 300 })
-  password: string;
+  @Column()
+  public firstName: string;
+
+  @Column()
+  public lastName: string;
 }
+
+export default User;

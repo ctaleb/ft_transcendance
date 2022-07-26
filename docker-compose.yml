@@ -2,10 +2,13 @@ services:
   database:
     image: postgres:14-bullseye
     container_name: database
+    networks:
+      - 42network
     init: true
     # default port but probably not needed in our case, since already exposed for the docker network in the official image
-    # ports:
-    #   - 5432:5432
+    # while we work on our own environments, we'll need to keep this open however
+    ports:
+      - 5432:5432
     restart: unless-stopped
     environment:
       - POSTGRES_HOST=${POSTGRES_HOST}
@@ -13,12 +16,13 @@ services:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      # - PGDATA=/var/lib/postgresql/data
     volumes:
-      - db:/var/lib/postgresql/data/
+      - ./db:/var/lib/postgresql/data/
   adminer:
     image: adminer
     container_name: adminer
+    networks:
+      - 42network
     init: true
     restart: unless-stopped
     # http://localhost:8080/ to access adminer page
@@ -32,23 +36,27 @@ services:
   #   restart: unless-stopped
   #   ports:
   #     - 8080:8080
-  back:
-    depends_on:
-      - database
-    image: back
-    container_name: back
-    init: true
-    build: back/.
-    restart: unless-stopped
-  front:
-    depends_on:
-      - back
-    image: front
-    container_name: front
-    init: true
-    build: front/.
-    restart: unless-stopped
-volumes:
-  db:
-    name: db
-    driver: local
+  # back:
+  #   depends_on:
+  #     - database
+  #   image: back
+  #   container_name: back
+  #   init: true
+  #   build: back/.
+  #   restart: unless-stopped
+  # front:
+  #   depends_on:
+  #     - back
+  #   image: front
+  #   container_name: front
+  #   init: true
+  #   build: front/.
+  #   restart: unless-stopped
+# volumes:
+#   db:
+#     name: db
+#     driver: local
+networks:
+ 42network:
+   name: 42network
+   external: false
