@@ -22,6 +22,7 @@
 	"settings": {
 		"material-icon-theme.activeIconPack": "nest",
 		"prettier.useTabs": true,
-		"prettier.tabWidth": 2
-	},
+		"prettier.tabWidth": 2,
+		"prettier.configPath": "~/Projects/ft_transcendance/ft_transcendance.code-workspace"
+	}
 }
