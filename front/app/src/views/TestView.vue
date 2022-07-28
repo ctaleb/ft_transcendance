@@ -1,5 +1,7 @@
 <template>
-	<test-component />
+	<div class="container w-50 p-5">
+		<test-component />
+	</div>
 </template>
 
 <script setup lang="ts">
