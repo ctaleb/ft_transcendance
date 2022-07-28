@@ -1,7 +1,12 @@
 <template>
-  <p class="greeting" @click="increment()">{{ number }}</p>
+<div>
+    <div class="alert alert-primary" role="alert">
+      If this is visible, leo messi fourmau has set up bootstrap !
+    </div>
+  <p class="text-success" @click="increment()">{{ number }}</p>
   <input type="text" name="hey" id="ho" v-model="text" />
-  <h2>{{ text }}</h2>
+  <h2 class="text-warning">{{ text }}</h2>
+</div>
 </template>
 
 <script lang="ts">
@@ -26,8 +31,5 @@ p {
 </style>
 
 <style>
-.greeting {
-  color: red;
-  font-weight: bold;
-}
+
 </style>
