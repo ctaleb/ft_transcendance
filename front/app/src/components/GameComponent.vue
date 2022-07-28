@@ -14,6 +14,7 @@ let leftMovement = false,
   rightMovement = false;
 let gameOn = true;
 let padding = 15;
+let counter = 0;
 
 interface IPoint {
   x: number;
@@ -62,11 +63,11 @@ function ballMove(ball: IBall, topBar: IPoint) {
     ball.rotation = 0;
     ball.x = canvas.value!.width - ball.radius;
   }
-  if (ball.y > canvas.value!.height - padding - ball.radius - barHeight || ball.y <= barHeight + ball.radius + padding) {
-    if (ball.x > topBar.x && ball.x < topBar.x + width) {
+  if (ball.y > canvas.value!.height - padding - ball.radius - topBar.height || ball.y <= topBar.height + ball.radius + padding) {
+    if (ball.x > topBar.x && ball.x < topBar.x + topBar.width) {
       ball.speed.y *= 1.1;
       ball.speed.y *= -1;
-      ball.rotation = (20 * ball.speed.y) * barMoving;
+      ball.rotation = (20 * ball.speed.y) * topBar.moving;
       counter++;
     }
     else
@@ -82,17 +83,19 @@ function ballMove(ball: IBall, topBar: IPoint) {
 }
 
 function barMove(topBar: IPoint, bottomBar: IPoint) {
-  topBar.speed *= 1.1;
-  bottomBar.speed *= 1.1;
+ // topBar.speed *= 1.1;
+ // bottomBar.speed *= 1.1;
   if (leftMovement && topBar.x > 0) {
-    topBar.x -= barSpeed;
-    bottomBar.x -= barSpeed;
-    barMoving = -1;
+    topBar.x -= topBar.speed;
+    bottomBar.x -= bottomBar.speed;
+    topBar.moving = -1;
+    bottomBar.moving = -1;
   }
-  if (rightMovement && topBar.x < canvas.value!.width - width) {
-    topBar.x += barSpeed;
-    bottomBar.x += barSpeed;
-    barMoving = 1;
+  if (rightMovement && topBar.x < canvas.value!.width - topBar.width) {
+    topBar.x += topBar.speed;
+    bottomBar.x += topBar.speed;
+    topBar.moving = -1;
+    bottomBar.moving = -1;
   }
 }
 
@@ -109,7 +112,7 @@ onMounted(() => {
       width: 100,
       speed: 5,
       moving: 0,
-      counter: 0,
+//      counter: 0, moved as global, no sense to have a counter per bar
       x: canvas.value!.width / 2 - 100 / 2,
       y: 15,
     };
@@ -118,7 +121,7 @@ onMounted(() => {
       width: 100,
       speed: 5,
       moving: 0,
-      counter: 0,
+ //     counter: 0,
       x: canvas.value!.width / 2 - 100 / 2,
       y: canvas.value!.height - 10 - 15,
     };
@@ -157,8 +160,8 @@ onMounted(() => {
 
         // Draw the bars
         ctx.fillStyle = "black";
-        ctx.fillRect(topBar.x, topBar.y, width, barHeight);
-        ctx.fillRect(bottomBar.x, bottomBar.y, width, barHeight);
+        ctx.fillRect(topBar.x, topBar.y, topBar.width, topBar.height);
+        ctx.fillRect(bottomBar.x, bottomBar.y, bottomBar.width, bottomBar.height);
 
         requestAnimationFrame(loop);
       };
