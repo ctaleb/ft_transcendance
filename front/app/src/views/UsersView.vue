@@ -1,10 +1,21 @@
 <template>
 	<div>
-    <div v-for="user in users" :key="user['id']">
-      <p>user number {{ user['id'] }} : </p>
-			<p>{{ user['firstName'] }} --- {{ user['lastName'] }}</p>
-			<br>
-		</div>
+    <table class="table table-striped table-hover">
+      <thead>
+        <tr class="table-primary">
+          <th scope="col">ID</th>
+          <th scope="col">First name</th>
+          <th scope="col">Last name</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="user in users" :key="user['id']">
+            <td scope="row">{{ user['id'] }}</td>
+            <td>{{ user['firstName'] }}</td>
+            <td>{{ user['lastName'] }}</td>
+        </tr>
+      </tbody>
+    </table>
 	</div>
 </template>
 

@@ -14,7 +14,7 @@
 				</div>
 			</div>
 		</div>
-		<button type="submit" class="btn btn-primary mt-5">Send</button>
+		<button type="submit" class="btn btn-primary mt-3">Create my user</button>
 	</form>
 </template>
 
