@@ -3,7 +3,9 @@
 	<nav class="nav justify-content-center">
 		<router-link class="nav-link" to="/">Home</router-link>
 		<router-link class="nav-link" to="/about"> About</router-link>
-		<router-link class="nav-link" to="/test"> Test</router-link>
+		<router-link class="nav-link" to="/register"> Register</router-link>
+		<router-link class="nav-link" to="/login"> Login</router-link>
+		<router-link class="nav-link" to="/users"> Users</router-link>
 	</nav>
 	<router-view />
 </div>

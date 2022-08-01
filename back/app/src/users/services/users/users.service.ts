@@ -1,7 +1,8 @@
-import { Injectable, HttpStatus, HttpException } from '@nestjs/common';
+import { Injectable, HttpStatus, HttpException, Res } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import User from 'src/model/user.entity';
 import { CreateUserDto } from 'src/users/dtos/CreateUser.dto';
+import { LoginUserDto } from 'src/users/dtos/LoginUser.dto';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -27,5 +28,13 @@ export class UsersService {
     const newUser = await this.usersRepository.create(user);
     await this.usersRepository.save(newUser);
     return newUser;
+  }
+
+  async loginUser(loginuser: LoginUserDto) {
+    const userToConnect = await this.usersRepository.findOneBy({ firstName: loginuser.firstName });
+    if (userToConnect && userToConnect.lastName == loginuser.lastName)
+      return {message: 'Logged'}
+    else
+      return {message: 'Not Logged'}
   }
 }
