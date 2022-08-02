@@ -30,11 +30,7 @@
 </template>
 
 <script lang="ts">
-import TestComponent from "../components/TestComponent.vue";
 export default {
-  components: {
-    TestComponent,
-  },
   data() {
     return {
       text: "",
