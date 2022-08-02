@@ -1,21 +1,21 @@
 import { Injectable, HttpStatus, HttpException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import User from 'src/model/user.entity';
-import { CreateUserDto } from 'src/dtos/CreateUser.dto';
-import { Repository } from 'typeorm';
+import { UserEntity } from 'src/model/user.entity';
+import { CreateUserDto } from 'src/dtos/user.dto';
+import { Repository, QueryRunner } from 'typeorm';
 
 @Injectable()
 export class UsersService {
   constructor(
-    @InjectRepository(User)
-    private usersRepository: Repository<User>,
+    @InjectRepository(UserEntity)
+    private usersRepository: Repository<UserEntity>,
   ) {}
 
   getAllUsers() {
     return this.usersRepository.find();
   }
 
-  async getUserById(id: number): Promise<User> {
+  async getUserById(id: number): Promise<UserEntity> {
     const user = await this.usersRepository.findOneBy({ id });
     if (user) {
       return user;
@@ -23,9 +23,11 @@ export class UsersService {
     throw new HttpException('User not found', HttpStatus.NOT_FOUND);
   }
 
-  async createUser(user: CreateUserDto) {
-    const newUser = await this.usersRepository.create(user);
-    await this.usersRepository.save(newUser);
-    return newUser;
+  async createUser(
+    createUserDto: CreateUserDto,
+    queryRunner: QueryRunner,
+  ): Promise<UserEntity> {
+    const user = this.usersRepository.create(createUserDto);
+    return this.usersRepository.save(user);
   }
 }

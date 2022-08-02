@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { database } from '../config/config.js';
+import { AuthenticationSubscriber } from 'src/authentication/authentication.subscriber';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { database } from '../config/config.js';
       database: database.name,
       entities: [__dirname + '/../**/*.entity.js'],
       synchronize: true,
+      subscribers: [AuthenticationSubscriber],
     }),
   ],
 })
