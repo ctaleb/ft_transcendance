@@ -1,5 +1,10 @@
 {
   "dependencies": {
+    "@hapi/joi": "^17.1.1",
+    "@nestjs/config": "^2.2.0",
+    "@types/bcrypt": "^5.0.0",
+    "@types/hapi__joi": "^17.1.8",
+    "bcrypt": "^5.0.1",
     "dotenv": "^16.0.1"
   }
 }

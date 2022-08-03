@@ -1,15 +1,13 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { AbstractEntity } from './abstract.entity';
+import { Column, Entity } from 'typeorm';
+import { Exclude } from 'class-transformer';
 
 @Entity({ name: 'user' })
-class User {
-  @PrimaryGeneratedColumn()
-  public id: number;
+export class UserEntity extends AbstractEntity {
+  @Column({ unique: true })
+  public nickname: string;
 
   @Column()
-  public firstName: string;
-
-  @Column()
-  public lastName: string;
+  @Exclude()
+  public password: string;
 }
-
-export default User;
