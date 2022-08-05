@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
-import { UsersModule } from './users.module';
+import { UsersModule } from './user/user.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { DatabaseModule } from './database/database.module';
-import { AuthenticationModule } from './authentication.module';
+import { AuthenticationModule } from './authentication/authentication.module';
 
 @Module({
   imports: [

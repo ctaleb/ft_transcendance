@@ -1,11 +1,11 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { PostgresErrorCode } from 'src/database/errors.constraint';
-import { UsersService } from 'src/services/users/users.service';
+import { UserService } from 'src/user/user.service';
 import { DataSource, QueryRunner, Repository } from 'typeorm';
-import { CreateUserDto } from 'src/dtos/user.dto';
-import { RegistrationDto } from 'src/dtos/registration.dto';
-import { UserEntity } from 'src/model/user.entity';
-import { UserAlreadyExistException } from 'src/exceptions/user-already-exist.exception';
+import { CreateUserDto } from 'src/user/user.dto';
+import { RegistrationDto } from 'src/authentication/registration.dto';
+import { UserEntity } from 'src/user/user.entity';
+import { UserAlreadyExistException } from 'src/authentication/user-already-exist.exception';
 import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
@@ -13,7 +13,7 @@ export class AuthenticationService {
   constructor(
     @InjectRepository(UserEntity)
     private readonly _authenticationRepository: Repository<UserEntity>,
-    private readonly _userService: UsersService,
+    private readonly _userService: UserService,
     private readonly _dataSource: DataSource,
   ) {}
 
