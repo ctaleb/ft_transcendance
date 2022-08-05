@@ -5,7 +5,7 @@ import { DataSource, QueryRunner, Repository } from 'typeorm';
 import { CreateUserDto } from 'src/user/user.dto';
 import { RegistrationDto } from 'src/authentication/registration.dto';
 import { UserEntity } from 'src/user/user.entity';
-import { UserAlreadyExistException } from 'src/authentication/user-already-exist.exception';
+import { UserAlreadyExistException } from 'src/authentication/authentication.exception';
 import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()

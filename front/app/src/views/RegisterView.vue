@@ -1,9 +1,18 @@
 <template>
-	<form action="/api/users/create" method="post">
+	<form action="/api/authentication/registration" method="post">
 		<label for="nickname">Nickname:</label>
-		<input type="text" id="nick" name="nickname" /><br /><br />
+		<input type="text" id="nick" name="nickname" required /><br /><br />
 		<label for="password">Password:</label>
-		<input type="password" id="password" name="password" /><br /><br />
+		<input type="password" id="password" name="password" required /><br /><br />
+		<label for="phone">Phone number:</label>
+		<input
+			type="tel"
+			id="phone"
+			name="phone"
+			placeholder="0611111111"
+			pattern="[0-9]{10}"
+			required
+		/><br /><br />
 		<input type="submit" value="Submit" />
 	</form>
 </template>

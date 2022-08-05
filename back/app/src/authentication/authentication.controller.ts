@@ -3,7 +3,7 @@ import { UserEntity } from 'src/user/user.entity';
 import { RegistrationDto } from 'src/authentication/registration.dto';
 import { AuthenticationService } from 'src/authentication/authentication.service';
 
-@Controller('Authentication')
+@Controller('authentication')
 export class AuthenticationController {
   constructor(private readonly _authenticationService: AuthenticationService) {}
 

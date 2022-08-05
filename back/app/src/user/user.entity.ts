@@ -7,6 +7,9 @@ export class UserEntity extends AbstractEntity {
   @Column({ unique: true })
   public nickname: string;
 
+  @Column({ unique: true })
+  public phone: string;
+
   @Column()
   @Exclude()
   public password: string;
