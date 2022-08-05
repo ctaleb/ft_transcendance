@@ -1,5 +1,5 @@
 <template>
-	<form action="/api/users/create" method="post">
+	<form action="/api/Authentication/registration" method="post">
 		<label for="nickname">Nickname:</label>
 		<input type="text" id="nick" name="nickname" /><br /><br />
 		<label for="password">Password:</label>

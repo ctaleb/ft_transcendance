@@ -5,10 +5,12 @@ import { AuthenticationController } from 'src/authentication/authentication.cont
 import { AuthenticationService } from 'src/authentication/authentication.service';
 import { UserEntity } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
+import { PassportModule } from '@nestjs/passport';
+import { LocalStrategy } from './local.strategy';
 
 @Module({
-  imports: [UsersModule, TypeOrmModule.forFeature([UserEntity])],
-  providers: [AuthenticationService, UserService],
+  imports: [UsersModule, PassportModule, TypeOrmModule.forFeature([UserEntity])],
+  providers: [AuthenticationService, LocalStrategy, UserService],
   controllers: [AuthenticationController],
 })
 export class AuthenticationModule {}
