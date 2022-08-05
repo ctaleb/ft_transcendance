@@ -4,7 +4,7 @@ import {
   InsertEvent,
   UpdateEvent,
 } from 'typeorm';
-import { UserEntity } from '../model/user.entity';
+import { UserEntity } from '../user/user.entity';
 import { AuthenticationProvider } from './authentication.provider';
 
 @EventSubscriber()

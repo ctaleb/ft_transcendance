@@ -1,4 +1,4 @@
-import { AbstractEntity } from './abstract.entity';
+import { AbstractEntity } from '../abstract.entity';
 import { Column, Entity } from 'typeorm';
 import { Exclude } from 'class-transformer';
 
