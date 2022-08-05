@@ -8,8 +8,7 @@ import { UserEntity } from 'src/user/user.entity';
 import { UserAlreadyExistException } from 'src/authentication/user-already-exist.exception';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AuthenticationProvider } from './authentication.provider';
-import bcrypt from 'bcrypt'
-
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthenticationService {
@@ -44,14 +43,19 @@ export class AuthenticationService {
     return user;
   }
 
-  async validateUser(nickname: string, plainPassword: string): Promise<any> {
-    const user = await this._userService.getUserByNickname(nickname);
+  async validateUser(username: string, plainPassword: string): Promise<any> {
+    console.log("First output");
+   const user = await this._userService.getUserByNickname(username);
+    console.log(user);
     if (user) {
-      bcrypt.compare(plainPassword, user.password, function(err, result){
-          const { password, ...ret } = user;
-          return user;
-     });
+        if (bcrypt.compareSync(plainPassword, user.password))
+        {
+            console.log("lalala");
+            const { password, ...ret } = user;
+            return ret;
+        }
     }
+    console.log("nul");
     return null;
   }
 }
