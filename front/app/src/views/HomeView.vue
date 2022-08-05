@@ -1,33 +1,29 @@
 <template>
-  <p class="greeting" @click="increment()">{{ number }}</p>
-  <input type="text" name="hey" id="ho" v-model="text" />
-  <h2>{{ text }}</h2>
+	<p class="greeting" @click="increment()">{{ number }}</p>
+	<input type="text" name="hey" id="ho" v-model="text" />
+	<h2>{{ text }}</h2>
 </template>
 
 <script lang="ts">
-import TestComponent from "../components/TestComponent.vue";
 export default {
-  components: {
-    TestComponent,
-  },
-  data() {
-    return {
-      text: "",
-      number: 1,
-    };
-  },
+	data() {
+		return {
+			text: "",
+			number: 1,
+		};
+	},
 };
 </script>
 
 <style scoped>
 p {
-  user-select: none;
+	user-select: none;
 }
 </style>
 
 <style>
 .greeting {
-  color: red;
-  font-weight: bold;
+	color: red;
+	font-weight: bold;
 }
 </style>

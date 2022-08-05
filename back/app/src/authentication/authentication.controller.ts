@@ -1,7 +1,7 @@
 import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
-import { UserEntity } from 'src/model/user.entity';
-import { RegistrationDto } from 'src/dtos/registration.dto';
-import { AuthenticationService } from 'src/services/authentication/authentication.service';
+import { UserEntity } from 'src/user/user.entity';
+import { RegistrationDto } from 'src/authentication/registration.dto';
+import { AuthenticationService } from 'src/authentication/authentication.service';
 
 @Controller('Authentication')
 export class AuthenticationController {
