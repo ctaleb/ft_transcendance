@@ -8,11 +8,11 @@ import { AuthenticationModule } from './authentication/authentication.module';
 @Module({
   imports: [
     UsersModule,
+    DatabaseModule,
     AuthenticationModule,
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '../../..', 'front/app/dist'),
     }),
-    DatabaseModule,
   ],
 })
 export class AppModule {}

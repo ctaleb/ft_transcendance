@@ -7,8 +7,9 @@ import { RegistrationDto } from 'src/authentication/registration.dto';
 import { UserEntity } from 'src/user/user.entity';
 import { UserAlreadyExistException } from 'src/authentication/user-already-exist.exception';
 import { InjectRepository } from '@nestjs/typeorm';
-import { AuthenticationProvider } from './authentication.provider';
 import * as bcrypt from 'bcrypt';
+import { JwtService } from '@nestjs/jwt';
+
 
 @Injectable()
 export class AuthenticationService {
@@ -17,6 +18,7 @@ export class AuthenticationService {
     private readonly _authenticationRepository: Repository<UserEntity>,
     private readonly _userService: UserService,
     private readonly _dataSource: DataSource,
+    private jwtService: JwtService,
   ) {}
 
   async registration(registrationDto: RegistrationDto): Promise<UserEntity> {
@@ -57,5 +59,12 @@ export class AuthenticationService {
     }
     console.log("nul");
     return null;
+  }
+
+  async login(user: any) {
+    const payload = { username: user.nickname, sub: user.id };
+    return {
+      access_token: this.jwtService.sign(payload),
+    };
   }
 }

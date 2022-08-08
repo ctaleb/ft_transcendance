@@ -2,7 +2,7 @@ import { Body, Controller, HttpCode, HttpStatus, Post, Request, UseGuards } from
 import { UserEntity } from 'src/user/user.entity';
 import { RegistrationDto } from 'src/authentication/registration.dto';
 import { AuthenticationService } from 'src/authentication/authentication.service';
-import { AuthGuard } from '@nestjs/passport';
+import { LocalAuthGuard } from './local-auth.guard';
 
 @Controller('Authentication')
 export class AuthenticationController {
@@ -16,10 +16,10 @@ export class AuthenticationController {
     return this._authenticationService.registration(registrationDto);
   }
 
-  @UseGuards(AuthGuard('local'))
+  @UseGuards(LocalAuthGuard)
   @Post('login')
   async login(@Request() req) {
-    return req.user;
+    return this._authenticationService.login(req.user);
   }
 }
 
