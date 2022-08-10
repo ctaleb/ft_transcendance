@@ -1,10 +1,14 @@
 <template>
-	<form action="/api/authentication/registration" method="post">
-		<label for="nickname">Nickname:</label>
+	<form
+		action="/api/authentication/registration"
+		method="post"
+		enctype="multipart/form-data"
+	>
+		<label for="nickname">Nickname:</label><br />
 		<input type="text" id="nick" name="nickname" required /><br /><br />
-		<label for="password">Password:</label>
+		<label for="password">Password:</label><br />
 		<input type="password" id="password" name="password" required /><br /><br />
-		<label for="phone">Phone number:</label>
+		<label for="phone">Phone number:</label><br />
 		<input
 			type="tel"
 			id="phone"
@@ -13,11 +17,13 @@
 			pattern="[0-9]{10}"
 			required
 		/><br /><br />
+		<label for="avatar">Choose a profile picture:</label><br />
+		<input type="file" id="avatar" name="avatar" accept="image/*" /><br /><br />
 		<input type="submit" value="Submit" />
 	</form>
 </template>
 
-<script setup lang="ts"></script>
+<script lang="ts"></script>
 
 <style scoped>
 p {
