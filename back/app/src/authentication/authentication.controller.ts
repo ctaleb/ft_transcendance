@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Request, UseGuards } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, Request, UseGuards, Response } from '@nestjs/common';
 import { UserEntity } from 'src/user/user.entity';
 import { RegistrationDto } from 'src/authentication/registration.dto';
 import { AuthenticationService } from 'src/authentication/authentication.service';
@@ -18,8 +18,14 @@ export class AuthenticationController {
 
   @UseGuards(LocalAuthGuard)
   @Post('login')
-  async login(@Request() req) {
-    return this._authenticationService.login(req.user);
+  async login(@Request() req, @Response({ passthrough: true }) res) {
+    const token = this._authenticationService.login(req.user);
+    res.cookie('access_token', (await token).access_token, {
+      httpOnly: true,
+    });
+    console.log("Cookies sent:");
+    console.log(req.cookies);
+    return {token: (await token).access_token};
   }
 }
 
