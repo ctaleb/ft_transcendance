@@ -1,10 +1,43 @@
 <template>
-	<form action="/api/Authentication/login" method="post">
+	<form @submit.prevent="login">
 		<label for="username">Username</label>
-		<input type="text" id="username" name="username" /><br /><br />
+		<input v-model="username"  type="text" id="username" name="username" /><br /><br />
 		<label for="password">Password:</label>
-		<input type="password" id="password" name="password" /><br /><br />
+		<input v-model="password" type="password" id="password" name="password" /><br /><br />
 		<input type="submit" value="Submit" />
 	</form>
 </template>
+
+<script lang="ts">
+import { defineComponent } from "vue";
+import { store } from '../store'
+export default defineComponent({
+data: () => {
+	return {
+		username: "nicknick",
+		password: "motdepasse",
+	};
+},
+methods: {
+	async login() {
+
+	fetch("http://localhost:3000/api/Authentication/login", {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify({
+			username: this.username,
+			password: this.password,
+		}),
+	}).then((response) =>
+		response.json())
+	.then((value) => {
+		store.token = value.token;
+		console.log(store.token);
+	})
+	},
+},
+});
+</script>
 

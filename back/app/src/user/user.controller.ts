@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Request, UseGuards, Get } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, Request, Response, UseGuards, Get } from '@nestjs/common';
 import { UserEntity } from 'src/user/user.entity';
 import { RegistrationDto } from 'src/authentication/registration.dto';
 import { UserService } from './user.service';
@@ -11,7 +11,7 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard)
   @Get('profile')
-  async getProfile(@Request() req) {
+  async getProfile(@Request() req, @Response() res) {
     console.log("Cookies received:");
     console.log(req.cookies);
     return req.user;

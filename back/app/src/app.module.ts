@@ -1,9 +1,11 @@
-import { Module } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { UsersModule } from './user/user.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { DatabaseModule } from './database/database.module';
 import { AuthenticationModule } from './authentication/authentication.module';
+import { TokenMiddleware } from './token.midleware';
+
 
 @Module({
   imports: [
@@ -15,4 +17,10 @@ import { AuthenticationModule } from './authentication/authentication.module';
     }),
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(TokenMiddleware)
+      .forRoutes('/user');
+  }
+}
