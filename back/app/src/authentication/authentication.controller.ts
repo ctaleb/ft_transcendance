@@ -20,11 +20,6 @@ export class AuthenticationController {
   @Post('login')
   async login(@Request() req, @Response({ passthrough: true }) res) {
     const token = this._authenticationService.login(req.user);
-    res.cookie('access_token', (await token).access_token, {
-      httpOnly: true,
-    });
-    console.log("Cookies sent:");
-    console.log(req.cookies);
     return {token: (await token).access_token};
   }
 }

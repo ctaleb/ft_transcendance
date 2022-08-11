@@ -11,10 +11,8 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard)
   @Get('profile')
-  async getProfile(@Request() req, @Response() res) {
-    console.log("Cookies received:");
-    console.log(req.cookies);
-    return req.user;
+  async getProfile(@Request() req) {
+     return req.user;
   }
 }
 

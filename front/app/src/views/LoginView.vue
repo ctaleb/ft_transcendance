@@ -30,8 +30,8 @@ methods: {
 			username: this.username,
 			password: this.password,
 		}),
-	}).then((response) =>
-		response.json())
+	})
+	.then((response) => response.json())
 	.then((value) => {
 		store.token = value.token;
 		console.log(store.token);
