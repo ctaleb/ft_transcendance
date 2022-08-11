@@ -1,5 +1,6 @@
 import {
   Body,
+  ConsoleLogger,
   Controller,
   HttpCode,
   HttpStatus,
