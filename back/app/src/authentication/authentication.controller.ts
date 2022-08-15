@@ -29,11 +29,10 @@ export class AuthenticationController {
       fileFilter: imageFileFilter,
     }),
   )
-  @HttpCode(HttpStatus.OK)
   async registration(
     @UploadedFile() avatar: Express.Multer.File,
     @Body() registrationDto: RegistrationDto,
-  ): Promise<UserEntity> {
+  ) {
     return this._authenticationService.registration(registrationDto, {
       path: avatar.path,
       filename: avatar.originalname,

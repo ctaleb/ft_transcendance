@@ -15,10 +15,7 @@ export class AuthenticationService {
     private readonly _dataSource: DataSource,
   ) {}
 
-  async registration(
-    registrationDto: RegistrationDto,
-    imageDto: ImageDto,
-  ): Promise<UserEntity> {
+  async registration(registrationDto: RegistrationDto, imageDto: ImageDto) {
     let user: UserEntity;
     const queryRunner = this._dataSource.createQueryRunner();
 
@@ -27,7 +24,7 @@ export class AuthenticationService {
 
     try {
       user = await this._userService.createUser(registrationDto, queryRunner);
-      this._userService.setAvatar(user.id, imageDto);
+      user = await this._userService.setAvatar(user.id, imageDto);
       await queryRunner.commitTransaction();
     } catch (error) {
       await queryRunner.rollbackTransaction();
@@ -39,7 +36,6 @@ export class AuthenticationService {
     } finally {
       await queryRunner.release();
     }
-
     return user;
   }
 }

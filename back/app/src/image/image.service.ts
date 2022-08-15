@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ImageEntity } from './image.entity';
@@ -15,5 +15,13 @@ export class ImageService {
     const newFile = await this.imageRepository.create(fileData);
     await this.imageRepository.save(newFile);
     return newFile;
+  }
+
+  async getImageById(id: number) {
+    const file = await this.imageRepository.findOneBy({ id });
+    if (file) {
+      return file;
+    }
+    throw new NotFoundException();
   }
 }

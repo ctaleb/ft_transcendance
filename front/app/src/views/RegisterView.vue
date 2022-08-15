@@ -34,12 +34,12 @@
 			accept="image/*"
 			@change="updateAvatar"
 		/><br /><br />
-		<input type="submit" value="Submit" @click="createPost()" />
+		<input type="submit" value="Submit" @click.stop.prevent="createPost()" />
 	</form>
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, resolveComponent } from "vue";
 export default defineComponent({
 	name: "RegisterView",
 	data() {
@@ -54,7 +54,7 @@ export default defineComponent({
 		updateAvatar(event: Event) {
 			this.avatar = (event.target as HTMLInputElement).files?.[0]!;
 		},
-		createPost() {
+		async createPost() {
 			let formData = new FormData();
 
 			formData.append("nickname", this.nickname);
@@ -65,7 +65,16 @@ export default defineComponent({
 			fetch("http://localhost:3000/api/authentication/registration", {
 				method: "POST",
 				body: formData,
-			});
+			})
+				.then((response) => response.json())
+				.then((data) => {
+					console.log("Success");
+					this.$router.push("/");
+				})
+				.catch((err) => {
+					this.$router.push("/");
+					console.log(err);
+				});
 		},
 	},
 });
