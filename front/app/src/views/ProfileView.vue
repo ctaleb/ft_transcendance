@@ -1,5 +1,9 @@
 <template>
-	<p v-if="user!=null">Hola {{ user.nickname }}</p>
+	<div v-if="user!=null">
+		<p>Hola {{ user.nickname }}</p>
+		<p>Created at {{ user.createdAt }}</p>
+		<p>Updated at {{ user.updatedAt }}</p>
+	</div>
 	<p v-else>User = null</p>
 </template>
 
@@ -19,12 +23,13 @@ export default defineComponent({
 		fetch("http://localhost:3000/api/user/profile", {
 		method: "GET",
 		headers: {
-			"Authorization": "Bearer " + store.token,
+			"Authorization": "Bearer " + localStorage.token,
 		},
 	})
 	.then(res => res.json())
     .then((data) => {
-		if (store.user.uuid == null)
+		console.log(data);
+		if (!localStorage.isConnected)
 			this.$router.push('/signin');
 	})
     .catch(err => console.log(err.message));

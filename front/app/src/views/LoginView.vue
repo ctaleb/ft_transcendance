@@ -35,6 +35,8 @@ methods: {
 	.then((value) => {
 		store.token = value.token;
 		store.user = value.user;
+		localStorage.token = value.token;
+		this.$router.push('/');
 		console.log(value.user);
 	})
 	},
