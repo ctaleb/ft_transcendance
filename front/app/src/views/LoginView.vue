@@ -34,7 +34,8 @@ methods: {
 	.then((response) => response.json())
 	.then((value) => {
 		store.token = value.token;
-		console.log(store.token);
+		store.user = value.user;
+		console.log(value.user);
 	})
 	},
 },

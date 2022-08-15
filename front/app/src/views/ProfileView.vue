@@ -1,5 +1,5 @@
 <template>
-	<p v-if="user!=null">Hola {{ user['id'] }}</p>
+	<p v-if="user!=null">Hola {{ user.nickname }}</p>
 	<p v-else>User = null</p>
 </template>
 
@@ -10,7 +10,7 @@ import { store } from '../store'
 export default defineComponent({
 	data() {
 		return {
-			user: null,
+			user: store.user,
 		};
 	},
 	
@@ -23,9 +23,11 @@ export default defineComponent({
 		},
 	})
 	.then(res => res.json())
-    .then(data => this.user = data)
+    .then((data) => {
+		if (store.user.uuid == null)
+			this.$router.push('/signin');
+	})
     .catch(err => console.log(err.message));
-	this.$router.push("/");
   }
 });
 </script>
