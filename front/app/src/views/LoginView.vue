@@ -33,8 +33,6 @@ methods: {
 	})
 	.then((response) => response.json())
 	.then((value) => {
-		store.token = value.token;
-		store.user = value.user;
 		localStorage.setItem("token", value.token);
 		localStorage.setItem("user", JSON.stringify(value.user));
 		this.$router.push('/');

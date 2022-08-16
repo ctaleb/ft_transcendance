@@ -1,10 +1,5 @@
 <template>
-	<div v-if="user!=null">
-		<p>Hello {{ user.nickname }} !</p>
-		<p>Created at {{ user.createdAt }}</p>
-		<p>Updated at {{ user.updatedAt }}</p>
-	</div>
-	<p v-else>User = null</p>
+	<p>Welcome to the fc ranscendance portal</p>
 </template>
 
 <script lang="ts">
@@ -14,7 +9,6 @@ import { store } from '../store'
 export default defineComponent({
 	data() {
 		return {
-			user: JSON.parse(localStorage.getItem("user") || '{}'),
 		};
 	},
 	

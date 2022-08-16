@@ -8,5 +8,6 @@ export const store = reactive({
 		nickname: null,
 		updatedAt: null,
 		uuid: null,
-	}
+	},
+	isConnected: false,
 })
