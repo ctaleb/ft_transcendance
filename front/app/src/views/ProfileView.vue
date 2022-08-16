@@ -1,6 +1,6 @@
 <template>
 	<div v-if="user!=null">
-		<p>Hola {{ user.nickname }}</p>
+		<p>Hello {{ user.nickname }} !</p>
 		<p>Created at {{ user.createdAt }}</p>
 		<p>Updated at {{ user.updatedAt }}</p>
 	</div>
@@ -14,7 +14,7 @@ import { store } from '../store'
 export default defineComponent({
 	data() {
 		return {
-			user: store.user,
+			user: JSON.parse(localStorage.getItem("user") || '{}'),
 		};
 	},
 	
@@ -23,13 +23,12 @@ export default defineComponent({
 		fetch("http://localhost:3000/api/user/profile", {
 		method: "GET",
 		headers: {
-			"Authorization": "Bearer " + localStorage.token,
+			"Authorization": "Bearer " + localStorage.getItem("token"),
 		},
 	})
 	.then(res => res.json())
     .then((data) => {
-		console.log(data);
-		if (!localStorage.isConnected)
+		if (data.message)
 			this.$router.push('/signin');
 	})
     .catch(err => console.log(err.message));
