@@ -5,6 +5,7 @@ import { join } from 'path';
 import { DatabaseModule } from './database/database.module';
 import { AuthenticationModule } from './authentication/authentication.module';
 import { ImageModule } from './image/image.module';
+import { MessagesModule } from './chat/messages.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { ImageModule } from './image/image.module';
     }),
     DatabaseModule,
     ImageModule,
+    MessagesModule,
   ],
 })
 export class AppModule {}
