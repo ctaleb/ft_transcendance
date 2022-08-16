@@ -29,7 +29,6 @@ export class AuthenticationController {
       fileFilter: imageFileFilter,
     }),
   )
-  @HttpCode(HttpStatus.OK)
   async registration(
     @UploadedFile() avatar: Express.Multer.File,
     @Body() registrationDto: RegistrationDto,

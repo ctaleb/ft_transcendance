@@ -21,7 +21,8 @@ export class UserService {
   async getUserById(id: number): Promise<UserEntity> {
     const user = await this._usersRepository.findOneBy({ id });
     if (user) {
-      return user;
+      const avatar = await this._imageService.getImageById(user.avatarId);
+      return { ...user, ...avatar };
     }
     throw new HttpException('User not found', HttpStatus.NOT_FOUND);
   }
@@ -39,5 +40,6 @@ export class UserService {
     await this._usersRepository.update(userId, {
       avatarId: avatar.id,
     });
+    return await this._usersRepository.findOneBy({ id: userId });
   }
 }
