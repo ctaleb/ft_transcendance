@@ -17,6 +17,10 @@ export class ImageService {
     return newFile;
   }
 
+  async getDefaultAvatar() {
+    return this.getImageById(1);
+  }
+
   async getImageById(id: number) {
     const file = await this.imageRepository.findOneBy({ id });
     if (file) {

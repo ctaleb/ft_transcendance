@@ -36,7 +36,12 @@ export class UserService {
   }
 
   async setAvatar(userId: number, fileData: ImageDto) {
-    const avatar = await this._imageService.saveImage(fileData);
+    let avatar;
+    if (fileData) {
+      avatar = await this._imageService.saveImage(fileData);
+    } else {
+      avatar = await this._imageService.getDefaultAvatar();
+    }
     await this._usersRepository.update(userId, {
       avatarId: avatar.id,
     });

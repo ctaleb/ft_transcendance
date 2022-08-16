@@ -33,10 +33,15 @@ export class AuthenticationController {
     @UploadedFile() avatar: Express.Multer.File,
     @Body() registrationDto: RegistrationDto,
   ) {
-    return this._authenticationService.registration(registrationDto, {
-      path: avatar.path,
-      filename: avatar.originalname,
-      mimetype: avatar.mimetype,
-    });
+    return this._authenticationService.registration(
+      registrationDto,
+      avatar
+        ? {
+            path: avatar.path,
+            filename: avatar.originalname,
+            mimetype: avatar.mimetype,
+          }
+        : null,
+    );
   }
 }
