@@ -39,7 +39,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, resolveComponent } from "vue";
+import { defineComponent } from "vue";
 export default defineComponent({
 	name: "RegisterView",
 	data() {
@@ -68,7 +68,6 @@ export default defineComponent({
 			})
 				.then((response) => response.json())
 				.then((data) => {
-					console.log("Success");
 					this.$router.push("/");
 				})
 				.catch((err) => {
