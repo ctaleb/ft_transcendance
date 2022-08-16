@@ -16,7 +16,7 @@ export class AuthenticationService {
     private readonly _dataSource: DataSource,
   ) {}
 
-  async registration(registrationDto: RegistrationDto, imageDto: ImageDto) {
+  async registration(registrationDto: RegistrationDto, imageDto: ImageDto): Promise<UserEntity> {
     let user: UserEntity;
     const queryRunner = this._dataSource.createQueryRunner();
 
