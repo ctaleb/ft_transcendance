@@ -1,24 +1,85 @@
 <template>
-  <head>
-    <title>Socket.IO chat</title>
-  </head>
-  <body>
-    <ul id="messages"></ul>
-    <form id="form" action="">
-      <input id="input" autocomplete="off" /><button>Send</button>
-    </form>
-  </body>
+  <div class="chat">
+    <div v-if="!joined">
+      <form @submit.prevent="join">
+        <label>Enter your name</label>
+        <input v-model="name"/>
+        <button type="submit">Join</button>
+      </form>
+    </div>
+    <div class="chat-container" v-else>
+      <div class="messages-container">
+        <div v-for="message in messages">
+            [{{ message.name }}] : {{ message.message }}
+        </div>
+      </div>
+      <div v-if="typingDisplay">{{typingDisplay}}</div>
+      <hr />
+      <div class="message-input">
+        <form @submit.prevent="sendMessage">
+          <label>Message:</label>
+          <input v-model="messageText" @input="emitTyping"/>
+          <button type="submit">Send</button>
+        </form>
+      </div>
+    </div>
+  </div>
 </template>
 
 <style>
-	body { margin: 0; padding-bottom: 3rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
 
-	#form { background: rgba(0, 0, 0, 0.15); padding: 0.25rem; position: fixed; bottom: 0; left: 0; right: 0; display: flex; height: 3rem; box-sizing: border-box; backdrop-filter: blur(10px); }
-	#input { border: none; padding: 0 1rem; flex-grow: 1; border-radius: 2rem; margin: 0.25rem; }
-	#input:focus { outline: none; }
-	#form > button { background: #333; border: none; padding: 0 1rem; margin: 0.25rem; border-radius: 3px; outline: none; color: #fff; }
-
-	#messages { list-style-type: none; margin: 0; padding: 0; }
-	#messages > li { padding: 0.5rem 1rem; }
-	#messages > li:nth-child(odd) { background: #efefef; }
 </style>
+
+<script setup lang="ts">
+import { io } from "socket.io-client";
+import { onBeforeMount, ref } from "vue";
+
+const socket = io("http://10.2.12.4:3000");
+
+const messages = ref([]);
+const messageText = ref('');
+const joined = ref(false);
+const name = ref('');
+const typingDisplay = ref('');
+
+onBeforeMount (() => {
+  socket.emit('findAllMessages', {}, (response) => {
+    messages.value = response;
+  });
+
+  socket.on('message', (message) => {
+    messages.value.push(message);
+  });
+
+  socket.on('typing', ({name, isTyping}) => {
+    if (isTyping) {
+      typingDisplay.value = `${name} is typing...`;
+    } else {
+      typingDisplay.value = '';
+    }
+  });
+
+});
+
+const join = () => {
+  socket.emit("join", { name: name.value }, () => {
+    joined.value = true;
+  });
+}
+
+const sendMessage = () => {
+  socket.emit('createMessage', { message : messageText.value }, response => {
+    messageText.value = '';
+  });
+}
+
+let timeout;
+const emitTyping = () => {
+  socket.emit('typing', { isTyping: true });
+  clearTimeout(timeout);
+  timeout = setTimeout(() => {
+    socket.emit('typing', { isTyping: false });
+  }, 2000);
+}
+
+</script>
