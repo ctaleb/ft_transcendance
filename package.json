@@ -2,9 +2,19 @@
   "dependencies": {
     "@hapi/joi": "^17.1.1",
     "@nestjs/config": "^2.2.0",
+    "@nestjs/jwt": "^9.0.0",
+    "@nestjs/passport": "^9.0.0",
     "@types/bcrypt": "^5.0.0",
     "@types/hapi__joi": "^17.1.8",
     "bcrypt": "^5.0.1",
-    "dotenv": "^16.0.1"
+    "cookie-parser": "^1.4.6",
+    "dotenv": "^16.0.1",
+    "passport": "^0.6.0",
+    "passport-jwt": "^4.0.0",
+    "passport-local": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/cookie-parser": "^1.4.3",
+    "@types/passport-jwt": "^3.0.6"
   }
 }

@@ -26,6 +26,13 @@ export class UserService {
     }
     throw new HttpException('User not found', HttpStatus.NOT_FOUND);
   }
+  async getUserByNickname(nickname: string): Promise<UserEntity> {
+    const user = await this.usersRepository.findOneBy({ nickname });
+    if (user) {
+      return user;
+    }
+    throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+  }
 
   async createUser(
     createUserDto: CreateUserDto,

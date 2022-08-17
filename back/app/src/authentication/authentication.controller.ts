@@ -1,5 +1,8 @@
 import {
   Body,
+  Request,
+  UseGuards,
+  Response
   ConsoleLogger,
   Controller,
   HttpCode,
@@ -13,6 +16,7 @@ import { RegistrationDto } from 'src/authentication/registration.dto';
 import { AuthenticationService } from 'src/authentication/authentication.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
+import { LocalAuthGuard } from './local-auth.guard';
 import { editFileName, imageFileFilter } from 'src/utils/file-uploading.utils';
 
 @Controller('authentication')
@@ -39,4 +43,12 @@ export class AuthenticationController {
       mimetype: avatar.mimetype,
     });
   }
+
+  @UseGuards(LocalAuthGuard)
+  @Post('login')
+  async login(@Request() req, @Response({ passthrough: true }) res) {
+    const token = this._authenticationService.login(req.user);
+    return {token: (await token).access_token, user: req.user};
+  }
 }
+
