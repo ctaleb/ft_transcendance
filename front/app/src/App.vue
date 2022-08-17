@@ -7,6 +7,7 @@
 			<router-link to="/portal">Portal</router-link> |
 			<router-link to="/game">Game</router-link> |
 			<router-link to="/profile">Profile</router-link> |
+      <router-link to="/chat">Chat</router-link> |
 			<router-link to="/" v-on:click.prevent="logout()">Logout</router-link>
 		</nav>
 	</div>

@@ -25,4 +25,7 @@ ps:
 clean:
 	docker-compose down --rmi all
 
+fclean:
+	docker-compose down --rmi all -v
+
 .PHONY: all stop back front database adminer ps clean

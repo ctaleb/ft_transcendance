@@ -21,8 +21,6 @@ export class AuthenticationSubscriber
         entity.password,
       );
     }
-
-    if (entity.nickname) entity.nickname = entity.nickname.toLowerCase();
   }
 
   async beforeUpdate({

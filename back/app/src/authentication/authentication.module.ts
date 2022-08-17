@@ -5,6 +5,8 @@ import { AuthenticationController } from 'src/authentication/authentication.cont
 import { AuthenticationService } from 'src/authentication/authentication.service';
 import { UserEntity } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
+import { MulterModule } from '@nestjs/platform-express';
+import { ImageModule } from 'src/image/image.module';
 import { PassportModule } from '@nestjs/passport';
 import { LocalStrategy } from './local.strategy';
 import { JwtModule } from '@nestjs/jwt';
@@ -13,9 +15,11 @@ import { jwtConstants } from './constants';
 
 @Module({
   imports: [
-    UsersModule, 
+    UsersModule,
+    ImageModule,
     PassportModule, 
     TypeOrmModule.forFeature([UserEntity]),
+    MulterModule.register({ dest: './assets' }),
     JwtModule.register({
       secret: jwtConstants.secret,
       signOptions: { expiresIn: '10d' },
