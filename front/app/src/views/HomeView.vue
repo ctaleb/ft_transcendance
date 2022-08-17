@@ -18,8 +18,8 @@ import { store } from '../store'
 export default defineComponent({
 data: () => {
 	return {
-		username: "nicknick",
-		password: "motdepasse",
+		username: "",
+		password: "",
 	};
 },
 methods: {
@@ -40,7 +40,6 @@ methods: {
 		localStorage.setItem("token", value.token);
 		localStorage.setItem("user", JSON.stringify(value.user));
 		this.$router.push('/portal');
-		console.log(value.user);
 	})
 	},
 },
