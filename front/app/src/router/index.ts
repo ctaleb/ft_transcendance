@@ -2,7 +2,6 @@ import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 import HomeView from "../views/HomeView.vue";
 import GameView from "../views/GameView.vue";
 import RegisterView from "../views/RegisterView.vue";
-import LoginView from "../views/LoginView.vue";
 import ProfileView from "../views/ProfileView.vue";
 import PortalView from "../views/PortalView.vue";
 
@@ -21,11 +20,6 @@ const routes: Array<RouteRecordRaw> = [
 		path: "/signup",
 		name: "sign up",
 		component: RegisterView,
-	},
-	{
-		path: "/signin",
-		name: "signin",
-		component: LoginView,
 	},
 	{
 		path: "/profile",

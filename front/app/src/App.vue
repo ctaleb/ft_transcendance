@@ -6,7 +6,8 @@
 			<router-link to="/signup">Sign up</router-link> -->
 			<router-link to="/portal">Portal</router-link> |
 			<router-link to="/game">Game</router-link> |
-			<router-link to="/profile">Profile</router-link>
+			<router-link to="/profile">Profile</router-link> |
+			<router-link to="/" v-on:click.prevent="logout()">Logout</router-link>
 		</nav>
 	</div>
 	<router-view />
@@ -23,23 +24,12 @@ export default defineComponent({
 			isConnected: store.isConnected,
 		};
 	},
-	
-// 	mounted() {
-// 		fetch("http://localhost:3000/api/user/profile", {
-// 		method: "GET",
-// 		headers: {
-// 			"Authorization": "Bearer " + localStorage.getItem("token"),
-// 		},
-// 	})
-// 	.then(res => res.json())
-//     .then((data) => {
-// 		if (data.message)
-// 			this.isConnected = false;
-// 		else
-// 			this.isConnected = true;
-// 	})
-//     .catch(err => console.log(err.message));
-//   }
+	methods: {
+		logout() {
+			localStorage.removeItem("token");
+			localStorage.removeItem("user");
+		},
+	},
 });
 </script>
 
