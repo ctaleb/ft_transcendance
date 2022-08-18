@@ -13,7 +13,6 @@ export default defineComponent({
 	},
 	
 	mounted() {
-		console.log("In profile : " + store.token);
 		fetch("http://localhost:3000/api/user/profile", {
 		method: "GET",
 		headers: {

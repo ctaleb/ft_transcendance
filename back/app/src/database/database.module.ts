@@ -13,7 +13,7 @@ import { AuthenticationSubscriber } from 'src/authentication/authentication.subs
       password: database.password,
       database: database.name,
       entities: [__dirname + '/../**/*.entity.js'],
-      synchronize: false,
+      synchronize: true,
       subscribers: [AuthenticationSubscriber],
     }),
   ],
