@@ -9,6 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { ImageDto } from 'src/image/image.dto';
+import { unlink } from 'fs';
 
 @Injectable()
 export class AuthenticationService {
@@ -31,10 +32,16 @@ export class AuthenticationService {
       await queryRunner.commitTransaction();
     } catch (error) {
       await queryRunner.rollbackTransaction();
+      console.log(error);
+      if (imageDto) {
+        unlink(imageDto.path, (err) => {
+          if (err) throw err;
+          console.log(imageDto.path + ' has been deleted');
+        });
+      }
       if (error?.code === PostgresErrorCode.UniqueViolation) {
         throw new UserAlreadyExistException();
       }
-      console.log(error);
       throw new InternalServerErrorException();
     } finally {
       await queryRunner.release();
