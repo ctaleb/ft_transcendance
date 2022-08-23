@@ -5,11 +5,11 @@ import { Exclude } from 'class-transformer';
 @Entity({ name: 'image' })
 export class ImageEntity extends AbstractEntity {
   @Column()
-  filename: string;
+  public filename: string;
 
   @Column()
-  path: string;
+  public path: string;
 
   @Column()
-  mimetype: string;
+  public mimetype: string;
 }
