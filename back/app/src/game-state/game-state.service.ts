@@ -9,11 +9,12 @@ export class GameStateService {
     x: 200,
     y: 200,
   };
-  gameState: GameState = {
-    ball: this.StartPoint,
-  };
+  //   gameState: GameState = {
+  //     ball: this.StartPoint,
+  //   };
 
   clientToUser = {};
+  id = 0;
 
   //   create(createGameStateDto: CreateGameStateDto) {
   //     return 'This action adds a new gameState';
@@ -27,14 +28,15 @@ export class GameStateService {
   //     return `This action returns a #${id} gameState`;
   //   }
 
-  identify(name: string, clientId: string) {
-    this.clientToUser[clientId] = name;
+  identify(clientId: string) {
+    this.clientToUser[clientId] = this.id;
+    this.id++;
 
     return Object.values(this.clientToUser);
   }
 
   update() {
-    return this.gameState.ball;
+    // return this.gameState.ball;
     // return `This action updates a #${id} gameState`;
   }
 }

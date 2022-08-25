@@ -19,7 +19,9 @@ export class GameStateGateway {
   @WebSocketServer()
   server: Server;
 
-  constructor(private readonly gameStateService: GameStateService) {}
+  constructor(private readonly gameStateService: GameStateService) {
+    this.update();
+  }
 
   @SubscribeMessage('createGameState')
   //   create(@MessageBody() createGameStateDto: CreateGameStateDto) {
@@ -37,14 +39,16 @@ export class GameStateGateway {
   //   }
   @SubscribeMessage('join')
   joinRoom(
-    @MessageBody('name') name: string,
+    // @MessageBody('name') name: string,
     @ConnectedSocket() client: Socket,
   ) {
-    return this.gameStateService.identify(name, client.id);
+    console.log('identifying...');
+    return this.gameStateService.identify(client.id);
   }
 
   @SubscribeMessage('updateGameState')
   update() {
+    console.log('Sending ball update');
     return this.gameStateService.update();
   }
 

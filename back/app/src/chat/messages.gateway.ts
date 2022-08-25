@@ -18,7 +18,9 @@ export class MessagesGateway {
   @WebSocketServer()
   server: Server;
 
-  constructor(private readonly messagesService: MessagesService) {}
+  constructor(private readonly messagesService: MessagesService) {
+    this.loop();
+  }
 
   @SubscribeMessage('createMessage')
   async create(
@@ -56,5 +58,15 @@ export class MessagesGateway {
     const name = await this.messagesService.getClientName(client.id);
 
     client.broadcast.emit('typing', { name, isTyping });
+  }
+
+  @SubscribeMessage('updateGameState')
+  update() {
+    this.messagesService.loop();
+    return this.messagesService.update();
+  }
+
+  loop() {
+    this.messagesService.loop();
   }
 }

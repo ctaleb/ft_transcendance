@@ -1,13 +1,6 @@
 <template>
 	<!-- <body> -->
-	<div v-if="!joined">
-		<form @submit.prevent="join">
-			<label>Enter your name</label>
-			<input v-model="name" />
-			<button type="submit">Join</button>
-		</form>
-	</div>
-	<div class="game-container" v-else>
+	<div class="game-container">
 		<canvas ref="canvas" width="500" height="500"></canvas>
 	</div>
 	<!-- </body> -->
@@ -19,7 +12,7 @@ import { ref, onMounted, onBeforeMount } from "vue";
 import { io } from "socket.io-client";
 import { getBaseTransformPreset } from "@vue/compiler-core";
 
-const socket = io("http://10.2.12.4:3000");
+const socket = io("http://" + window.location.hostname + ":3000");
 
 const ballImg = new Image();
 ballImg.src = ballUrl;
@@ -86,23 +79,38 @@ start = {
 };
 const ball = ref<IPoint>(start);
 
-onBeforeMount(() => {
-	socket.emit("update", {}, (response) => {
-		console.log("trying to update");
-		ball.value = response;
-		if (ctx) {
-			drawPlayground(ctx);
-
-			// Draw the ball
-			ctx.drawImage(
-				ballImg,
-				ball.value.x - 16,
-				ball.value.y - 16,
-				16 * 2,
-				16 * 2
-			);
-		}
-	});
+onMounted(() => {
+	let ctx = canvas.value?.getContext("2d");
+	console.log(canvas);
+	if (ctx) {
+		drawPlayground(ctx);
+		ctx.drawImage(
+			ballImg,
+			ball.value.x - 16,
+			ball.value.y - 16,
+			16 * 2,
+			16 * 2
+		);
+	}
+	// join();
+	const loop = () => {
+		// console.log(ball.value);
+		if (!ctx) return;
+		drawPlayground(ctx);
+		socket.emit("updateGameState", {}, (response: IPoint) => {
+			console.log("trying to update");
+			ball.value = response;
+		});
+		ctx.drawImage(
+			ballImg,
+			ball.value.x - 16,
+			ball.value.y - 16,
+			16 * 2,
+			16 * 2
+		);
+		requestAnimationFrame(loop);
+	};
+	requestAnimationFrame(loop);
 });
 
 // onMounted(() => {
@@ -159,9 +167,9 @@ onBeforeMount(() => {
 // 	}
 // });
 
-const join = () => {
-	socket.emit("join", { name: name.value }, () => {
-		joined.value = true;
-	});
-};
+// const join = () => {
+// 	socket.emit("join", {}, () => {
+// 		joined.value = true;
+// 	});
+// };
 </script>
