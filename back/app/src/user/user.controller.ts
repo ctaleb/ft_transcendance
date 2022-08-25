@@ -17,16 +17,22 @@ export class UserController {
   async getProfile(@Request() req) {
      return req.user;
     }
-     
   @Get('profile-picture/assets/:imagename')
   getPicture(@Param('imagename') imagename, @Res() res): Observable<Object> {
     console.log(join(process.cwd(), "/assets/" + imagename));
     return of(res.sendFile(join(process.cwd(), "/assets/" + imagename)));
   }
-
   @Get(':id')
   async getUserById(@Param('id', ParseIntPipe) id: number) {
     return this._userService.getUserById(id);
+  }
+  @Get('bynickname/:nickname')
+  async getUserByNickname(@Param('nickname') nickname: string) {
+    return this._userService.getUserByNickname(nickname);
+  }
+  @Get()
+  getAllUsers(){
+    return this._userService.getAllUsers();
   }
 }
 

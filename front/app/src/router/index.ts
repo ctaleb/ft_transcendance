@@ -5,6 +5,7 @@ import ChatView from "../views/ChatView.vue";
 import RegisterView from "../views/RegisterView.vue";
 import ProfileView from "../views/ProfileView.vue";
 import PortalView from "../views/PortalView.vue";
+import AllUsersView from "../views/AllUsersView.vue";
 
 const routes: Array<RouteRecordRaw> = [
 	{
@@ -36,6 +37,11 @@ const routes: Array<RouteRecordRaw> = [
 		path: "/portal",
 		name: "portal",
 		component: PortalView,
+	},
+	{
+		path: "/users",
+		name: "users",
+		component: AllUsersView,
 	},
 ];
 
