@@ -10,7 +10,7 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import { store } from '../store'
+let funcs = require('../functions/funcs');
 
 export default defineComponent({
 	data() {
@@ -22,15 +22,8 @@ export default defineComponent({
 	},
 	
 	mounted() {
-		fetch("http://localhost:3000/api/user/profile", {
-		method: "GET",
-		headers: {
-			"Authorization": "Bearer " + localStorage.getItem("token"),
-		},
-	})
-	.then(res => res.json())
-    .then((data) => {
-		if (data.message)
+		let is_connected = funcs.isConnected(localStorage.getItem("token"));
+		if (is_connected == false)
 			this.$router.push('/');
 		else
 		{
@@ -58,8 +51,6 @@ export default defineComponent({
 			})
 			.catch(err => console.log(err.message));
 		}
-	})
-    .catch(err => console.log(err.message));
   }
 });
 </script>
