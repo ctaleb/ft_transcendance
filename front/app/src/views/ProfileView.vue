@@ -43,7 +43,6 @@ export default defineComponent({
 			.then(res => res.json())
 			.then((data) => {
 				this.avatar = data.path;
-				console.log(this.avatar);
 				fetch("http://localhost:3000/api/user/profile-picture/" + this.avatar, {
 					method: "GET",
 					headers: {
@@ -55,7 +54,9 @@ export default defineComponent({
 					console.log(data);
 					this.image = URL.createObjectURL(data);
 				})
+				.catch(err => console.log(err.message));
 			})
+			.catch(err => console.log(err.message));
 		}
 	})
     .catch(err => console.log(err.message));

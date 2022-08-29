@@ -19,7 +19,6 @@ export class UserController {
     }
   @Get('profile-picture/assets/:imagename')
   getPicture(@Param('imagename') imagename, @Res() res): Observable<Object> {
-    console.log(join(process.cwd(), "/assets/" + imagename));
     return of(res.sendFile(join(process.cwd(), "/assets/" + imagename)));
   }
   @Get(':id')

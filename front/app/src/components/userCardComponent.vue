@@ -23,7 +23,6 @@ export default defineComponent({
         };
     },
     mounted() {
-		console.log(this.$props.nick);
        fetch("http://localhost:3000/api/user/bynickname/" + this.$props.nick, {
 			method: "GET",
 			headers: {
@@ -45,7 +44,9 @@ export default defineComponent({
 			.then((data) => {
 				this.imageUrl = URL.createObjectURL(data);
 			})
+			.catch(err => console.log(err.message));
 		})
+		.catch(err => console.log(err.message));
     },
 });
 </script>

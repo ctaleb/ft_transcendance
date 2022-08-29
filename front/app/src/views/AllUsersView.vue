@@ -35,10 +35,11 @@ export default defineComponent({
 					"Authorization": "Bearer " + localStorage.getItem("token"),
 				},
 			})
-				.then(res => res.json())
-				.then((data) => {
+			.then(res => res.json())
+			.then((data) => {
 				this.users = data;
-			});
+			})
+			.catch(err => console.log(err.message));
 		}
         })
         .catch(err => console.log(err.message));
