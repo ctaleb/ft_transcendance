@@ -7,6 +7,7 @@ import { AuthenticationModule } from './authentication/authentication.module';
 import { ImageModule } from './image/image.module';
 import { MessagesModule } from './chat/messages.module';
 import { FriendListModule } from './friend_list/friend_list.module';
+import { OauthModule } from './oauth/oauth.module';
 
 
 @Module({
@@ -20,6 +21,7 @@ import { FriendListModule } from './friend_list/friend_list.module';
       rootPath: join(__dirname, '../../..', 'front/app/dist'),
     }),
     FriendListModule,
+    OauthModule,
   ],
 })
 export class AppModule {};

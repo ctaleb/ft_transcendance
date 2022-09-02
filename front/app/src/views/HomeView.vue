@@ -8,6 +8,7 @@
 			<input v-model="password" type="password" id="password" name="password" /><br /><br />
 			<input type="submit" value="Submit" />
 		</form>
+		<button style="margin-top:1em;margin-bottom:1em;width: 10em;">Login with 42</button>
 		<h3 style="text-align:center">Or <a href="/signup">sign up</a></h3>
 	</div>
 </template>
