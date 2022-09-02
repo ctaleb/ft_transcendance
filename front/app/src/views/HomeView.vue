@@ -14,13 +14,20 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import { store } from '../store'
+let funcs = require('../functions/funcs');
+
 export default defineComponent({
 data: () => {
 	return {
 		username: "",
 		password: "",
 	};
+},
+mounted() {
+	let isConnected = funcs.isConnected(localStorage.getItem("token"));
+	console.log(isConnected);
+	if (isConnected)
+		this.$router.push("/portal");
 },
 methods: {
 	async login() {

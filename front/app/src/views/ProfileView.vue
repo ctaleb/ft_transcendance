@@ -10,7 +10,7 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import { store } from '../store'
+let funcs = require('../functions/funcs');
 
 export default defineComponent({
 	data() {
@@ -22,44 +22,20 @@ export default defineComponent({
 	},
 	
 	mounted() {
-		fetch("http://localhost:3000/api/user/profile", {
-		method: "GET",
-		headers: {
-			"Authorization": "Bearer " + localStorage.getItem("token"),
-		},
-	})
-	.then(res => res.json())
-    .then((data) => {
-		if (data.message)
+		let isConnected = funcs.isConnected(localStorage.getItem("token"));
+		if (isConnected == false)
 			this.$router.push('/');
 		else
 		{
-			fetch("http://localhost:3000/api/user/" + this.user.id, {
-				method: "GET",
-				headers: {
-					"Authorization": "Bearer " + localStorage.getItem("token"),
-				},
-			})
-			.then(res => res.json())
-			.then((data) => {
+			funcs.getUserById(this.user.id)
+			.then((data: any) => {
 				this.avatar = data.path;
-				fetch("http://localhost:3000/api/user/profile-picture/" + this.avatar, {
-					method: "GET",
-					headers: {
-						"Authorization": "Bearer " + localStorage.getItem("token"),
-					},
-				})
-				.then(res => res.blob())
-				.then((data) => {
-					console.log(data);
+				funcs.getUserAvatar(this.avatar)
+				.then((data: any) => {
 					this.image = URL.createObjectURL(data);
 				})
-				.catch(err => console.log(err.message));
 			})
-			.catch(err => console.log(err.message));
 		}
-	})
-    .catch(err => console.log(err.message));
   }
 });
 </script>
