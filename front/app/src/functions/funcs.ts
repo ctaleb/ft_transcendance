@@ -1,6 +1,8 @@
-export function isConnected(token: string) {
+export function isConnected(token: string): boolean {
 	if (token == null)
 		return false;
+
+	let ret: boolean = true;
 	fetch("http://localhost:3000/api/user/profile", {
 		method: "GET",
 		headers: {
@@ -10,11 +12,10 @@ export function isConnected(token: string) {
 	.then(res => res.json())
     .then((data) => {
 		if (data.message)
-			return false;
-		else
-			return true;
+			ret = false;
 	})
 	.catch(err => console.log(err.message));
+	return ret;
 }
 
 export function getUserById(id: number): Promise<any> {
