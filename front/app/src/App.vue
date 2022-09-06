@@ -57,4 +57,8 @@ nav {
 		}
 	}
 }
+
+.text-red {
+  color:red;
+}
 </style>
