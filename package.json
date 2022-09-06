@@ -16,6 +16,7 @@
     "cookie-parser": "^1.4.6",
     "dotenv": "^16.0.1",
     "g": "^2.0.1",
+    "oauth2-wrapper": "^1.0.1",
     "passport": "^0.6.0",
     "passport-jwt": "^4.0.0",
     "passport-local": "^1.0.0",
@@ -26,7 +27,7 @@
   },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.3",
-    "@types/node": "^18.7.14",
+    "@types/node": "^18.7.15",
     "@types/passport-jwt": "^3.0.6",
     "node-sass": "^7.0.1",
     "sass-loader": "^13.0.2"
