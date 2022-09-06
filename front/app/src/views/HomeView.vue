@@ -22,7 +22,7 @@
 		</form>
 		<h3 style="text-align:center">Or <a href="/signup">sign up</a></h3>
 	</div>
-    <div v-if="login_failed_msg">
+    <div :style="{ color: login_failed_color }" v-if="login_failed_msg">
       Login failed. Please try again.
     </div>
 
@@ -38,9 +38,10 @@ let funcs = require('../functions/funcs');
 export default defineComponent({
 data: () => {
 	return {
-        login_failed_msg:  ref(false),
 		username: "",
 		password: "",
+        login_failed_msg:  ref(false),
+        login_failed_color: 'red',
 	};
 },
 mounted() {
