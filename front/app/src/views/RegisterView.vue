@@ -64,10 +64,17 @@ import { required, minLength, maxLength, sameAs } from '@vuelidate/validators'
 
 export default defineComponent({
 	name: "RegisterView",
+
     setup() {
         console.log("in setup()");
-        return { v$: useVuelidate() }
+		const v$ = useVuelidate();
+		console.log(v$);
+		const isDisabled = () => {
+			//v$.$invalid;
+		};
+        return { v$, isDisabled }
     }, // activate Vuelidate
+
 	data() {
 		return {
 			nickname: "",
@@ -77,6 +84,7 @@ export default defineComponent({
             submitted: false,
 		};
 	},
+
     validations() {
         return {
             nickname: { required },
@@ -84,11 +92,7 @@ export default defineComponent({
             confirmPassword: { required, sameAsPassword: sameAs("password") }
         };
     },
-    computed: {
-        isDisabled() {
-          return this.$v.$invalid;
-        }
-    },
+
 	methods: {
 		updateAvatar(event: Event) {
 			this.avatar = (event.target as HTMLInputElement).files?.[0]!;
