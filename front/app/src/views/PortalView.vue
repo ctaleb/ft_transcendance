@@ -1,5 +1,5 @@
 <template>
-	<p>Welcome to the fc ranscendance portal</p>
+	<p>Welcome to the fc_transcendance portal</p>
 </template>
 
 <script lang="ts">
