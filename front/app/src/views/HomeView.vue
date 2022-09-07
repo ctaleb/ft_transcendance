@@ -75,7 +75,8 @@ methods: {
 		localStorage.setItem("user", JSON.stringify(value.user));
 		this.$router.push('/portal');
 	})
-    .catch( function( error ){
+    .catch((error) => {
+      console.log(error);
 	})
   }
 },
