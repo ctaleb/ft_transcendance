@@ -17,15 +17,6 @@
 			name="password"
 			required
 		/>
-        <div
-            v-if="this.submitted && $v.password.$error"
-            class="text-red"
-        >
-          <span v-if="!$v.password.required">Password is required</span>
-          <span v-if="password && !$v.password.valid">
-                Password must contain at least one uppercase, one lowercase, one digit
-                and one special character</span>
-        </div>
         <br /><br />
         <label for="confirm password">Confirm password:</label><br />
         <input
@@ -52,7 +43,7 @@
 			accept="image/*"
 			@change="updateAvatar"
 		/><br /><br />
-		<input type="submit" value="Submit" :disabled="this.isDisabled"  @click.stop.prevent="createPost()" />
+		<input type="submit" value="Submit" @click.stop.prevent="createPost()" />
 	</form>
 </template>
 
@@ -118,7 +109,7 @@ export default defineComponent({
 					this.$router.push("/");
 				})
 				.catch((err) => {
-					this.$router.push("/");
+				//	this.$router.push("/");
 					console.log(err);
 				});
 		},
