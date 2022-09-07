@@ -2,24 +2,44 @@
 	<div>
 		<h2 style="text-align:center">Welcome on fc_transcendance, please Log in</h2>
 		<form @submit.prevent="login">
-			<label for="username">Username</label>
-			<input v-model="username"  type="text" id="username" name="username" /><br /><br />
-			<label for="password">Password:</label>
-			<input v-model="password" type="password" id="password" name="password" /><br /><br />
+			<label for="username">Username: </label>
+			<input
+              v-model="username"
+              type="text"
+              id="username"
+              name="username"
+              required
+            /><br /><br />
+			<label for="password">Password: </label>
+			<input
+              v-model="password"
+              type="password"
+              id="password"
+              name="password"
+              required
+            /><br /><br />
 			<input type="submit" value="Submit" />
 		</form>
-		<button style="margin-top:1em;margin-bottom:1em;width: 10em;" v-on:click="oauth()">Login with 42</button>
+		<a style="margin-top:1em;margin-bottom:1em;width: 10em;" href="https://api.intra.42.fr/oauth/authorize?client_id=1a90768d9956eae0b0360b4588273a1d4a25143a9c8cfc6a0330dac17b9684db&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2F&response_type=code">Login with 42</a>
 		<h3 style="text-align:center;margin-top: 0;">Or <a href="/signup">sign up</a></h3>
 	</div>
+    <div v-if="login_failed_msg">
+      Login failed. Please try again.
+    </div>
+
 </template>
 
 <script lang="ts">
 import { defineComponent } from "vue";
+import { ref } from "vue";
+
 let funcs = require('../functions/funcs');
+
 
 export default defineComponent({
 data: () => {
 	return {
+        login_failed_msg:  ref(false),
 		username: "",
 		password: "",
 		token: {
@@ -36,9 +56,25 @@ mounted() {
 	console.log(isConnected);
 	if (isConnected)
 		this.$router.push("/portal");
+    else
+        console.log("not connected");
+	
+	//get back intra code, if exists
+	let current_url = window.location.href;
+	var url = new URL(current_url);
+	let code = url.searchParams.get("code");
+	if (code != null)
+	{
+		console.log(code);
+		fetch("http://localhost:3000/api/oauth/" + code, {
+			method: "POST",
+		})
+	}
 },
 methods: {
 	async login() {
+
+	console.log("here we are");
 
 	fetch("http://localhost:3000/api/Authentication/login", {
 		method: "POST",
@@ -50,37 +86,32 @@ methods: {
 			password: this.password,
 		}),
 	})
-	.then((response) => response.json())
-	.then((value) => {
+        .then((response) => {
+          console.log("response.status: " + response.status);
+          if (response.status != 201) {
+            console.log("fetch failed");
+            this.login_failed_msg = true;
+            throw response.status;
+          }
+          console.log("fetch success");
+          return  response.json();
+        })
+	.then((value : any) => {
+        console.log("username: " + value.username);
 		localStorage.setItem("token", value.token);
 		localStorage.setItem("user", JSON.stringify(value.user));
 		this.$router.push('/portal');
 	})
+	.catch((error) => {console.log(error)})
 	},
 
 	oauth() {
-
-	fetch("https://api.intra.42.fr/oauth/token", {
-		body: "grant_type=client_credentials&client_id=1a90768d9956eae0b0360b4588273a1d4a25143a9c8cfc6a0330dac17b9684db&client_secret=fc3b24dee46ae52d1c335e8ef794d2de3dcd530b97fa22aeb19267de032a9f49",
-		headers: {
-			"Content-Type": "application/x-www-form-urlencoded"
-		},
-		method: "POST"
-	})
-	.then((res) => res.json())
-	.then((value) => { 
-		this.token = value; 
-		fetch("https://api.intra.42.fr/v2/cursus", {
-			headers: {
-				"Authorization": "Bearer " + this.token.access_token,
-			},
+		fetch("http://localhost:3000/api/oauth/intra", {
+			
 		})
-		.then((res) => res.json())
-		.then((value) => {console.log(value);})
-	})
-	.catch((err) => {console.log(err); })
+		.catch((err) => {console.log(err); })
+	}
 
-	},
 },
 });
 </script>

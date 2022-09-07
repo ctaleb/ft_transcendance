@@ -1,3 +1,4 @@
 .env
 db
 cmd.txt
+node_modules
