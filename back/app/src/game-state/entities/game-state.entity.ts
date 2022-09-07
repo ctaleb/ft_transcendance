@@ -6,4 +6,6 @@ export class IPoint {
 export class GameState {
   ball: IPoint;
   speed: IPoint;
+  hostBar: IPoint;
+  clientBar: IPoint;
 }

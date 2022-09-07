@@ -11,6 +11,7 @@ import ballUrl from "../assets/ball.png";
 import { ref, onMounted, onBeforeMount } from "vue";
 import { io } from "socket.io-client";
 import { getBaseTransformPreset } from "@vue/compiler-core";
+import { Emitter } from "@socket.io/component-emitter";
 
 const socket = io("http://" + window.location.hostname + ":3000");
 
@@ -71,6 +72,7 @@ let ctx = canvas.value?.getContext("2d");
 
 const joined = ref(false);
 const name = ref("");
+let room = "game";
 
 let start: IPoint;
 start = {
@@ -78,39 +80,56 @@ start = {
 	y: 500 / 2,
 };
 const ball = ref<IPoint>(start);
+// const selfBar = ref<IPoint>{x: 45}
+
+// onBeforeMount(() => {
+// });
 
 onMounted(() => {
+	socket.emit("joinGame", { room: room }, () => {});
+
 	let ctx = canvas.value?.getContext("2d");
-	console.log(canvas);
-	if (ctx) {
-		drawPlayground(ctx);
-		ctx.drawImage(
-			ballImg,
-			ball.value.x - 16,
-			ball.value.y - 16,
-			16 * 2,
-			16 * 2
-		);
-	}
+	socket.on("ServerUpdate", (message: any) => {
+		ball.value = message.gameState.ball;
+		if (ctx) {
+			drawPlayground(ctx);
+			ctx.drawImage(
+				ballImg,
+				ball.value.x - 16,
+				ball.value.y - 16,
+				16 * 2,
+				16 * 2
+			);
+		}
+	});
+
+	window.addEventListener("keydown", (e) => {
+		if (e.key === "ArrowLeft") socket.emit("moveLeft", { room: room });
+		else if (e.key === "ArrowRight") socket.emit("moveRight", { room: room });
+	});
+
+	// socket.on("message", (message) => {
+	// 	messages.value.push(message);
+	// });
 	// join();
-	const loop = () => {
-		// console.log(ball.value);
-		if (!ctx) return;
-		drawPlayground(ctx);
-		socket.emit("updateGameState", {}, (response: IPoint) => {
-			console.log("trying to update");
-			ball.value = response;
-		});
-		ctx.drawImage(
-			ballImg,
-			ball.value.x - 16,
-			ball.value.y - 16,
-			16 * 2,
-			16 * 2
-		);
-		requestAnimationFrame(loop);
-	};
-	requestAnimationFrame(loop);
+	// const loop = () => {
+	// 	// console.log(ball.value);
+	// 	if (!ctx) return;
+	// 	drawPlayground(ctx);
+	// 	socket.emit("updateGameState", {}, (response: IPoint) => {
+	// 		console.log("trying to update");
+	// 		ball.value = response;
+	// 	});
+	// 	ctx.drawImage(
+	// 		ballImg,
+	// 		ball.value.x - 16,
+	// 		ball.value.y - 16,
+	// 		16 * 2,
+	// 		16 * 2
+	// 	);
+	// 	requestAnimationFrame(loop);
+	// };
+	// requestAnimationFrame(loop);
 });
 
 // onMounted(() => {

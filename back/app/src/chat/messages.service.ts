@@ -1,116 +1,113 @@
 import { Injectable } from '@nestjs/common';
 import { CreateMessageDto } from './dto/create-message.dto';
-import { Message } from './entities/message.entity';
+import { Message, Room, Game } from './entities/message.entity';
 import { GameState, IPoint } from '../game-state/entities/game-state.entity';
+import { PassThrough } from 'stream';
+
+// interface Room {
+//   name: string;
+//   message: Message[];
+// }
 
 @Injectable()
 export class MessagesService {
-  messages: Message[] = [
-    {
-      name: 'John Doe',
-      message: 'Hello World!',
-    },
-    {
-      name: 'Jane Doe',
-      message: 'Hello John!',
-    },
-  ];
-  StartPoint: IPoint = {
-    x: 200,
-    y: 200,
-  };
-  StartSpeed: IPoint = {
-    x: 2.6,
-    y: 2,
-  };
-  gameState: GameState = {
-    ball: this.StartPoint,
-    speed: this.StartSpeed,
-  };
+  rooms: Room[] = [];
+  games: Game[] = [];
 
-  clientToUser = {};
+  clientToUser = [];
 
-  identify(name: string, clientId: string) {
+  identify(name: string, clientId: string, room: string) {
     this.clientToUser[clientId] = name;
-
+    if (this.rooms.find((element) => element.name === room) === undefined)
+      this.rooms.push({ name: room, messages: [], userList: [] });
+    this.rooms.find((element) => element.name === room).userList.push(name);
     return Object.values(this.clientToUser);
   }
 
-  getClientName(clientId: string) {
+  getClientName(clientId: string, room: string) {
     return this.clientToUser[clientId];
   }
 
-  create(createMessageDto: CreateMessageDto, clientId: string) {
+  create(createMessageDto: CreateMessageDto, clientId: string, room: string) {
     const message = {
       name: this.clientToUser[clientId],
       message: createMessageDto.message,
     };
-    this.messages.push(message);
+    this.rooms.find((element) => element.name === room).messages.push(message);
 
     return message;
   }
 
-  findAll() {
-    return this.messages;
+  findAll(room: string) {
+    return this.rooms.find((element) => element.name === room).messages;
   }
 
-  update() {
-    return this.gameState.ball;
-    // return `This action updates a #${id} gameState`;
+  findUsers(room: string) {
+    // console.log(this.rooms.find((element) => element.name === room).userList);
+    return this.rooms.find((element) => element.name === room).userList;
   }
 
-  loop() {
-    if (this.gameState.ball.x - 16 <= 0) {
-      this.gameState.speed.x *= -1;
-      this.gameState.ball.x = 0 + 16;
-      //   ball.rotation = 0;
+  //game stuff here
+
+  joiningGame(room: string) {
+    if (!this.findGame(room)) {
+      this.games.push({
+        id: room,
+        gameState: {
+          ball: { x: 200, y: 200 },
+          speed: { x: 5, y: 5 },
+          hostBar: { x: 200, y: 50 },
+          clientBar: { x: 450, y: 450 },
+        },
+        playerList: [],
+        specList: [],
+        hostInput: '',
+        clientInput: '',
+      });
+      //   this.loop(room);
+      return false;
     }
-    if (this.gameState.ball.x + 16 > 500) {
-      this.gameState.speed.x *= -1;
-      //   ball.rotation = 0;
-      this.gameState.ball.x = 500 - 16;
-    }
-    if (this.gameState.speed.y > 0) {
-      if (
-        this.gameState.ball.y > 500 - 15 - 16 ||
-        this.gameState.ball.y <= 16 + 15
-      ) {
-        // if (
-        //   this.gameState.ball.x > topBar.x &&
-        //   this.gameState.ball.x < topBar.x + barWidth
-        // ) {
-        this.gameState.speed.y *= 1.1;
-        this.gameState.speed.y *= -1;
-        //   ball.rotation = (20 * this.gameState.speed.y) * barMoving;
-        //   counter.value++;
-        // }
-      }
-    } else if (this.gameState.speed.y < 0) {
-      if (
-        this.gameState.ball.y > 500 - 15 - 16 ||
-        this.gameState.ball.y <= 16 + 15
-      ) {
-        // if (
-        //   this.gameState.ball.x > bottomBar.x &&
-        //   this.gameState.ball.x < bottomBar.x + barWidth
-        // ) {
-        this.gameState.speed.y *= 1.1;
-        this.gameState.speed.y *= -1;
-        //   ball.rotation = 20 * this.gameState.speed.y * barMoving;
-        //   counter.value++;
-      }
-    }
-    this.gameState.ball.x += this.gameState.speed.x;
-    this.gameState.ball.y -= this.gameState.speed.y;
-    // this.loop();
+    return true;
   }
-  //     if (
-  //       (this.gameState.speed.x > 0 && ball.rotation > 0) ||
-  //       (this.gameState.speed.x < 0 && ball.rotation < 0)
-  //     )
-  //       ball.rotation *= -1;
-  //     this.gameState.ball.x += ball.rotation / 10;
-  //     this.gameState.ball.y -= this.gameState.speed.y;
-  //     ball.rotation *= 0.99;
-  //   }
+
+  findGame(room: string) {
+    if (this.games.find((element) => element.id === room) === undefined)
+      return false;
+    return true;
+  }
+
+  updateGameState(room: string) {
+    return this.games.find((element) => element.id === room);
+  }
+
+  loop(room: string) {
+    const thisGame = this.games.find((element) => element.id === room);
+    if (thisGame.gameState.ball.x - 16 <= 0) {
+      thisGame.gameState.speed.x *= -1;
+      thisGame.gameState.ball.x = 0 + 16;
+    }
+    if (thisGame.gameState.ball.x + 16 > 500) {
+      thisGame.gameState.speed.x *= -1;
+      thisGame.gameState.ball.x = 500 - 16;
+    }
+    if (thisGame.gameState.speed.y > 0) {
+      if (
+        thisGame.gameState.ball.y > 500 - 15 - 16 ||
+        thisGame.gameState.ball.y <= 16 + 15
+      ) {
+        // thisGame.gameState.speed.y *= 1.1;
+        thisGame.gameState.speed.y *= -1;
+      }
+    } else if (thisGame.gameState.speed.y < 0) {
+      if (
+        thisGame.gameState.ball.y > 500 - 15 - 16 ||
+        thisGame.gameState.ball.y <= 16 + 15
+      ) {
+        // thisGame.gameState.speed.y *= 1.1;
+        thisGame.gameState.speed.y *= -1;
+      }
+    }
+    thisGame.gameState.ball.x += thisGame.gameState.speed.x;
+    thisGame.gameState.ball.y -= thisGame.gameState.speed.y;
+  }
 }
