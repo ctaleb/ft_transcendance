@@ -104,14 +104,6 @@ methods: {
 	})
 	.catch((error) => {console.log(error)})
 	},
-
-	oauth() {
-		fetch("http://localhost:3000/api/oauth/intra", {
-			
-		})
-		.catch((err) => {console.log(err); })
-	}
-
 },
 });
 </script>
