@@ -79,7 +79,7 @@ export default defineComponent({
             nickname: { required },
             password: {
 				password: { required },
-				confirm: { required },
+				confirm: { required, sameAs: sameAs(this.password.password) },
 			},
 			phone: { required },
         };
