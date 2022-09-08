@@ -67,8 +67,16 @@ mounted() {
 	{
 		console.log(code);
 		fetch("http://localhost:3000/api/oauth/" + code, {
+			headers: {
+				"Content-Type": "application/json"
+			},
 			method: "POST",
 		})
+		.then((res) => res.json())
+		.then((token) => {
+			console.log(token);
+		})
+		.catch((err) => console.log(err))
 	}
 },
 methods: {

@@ -9,6 +9,8 @@ export class OauthController {
 
   @Post(':code')
   async connect(@Param('code') code: string) {
-    return this.oauthService.connect(code);
+    let token =  await this.oauthService.connect(code);
+    console.log("Token in controller --> " + token);
+    return token;
   }  
 }

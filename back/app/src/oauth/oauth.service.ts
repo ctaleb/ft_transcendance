@@ -5,9 +5,9 @@ import { UpdateOauthDto } from './dto/update-oauth.dto';
 
 @Injectable()
 export class OauthService {
-  connect(code: string) {
-    console.log(code);
-    fetch("https://api.intra.42.fr/oauth/token", {
+  async connect(code: string): Promise<any> {
+    console.log("USER CODE : " + code);
+      let token = await fetch("https://api.intra.42.fr/oauth/token", {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -15,7 +15,8 @@ export class OauthService {
       method: "POST"
     })
     .then((val) => val.json())
-    .then((ret) => {console.log(ret)})
+    .then((ret) => { return ret })
     .catch((err) => {console.log(err)})
+    return token;
   }
 }
