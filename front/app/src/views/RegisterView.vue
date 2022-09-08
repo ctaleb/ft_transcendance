@@ -12,7 +12,7 @@
 		<label for="password">Password:</label><br />
 		<input
 			type="password"
-			v-model="password"
+			v-model="password.password"
 			id="password"
 			name="password"
 			required
@@ -21,8 +21,8 @@
         <label for="confirm password">Confirm password:</label><br />
         <input
             type="password"
+			v-model="password.confirm"
             placeholder="Confirm password"
-            value=""
             autocomplete="off"
         /><br /><br />
 		<label for="phone">Phone number:</label><br />
@@ -43,7 +43,11 @@
 			accept="image/*"
 			@change="updateAvatar"
 		/><br /><br />
-		<input type="submit" value="Submit" @click.stop.prevent="createPost()" />
+		<input type="submit" value="Submit" @click.stop.prevent="submitForm()" />
+		<div v-for="(error, index) in v$.$errors" :key="index">
+			{{ error.$message }}
+		</div>
+
 	</form>
 </template>
 
@@ -56,20 +60,14 @@ import { required, minLength, maxLength, sameAs } from '@vuelidate/validators'
 export default defineComponent({
 	name: "RegisterView",
 
-    setup() {
-        console.log("in setup()");
-		const v$ = useVuelidate();
-		console.log(v$);
-		const isDisabled = () => {
-			//v$.$invalid;
-		};
-        return { v$, isDisabled }
-    }, // activate Vuelidate
-
 	data() {
 		return {
+			v$:  useVuelidate(),
 			nickname: "",
-			password: "",
+			password: {
+				password: "",
+				confirm: "",
+			},
 			phone: "",
 			avatar: File.prototype, // To store file data
             submitted: false,
@@ -79,8 +77,11 @@ export default defineComponent({
     validations() {
         return {
             nickname: { required },
-            password: { required },
-            confirmPassword: { required, sameAsPassword: sameAs("password") }
+            password: {
+				password: { required },
+				confirm: { required },
+			},
+			phone: { required },
         };
     },
 
@@ -88,6 +89,8 @@ export default defineComponent({
 		updateAvatar(event: Event) {
 			this.avatar = (event.target as HTMLInputElement).files?.[0]!;
 		},
+
+
 		async createPost() {
 			let formData = new FormData();
 
@@ -95,7 +98,7 @@ export default defineComponent({
 
 			formData.append("nickname", this.nickname);
 			formData.append("phone", this.phone);
-			formData.append("password", this.password);
+			formData.append("password", this.password.password);
 			if (this.avatar != File.prototype) {
 				formData.append("avatar", this.avatar, this.avatar.name);
 			}
@@ -112,6 +115,19 @@ export default defineComponent({
 				//	this.$router.push("/");
 					console.log(err);
 				});
+		},
+
+		submitForm() {
+			console.log(this.v$);
+			this.v$.$validate();
+			if (this.v$.$error) {
+				console.log("error detected in form");
+				console.log("password: " + this.password.password);
+				console.log("password.confirm: " + this.password.confirm);
+			} else {
+				this.createPost();
+			}
+
 		},
 	},
 });
