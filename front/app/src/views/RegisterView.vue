@@ -3,7 +3,7 @@
 		<label for="nickname">Nickname:</label><br />
 		<input
 			type="text"
-			v-model="nickname"
+			v-model="state.nickname"
 			id="nick"
 			name="nickname"
 			required
@@ -12,7 +12,7 @@
 		<label for="password">Password:</label><br />
 		<input
 			type="password"
-			v-model="password.password"
+			v-model="state.password.password"
 			id="password"
 			name="password"
 			required
@@ -21,14 +21,14 @@
         <label for="confirm password">Confirm password:</label><br />
         <input
             type="password"
-			v-model="password.confirm"
+			v-model="state.password.confirm"
             placeholder="Confirm password"
             autocomplete="off"
         /><br /><br />
 		<label for="phone">Phone number:</label><br />
 		<input
 			type="tel"
-			v-model="phone"
+			v-model="state.phone"
 			id="phone"
 			name="phone"
 			placeholder="0611111111"
@@ -53,37 +53,40 @@
 
 <script lang="ts">
 
-import { defineComponent } from "vue";
+import { defineComponent, reactive, computed } from "vue";
 import useVuelidate from '@vuelidate/core'
 import { required, minLength, maxLength, sameAs } from '@vuelidate/validators'
 
 export default defineComponent({
 	name: "RegisterView",
 
-	data() {
-		return {
-			v$:  useVuelidate(),
+	setup() {
+
+		const state = reactive({
 			nickname: "",
 			password: {
 				password: "",
 				confirm: "",
 			},
 			phone: "",
-			avatar: File.prototype, // To store file data
-            submitted: false,
-		};
-	},
+		});
 
-    validations() {
-        return {
-            nickname: { required },
-            password: {
-				password: { required },
-				confirm: { required, sameAs: sameAs(this.password.password) },
+		const rules = computed() => {
+			return {
+				nickname: { required },
+				password: {
+					password: { required },
+					confirm: { required, sameAs: sameAs(state.password.password) },
+				},
+				phone: { required },
 			},
-			phone: { required },
         };
-    },
+
+		const v$ = useVuelidate(rules, state);
+
+		return { state, v$ };
+			
+	},
 
 	methods: {
 		updateAvatar(event: Event) {
