@@ -11,11 +11,17 @@ export class Message {
   message: string;
 }
 
+export class Player {
+  name: string;
+  input: string[];
+  left: boolean;
+  right: boolean;
+}
+
 export class Game {
   id: string;
   gameState: GameState;
-  playerList: string[];
   specList: string[];
-  hostInput: string;
-  clientInput: string;
+  host: Player;
+  client: Player;
 }

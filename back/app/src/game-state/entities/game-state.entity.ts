@@ -3,9 +3,20 @@ export class IPoint {
   y: number;
 }
 
-export class GameState {
-  ball: IPoint;
+export class IBar {
+  size: IPoint;
+  pos: IPoint;
+  speed: number;
+}
+
+export class IBall {
+  size: number;
+  pos: IPoint;
   speed: IPoint;
-  hostBar: IPoint;
-  clientBar: IPoint;
+}
+
+export class GameState {
+  ball: IBall;
+  hostBar: IBar;
+  clientBar: IBar;
 }

@@ -79,8 +79,19 @@ export class MessagesGateway {
     client.join(room);
     if (!this.messagesService.joiningGame(room)) {
       this.gameLoop(room);
+      return 'host';
     }
+    return 'client';
   }
 
-  //   @SubscribeMessage('ArrowLeft')
+  @SubscribeMessage('key')
+  downLeft(
+    @MessageBody('room') room: string,
+    @MessageBody('clientStatus') clientStatus: string,
+    @MessageBody('key') key: string,
+    @ConnectedSocket()
+    client: Socket,
+  ) {
+    this.messagesService.storeBarMove(room, clientStatus, key);
+  }
 }

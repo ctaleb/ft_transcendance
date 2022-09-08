@@ -25,8 +25,10 @@ interface IPoint {
 	y: number;
 }
 
-interface IBall extends IPoint {
-	radius: number;
+interface IBall {
+	size: number;
+	pos: IPoint;
+	speed: IPoint;
 }
 
 function drawPlayground(ctx: CanvasRenderingContext2D) {
@@ -73,39 +75,81 @@ let ctx = canvas.value?.getContext("2d");
 const joined = ref(false);
 const name = ref("");
 let room = "game";
+let clientStatus = "";
 
-let start: IPoint;
-start = {
-	x: 500 / 2,
-	y: 500 / 2,
-};
-const ball = ref<IPoint>(start);
+const ball = ref<IBall>({
+	size: 16,
+	pos: { x: 200, y: 200 },
+	speed: { x: 0, y: 0 },
+});
 // const selfBar = ref<IPoint>{x: 45}
 
 // onBeforeMount(() => {
 // });
 
 onMounted(() => {
-	socket.emit("joinGame", { room: room }, () => {});
+	socket.emit("joinGame", { room: room }, (response: string) => {
+		clientStatus = response;
+	});
 
 	let ctx = canvas.value?.getContext("2d");
-	socket.on("ServerUpdate", (message: any) => {
-		ball.value = message.gameState.ball;
+	socket.on("ServerUpdate", (gameState: any) => {
+		ball.value = gameState.ball;
 		if (ctx) {
 			drawPlayground(ctx);
 			ctx.drawImage(
 				ballImg,
-				ball.value.x - 16,
-				ball.value.y - 16,
-				16 * 2,
-				16 * 2
+				ball.value.pos.x - ball.value.size,
+				ball.value.pos.y - ball.value.size,
+				ball.value.size * 2,
+				ball.value.size * 2
+			);
+			ctx.fillStyle = "black";
+			let bar = gameState.hostBar;
+			ctx.fillRect(
+				bar.pos.x - bar.size.x,
+				bar.pos.y - bar.size.y,
+				bar.size.x * 2,
+				bar.size.y * 2
+			);
+			bar = gameState.clientBar;
+			ctx.fillRect(
+				bar.pos.x - bar.size.x,
+				bar.pos.y - bar.size.y,
+				bar.size.x * 2,
+				bar.size.y * 2
 			);
 		}
 	});
 
 	window.addEventListener("keydown", (e) => {
-		if (e.key === "ArrowLeft") socket.emit("moveLeft", { room: room });
-		else if (e.key === "ArrowRight") socket.emit("moveRight", { room: room });
+		if (e.key === "ArrowLeft")
+			socket.emit("key", {
+				room: room,
+				clientStatus: clientStatus,
+				key: "downLeft",
+			});
+		else if (e.key === "ArrowRight")
+			socket.emit("key", {
+				room: room,
+				clientStatus: clientStatus,
+				key: "downRight",
+			});
+	});
+
+	window.addEventListener("keyup", (e) => {
+		if (e.key === "ArrowLeft")
+			socket.emit("key", {
+				room: room,
+				clientStatus: clientStatus,
+				key: "upLeft",
+			});
+		else if (e.key === "ArrowRight")
+			socket.emit("key", {
+				room: room,
+				clientStatus: clientStatus,
+				key: "upRight",
+			});
 	});
 
 	// socket.on("message", (message) => {
