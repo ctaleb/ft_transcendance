@@ -6,6 +6,7 @@ import {
   IPoint,
   IBar,
   IBall,
+  Score,
 } from '../game-state/entities/game-state.entity';
 import { PassThrough } from 'stream';
 
@@ -73,6 +74,10 @@ export class MessagesService {
             size: { x: 40, y: 10 },
             pos: { x: 250, y: 40 },
             speed: 0,
+          },
+          score: {
+            client: 0,
+            host: 0,
           },
         },
         specList: [],
@@ -162,45 +167,43 @@ export class MessagesService {
       }
     }
   }
-
-  loop(room: string) {
-    const thisGame = this.games.find((element) => element.id === room);
-    this.updateMoveStatus(thisGame.host);
-    this.updateMoveStatus(thisGame.client);
-
-    this.moveBar(thisGame.gameState.hostBar, thisGame.host);
-    this.moveBar(thisGame.gameState.clientBar, thisGame.client);
-
-    this.barBallCollision(
-      thisGame.gameState.hostBar,
-      thisGame.gameState.clientBar,
-      thisGame.gameState.ball,
-    );
-
-    if (thisGame.gameState.ball.pos.x - 16 <= 0) {
-      thisGame.gameState.ball.speed.x *= -1;
-      thisGame.gameState.ball.pos.x = 0 + 16;
+  wallBallCollision(ball: IBall) {
+    if (ball.pos.x - 16 <= 0) {
+      ball.speed.x *= -1;
+      ball.pos.x = 0 + 16;
     }
-    if (thisGame.gameState.ball.pos.x + 16 > 500) {
-      thisGame.gameState.ball.speed.x *= -1;
-      thisGame.gameState.ball.pos.x = 500 - 16;
+    if (ball.pos.x + 16 > 500) {
+      ball.speed.x *= -1;
+      ball.pos.x = 500 - 16;
     }
-    if (thisGame.gameState.ball.speed.y > 0) {
-      if (
-        thisGame.gameState.ball.pos.y > 500 - 16 ||
-        thisGame.gameState.ball.pos.y <= 16 + 15
-      ) {
-        thisGame.gameState.ball.speed.y *= -1;
-      }
-    } else if (thisGame.gameState.ball.speed.y < 0) {
-      if (
-        thisGame.gameState.ball.pos.y > 500 - 16 ||
-        thisGame.gameState.ball.pos.y <= 16 + 15
-      ) {
-        thisGame.gameState.ball.speed.y *= -1;
-      }
+  }
+
+  goal(ball: IBall, score: Score) {
+    if (ball.pos.y < 0) {
+      score.host += 1;
+      ball.pos = { x: 250, y: 250 };
     }
-    thisGame.gameState.ball.pos.x += thisGame.gameState.ball.speed.x;
-    thisGame.gameState.ball.pos.y -= thisGame.gameState.ball.speed.y;
+    if (ball.pos.y > 500) {
+      score.client += 1;
+      ball.pos = { x: 250, y: 250 };
+    }
+  }
+
+  loop(roomName: string) {
+    const room = this.games.find((element) => element.id === roomName);
+    const game = room.gameState;
+    this.updateMoveStatus(room.host);
+    this.updateMoveStatus(room.client);
+
+    this.moveBar(game.hostBar, room.host);
+    this.moveBar(game.clientBar, room.client);
+
+    this.barBallCollision(game.hostBar, game.clientBar, game.ball);
+    this.wallBallCollision(game.ball);
+
+    game.ball.pos.x += game.ball.speed.x;
+    game.ball.pos.y -= game.ball.speed.y;
+
+    this.goal(game.ball, game.score);
   }
 }

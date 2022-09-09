@@ -15,8 +15,14 @@ export class IBall {
   speed: IPoint;
 }
 
+export class Score {
+  client: number;
+  host: number;
+}
+
 export class GameState {
   ball: IBall;
   hostBar: IBar;
   clientBar: IBar;
+  score: Score;
 }

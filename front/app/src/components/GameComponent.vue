@@ -1,5 +1,10 @@
 <template>
 	<!-- <body> -->
+	<div class="score">
+		Score:
+		<div>Host: {{ hostScore }}</div>
+		<div>Client: {{ clientScore }}</div>
+	</div>
 	<div class="game-container">
 		<canvas ref="canvas" width="500" height="500"></canvas>
 	</div>
@@ -45,35 +50,12 @@ function drawPlayground(ctx: CanvasRenderingContext2D) {
 	ctx.strokeRect(0, 0, canvas.value!.width, canvas.value!.height);
 }
 
-// function gameReset(topBar: IPoint, bottomBar: IPoint, ball: IBall) {
-// 	if (restart) {
-// 		topBar.x = canvas.value!.width / 2 - barWidth / 2;
-// 		topBar.y = padding;
-// 		bottomBar.x = canvas.value!.width / 2 - barWidth / 2;
-// 		bottomBar.y = canvas.value!.height - barHeight - padding;
-// 		ball.x = canvas.value!.width / 2;
-// 		ball.y = canvas.value!.height / 2;
-// 		ball.speed.x = 2.6;
-// 		ball.speed.y = 2;
-// 		ball.radius = 16;
-// 		ball.rotation = 0;
-// 		counter.value = 0;
-// 		gameOn = false;
-// 		gameOver = false;
-// 		restart = false;
-// 		leftMovement = false;
-// 		rightMovement = false;
-// 		leftMovementP2 = false;
-// 		rightMovementP2 = false;
-// 		spaceBar = false;
-// 		barMoving = 0;
-// 	}
-// }
-
 let ctx = canvas.value?.getContext("2d");
 
 const joined = ref(false);
 const name = ref("");
+const hostScore = ref(0);
+const clientScore = ref(0);
 let room = "game";
 let clientStatus = "";
 
@@ -82,10 +64,6 @@ const ball = ref<IBall>({
 	pos: { x: 200, y: 200 },
 	speed: { x: 0, y: 0 },
 });
-// const selfBar = ref<IPoint>{x: 45}
-
-// onBeforeMount(() => {
-// });
 
 onMounted(() => {
 	socket.emit("joinGame", { room: room }, (response: string) => {
@@ -95,6 +73,8 @@ onMounted(() => {
 	let ctx = canvas.value?.getContext("2d");
 	socket.on("ServerUpdate", (gameState: any) => {
 		ball.value = gameState.ball;
+		clientScore.value = gameState.score.client;
+		hostScore.value = gameState.score.host;
 		if (ctx) {
 			drawPlayground(ctx);
 			ctx.drawImage(
@@ -151,88 +131,5 @@ onMounted(() => {
 				key: "upRight",
 			});
 	});
-
-	// socket.on("message", (message) => {
-	// 	messages.value.push(message);
-	// });
-	// join();
-	// const loop = () => {
-	// 	// console.log(ball.value);
-	// 	if (!ctx) return;
-	// 	drawPlayground(ctx);
-	// 	socket.emit("updateGameState", {}, (response: IPoint) => {
-	// 		console.log("trying to update");
-	// 		ball.value = response;
-	// 	});
-	// 	ctx.drawImage(
-	// 		ballImg,
-	// 		ball.value.x - 16,
-	// 		ball.value.y - 16,
-	// 		16 * 2,
-	// 		16 * 2
-	// 	);
-	// 	requestAnimationFrame(loop);
-	// };
-	// requestAnimationFrame(loop);
 });
-
-// onMounted(() => {
-// 	if (joined) {
-// 		if (ctx) {
-// 			// window.addEventListener("keydown", (e) => {
-// 			// 	if (e.key === "ArrowLeft") leftMovement = true;
-// 			// 	else if (e.key === "ArrowRight") rightMovement = true;
-// 			// 	else if (e.key === "a") leftMovementP2 = true;
-// 			// 	else if (e.key === "d") rightMovementP2 = true;
-// 			// 	else if (e.key === "F2") restart = true;
-// 			// });
-// 			// window.addEventListener("keyup", (e) => {
-// 			// 	if (e.key === "ArrowLeft") leftMovement = false;
-// 			// 	else if (e.key === "ArrowRight") rightMovement = false;
-// 			// 	else if (e.key === "a") leftMovementP2 = false;
-// 			// 	else if (e.key === "d") rightMovementP2 = false;
-// 			// 	else if (e.key === "F2") restart = false;
-// 			// });
-// 			// if (gameOn === false) {
-// 			// 	window.addEventListener("keydown", (e) => {
-// 			// 		if (e.key === " ") spaceBar = true;
-// 			// 	});
-// 			// 	window.addEventListener("keyup", (e) => {
-// 			// 		if (e.key === " ") spaceBar = false;
-// 			// 	});
-// 			// }
-// 			// window.addEventListener("keydown", (e) => {
-// 			// 	if (e.key === "`") console.log(players);
-// 			// });
-
-// 			const loop = () => {
-// 				if (!ctx) return;
-// 				drawPlayground(ctx);
-
-// 				// Draw the ball
-// 				ctx.drawImage(
-// 					ballImg,
-// 					ball.value.x - 16,
-// 					ball.value.y - 16,
-// 					16 * 2,
-// 					16 * 2
-// 				);
-
-// 				// Draw the bars
-// 				// ctx.fillStyle = "black";
-// 				// ctx.fillRect(topBar.x, topBar.y, barWidth, barHeight);
-// 				// ctx.fillRect(bottomBar.x, bottomBar.y, barWidth, barHeight);
-
-// 				requestAnimationFrame(loop);
-// 			};
-// 			requestAnimationFrame(loop);
-// 		}
-// 	}
-// });
-
-// const join = () => {
-// 	socket.emit("join", {}, () => {
-// 		joined.value = true;
-// 	});
-// };
 </script>
