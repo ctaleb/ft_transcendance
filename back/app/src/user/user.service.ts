@@ -26,10 +26,12 @@ export class UserService {
     }
     throw new HttpException('User not found', HttpStatus.NOT_FOUND);
   }
+  
   async getUserByNickname(nickname: string): Promise<UserEntity> {
     const user = await this._usersRepository.findOneBy({ nickname });
     if (user) {
-      return user;
+      const avatar = await this._imageService.getImageById(user.avatarId);
+      return { ...user, ...avatar };
     }
     throw new HttpException('User not found', HttpStatus.NOT_FOUND);
   }
@@ -43,7 +45,12 @@ export class UserService {
   }
 
   async setAvatar(userId: number, fileData: ImageDto) {
-    const avatar = await this._imageService.saveImage(fileData);
+    let avatar;
+    if (fileData) {
+      avatar = await this._imageService.saveImage(fileData);
+    } else {
+      avatar = await this._imageService.getDefaultAvatar();
+    }
     await this._usersRepository.update(userId, {
       avatarId: avatar.id,
     });

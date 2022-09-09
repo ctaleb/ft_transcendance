@@ -6,6 +6,7 @@ import { DatabaseModule } from './database/database.module';
 import { AuthenticationModule } from './authentication/authentication.module';
 import { ImageModule } from './image/image.module';
 import { MessagesModule } from './chat/messages.module';
+import { FriendListModule } from './friend_list/friend_list.module';
 import { GameState } from './game-state/entities/game-state.entity';
 
 @Module({
@@ -19,6 +20,7 @@ import { GameState } from './game-state/entities/game-state.entity';
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '../../..', 'front/app/dist'),
     }),
+    FriendListModule,
   ],
 })
 export class AppModule {}

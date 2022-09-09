@@ -60,7 +60,9 @@ export default defineComponent({
 			formData.append("nickname", this.nickname);
 			formData.append("phone", this.phone);
 			formData.append("password", this.password);
-			formData.append("avatar", this.avatar, this.avatar.name);
+			if (this.avatar != File.prototype) {
+				formData.append("avatar", this.avatar, this.avatar.name);
+			}
 
 			fetch("http://localhost:3000/api/authentication/registration", {
 				method: "POST",

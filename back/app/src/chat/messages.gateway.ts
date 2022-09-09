@@ -8,6 +8,7 @@ import {
 import { MessagesService } from './messages.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { Server, Socket } from 'socket.io';
+import { GameState } from 'src/game.core';
 import { RouterModule } from '@nestjs/core';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 
@@ -93,5 +94,39 @@ export class MessagesGateway {
     client: Socket,
   ) {
     this.messagesService.storeBarMove(room, clientStatus, key);
+  }
+
+  // Game Core
+
+  private gameQueue: Socket[] = [];
+  private gameStates: GameState[] = [];
+
+  @SubscribeMessage('joinQueue')
+  joinQueue(@ConnectedSocket() client: Socket) {
+    this.gameQueue.push(client);
+    if (this.gameQueue.length > 1) {
+      let gameState: GameState = {
+        room: `game-${this.gameStates.length}`,
+        gameOn: false,
+        ready: false,
+      };
+      this.gameQueue.shift().join(gameState.room);
+      this.gameQueue.shift().join(gameState.room);
+      this.gameStates.push(gameState);
+      this.server.to(gameState.room).emit('lobbyCreated', gameState);
+    }
+  }
+
+  @SubscribeMessage('playerReady')
+  launchGame(@MessageBody('cGameState') cGameState: GameState) {
+    const gameState = this.gameStates.find(
+      (game) => game.room === cGameState.room,
+    );
+    if (gameState.ready === false) {
+      gameState.ready = true;
+    } else {
+      gameState.gameOn = true;
+      this.server.to(gameState.room).emit('startGame', gameState);
+    }
   }
 }

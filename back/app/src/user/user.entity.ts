@@ -1,5 +1,5 @@
 import { AbstractEntity } from '../database/abstract.entity';
-import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { ImageEntity } from 'src/image/image.entity';
 
@@ -16,7 +16,7 @@ export class UserEntity extends AbstractEntity {
   public password: string;
 
   @JoinColumn({ name: 'avatarId' })
-  @OneToOne(() => ImageEntity, {
+  @ManyToOne(() => ImageEntity, {
     nullable: true,
   })
   public avatar?: ImageEntity;

@@ -1,14 +1,13 @@
 <template>
-	<!-- <body> -->
 	<div class="score">
 		Score:
 		<div>Host: {{ hostScore }}</div>
 		<div>Client: {{ clientScore }}</div>
 	</div>
-	<div class="game-container">
-		<canvas ref="canvas" width="500" height="500"></canvas>
-	</div>
-	<!-- </body> -->
+	<button @click="findMatch()" :disabled="startButton">
+		{{ lobbyStatus }}
+	</button>
+	<canvas ref="canvas" width="500" height="500"></canvas>
 </template>
 
 <script setup lang="ts">
@@ -17,17 +16,25 @@ import { ref, onMounted, onBeforeMount } from "vue";
 import { io } from "socket.io-client";
 import { getBaseTransformPreset } from "@vue/compiler-core";
 import { Emitter } from "@socket.io/component-emitter";
+import { GameState } from "../../../../back/app/src/game.core";
 
 const socket = io("http://" + window.location.hostname + ":3000");
-
 const ballImg = new Image();
 ballImg.src = ballUrl;
+
 
 const canvas = ref<HTMLCanvasElement | null>(null);
 
 interface IPoint {
 	x: number;
 	y: number;
+}
+
+function findMatch() {
+	startButton.value = true;
+	lobbyStatus.value = "Looking for an opponent...";
+
+	socket.emit("joinQueue");
 }
 
 interface IBall {
@@ -59,6 +66,14 @@ const clientScore = ref(0);
 let room = "game";
 let clientStatus = "";
 
+function playerReady() {
+	if (spaceBar && !cGameState.gameOn) {
+		lobbyStatus.value = "Waiting for the other player...";
+		socket.emit("playerReady", { cGameState }, () => {});
+		spaceBar = false;
+	}
+}
+
 const ball = ref<IBall>({
 	size: 16,
 	pos: { x: 200, y: 200 },
@@ -71,7 +86,24 @@ onMounted(() => {
 	});
 
 	let ctx = canvas.value?.getContext("2d");
-	socket.on("ServerUpdate", (gameState: any) => {
+  socket.on("lobbyCreated", (gameState) => {
+			sGameState = cGameState = gameState;
+			lobbyCreated = true;
+			lobbyStatus.value = "Ready ?";
+		});
+    if (cGameState) {
+				if (
+					spaceBar === true &&
+					cGameState.gameOn === false
+				) {
+					playerReady();
+				}
+				socket.on("startGame", (gameState) => {
+					sGameState = cGameState = gameState;
+					lobbyStatus.value = "Go !";
+				});
+				if (cGameState.gameOn === true) {
+					socket.on("ServerUpdate", (gameState: any) => {
 		ball.value = gameState.ball;
 		clientScore.value = gameState.score.client;
 		hostScore.value = gameState.score.host;
@@ -101,6 +133,7 @@ onMounted(() => {
 			);
 		}
 	});
+				}
 
 	window.addEventListener("keydown", (e) => {
 		if (e.key === "ArrowLeft")
@@ -131,5 +164,20 @@ onMounted(() => {
 				key: "upRight",
 			});
 	});
+  
+  window.addEventListener("keydown", (e) => {
+			if (
+				lobbyCreated === true &&
+				cGameState?.gameOn === false &&
+				e.key === " "
+			)
+				spaceBar = true;
+		});
 });
 </script>
+
+<style type="text/css">
+button:disabled {
+	opacity: 0.7;
+}
+</style>
