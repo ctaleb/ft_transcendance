@@ -13,7 +13,7 @@ export class UserEntity extends AbstractEntity {
 
   @Column()
   @Exclude()
-  public password: string;
+  public password?: string;
 
   @JoinColumn({ name: 'avatarId' })
   @ManyToOne(() => ImageEntity, {

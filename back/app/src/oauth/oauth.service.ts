@@ -15,7 +15,27 @@ export class OauthService {
       method: "POST"
     })
     .then((val) => val.json())
-    .then((ret) => { return ret })
+    .then((token) => { 
+      fetch("https://api.intra.42.fr/v2/me", {
+				headers: {
+					"Authorization": "Bearer " + token.access_token,
+				},
+			})
+			.then((val) => val.json())
+			.then((res) => {
+				let formData = new FormData();
+        formData.append("nickname", res.login);
+        console.log(res.login);
+        console.log(res.phone);
+        formData.append("phone", res.phone);
+        formData.append("password", "PIKACHUUUUU");
+        fetch("http://localhost:3000/api/authentication/registration", {
+            method: "POST",
+            body: formData,
+        })
+			})
+      return token;
+    })
     .catch((err) => {console.log(err)})
     return token;
   }

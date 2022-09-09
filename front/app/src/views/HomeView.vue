@@ -74,7 +74,6 @@ mounted() {
 		})
 		.then((res) => res.json())
 		.then((token) => {
-			console.log(token);
 		})
 		.catch((err) => console.log(err))
 	}

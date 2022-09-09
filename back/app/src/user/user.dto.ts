@@ -7,7 +7,7 @@ export class CreateUserDto {
 
   @IsString()
   @IsNotEmpty()
-  @MinLength(9)
+  //@MinLength(9)
   @MaxLength(13)
   readonly phone: string;
 

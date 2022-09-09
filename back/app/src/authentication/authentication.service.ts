@@ -22,10 +22,8 @@ export class AuthenticationService {
   async registration(registrationDto: RegistrationDto, imageDto: ImageDto): Promise<UserEntity> {
     let user: UserEntity;
     const queryRunner = this._dataSource.createQueryRunner();
-
     await queryRunner.connect();
     await queryRunner.startTransaction();
-
     try {
       user = await this._userService.createUser(registrationDto, queryRunner);
       user = await this._userService.setAvatar(user.id, imageDto);
