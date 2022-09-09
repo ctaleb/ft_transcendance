@@ -29,6 +29,10 @@ export class UserController {
   async getUserByNickname(@Param('nickname') nickname: string) {
     return this._userService.getUserByNickname(nickname);
   }
+  @Get('findIntraUser/:id')
+  async getIntraUserById(@Param('id') id: string) {
+    return this._userService.getIntraUserById(id);
+  }
   @Get()
   getAllUsers(){
     return this._userService.getAllUsers();

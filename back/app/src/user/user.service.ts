@@ -56,4 +56,13 @@ export class UserService {
     });
     return await this._usersRepository.findOneBy({ id: userId });
   }
+
+  async getIntraUserById(intraId: string) {
+    const user = await this._usersRepository.findOneBy({ intraId });
+    if (user) {
+      const avatar = await this._imageService.getImageById(user.avatarId);
+      return { ...user, ...avatar };
+    }
+    throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+  }
 }

@@ -26,17 +26,27 @@ export class OauthService {
 				},
 			})
 			.then((val) => val.json())
-			.then((res) => {
-        console.log(res);
-				var formData = new FormData();
-        formData.append("nickname", res.login);
-        formData.append("phone", res.phone);
-        formData.append("intraId", res.id);
-        fetch("http://localhost:3000/api/authentication/registration", {
-            method: "POST",
-            body: formData,
-        })
+			.then(async (res) => {
+        let ifExists = await fetch("http://localhost:3000/api/user/findIntraUser/" + res.id, {
+          method: "GET",
+       })
+       .then((res) => {return res.json()})
+       console.log(ifExists);
+       if (ifExists.message)
+       {
+          console.log("THIS USER DOES NOT EXISTS");
+          var formData = new FormData();
+          formData.append("nickname", res.login);
+          formData.append("phone", res.phone);
+          formData.append("intraId", res.id);
+          fetch("http://localhost:3000/api/authentication/registration", {
+              method: "POST",
+              body: formData,
+          })
+         throw(UnauthorizedException)
+       }
 			})
+      .catch((err) => {console.log(err)})
       return token;
     })
     .catch((err) => {console.log(err)})
