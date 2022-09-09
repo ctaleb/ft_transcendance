@@ -32,7 +32,7 @@
 import { io } from "socket.io-client";
 import { onBeforeMount, ref } from "vue";
 
-const socket = io("http://10.19.1.157:3000");
+const socket = io("http://10.19.1.249:3000");
 
 const messages = ref([]);
 const messageText = ref("");
