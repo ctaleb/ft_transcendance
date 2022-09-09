@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { authorize } from 'passport';
 import { CreateOauthDto } from './dto/create-oauth.dto';
 import { UpdateOauthDto } from './dto/update-oauth.dto';
@@ -6,7 +6,6 @@ import { UpdateOauthDto } from './dto/update-oauth.dto';
 @Injectable()
 export class OauthService {
   async connect(code: string): Promise<any> {
-    console.log("USER CODE : " + code);
       let token = await fetch("https://api.intra.42.fr/oauth/token", {
       headers: {
         "Content-Type": "multipart/form-data",
@@ -15,7 +14,12 @@ export class OauthService {
       method: "POST"
     })
     .then((val) => val.json())
-    .then((token) => { 
+    .then((token) => {
+      if (token.access_token == null)
+      {
+        console.log("Not a 42 user");
+        throw(UnauthorizedException);
+      }
       fetch("https://api.intra.42.fr/v2/me", {
 				headers: {
 					"Authorization": "Bearer " + token.access_token,
@@ -23,12 +27,11 @@ export class OauthService {
 			})
 			.then((val) => val.json())
 			.then((res) => {
-				let formData = new FormData();
+        console.log(res);
+				var formData = new FormData();
         formData.append("nickname", res.login);
-        console.log(res.login);
-        console.log(res.phone);
         formData.append("phone", res.phone);
-        formData.append("password", "PIKACHUUUUU");
+        formData.append("intraId", res.id);
         fetch("http://localhost:3000/api/authentication/registration", {
             method: "POST",
             body: formData,

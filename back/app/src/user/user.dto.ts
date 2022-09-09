@@ -11,8 +11,7 @@ export class CreateUserDto {
   @MaxLength(13)
   readonly phone: string;
 
-  @IsString()
-  @IsNotEmpty()
-  @MinLength(6)
-  readonly password: string;
+  readonly password?: string;
+  
+  readonly intraId?: string;
 }
