@@ -19,7 +19,9 @@ export class Player {
 }
 
 export class Game {
-  id: string;
+  room: string;
+  gameOn: boolean;
+  ready: boolean;
   gameState: GameState;
   specList: string[];
   host: Player;

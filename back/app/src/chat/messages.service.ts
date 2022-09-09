@@ -9,14 +9,11 @@ import {
   Score,
 } from '../game-state/entities/game-state.entity';
 import { PassThrough } from 'stream';
-
-// interface Room {
-//   name: string;
-//   message: Message[];
-// }
+import { Socket } from 'socket.io';
 
 @Injectable()
 export class MessagesService {
+  gameQueue: Socket[] = [];
   rooms: Room[] = [];
   games: Game[] = [];
 
@@ -55,10 +52,14 @@ export class MessagesService {
 
   //game stuff here
 
-  joiningGame(room: string) {
-    if (!this.findGame(room)) {
+  joinQueue(socket: Socket) {
+    this.gameQueue.push(socket);
+    if (this.gameQueue.length > 1) {
+      const room = `game-${this.games.length + 1}`;
       this.games.push({
-        id: room,
+        room: room,
+        gameOn: false,
+        ready: false,
         gameState: {
           ball: {
             size: 16,
@@ -94,29 +95,39 @@ export class MessagesService {
           right: false,
         },
       });
-      //   this.loop(room);
-      return false;
+
+      //   let gameState: GameState = {
+      //     room: `game-${this.gameStates.length}`,
+      //     gameOn: false,
+      //     ready: false,
+      //   };
+      //   this.gameQueue.shift().join(room);
+      //   this.gameQueue.shift().join(room);
+      //   this.server.to(room).emit('lobbyCreated', gameState);
+      return this.games[this.games.length - 1];
     }
-    return true;
+    return null;
   }
 
   storeBarMove(room: string, clientStatus: string, motion: string) {
     if (clientStatus === 'host')
-      this.games.find((element) => element.id === room).host.input.push(motion);
+      this.games
+        .find((element) => element.room === room)
+        .host.input.push(motion);
     else
       this.games
-        .find((element) => element.id === room)
+        .find((element) => element.room === room)
         .client.input.push(motion);
   }
 
   findGame(room: string) {
-    if (this.games.find((element) => element.id === room) === undefined)
+    if (this.games.find((element) => element.room === room) === undefined)
       return false;
     return true;
   }
 
   updateGameState(room: string) {
-    return this.games.find((element) => element.id === room).gameState;
+    return this.games.find((element) => element.room === room).gameState;
   }
 
   updateMoveStatus(player: Player) {
@@ -190,7 +201,7 @@ export class MessagesService {
   }
 
   loop(roomName: string) {
-    const room = this.games.find((element) => element.id === roomName);
+    const room = this.games.find((element) => element.room === roomName);
     const game = room.gameState;
     this.updateMoveStatus(room.host);
     this.updateMoveStatus(room.client);

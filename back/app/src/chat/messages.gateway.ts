@@ -11,6 +11,7 @@ import { Server, Socket } from 'socket.io';
 import { GameState } from 'src/game.core';
 import { RouterModule } from '@nestjs/core';
 import { IoAdapter } from '@nestjs/platform-socket.io';
+import { Game } from './entities/message.entity';
 
 @WebSocketGateway({
   cors: {
@@ -62,28 +63,14 @@ export class MessagesGateway {
   }
 
   gameLoop = (room: string) => {
-    this.messagesService.loop(room);
     this.server
       .to(room)
       .emit('ServerUpdate', this.messagesService.updateGameState(room));
     setTimeout(() => {
+      this.messagesService.loop(room);
       this.gameLoop(room);
     }, 10);
   };
-
-  @SubscribeMessage('joinGame')
-  joinGame(
-    @MessageBody('room') room: string,
-    @ConnectedSocket()
-    client: Socket,
-  ) {
-    client.join(room);
-    if (!this.messagesService.joiningGame(room)) {
-      this.gameLoop(room);
-      return 'host';
-    }
-    return 'client';
-  }
 
   @SubscribeMessage('key')
   downLeft(
@@ -98,35 +85,28 @@ export class MessagesGateway {
 
   // Game Core
 
-  private gameQueue: Socket[] = [];
-  private gameStates: GameState[] = [];
-
   @SubscribeMessage('joinQueue')
   joinQueue(@ConnectedSocket() client: Socket) {
-    this.gameQueue.push(client);
-    if (this.gameQueue.length > 1) {
-      let gameState: GameState = {
-        room: `game-${this.gameStates.length}`,
-        gameOn: false,
-        ready: false,
-      };
-      this.gameQueue.shift().join(gameState.room);
-      this.gameQueue.shift().join(gameState.room);
-      this.gameStates.push(gameState);
-      this.server.to(gameState.room).emit('lobbyCreated', gameState);
+    const game = this.messagesService.joinQueue(client);
+    if (game) {
+      this.messagesService.gameQueue.shift().join(game.room);
+      this.messagesService.gameQueue.shift().join(game.room);
+      this.server.to(game.room).emit('lobbyCreated', game);
     }
   }
 
   @SubscribeMessage('playerReady')
-  launchGame(@MessageBody('cGameState') cGameState: GameState) {
-    const gameState = this.gameStates.find(
-      (game) => game.room === cGameState.room,
+  launchGame(@MessageBody('clientGameState') clientGameState: Game) {
+    const gameState = this.messagesService.games.find(
+      (game) => game.room === clientGameState.room,
     );
     if (gameState.ready === false) {
       gameState.ready = true;
+      this.server.to(gameState.room).emit('yourehost');
     } else {
       gameState.gameOn = true;
       this.server.to(gameState.room).emit('startGame', gameState);
+      this.gameLoop(gameState.room);
     }
   }
 }

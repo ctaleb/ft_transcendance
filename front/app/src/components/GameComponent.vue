@@ -4,10 +4,14 @@
 		<div>Host: {{ hostScore }}</div>
 		<div>Client: {{ clientScore }}</div>
 	</div>
-	<button @click="findMatch()" :disabled="startButton">
-		{{ lobbyStatus }}
-	</button>
-	<canvas ref="canvas" width="500" height="500"></canvas>
+	<div>
+		<button @click="findMatch()" :disabled="startButton">
+			{{ lobbyStatus }}
+		</button>
+	</div>
+	<div>
+		<canvas ref="canvas" width="500" height="500"></canvas>
+	</div>
 </template>
 
 <script setup lang="ts">
@@ -17,11 +21,11 @@ import { io } from "socket.io-client";
 import { getBaseTransformPreset } from "@vue/compiler-core";
 import { Emitter } from "@socket.io/component-emitter";
 import { GameState } from "../../../../back/app/src/game.core";
+import { Game } from "../../../../back/app/src/chat/entities/message.entity";
 
 const socket = io("http://" + window.location.hostname + ":3000");
 const ballImg = new Image();
 ballImg.src = ballUrl;
-
 
 const canvas = ref<HTMLCanvasElement | null>(null);
 
@@ -29,6 +33,9 @@ interface IPoint {
 	x: number;
 	y: number;
 }
+
+const startButton = ref(false);
+const lobbyStatus = ref("Find match");
 
 function findMatch() {
 	startButton.value = true;
@@ -64,14 +71,13 @@ const name = ref("");
 const hostScore = ref(0);
 const clientScore = ref(0);
 let room = "game";
-let clientStatus = "";
+let clientStatus = "client";
+let clientGameState: Game;
+let lobbyCreated: boolean = false;
 
 function playerReady() {
-	if (spaceBar && !cGameState.gameOn) {
-		lobbyStatus.value = "Waiting for the other player...";
-		socket.emit("playerReady", { cGameState }, () => {});
-		spaceBar = false;
-	}
+	lobbyStatus.value = "Waiting for the other player...";
+	socket.emit("playerReady", { clientGameState }, () => {});
 }
 
 const ball = ref<IBall>({
@@ -81,29 +87,14 @@ const ball = ref<IBall>({
 });
 
 onMounted(() => {
-	socket.emit("joinGame", { room: room }, (response: string) => {
-		clientStatus = response;
+	let ctx = canvas.value?.getContext("2d");
+
+	socket.on("yourehost", () => {
+		clientStatus = "host";
 	});
 
-	let ctx = canvas.value?.getContext("2d");
-  socket.on("lobbyCreated", (gameState) => {
-			sGameState = cGameState = gameState;
-			lobbyCreated = true;
-			lobbyStatus.value = "Ready ?";
-		});
-    if (cGameState) {
-				if (
-					spaceBar === true &&
-					cGameState.gameOn === false
-				) {
-					playerReady();
-				}
-				socket.on("startGame", (gameState) => {
-					sGameState = cGameState = gameState;
-					lobbyStatus.value = "Go !";
-				});
-				if (cGameState.gameOn === true) {
-					socket.on("ServerUpdate", (gameState: any) => {
+	socket.on("ServerUpdate", (gameState: any) => {
+		console.log("Server Game update");
 		ball.value = gameState.ball;
 		clientScore.value = gameState.score.client;
 		hostScore.value = gameState.score.host;
@@ -133,18 +124,32 @@ onMounted(() => {
 			);
 		}
 	});
-				}
+
+	socket.on("lobbyCreated", (gameState) => {
+		console.log("Lobby created");
+
+		clientGameState = gameState;
+		lobbyCreated = true;
+		lobbyStatus.value = "Ready ?";
+	});
+
+	socket.on("startGame", (gameState) => {
+		console.log("Start");
+
+		clientGameState = gameState;
+		lobbyStatus.value = "Go !";
+	});
 
 	window.addEventListener("keydown", (e) => {
 		if (e.key === "ArrowLeft")
 			socket.emit("key", {
-				room: room,
+				room: clientGameState.room,
 				clientStatus: clientStatus,
 				key: "downLeft",
 			});
 		else if (e.key === "ArrowRight")
 			socket.emit("key", {
-				room: room,
+				room: clientGameState.room,
 				clientStatus: clientStatus,
 				key: "downRight",
 			});
@@ -153,26 +158,26 @@ onMounted(() => {
 	window.addEventListener("keyup", (e) => {
 		if (e.key === "ArrowLeft")
 			socket.emit("key", {
-				room: room,
+				room: clientGameState.room,
 				clientStatus: clientStatus,
 				key: "upLeft",
 			});
 		else if (e.key === "ArrowRight")
 			socket.emit("key", {
-				room: room,
+				room: clientGameState.room,
 				clientStatus: clientStatus,
 				key: "upRight",
 			});
 	});
-  
-  window.addEventListener("keydown", (e) => {
-			if (
-				lobbyCreated === true &&
-				cGameState?.gameOn === false &&
-				e.key === " "
-			)
-				spaceBar = true;
-		});
+
+	window.addEventListener("keydown", (e) => {
+		if (
+			lobbyCreated === true &&
+			clientGameState?.gameOn === false &&
+			e.key === " "
+		)
+			playerReady();
+	});
 });
 </script>
 
