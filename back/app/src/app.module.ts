@@ -7,7 +7,7 @@ import { AuthenticationModule } from './authentication/authentication.module';
 import { ImageModule } from './image/image.module';
 import { MessagesModule } from './chat/messages.module';
 import { FriendListModule } from './friend_list/friend_list.module';
-
+import { GameState } from './game-state/entities/game-state.entity';
 
 @Module({
   imports: [
@@ -15,6 +15,7 @@ import { FriendListModule } from './friend_list/friend_list.module';
     DatabaseModule,
     ImageModule,
     MessagesModule,
+    GameState,
     AuthenticationModule,
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '../../..', 'front/app/dist'),
@@ -22,4 +23,4 @@ import { FriendListModule } from './friend_list/friend_list.module';
     FriendListModule,
   ],
 })
-export class AppModule {};
+export class AppModule {}
