@@ -20,7 +20,12 @@ import { ref, onMounted, onBeforeMount } from "vue";
 import { io } from "socket.io-client";
 import { getBaseTransformPreset } from "@vue/compiler-core";
 import { Emitter } from "@socket.io/component-emitter";
-import { Game } from "../../../../back/app/src/chat/entities/message.entity";
+import {
+	GameState,
+	GameRoom,
+	IBall,
+	IPoint,
+} from "../../../../back/app/src/chat/entities/message.entity";
 
 const socket = io("http://" + window.location.hostname + ":3000");
 const ballImg = new Image();
@@ -28,13 +33,12 @@ ballImg.src = ballUrl;
 
 const canvas = ref<HTMLCanvasElement | null>(null);
 
-interface IPoint {
-	x: number;
-	y: number;
-}
-
 const startButton = ref(false);
 const lobbyStatus = ref("Find match");
+const hostScore = ref(0);
+const clientScore = ref(0);
+
+let gameRoom: GameRoom;
 
 function findMatch() {
 	startButton.value = true;
@@ -43,10 +47,9 @@ function findMatch() {
 	socket.emit("joinQueue");
 }
 
-interface IBall {
-	size: number;
-	pos: IPoint;
-	speed: IPoint;
+function playerReady() {
+	lobbyStatus.value = "Waiting for the other player...";
+	socket.emit("playerReady", { clientGameState }, () => {});
 }
 
 function drawPlayground(ctx: CanvasRenderingContext2D) {
@@ -63,48 +66,27 @@ function drawPlayground(ctx: CanvasRenderingContext2D) {
 	ctx.strokeRect(0, 0, canvas.value!.width, canvas.value!.height);
 }
 
-let ctx = canvas.value?.getContext("2d");
-
-const joined = ref(false);
-const name = ref("");
-const hostScore = ref(0);
-const clientScore = ref(0);
-let room = "game";
-let clientStatus = "client";
-let clientGameState: Game;
-let lobbyCreated: boolean = false;
-let spaceBar = false;
-
-function playerReady() {
-	lobbyStatus.value = "Waiting for the other player...";
-	socket.emit("playerReady", { clientGameState }, () => {});
-}
-
-const ball = ref<IBall>({
-	size: 16,
-	pos: { x: 200, y: 200 },
-	speed: { x: 0, y: 0 },
-});
-
 onMounted(() => {
 	let ctx = canvas.value?.getContext("2d");
 
-	socket.on("yourehost", () => {
-		clientStatus = "host";
+	socket.on("gameConfirmation", (gameRoom) => {
+		gameRoom = gameRoom;
+		lobbyStatus.value =
+			"Are you ready to play a ranked game against a very strong opponent ?";
 	});
 
-	socket.on("ServerUpdate", (gameState: any) => {
-		ball.value = gameState.ball;
+	socket.on("ServerUpdate", (gameState: GameState) => {
+		let ball = gameState.ball;
 		clientScore.value = gameState.score.client;
 		hostScore.value = gameState.score.host;
 		if (ctx) {
 			drawPlayground(ctx);
 			ctx.drawImage(
 				ballImg,
-				ball.value.pos.x - ball.value.size,
-				ball.value.pos.y - ball.value.size,
-				ball.value.size * 2,
-				ball.value.size * 2
+				ball.pos.x - ball.size,
+				ball.pos.y - ball.size,
+				ball.size * 2,
+				ball.size * 2
 			);
 			ctx.fillStyle = "black";
 			let bar = gameState.hostBar;
@@ -124,28 +106,19 @@ onMounted(() => {
 		}
 	});
 
-	socket.on("lobbyCreated", (gameState) => {
-		clientGameState = gameState;
-		lobbyCreated = true;
-		lobbyStatus.value = "Ready ?";
-	});
-
-	socket.on("startGame", (gameState) => {
-		clientGameState = gameState;
-		lobbyStatus.value = "Go !";
+	socket.on("startGame", (gameRoom) => {
+		gameRoom = gameRoom;
 	});
 
 	window.addEventListener("keydown", (e) => {
 		if (e.key === "ArrowLeft")
 			socket.emit("key", {
-				room: clientGameState.room,
-				clientStatus: clientStatus,
+				room: gameRoom.name,
 				key: "downLeft",
 			});
 		else if (e.key === "ArrowRight")
 			socket.emit("key", {
-				room: clientGameState.room,
-				clientStatus: clientStatus,
+				room: gameRoom.name,
 				key: "downRight",
 			});
 	});
@@ -153,28 +126,14 @@ onMounted(() => {
 	window.addEventListener("keyup", (e) => {
 		if (e.key === "ArrowLeft")
 			socket.emit("key", {
-				room: clientGameState.room,
-				clientStatus: clientStatus,
+				room: gameRoom.name,
 				key: "upLeft",
 			});
 		else if (e.key === "ArrowRight")
 			socket.emit("key", {
-				room: clientGameState.room,
-				clientStatus: clientStatus,
+				room: gameRoom.name,
 				key: "upRight",
 			});
-	});
-
-	window.addEventListener("keydown", (e) => {
-		if (
-			lobbyCreated === true &&
-			clientGameState?.gameOn === false &&
-			e.key === " " &&
-			spaceBar === false
-		) {
-			playerReady();
-			spaceBar = true;
-		}
 	});
 });
 </script>

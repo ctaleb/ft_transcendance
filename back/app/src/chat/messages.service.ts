@@ -1,14 +1,22 @@
 import { Injectable } from '@nestjs/common';
 import { CreateMessageDto } from './dto/create-message.dto';
-import { Message, Room, Game, Player } from './entities/message.entity';
-import { IBar, IBall, Score } from '../game-state/entities/game-state.entity';
+import {
+  Message,
+  ChatRoom,
+  Game,
+  Player,
+  IBar,
+  IBall,
+  Score,
+  GameOptions,
+} from './entities/message.entity';
 import { PassThrough } from 'stream';
 import { Socket } from 'socket.io';
 
 @Injectable()
 export class MessagesService {
   gameQueue: Socket[] = [];
-  rooms: Room[] = [];
+  rooms: ChatRoom[] = [];
   games: Game[] = [];
 
   clientToUser = [];
@@ -47,13 +55,25 @@ export class MessagesService {
   //game stuff here
 
   joinQueue(socket: Socket) {
+    //for later : need to make sure the socket is in only once
     this.gameQueue.push(socket);
     if (this.gameQueue.length > 1) {
-      const room = `game-${this.games.length + 1}`;
+      const roomName = `game-${this.games.length + 1}`;
       this.games.push({
-        room: room,
-        gameOn: false,
-        ready: false,
+        room: {
+          name: roomName,
+          hostName: '',
+          clientName: '',
+          gameStatus: '',
+          gameOptions: {
+            ballSpeed: { x: 2, y: 2 },
+            ballsize: 16,
+            barSpeed: 7,
+            barSize: { x: 40, y: 10 },
+            scoreMax: 5,
+            timeLimit: 0,
+          },
+        },
         gameState: {
           ball: {
             size: 16,
@@ -75,15 +95,12 @@ export class MessagesService {
             host: 0,
           },
         },
-        specList: [],
         host: {
-          name: '',
           input: [],
           left: false,
           right: false,
         },
         client: {
-          name: '',
           input: [],
           left: false,
           right: false,
@@ -97,11 +114,11 @@ export class MessagesService {
   storeBarMove(room: string, clientStatus: string, motion: string) {
     if (clientStatus === 'host')
       this.games
-        .find((element) => element.room === room)
+        .find((element) => element.room.name === room)
         .host.input.push(motion);
     else
       this.games
-        .find((element) => element.room === room)
+        .find((element) => element.room.name === room)
         .client.input.push(motion);
   }
 
@@ -112,7 +129,7 @@ export class MessagesService {
   }
 
   updateGameState(room: string) {
-    return this.games.find((element) => element.room === room).gameState;
+    return this.games.find((element) => element.room.name === room).gameState;
   }
 
   updateMoveStatus(player: Player) {
@@ -186,7 +203,7 @@ export class MessagesService {
   }
 
   loop(roomName: string) {
-    const room = this.games.find((element) => element.room === roomName);
+    const room = this.games.find((element) => element.room.name === roomName);
     const game = room.gameState;
     this.updateMoveStatus(room.host);
     this.updateMoveStatus(room.client);

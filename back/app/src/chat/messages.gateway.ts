@@ -88,9 +88,9 @@ export class MessagesGateway {
   joinQueue(@ConnectedSocket() client: Socket) {
     const game = this.messagesService.joinQueue(client);
     if (game) {
-      this.messagesService.gameQueue.shift().join(game.room);
-      this.messagesService.gameQueue.shift().join(game.room);
-      this.server.to(game.room).emit('lobbyCreated', game);
+      this.messagesService.gameQueue.shift().join(game.room.name);
+      this.messagesService.gameQueue.shift().join(game.room.name);
+      this.server.to(game.room.name).emit('gameConfirmation', game.room);
     }
   }
 
