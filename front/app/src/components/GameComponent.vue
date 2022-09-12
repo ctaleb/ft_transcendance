@@ -20,7 +20,6 @@ import { ref, onMounted, onBeforeMount } from "vue";
 import { io } from "socket.io-client";
 import { getBaseTransformPreset } from "@vue/compiler-core";
 import { Emitter } from "@socket.io/component-emitter";
-import { GameState } from "../../../../back/app/src/game.core";
 import { Game } from "../../../../back/app/src/chat/entities/message.entity";
 
 const socket = io("http://" + window.location.hostname + ":3000");
@@ -74,6 +73,7 @@ let room = "game";
 let clientStatus = "client";
 let clientGameState: Game;
 let lobbyCreated: boolean = false;
+let spaceBar = false;
 
 function playerReady() {
 	lobbyStatus.value = "Waiting for the other player...";
@@ -169,9 +169,12 @@ onMounted(() => {
 		if (
 			lobbyCreated === true &&
 			clientGameState?.gameOn === false &&
-			e.key === " "
-		)
+			e.key === " " &&
+			spaceBar === false
+		) {
 			playerReady();
+			spaceBar = true;
+		}
 	});
 });
 </script>

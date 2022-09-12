@@ -8,7 +8,6 @@ import {
 import { MessagesService } from './messages.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { Server, Socket } from 'socket.io';
-import { GameState } from 'src/game.core';
 import { RouterModule } from '@nestjs/core';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import { Game } from './entities/message.entity';

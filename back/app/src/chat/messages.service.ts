@@ -1,13 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { Message, Room, Game, Player } from './entities/message.entity';
-import {
-  GameState,
-  IPoint,
-  IBar,
-  IBall,
-  Score,
-} from '../game-state/entities/game-state.entity';
+import { IBar, IBall, Score } from '../game-state/entities/game-state.entity';
 import { PassThrough } from 'stream';
 import { Socket } from 'socket.io';
 
@@ -95,15 +89,6 @@ export class MessagesService {
           right: false,
         },
       });
-
-      //   let gameState: GameState = {
-      //     room: `game-${this.gameStates.length}`,
-      //     gameOn: false,
-      //     ready: false,
-      //   };
-      //   this.gameQueue.shift().join(room);
-      //   this.gameQueue.shift().join(room);
-      //   this.server.to(room).emit('lobbyCreated', gameState);
       return this.games[this.games.length - 1];
     }
     return null;
