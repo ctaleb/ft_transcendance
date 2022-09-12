@@ -24,27 +24,34 @@
            v-model="state.password.confirmation"
            placeholder="Confirm password"
            autocomplete="off"
-           /><br /><br />
-           <label for="phone">Phone number:</label><br />
-           <input
-                  type="tel"
-                  v-model="state.phone"
-                  id="phone"
-                  name="phone"
-                  placeholder="0611111111"
-                  pattern="[0-9]{10}"
-                  required
-                  /><br /><br />
-                  <label for="avatar">Choose a profile picture:</label><br />
-                  <input
-                         type="file"
-                         id="avatar"
-                         name="avatar"
-                         accept="image/*"
-                         @change="updateAvatar"
-                         /><br /><br />
-                         <input type="submit" value="Submit" @click.stop.prevent="submitForm()" />
+     /><br /><br />
+     <label for="phone">Phone number:</label><br />
+     <input
+            type="tel"
+            v-model="state.phone"
+            id="phone"
+            name="phone"
+            placeholder="0611111111"
+            pattern="[0-9]{10}"
+            required
+      /><br /><br />
+      <label for="avatar">Choose a profile picture:</label><br />
+      <input
+             type="file"
+             id="avatar"
+             name="avatar"
+             accept="image/*"
+             @change="updateAvatar"
+             /><br /><br />
+     <input type="submit" value="Submit" @click.stop.prevent="submitForm()" />
 
+     <p v-for="error of v$.$errors" :key="error.$uid">
+      <strong>{{ error.$validator }}</strong>
+      <small> on property</small>
+      <strong>{{ error.$property }}</strong>
+      <small> says:</small>
+      <strong>{{ error.$message }}</strong>
+      </p>
   </form>
 </template>
 
@@ -54,14 +61,6 @@ import { defineComponent, reactive, computed } from "vue";
 import { useRouter } from 'vue-router';
 import useVuelidate from '@vuelidate/core';
 import { required, minLength, maxLength, sameAs } from '@vuelidate/validators';
-
-
-const o = {
-	a: 1,
-	b: 1,
-	c: 1,
-	d: 1,
-};
 
 
 export default defineComponent({
