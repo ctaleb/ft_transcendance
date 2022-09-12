@@ -122,13 +122,14 @@ export default defineComponent({
     const v$ = useVuelidate(rules, state);
 
     function submitForm() {
+      v$.value.$touch();
       console.log(v$);
-      console.log(state);
-      console.log(rules);
+
     }
 
     return { state, v$, updateAvatar, createPost, submitForm };
-  }
+  },
+
 });
 
 </script>
