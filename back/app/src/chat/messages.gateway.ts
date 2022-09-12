@@ -96,13 +96,16 @@ export class MessagesGateway {
   }
 
   @SubscribeMessage('playerReady')
-  launchGame(@MessageBody('clientGameState') clientGameState: Game) {
+  launchGame(
+    @MessageBody('clientGameState') clientGameState: Game,
+    @ConnectedSocket() client: Socket,
+  ) {
     const gameState = this.messagesService.games.find(
       (game) => game.room === clientGameState.room,
     );
     if (gameState.ready === false) {
       gameState.ready = true;
-      this.server.to(gameState.room).emit('yourehost');
+      client.emit('yourehost');
     } else {
       gameState.gameOn = true;
       this.server.to(gameState.room).emit('startGame', gameState);

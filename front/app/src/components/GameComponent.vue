@@ -94,7 +94,6 @@ onMounted(() => {
 	});
 
 	socket.on("ServerUpdate", (gameState: any) => {
-		console.log("Server Game update");
 		ball.value = gameState.ball;
 		clientScore.value = gameState.score.client;
 		hostScore.value = gameState.score.host;
@@ -126,16 +125,12 @@ onMounted(() => {
 	});
 
 	socket.on("lobbyCreated", (gameState) => {
-		console.log("Lobby created");
-
 		clientGameState = gameState;
 		lobbyCreated = true;
 		lobbyStatus.value = "Ready ?";
 	});
 
 	socket.on("startGame", (gameState) => {
-		console.log("Start");
-
 		clientGameState = gameState;
 		lobbyStatus.value = "Go !";
 	});
