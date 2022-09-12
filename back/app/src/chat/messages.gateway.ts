@@ -8,8 +8,6 @@ import {
 import { MessagesService } from './messages.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { Server, Socket } from 'socket.io';
-import { RouterModule } from '@nestjs/core';
-import { IoAdapter } from '@nestjs/platform-socket.io';
 import { Game } from './entities/message.entity';
 
 @WebSocketGateway({
@@ -61,25 +59,21 @@ export class MessagesGateway {
     return this.messagesService.findUsers(room);
   }
 
-  gameLoop = (room: string) => {
-    this.server
-      .to(room)
-      .emit('ServerUpdate', this.messagesService.updateGameState(room));
+  gameLoop = (game: Game) => {
+    this.server.to(game.room.name).emit('ServerUpdate', game.gameState);
     setTimeout(() => {
-      this.messagesService.loop(room);
-      this.gameLoop(room);
+      this.messagesService.loop(game);
+      this.gameLoop(game);
     }, 10);
   };
 
   @SubscribeMessage('key')
   downLeft(
-    @MessageBody('room') room: string,
-    @MessageBody('clientStatus') clientStatus: string,
     @MessageBody('key') key: string,
     @ConnectedSocket()
     client: Socket,
   ) {
-    this.messagesService.storeBarMove(room, clientStatus, key);
+    this.messagesService.storeBarMove(client, key);
   }
 
   // Game Core
@@ -88,27 +82,50 @@ export class MessagesGateway {
   joinQueue(@ConnectedSocket() client: Socket) {
     const game = this.messagesService.joinQueue(client);
     if (game) {
-      this.messagesService.gameQueue.shift().join(game.room.name);
-      this.messagesService.gameQueue.shift().join(game.room.name);
       this.server.to(game.room.name).emit('gameConfirmation', game.room);
+      setTimeout(() => {
+        if (game.host.status === 'ready' && game.client.status === 'ready') {
+          game.room.status = 'playing';
+          this.server.to(game.room.name).emit('startGame', game.room);
+          this.gameLoop(game);
+        } else {
+          if (game.host.status === 'ready') {
+            game.host.status = 'inQueue';
+            game.client.status = 'idle';
+            this.messagesService.playerQueue.push(game.host);
+          } else if (game.client.status === 'ready') {
+            game.client.status = 'inQueue';
+            game.host.status = 'idle';
+            this.messagesService.playerQueue.push(game.client);
+          } else {
+            game.host.status = 'idle';
+            game.client.status = 'idle';
+          }
+          this.messagesService.games.splice(
+            this.messagesService.games.indexOf(game),
+            1,
+          );
+        }
+      }, 5000);
     }
   }
 
   @SubscribeMessage('playerReady')
-  launchGame(
-    @MessageBody('clientGameState') clientGameState: Game,
-    @ConnectedSocket() client: Socket,
-  ) {
-    const gameState = this.messagesService.games.find(
-      (game) => game.room === clientGameState.room,
-    );
-    if (gameState.ready === false) {
-      gameState.ready = true;
-      client.emit('yourehost');
-    } else {
-      gameState.gameOn = true;
-      this.server.to(gameState.room).emit('startGame', gameState);
-      this.gameLoop(gameState.room);
-    }
+  playerReady(@ConnectedSocket() client: Socket) {
+    this.messagesService.playerList.find(
+      (element) => element.socket === client,
+    ).status = 'ready';
+  }
+
+  @SubscribeMessage('playerNotReady')
+  playerNotReady(@ConnectedSocket() client: Socket) {
+    this.messagesService.playerList.find(
+      (element) => element.socket === client,
+    ).status = 'idle';
+  }
+
+  @SubscribeMessage('joiningPlayerList')
+  joiningPlayerList(@ConnectedSocket() client: Socket) {
+    this.messagesService.joiningPlayerList(client);
   }
 }

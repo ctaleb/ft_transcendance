@@ -12,14 +12,47 @@
 	<div>
 		<canvas ref="canvas" width="500" height="500"></canvas>
 	</div>
+
+	<div class="modal hidden">
+		<h1>Ready to play ?</h1>
+		<button @click="confirmGame()">Yes</button>
+		<button @click="denyGame()">No</button>
+	</div>
+	<div class="overlay hidden"></div>
 </template>
+
+<style>
+.hidden {
+	display: none;
+}
+.modal {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	width: 70%;
+	background-color: white;
+	padding: 6rem;
+	border-radius: 5px;
+	box-shadow: 0 3rem 5rem rgba(0, 0, 0, 0.3);
+	z-index: 10;
+}
+.overlay {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(0, 0, 0, 0.6);
+	backdrop-filter: blur(3px);
+	z-index: 5;
+}
+</style>
 
 <script setup lang="ts">
 import ballUrl from "../assets/ball.png";
 import { ref, onMounted, onBeforeMount } from "vue";
 import { io } from "socket.io-client";
-import { getBaseTransformPreset } from "@vue/compiler-core";
-import { Emitter } from "@socket.io/component-emitter";
 import {
 	GameState,
 	GameRoom,
@@ -38,7 +71,9 @@ const lobbyStatus = ref("Find match");
 const hostScore = ref(0);
 const clientScore = ref(0);
 
-let gameRoom: GameRoom;
+let theRoom: GameRoom;
+
+socket.emit("joiningPlayerList");
 
 function findMatch() {
 	startButton.value = true;
@@ -47,9 +82,14 @@ function findMatch() {
 	socket.emit("joinQueue");
 }
 
-function playerReady() {
-	lobbyStatus.value = "Waiting for the other player...";
-	socket.emit("playerReady", { clientGameState }, () => {});
+function confirmGame() {
+	socket.emit("playerReady", {}, () => {});
+	closeModal();
+}
+
+function denyGame() {
+	socket.emit("playerNotReady", {}, () => {});
+	closeModal();
 }
 
 function drawPlayground(ctx: CanvasRenderingContext2D) {
@@ -66,13 +106,22 @@ function drawPlayground(ctx: CanvasRenderingContext2D) {
 	ctx.strokeRect(0, 0, canvas.value!.width, canvas.value!.height);
 }
 
+function openModal() {
+	document.querySelector(".modal")?.classList.remove("hidden");
+	document.querySelector(".overlay")?.classList.remove("hidden");
+}
+
+function closeModal() {
+	document.querySelector(".modal")?.classList.add("hidden");
+	document.querySelector(".overlay")?.classList.add("hidden");
+}
+
 onMounted(() => {
 	let ctx = canvas.value?.getContext("2d");
 
-	socket.on("gameConfirmation", (gameRoom) => {
-		gameRoom = gameRoom;
-		lobbyStatus.value =
-			"Are you ready to play a ranked game against a very strong opponent ?";
+	socket.on("gameConfirmation", (gameRoom: GameRoom) => {
+		theRoom = gameRoom;
+		openModal();
 	});
 
 	socket.on("ServerUpdate", (gameState: GameState) => {
@@ -106,19 +155,17 @@ onMounted(() => {
 		}
 	});
 
-	socket.on("startGame", (gameRoom) => {
-		gameRoom = gameRoom;
+	socket.on("startGame", (gameRoom: GameRoom) => {
+		theRoom = gameRoom;
 	});
 
 	window.addEventListener("keydown", (e) => {
 		if (e.key === "ArrowLeft")
 			socket.emit("key", {
-				room: gameRoom.name,
 				key: "downLeft",
 			});
 		else if (e.key === "ArrowRight")
 			socket.emit("key", {
-				room: gameRoom.name,
 				key: "downRight",
 			});
 	});
@@ -126,12 +173,10 @@ onMounted(() => {
 	window.addEventListener("keyup", (e) => {
 		if (e.key === "ArrowLeft")
 			socket.emit("key", {
-				room: gameRoom.name,
 				key: "upLeft",
 			});
 		else if (e.key === "ArrowRight")
 			socket.emit("key", {
-				room: gameRoom.name,
 				key: "upRight",
 			});
 	});

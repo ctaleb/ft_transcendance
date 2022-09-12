@@ -1,21 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { CreateMessageDto } from './dto/create-message.dto';
 import {
-  Message,
   ChatRoom,
   Game,
   Player,
   IBar,
   IBall,
   Score,
-  GameOptions,
 } from './entities/message.entity';
-import { PassThrough } from 'stream';
 import { Socket } from 'socket.io';
 
 @Injectable()
 export class MessagesService {
-  gameQueue: Socket[] = [];
+  playerList: Player[] = [];
+  playerQueue: Player[] = [];
   rooms: ChatRoom[] = [];
   games: Game[] = [];
 
@@ -54,18 +52,34 @@ export class MessagesService {
 
   //game stuff here
 
+  joiningPlayerList(socket: Socket) {
+    const player: Player = {
+      input: [],
+      left: false,
+      right: false,
+      name: `player-${this.playerList.length + 1}`,
+      socket: socket,
+      elo: 0,
+      status: 'idle',
+    };
+    this.playerList.push(player);
+  }
+
   joinQueue(socket: Socket) {
     //for later : need to make sure the socket is in only once
-    this.gameQueue.push(socket);
-    if (this.gameQueue.length > 1) {
+    const player = this.playerList.find((element) => element.socket === socket);
+    if (this.playerQueue.length < 1) {
+      this.playerQueue.push(player);
+      player.status = 'inQueue';
+    } else {
       const roomName = `game-${this.games.length + 1}`;
       this.games.push({
         room: {
           name: roomName,
           hostName: '',
           clientName: '',
-          gameStatus: '',
-          gameOptions: {
+          status: 'launching',
+          options: {
             ballSpeed: { x: 2, y: 2 },
             ballsize: 16,
             barSpeed: 7,
@@ -95,41 +109,25 @@ export class MessagesService {
             host: 0,
           },
         },
-        host: {
-          input: [],
-          left: false,
-          right: false,
-        },
-        client: {
-          input: [],
-          left: false,
-          right: false,
-        },
+        host: this.playerQueue.shift(),
+        client: player,
       });
+      const host = this.games.find(
+        (element) => element.room.name === roomName,
+      ).host;
+      host.status = 'inLobby';
+      host.socket.join(roomName);
+      player.status = 'inLobby';
+      player.socket.join(roomName);
       return this.games[this.games.length - 1];
     }
     return null;
   }
 
-  storeBarMove(room: string, clientStatus: string, motion: string) {
-    if (clientStatus === 'host')
-      this.games
-        .find((element) => element.room.name === room)
-        .host.input.push(motion);
-    else
-      this.games
-        .find((element) => element.room.name === room)
-        .client.input.push(motion);
-  }
-
-  findGame(room: string) {
-    if (this.games.find((element) => element.room === room) === undefined)
-      return false;
-    return true;
-  }
-
-  updateGameState(room: string) {
-    return this.games.find((element) => element.room.name === room).gameState;
+  storeBarMove(socket: Socket, key: string) {
+    this.playerList
+      .find((element) => element.socket === socket)
+      .input.push(key);
   }
 
   updateMoveStatus(player: Player) {
@@ -202,21 +200,24 @@ export class MessagesService {
     }
   }
 
-  loop(roomName: string) {
-    const room = this.games.find((element) => element.room.name === roomName);
-    const game = room.gameState;
-    this.updateMoveStatus(room.host);
-    this.updateMoveStatus(room.client);
+  loop(game: Game) {
+    const gameState = game.gameState;
+    this.updateMoveStatus(game.host);
+    this.updateMoveStatus(game.client);
 
-    this.moveBar(game.hostBar, room.host);
-    this.moveBar(game.clientBar, room.client);
+    this.moveBar(gameState.hostBar, game.host);
+    this.moveBar(gameState.clientBar, game.client);
 
-    this.barBallCollision(game.hostBar, game.clientBar, game.ball);
-    this.wallBallCollision(game.ball);
+    this.barBallCollision(
+      gameState.hostBar,
+      gameState.clientBar,
+      gameState.ball,
+    );
+    this.wallBallCollision(gameState.ball);
 
-    game.ball.pos.x += game.ball.speed.x;
-    game.ball.pos.y -= game.ball.speed.y;
+    gameState.ball.pos.x += gameState.ball.speed.x;
+    gameState.ball.pos.y -= gameState.ball.speed.y;
 
-    this.goal(game.ball, game.score);
+    this.goal(gameState.ball, gameState.score);
   }
 }

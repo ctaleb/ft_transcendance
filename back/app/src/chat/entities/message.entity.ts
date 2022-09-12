@@ -1,3 +1,5 @@
+import { Socket } from 'socket.io';
+
 export class IPoint {
   x: number;
   y: number;
@@ -46,8 +48,8 @@ export class GameRoom {
   name: string;
   hostName: string;
   clientName: string;
-  gameStatus: string;
-  gameOptions: GameOptions;
+  status: string;
+  options: GameOptions;
 }
 
 export class Message {
@@ -59,6 +61,10 @@ export class Player {
   input: string[];
   left: boolean;
   right: boolean;
+  name: string;
+  socket: Socket;
+  elo: number;
+  status: string;
 }
 
 export class Game {
