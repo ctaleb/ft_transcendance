@@ -1,10 +1,13 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { authorize } from 'passport';
+import { json } from 'stream/consumers';
 import { CreateOauthDto } from './dto/create-oauth.dto';
 import { UpdateOauthDto } from './dto/update-oauth.dto';
 
 @Injectable()
 export class OauthService {
+  constructor(private jwtService: JwtService) {}
   async connect(code: string): Promise<any> {
       let token = await fetch("https://api.intra.42.fr/oauth/token", {
       headers: {
@@ -27,12 +30,11 @@ export class OauthService {
 			})
 			.then((val) => val.json())
 			.then(async (res) => {
-        let ifExists = await fetch("http://localhost:3000/api/user/findIntraUser/" + res.id, {
+        let user = await fetch("http://localhost:3000/api/user/findIntraUser/" + res.id, {
           method: "GET",
        })
        .then((res) => {return res.json()})
-       console.log(ifExists);
-       if (ifExists.message)
+       if (user.message)
        {
           console.log("THIS USER DOES NOT EXISTS");
           var formData = new FormData();
@@ -43,7 +45,11 @@ export class OauthService {
               method: "POST",
               body: formData,
           })
-         throw(UnauthorizedException)
+          .catch((err) => {console.log(err)})
+       }
+       else
+       {
+    
        }
 			})
       .catch((err) => {console.log(err)})
@@ -51,5 +57,19 @@ export class OauthService {
     })
     .catch((err) => {console.log(err)})
     return token;
+  }
+
+  async login(token: any) {
+    console.log("step1");
+    let user = await fetch("https://api.intra.42.fr/v2/me", {
+      headers: {
+        "Authorization": "Bearer " + token.access_token,
+      },
+    })
+    .then((val) => { return val.json(); })
+    .catch((err) => {console.log(err);})
+    console.log("user is : " + await user);
+    const payload = { username: user.login, sub: user.id, };
+    return this.jwtService.sign(payload);
   }
 }

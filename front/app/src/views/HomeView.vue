@@ -72,8 +72,22 @@ mounted() {
 			},
 			method: "POST",
 		})
-		.then((res) => res.json())
+		.then((res) => { return res.json();})
 		.then((token) => {
+			console.log("The token is in front : " + token.access_token);
+			fetch("http://localhost:3000/api/oauth/login/" + token.access_token, {
+				method: "POST",
+          	})
+			.then((response) => {
+				return response.json();
+			})
+			.then((value : any) => {
+				console.log("value: " + JSON.stringify(value));
+				localStorage.setItem("token", value.token);
+				localStorage.setItem("user", JSON.stringify(value.user));
+				this.$router.push('/portal');
+			})
+			.catch((err) => console.log(err))
 		})
 		.catch((err) => console.log(err))
 	}
@@ -83,7 +97,7 @@ methods: {
 
 	console.log("here we are");
 
-	fetch("http://localhost:3000/api/Authentication/login", {
+	fetch("http://localhost:3000/api/authentication/login", {
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",
@@ -93,16 +107,16 @@ methods: {
 			password: this.password,
 		}),
 	})
-        .then((response) => {
-          console.log("response.status: " + response.status);
-          if (response.status != 201) {
-            console.log("fetch failed");
-            this.login_failed_msg = true;
-            throw response.status;
-          }
-          console.log("fetch success");
-          return  response.json();
-        })
+	.then((response) => {
+		console.log("response.status: " + response.status);
+		if (response.status != 201) {
+			console.log("fetch failed");
+			this.login_failed_msg = true;
+			throw response.status;
+		}
+		console.log("fetch success");
+		return  response.json();
+	})
 	.then((value : any) => {
         console.log("username: " + value.username);
 		localStorage.setItem("token", value.token);
