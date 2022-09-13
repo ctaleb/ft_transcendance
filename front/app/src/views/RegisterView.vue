@@ -2,12 +2,16 @@
   <form>
     <label for="nickname">Nickname:</label><br />
     <input
+           
            type="text"
            v-model="state.nickname"
            id="nick"
            name="nickname"
            required
            />
+    <div :class="{ valid: !v$.$error && v$.$dirty, error: v$.$error }">v$.error: {{ v$.$error }}, v$.dirty: {{ v$.$dirty }}</div>
+    <pre class="left"> {{ v$ }} </pre>
+    <div v-if="v$.nickname.$error">Nickname fiel has an error.</div>
     <br /><br />
     <label for="password">Password:</label><br />
     <input
@@ -119,9 +123,10 @@ export default defineComponent({
     }))
 
     const v$ = useVuelidate(rules, state);
+    v$.value.$validate();
 
     function submitForm() {
-      v$.value.$touch();
+      //v$.value.$touch();
       console.log(v$);
 
     }
@@ -136,6 +141,14 @@ export default defineComponent({
 <style scoped>
 p {
   user-select: none;
+}
+
+.valid input {
+  border: 1px solid green;
+}
+
+.error input {
+  border: 1px solid red;
 }
 
 .greeting {
