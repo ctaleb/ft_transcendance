@@ -18,7 +18,7 @@ export class OauthController {
   async login(@Param('access_token') access_token: string) {
     console.log("acces token before service call : " + access_token);
     let tok =  await this.oauthService.login(access_token);
-    console.log("Token stringified--> " + JSON.stringify(tok));
+    console.log("Token stringified--> " + tok);
     return {token: tok, user:null};
   }
 }

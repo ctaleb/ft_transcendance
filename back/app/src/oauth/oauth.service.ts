@@ -61,15 +61,22 @@ export class OauthService {
 
   async login(token: any) {
     console.log("step1");
-    let user = await fetch("https://api.intra.42.fr/v2/me", {
+    let ret = await fetch("https://api.intra.42.fr/v2/me", {
       headers: {
-        "Authorization": "Bearer " + token.access_token,
+        "Authorization": "Bearer " + token,
       },
     })
-    .then((val) => { return val.json(); })
+    .then((val) => {
+      //console.log(token);
+      return val.json();
+    })
+    .then((user) => {
+      console.log("USER IS : ");
+      console.log(user);
+      const payload = { username: user.login, sub: user.id, };
+      return this.jwtService.sign(payload);
+    })
     .catch((err) => {console.log(err);})
-    console.log("user is : " + await user);
-    const payload = { username: user.login, sub: user.id, };
-    return this.jwtService.sign(payload);
+    return ret;
   }
 }
