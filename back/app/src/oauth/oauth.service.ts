@@ -17,13 +17,13 @@ export class OauthService {
       method: "POST"
     })
     .then((val) => val.json())
-    .then((token) => {
+    .then(async(token) => {
       if (token.access_token == null)
       {
         console.log("Not a 42 user");
         throw(UnauthorizedException);
       }
-      fetch("https://api.intra.42.fr/v2/me", {
+      await fetch("https://api.intra.42.fr/v2/me", {
 				headers: {
 					"Authorization": "Bearer " + token.access_token,
 				},
@@ -41,15 +41,11 @@ export class OauthService {
           formData.append("nickname", res.login);
           formData.append("phone", res.phone);
           formData.append("intraId", res.id);
-          fetch("http://localhost:3000/api/authentication/registration", {
+          await fetch("http://localhost:3000/api/authentication/registration", {
               method: "POST",
               body: formData,
           })
           .catch((err) => {console.log(err)})
-       }
-       else
-       {
-    
        }
 			})
       .catch((err) => {console.log(err)})
@@ -61,22 +57,29 @@ export class OauthService {
 
   async login(token: any) {
     console.log("step1");
-    let ret = await fetch("https://api.intra.42.fr/v2/me", {
+    let ret: any = await fetch("https://api.intra.42.fr/v2/me", {
       headers: {
         "Authorization": "Bearer " + token,
       },
     })
     .then((val) => {
-      //console.log(token);
       return val.json();
     })
-    .then((user) => {
+    .then(async (user) => {
       console.log("USER IS : ");
-      console.log(user);
+      console.log(user.id);
+      let intraUser = await fetch("http://localhost:3000/api/user/findIntraUser/" + user.id, {
+        method: "GET",
+			})
+      .then((res) => {
+        return res.json();
+      })
+      .catch((err) => {console.log(err);})
+      console.log("INTRA USER -- > " + JSON.stringify(intraUser));
       const payload = { username: user.login, sub: user.id, };
-      return this.jwtService.sign(payload);
+      return {token: this.jwtService.sign(payload), user: intraUser};
     })
     .catch((err) => {console.log(err);})
-    return ret;
+    return {token: ret.token, user: ret.user};
   }
 }

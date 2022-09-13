@@ -20,7 +20,7 @@
             /><br /><br />
 			<input type="submit" value="Submit" />
 		</form>
-		<a style="margin-top:1em;margin-bottom:1em;width: 10em;" href="https://api.intra.42.fr/oauth/authorize?client_id=1a90768d9956eae0b0360b4588273a1d4a25143a9c8cfc6a0330dac17b9684db&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2F&response_type=code">Login with 42</a>
+		<button style="background-color: #e7e7e7; color: black;width: 7em;border: 3px solid black; margin-top: 1em; padding: 0.5em;" type="button" onclick="location.href='https://api.intra.42.fr/oauth/authorize?client_id=1a90768d9956eae0b0360b4588273a1d4a25143a9c8cfc6a0330dac17b9684db&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2F&response_type=code'">Continue with 42</button>
 		<h3 style="text-align:center;margin-top: 0;">Or <a href="/signup">sign up</a></h3>
 	</div>
     <div v-if="login_failed_msg">
