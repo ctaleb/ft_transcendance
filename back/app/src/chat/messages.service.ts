@@ -8,7 +8,8 @@ import {
   IBall,
   Score,
 } from './entities/message.entity';
-import { Socket } from 'socket.io';
+import { Server, Socket } from 'socket.io';
+import { WebSocketServer } from '@nestjs/websockets';
 
 @Injectable()
 export class MessagesService {
@@ -16,8 +17,11 @@ export class MessagesService {
   playerQueue: Player[] = [];
   rooms: ChatRoom[] = [];
   games: Game[] = [];
+  kickOff = false;
 
   clientToUser = [];
+
+  server: Server = null;
 
   identify(name: string, clientId: string, room: string) {
     this.clientToUser[clientId] = name;
@@ -91,16 +95,16 @@ export class MessagesService {
         gameState: {
           ball: {
             size: 16,
-            pos: { x: 200, y: 200 },
-            speed: { x: 3, y: 3 },
+            pos: { x: 250, y: 250 },
+            speed: { x: 2, y: 2 },
           },
           hostBar: {
-            size: { x: 40, y: 10 },
+            size: { x: 50, y: 10 },
             pos: { x: 250, y: 460 },
             speed: 0,
           },
           clientBar: {
-            size: { x: 40, y: 10 },
+            size: { x: 50, y: 10 },
             pos: { x: 250, y: 40 },
             speed: 0,
           },
@@ -189,35 +193,68 @@ export class MessagesService {
     }
   }
 
-  goal(ball: IBall, score: Score) {
-    if (ball.pos.y < 0) {
-      score.host += 1;
-      ball.pos = { x: 250, y: 250 };
-    }
-    if (ball.pos.y > 500) {
-      score.client += 1;
-      ball.pos = { x: 250, y: 250 };
+  goal(
+    ball: IBall,
+    score: Score,
+    hostBar: IBar,
+    clientBar: IBar,
+    roomName: string,
+  ) {
+    if (ball.pos.y < 0 || ball.pos.y > 500) {
+      if (ball.pos.y < 0) {
+        score.host += 1;
+      } else {
+        score.client += 1;
+      }
+      this.resetGameState(ball, hostBar, clientBar);
+      this.startRound(roomName);
     }
   }
 
+  resetGameState(ball: IBall, hBar: IBar, cBar: IBar) {
+    ball.pos = { x: 250, y: 250 };
+    ball.speed = { x: 2, y: 2 };
+    hBar.pos = { x: 250, y: 460 };
+    hBar.speed = 0;
+    cBar.pos = { x: 250, y: 40 };
+    cBar.speed = 0;
+  }
+
+  startRound(roomName: string) {
+    this.kickOff = true;
+    this.server.to(roomName).emit('kickOff');
+    setTimeout(() => {
+      this.kickOff = false;
+      this.server.to(roomName).emit('play');
+    }, 3000);
+  }
+
   loop(game: Game) {
-    const gameState = game.gameState;
-    this.updateMoveStatus(game.host);
-    this.updateMoveStatus(game.client);
+    if (!this.kickOff) {
+      const gameState = game.gameState;
+      this.updateMoveStatus(game.host);
+      this.updateMoveStatus(game.client);
 
-    this.moveBar(gameState.hostBar, game.host);
-    this.moveBar(gameState.clientBar, game.client);
+      this.moveBar(gameState.hostBar, game.host);
+      this.moveBar(gameState.clientBar, game.client);
 
-    this.barBallCollision(
-      gameState.hostBar,
-      gameState.clientBar,
-      gameState.ball,
-    );
-    this.wallBallCollision(gameState.ball);
+      this.barBallCollision(
+        gameState.hostBar,
+        gameState.clientBar,
+        gameState.ball,
+      );
+      this.wallBallCollision(gameState.ball);
 
-    gameState.ball.pos.x += gameState.ball.speed.x;
-    gameState.ball.pos.y -= gameState.ball.speed.y;
+      gameState.ball.pos.x += gameState.ball.speed.x;
+      gameState.ball.pos.y -= gameState.ball.speed.y;
 
-    this.goal(gameState.ball, gameState.score);
+      this.goal(
+        gameState.ball,
+        gameState.score,
+        gameState.hostBar,
+        gameState.clientBar,
+        game.room.name,
+      );
+    }
   }
 }

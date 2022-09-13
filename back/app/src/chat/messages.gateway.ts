@@ -4,6 +4,7 @@ import {
   MessageBody,
   WebSocketServer,
   ConnectedSocket,
+  OnGatewayInit,
 } from '@nestjs/websockets';
 import { MessagesService } from './messages.service';
 import { CreateMessageDto } from './dto/create-message.dto';
@@ -15,11 +16,17 @@ import { Game } from './entities/message.entity';
     origin: '*',
   },
 })
-export class MessagesGateway {
+
+//implements for later? OnGatewayConnection, OnGatewayDisconnect: handleDisconnect, handleConnection
+export class MessagesGateway implements OnGatewayInit {
   @WebSocketServer()
   server: Server;
 
   constructor(private readonly messagesService: MessagesService) {}
+
+  afterInit(server: any) {
+    this.messagesService.server = this.server;
+  }
 
   @SubscribeMessage('createMessage')
   async create(
@@ -61,7 +68,22 @@ export class MessagesGateway {
 
   gameLoop = (game: Game) => {
     this.server.to(game.room.name).emit('ServerUpdate', game.gameState);
-    setTimeout(() => {
+    const loopTimer = setTimeout(() => {
+      if (
+        game.gameState.score.client >= game.room.options.scoreMax ||
+        game.gameState.score.host >= game.room.options.scoreMax
+      ) {
+        clearTimeout(loopTimer);
+        game.room.status = 'gameOver';
+        if (game.gameState.score.client >= game.room.options.scoreMax) {
+          game.client.socket.emit('Win', game.room);
+          game.host.socket.emit('Lose', game.room);
+        } else if (game.gameState.score.host >= game.room.options.scoreMax) {
+          game.client.socket.emit('Lose', game.room);
+          game.host.socket.emit('Win', game.room);
+        }
+        return;
+      }
       this.messagesService.loop(game);
       this.gameLoop(game);
     }, 10);
@@ -87,6 +109,7 @@ export class MessagesGateway {
         if (game.host.status === 'ready' && game.client.status === 'ready') {
           game.room.status = 'playing';
           this.server.to(game.room.name).emit('startGame', game.room);
+          this.messagesService.startRound(game.room.name);
           this.gameLoop(game);
         } else {
           if (game.host.status === 'ready') {

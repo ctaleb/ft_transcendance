@@ -51,6 +51,7 @@
 
 <script setup lang="ts">
 import ballUrl from "../assets/ball.png";
+import paddleUrl from "../assets/paddle_grec.png";
 import { ref, onMounted, onBeforeMount } from "vue";
 import { io } from "socket.io-client";
 import {
@@ -63,6 +64,8 @@ import {
 const socket = io("http://" + window.location.hostname + ":3000");
 const ballImg = new Image();
 ballImg.src = ballUrl;
+const paddleImg = new Image();
+paddleImg.src = paddleUrl;
 
 const canvas = ref<HTMLCanvasElement | null>(null);
 
@@ -70,6 +73,8 @@ const startButton = ref(false);
 const lobbyStatus = ref("Find match");
 const hostScore = ref(0);
 const clientScore = ref(0);
+let loadPercent = 120;
+let kickOff = false;
 
 let theRoom: GameRoom;
 
@@ -98,7 +103,7 @@ function drawPlayground(ctx: CanvasRenderingContext2D) {
 	// Draw the border + backgroung
 	ctx.fillStyle = "black";
 	ctx.globalCompositeOperation = "destination-over";
-	ctx.fillStyle = "#FFFFFF";
+	ctx.fillStyle = "#055248";
 	ctx.fillRect(0, 0, canvas.value!.width, canvas.value!.height);
 	ctx.globalCompositeOperation = "source-over";
 	ctx.lineWidth = 3;
@@ -116,6 +121,19 @@ function closeModal() {
 	document.querySelector(".overlay")?.classList.add("hidden");
 }
 
+function kickoffLoading(ctx: any) {
+	if (kickOff) {
+		ctx.beginPath();
+		let arcsize = (loadPercent / 100) * 2 * Math.PI;
+		loadPercent -= 0.4;
+		if (arcsize < 1) return;
+		ctx.arc(250, 250, 20, 1, arcsize);
+		ctx.strokeStyle = "#7AD3FA";
+		ctx.lineWidth = 4;
+		ctx.stroke();
+	}
+}
+
 onMounted(() => {
 	let ctx = canvas.value?.getContext("2d");
 
@@ -124,12 +142,22 @@ onMounted(() => {
 		openModal();
 	});
 
+	socket.on("kickOff", () => {
+		kickOff = true;
+	});
+
+	socket.on("play", () => {
+		kickOff = false;
+		loadPercent = 120;
+	});
+
 	socket.on("ServerUpdate", (gameState: GameState) => {
 		let ball = gameState.ball;
 		clientScore.value = gameState.score.client;
 		hostScore.value = gameState.score.host;
 		if (ctx) {
 			drawPlayground(ctx);
+			kickoffLoading(ctx);
 			ctx.drawImage(
 				ballImg,
 				ball.pos.x - ball.size,
@@ -139,14 +167,16 @@ onMounted(() => {
 			);
 			ctx.fillStyle = "black";
 			let bar = gameState.hostBar;
-			ctx.fillRect(
+			ctx.drawImage(
+				paddleImg,
 				bar.pos.x - bar.size.x,
 				bar.pos.y - bar.size.y,
 				bar.size.x * 2,
 				bar.size.y * 2
 			);
 			bar = gameState.clientBar;
-			ctx.fillRect(
+			ctx.drawImage(
+				paddleImg,
 				bar.pos.x - bar.size.x,
 				bar.pos.y - bar.size.y,
 				bar.size.x * 2,
@@ -155,30 +185,45 @@ onMounted(() => {
 		}
 	});
 
+	socket.on("Win", (gameRoom: GameRoom) => {
+		theRoom = gameRoom;
+		lobbyStatus.value = "Victory !";
+	});
+
+	socket.on("Lose", (gameRoom: GameRoom) => {
+		theRoom = gameRoom;
+		lobbyStatus.value = "Defeat...";
+	});
+
 	socket.on("startGame", (gameRoom: GameRoom) => {
 		theRoom = gameRoom;
+		lobbyStatus.value = "Play !";
 	});
 
 	window.addEventListener("keydown", (e) => {
-		if (e.key === "ArrowLeft")
-			socket.emit("key", {
-				key: "downLeft",
-			});
-		else if (e.key === "ArrowRight")
-			socket.emit("key", {
-				key: "downRight",
-			});
+		if (theRoom.status === "playing") {
+			if (e.key === "ArrowLeft")
+				socket.emit("key", {
+					key: "downLeft",
+				});
+			else if (e.key === "ArrowRight")
+				socket.emit("key", {
+					key: "downRight",
+				});
+		}
 	});
 
 	window.addEventListener("keyup", (e) => {
-		if (e.key === "ArrowLeft")
-			socket.emit("key", {
-				key: "upLeft",
-			});
-		else if (e.key === "ArrowRight")
-			socket.emit("key", {
-				key: "upRight",
-			});
+		if (theRoom.status === "playing") {
+			if (e.key === "ArrowLeft")
+				socket.emit("key", {
+					key: "upLeft",
+				});
+			else if (e.key === "ArrowRight")
+				socket.emit("key", {
+					key: "upRight",
+				});
+		}
 	});
 });
 </script>
