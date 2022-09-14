@@ -8,6 +8,7 @@ import { ImageService } from 'src/image/image.service';
 
 @Injectable()
 export class UserService {
+  static setAvatar: any;
   constructor(
     @InjectRepository(UserEntity)
     private _usersRepository: Repository<UserEntity>,

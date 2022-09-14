@@ -1,9 +1,13 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { UserService } from 'src/user/user.service';
+var fs = require('fs');
+var request = require('request');
 import { authorize } from 'passport';
 import { json } from 'stream/consumers';
 import { CreateOauthDto } from './dto/create-oauth.dto';
 import { UpdateOauthDto } from './dto/update-oauth.dto';
+import { imageFileFilter } from 'src/utils/file-uploading.utils';
 
 @Injectable()
 export class OauthService {
@@ -41,11 +45,26 @@ export class OauthService {
           formData.append("nickname", res.login);
           formData.append("phone", res.phone);
           formData.append("intraId", res.id);
+          let filename: string = res.login + "." + getUrlExtension(res.image_url);
+          let file_path: string = './assets/' + filename;
+          console.log(res.image_url);
+          download(res.image_url, file_path, function(){
+            console.log('done');
+          });
+          let avatar = {filename: "lfourmau.jpeg", path: './assets/lfourmau.jpeg', mimetype: "image/jpeg"};
+          console.log(formData);
           await fetch("http://localhost:3000/api/authentication/registration", {
               method: "POST",
               body: formData,
           })
           .catch((err) => {console.log(err)})
+          console.log("classic user id --->" + res.id);
+          await fetch("http://localhost:3000/api/user/setIntraAvatar/" + res.id + "/lfourmau.jpeg", {
+            method: "POST",
+          })
+          .then((res => res.json()))
+          .then((val) => {console.log(val);})
+          .catch((err) => {console.log(err);})
        }
 			})
       .catch((err) => {console.log(err)})
@@ -83,3 +102,20 @@ export class OauthService {
     return {token: ret.token, user: ret.user};
   }
 }
+function download(uri, filename, callback){
+  request.head(uri, function(err, res, body){
+    console.log('content-type:', res.headers['content-type']);
+    console.log('content-length:', res.headers['content-length']);
+
+    request(uri).pipe(fs.createWriteStream(filename)).on('close', callback);
+  });
+};
+
+const getUrlExtension = (url) => {
+  return url
+    .split(/[#?]/)[0]
+    .split(".")
+    .pop()
+    .trim();
+}
+

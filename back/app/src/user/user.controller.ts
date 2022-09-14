@@ -7,6 +7,8 @@ import { JwtAuthGuard } from 'src/authentication/jwt-auth.guard';
 import { read } from 'fs';
 import { Observable, of } from 'rxjs';
 import { join } from 'path';
+import { get } from 'http';
+import { ImageDto } from 'src/image/image.dto';
 
 @Controller('user')
 export class UserController {
@@ -36,6 +38,14 @@ export class UserController {
   @Get()
   getAllUsers(){
     return this._userService.getAllUsers();
+  }
+
+  @Post('setIntraAvatar/:id/:filename')
+  async setAvatar(@Param('id') id: number, @Param('filename') filename: string){
+    console.log("ID IN USERCONTROLLER " + id);
+    let path = "./assets/" + filename;
+    let file = {filename: filename, path: path, mimetype: "image/jpeg"};
+    return this._userService.setAvatar(id, file);
   }
 }
 
