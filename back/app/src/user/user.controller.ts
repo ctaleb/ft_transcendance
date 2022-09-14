@@ -31,9 +31,11 @@ export class UserController {
   async getUserByNickname(@Param('nickname') nickname: string) {
     return this._userService.getUserByNickname(nickname);
   }
-  @Get('findIntraUser/:id')
-  async getIntraUserById(@Param('id') id: string) {
-    return this._userService.getIntraUserById(id);
+  @Get('findIntraUser/:intraId')
+  async getIntraUserById(@Param('intraId') intraId: string) {
+    let ret = await this._userService.getIntraUserById(intraId);
+    console.log("USER IN CONTROLLER -- " + JSON.stringify(ret));
+    return ret;
   }
   @Get()
   getAllUsers(){
@@ -42,7 +44,6 @@ export class UserController {
 
   @Post('setIntraAvatar/:id/:filename')
   async setAvatar(@Param('id') id: number, @Param('filename') filename: string){
-    console.log("ID IN USERCONTROLLER " + id);
     let path = "./assets/" + filename;
     let file = {filename: filename, path: path, mimetype: "image/jpeg"};
     return this._userService.setAvatar(id, file);

@@ -62,6 +62,7 @@ export class UserService {
     const user = await this._usersRepository.findOneBy({ intraId });
     if (user) {
       const avatar = await this._imageService.getImageById(user.avatarId);
+      console.log("USER GET FROM INTRA IN SERVICE ---- " + JSON.stringify(user));
       return { ...user, ...avatar };
     }
     throw new HttpException('User not found', HttpStatus.NOT_FOUND);

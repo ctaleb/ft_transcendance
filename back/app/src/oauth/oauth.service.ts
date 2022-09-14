@@ -24,7 +24,6 @@ export class OauthService {
     .then(async(token) => {
       if (token.access_token == null)
       {
-        console.log("Not a 42 user");
         throw(UnauthorizedException);
       }
       await fetch("https://api.intra.42.fr/v2/me", {
@@ -40,31 +39,30 @@ export class OauthService {
        .then((res) => {return res.json()})
        if (user.message)
        {
-          console.log("THIS USER DOES NOT EXISTS");
           var formData = new FormData();
           formData.append("nickname", res.login);
           formData.append("phone", res.phone);
           formData.append("intraId", res.id);
           let filename: string = res.login + "." + getUrlExtension(res.image_url);
           let file_path: string = './assets/' + filename;
-          console.log(res.image_url);
           download(res.image_url, file_path, function(){
             console.log('done');
           });
-          let avatar = {filename: "lfourmau.jpeg", path: './assets/lfourmau.jpeg', mimetype: "image/jpeg"};
-          console.log(formData);
           await fetch("http://localhost:3000/api/authentication/registration", {
               method: "POST",
               body: formData,
           })
           .catch((err) => {console.log(err)})
-          console.log("classic user id --->" + res.id);
-          await fetch("http://localhost:3000/api/user/setIntraAvatar/" + res.id + "/lfourmau.jpeg", {
-            method: "POST",
-          })
-          .then((res => res.json()))
-          .then((val) => {console.log(val);})
-          .catch((err) => {console.log(err);})
+          await fetch("http://localhost:3000/api/user/findIntraUser/" + res.id, {
+            method: "GET",
+         })
+         .then((value) => value.json())
+         .then(async(result) => {
+           await fetch("http://localhost:3000/api/user/setIntraAvatar/" + result.id + "/" + filename, {
+             method: "POST",
+            })
+           .catch((err) => {console.log(err);})
+         })
        }
 			})
       .catch((err) => {console.log(err)})
@@ -75,7 +73,6 @@ export class OauthService {
   }
 
   async login(token: any) {
-    console.log("step1");
     let ret: any = await fetch("https://api.intra.42.fr/v2/me", {
       headers: {
         "Authorization": "Bearer " + token,
@@ -85,8 +82,6 @@ export class OauthService {
       return val.json();
     })
     .then(async (user) => {
-      console.log("USER IS : ");
-      console.log(user.id);
       let intraUser = await fetch("http://localhost:3000/api/user/findIntraUser/" + user.id, {
         method: "GET",
 			})
