@@ -1,29 +1,31 @@
 <template>
+  <h2>Sign up</h2>
   <form>
     <label for="nickname">Nickname:</label><br />
     <input
-           
            type="text"
            v-model="v$.nickname.$model"
            id="nick"
            name="nickname"
            />
     <br /><br />
-    <p v-for="error in v$.nickname.$errors" :key="error.$uid" class="text-red">
+    <span v-for="error in v$.nickname.$errors" :key="error.$uid" class="text-red">
       {{ error.$message }}
     <br /><br />
-    </p>
+    </span>
 
     <label for="password">Password:</label><br />
     <input
-           type="password"
-           v-model="state.password.firstTry"
+           :type="passwordFieldType"
+           v-model="v$.password.firstTry.$model"
            id="password"
            name="password"
            />
+    <button class="right" type="button" @click.prevent="hidePassword = !hidePassword">show / hide</button>
     <br /><br />
     <span v-for="error in v$.password.firstTry.$errors" :key="error.$uid" class="text-red">
       {{ error.$message }}
+    <br /><br />
     </span>
     <label for="confirm password">Confirm password:</label><br />
     <input
@@ -34,11 +36,12 @@
      /><br /><br />
     <span v-for="error in v$.password.confirmation.$errors" :key="error.$uid" class="text-red">
       {{ error.$message }}
+     <br /><br />
     </span>
      <label for="phone">Phone number:</label><br />
      <input
             type="tel"
-            v-model="state.phone"
+            v-model="v$.phone.$model"
             id="phone"
             name="phone"
             placeholder="0611111111"
@@ -46,6 +49,7 @@
       /><br /><br />
     <span v-for="error in v$.phone.$errors" :key="error.$uid" class="text-red">
       {{ error.$message }}
+     <br /><br />
     </span>
       <label for="avatar">Choose a profile picture:</label><br />
       <input
@@ -57,33 +61,29 @@
              /><br /><br />
     <span v-for="error in v$.avatar.$errors" :key="error.$uid" class="text-red">
       {{ error.$message }}
+     <br /><br />
     </span>
 
      <input type="submit" value="Submit" @click.stop.prevent="submitForm()" />
-      
-     <div v-if="v$.$invalid && v$.$dirty" class="text-red">
-       <p>Errors:</p>
-       <span v-for="error in v$.$errors" :key="error.$uid">
-         {{ error.$property }} - {{ error.$message }}
-         <br />
-       </span>
-     </div>
 
   </form>
 </template>
 
 <script lang="ts">
 
-import { defineComponent, reactive, computed } from "vue";
+import { defineComponent, ref, reactive, computed } from "vue";
 import { useRouter } from 'vue-router';
 import useVuelidate from '@vuelidate/core';
-import { required, minLength, maxLength, sameAs } from '@vuelidate/validators';
+import { required, minLength, maxLength, sameAs, helpers} from '@vuelidate/validators';
 
 
 export default defineComponent({
   name: "RegisterView",
 
   setup() {
+
+    const hidePassword = ref(true);
+    const passwordFieldType = computed(() => (hidePassword.value ? "password" : "text"));
 
     const state = reactive({
       nickname: "",
@@ -95,13 +95,39 @@ export default defineComponent({
       avatar: File.prototype,
     })
 
+    const containsUppercase = (value: string) => {
+      return /[A-Z]/.test(value);
+    };
+    const containsLowercase = (value: string) => {
+      return /[a-z]/.test(value);
+    };
+    const containsSpecial = (value: string) => {
+      return /[#?!@$%^&*-]/.test(value);
+    };
+    const containsNumber = (value: string) => {
+      return /[0-9]/.test(value);
+    };
+
     const rules = computed(() => ({
-      nickname: { required },
-      password: {
-        firstTry: { required },
-        confirmation: { required, sameAs: sameAs(state.password.firstTry) },
+      nickname: {
+        required: helpers.withMessage("This field cannot be empty", required),
+        minLength: minLength(3)
       },
-      phone: { required },
+      password: {
+        firstTry: {
+          required,
+          minLength: minLength(6),
+          containsUppercase: helpers.withMessage("Password must contain at least one uppercase", containsUppercase),
+          containsLowercase: helpers.withMessage("Password must contain at least one lowercase", containsLowercase),
+          containsSpecial: helpers.withMessage("Password must contain at least one of '#?!@$%^&*-'", containsSpecial),
+          containsNumber: helpers.withMessage("Password must contain at least one digit", containsNumber)
+        },
+        confirmation: {
+          required,
+          sameAs: helpers.withMessage("Passwords don't match", sameAs(state.password.firstTry))
+        },
+      },
+      phone: { required, minLength: minLength(9), maxLength: maxLength(13) },
       avatar: {},
     }))
 
@@ -115,8 +141,6 @@ export default defineComponent({
 
     async function createPost() {
       let formData = new FormData();
-
-      //this.submitted = true;
 
       formData.append("nickname", state.nickname);
       formData.append("phone", state.phone);
@@ -140,13 +164,12 @@ export default defineComponent({
 
     const submitForm = async () => {
       const isFormValid = await v$.value.$validate();
-      v$.value.$touch();
-      console.log("v$: " , v$);
-      console.log("isFormValid: " + isFormValid);
-
+      if (isFormValid) {
+        createPost();
+      }
     }
 
-    return { state, v$, updateAvatar, createPost, submitForm };
+    return { state, v$, updateAvatar, createPost, submitForm, passwordFieldType, hidePassword };
   },
 
 });
@@ -158,16 +181,4 @@ p {
   user-select: none;
 }
 
-.valid input {
-  border: 1px solid green;
-}
-
-.error input {
-  border: 1px solid red;
-}
-
-.greeting {
-  color: red;
-  font-weight: bold;
-}
 </style>
