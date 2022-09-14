@@ -109,7 +109,7 @@ export class MessagesGateway implements OnGatewayInit {
         if (game.host.status === 'ready' && game.client.status === 'ready') {
           game.room.status = 'playing';
           this.server.to(game.room.name).emit('startGame', game.room);
-          this.messagesService.startRound(game.room.name);
+          this.messagesService.startRound(game.room);
           this.gameLoop(game);
         } else {
           if (game.host.status === 'ready') {

@@ -1,3 +1,4 @@
+import { BooleanSupportOption } from 'prettier';
 import { Socket } from 'socket.io';
 
 export class IPoint {
@@ -9,6 +10,7 @@ export class IBar {
   size: IPoint;
   pos: IPoint;
   speed: number;
+  smashing: boolean;
 }
 
 export class IBall {
@@ -35,6 +37,7 @@ export class GameOptions {
   barSpeed: number;
   barSize: IPoint;
   scoreMax: number;
+  chargeMax: number;
   timeLimit: number;
 }
 
@@ -49,6 +52,10 @@ export class GameRoom {
   hostName: string;
   clientName: string;
   status: string;
+  kickOff: boolean;
+  barCollide: boolean;
+  sideCollide: boolean;
+  effect: string;
   options: GameOptions;
 }
 
@@ -59,6 +66,8 @@ export class Message {
 
 export class Player {
   input: string[];
+  smashLeft: number;
+  smashRight: number;
   left: boolean;
   right: boolean;
   name: string;

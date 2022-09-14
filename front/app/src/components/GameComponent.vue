@@ -52,12 +52,16 @@
 <script setup lang="ts">
 import ballUrl from "../assets/ball.png";
 import paddleUrl from "../assets/paddle_grec.png";
+import energyUrl from "../assets/energy.png";
+import paddleEnergyUrl from "../assets/energy_paddle_grec.png";
+import plateauUrl from "../assets/plateau.png";
 import { ref, onMounted, onBeforeMount } from "vue";
 import { io } from "socket.io-client";
 import {
 	GameState,
 	GameRoom,
 	IBall,
+	IBar,
 	IPoint,
 } from "../../../../back/app/src/chat/entities/message.entity";
 
@@ -66,6 +70,12 @@ const ballImg = new Image();
 ballImg.src = ballUrl;
 const paddleImg = new Image();
 paddleImg.src = paddleUrl;
+const energyPaddleImg = new Image();
+energyPaddleImg.src = paddleEnergyUrl;
+const plateauImg = new Image();
+plateauImg.src = plateauUrl;
+const energyImg = new Image();
+energyImg.src = energyUrl;
 
 const canvas = ref<HTMLCanvasElement | null>(null);
 
@@ -75,6 +85,8 @@ const hostScore = ref(0);
 const clientScore = ref(0);
 let loadPercent = 120;
 let kickOff = false;
+let cSmashingPercent = 0;
+let hSmashingPercent = 0;
 
 let theRoom: GameRoom;
 
@@ -101,14 +113,7 @@ function drawPlayground(ctx: CanvasRenderingContext2D) {
 	ctx.clearRect(0, 0, canvas.value!.width, canvas.value!.height);
 
 	// Draw the border + backgroung
-	ctx.fillStyle = "black";
-	ctx.globalCompositeOperation = "destination-over";
-	ctx.fillStyle = "#055248";
-	ctx.fillRect(0, 0, canvas.value!.width, canvas.value!.height);
-	ctx.globalCompositeOperation = "source-over";
-	ctx.lineWidth = 3;
-	ctx.strokeStyle = "#000000";
-	ctx.strokeRect(0, 0, canvas.value!.width, canvas.value!.height);
+	ctx.drawImage(plateauImg, 0, 0, 500, 500);
 }
 
 function openModal() {
@@ -134,6 +139,40 @@ function kickoffLoading(ctx: any) {
 	}
 }
 
+function drawSmashingEffect(
+	bar: IBar,
+	smashingPercent: number,
+	ctx: CanvasRenderingContext2D
+) {
+	if (bar.smashing) {
+		ctx.drawImage(
+			energyPaddleImg,
+			bar.pos.x - bar.size.x,
+			bar.pos.y - bar.size.y * (1 + smashingPercent / 100 / 2),
+			bar.size.x * 2,
+			bar.size.y * (2 + smashingPercent / 100)
+		);
+	}
+	if (bar.smashing) {
+		ctx.globalAlpha = (0.5 * smashingPercent) / 100;
+		ctx.drawImage(
+			energyImg,
+			bar.pos.x - bar.size.x * 2.5,
+			bar.pos.y - bar.size.y * 4,
+			bar.size.x * 5,
+			bar.size.y * 8
+		);
+		ctx.globalAlpha = 1;
+	}
+	ctx.drawImage(
+		paddleImg,
+		bar.pos.x - bar.size.x,
+		bar.pos.y - bar.size.y,
+		bar.size.x * 2,
+		bar.size.y * 2
+	);
+}
+
 onMounted(() => {
 	let ctx = canvas.value?.getContext("2d");
 
@@ -155,6 +194,12 @@ onMounted(() => {
 		let ball = gameState.ball;
 		clientScore.value = gameState.score.client;
 		hostScore.value = gameState.score.host;
+		if (gameState.clientBar.smashing && cSmashingPercent < 100 && !kickOff) {
+			cSmashingPercent += 2;
+		} else if (!gameState.clientBar.smashing || kickOff) cSmashingPercent = 0;
+		if (gameState.hostBar.smashing && hSmashingPercent < 100 && !kickOff) {
+			hSmashingPercent += 2;
+		} else if (!gameState.hostBar.smashing || kickOff) hSmashingPercent = 0;
 		if (ctx) {
 			drawPlayground(ctx);
 			kickoffLoading(ctx);
@@ -166,22 +211,8 @@ onMounted(() => {
 				ball.size * 2
 			);
 			ctx.fillStyle = "black";
-			let bar = gameState.hostBar;
-			ctx.drawImage(
-				paddleImg,
-				bar.pos.x - bar.size.x,
-				bar.pos.y - bar.size.y,
-				bar.size.x * 2,
-				bar.size.y * 2
-			);
-			bar = gameState.clientBar;
-			ctx.drawImage(
-				paddleImg,
-				bar.pos.x - bar.size.x,
-				bar.pos.y - bar.size.y,
-				bar.size.x * 2,
-				bar.size.y * 2
-			);
+			drawSmashingEffect(gameState.clientBar, cSmashingPercent, ctx);
+			drawSmashingEffect(gameState.hostBar, hSmashingPercent, ctx);
 		}
 	});
 
@@ -210,6 +241,14 @@ onMounted(() => {
 				socket.emit("key", {
 					key: "downRight",
 				});
+			if (e.key === "a")
+				socket.emit("key", {
+					key: "downA",
+				});
+			else if (e.key === "d")
+				socket.emit("key", {
+					key: "downD",
+				});
 		}
 	});
 
@@ -222,6 +261,14 @@ onMounted(() => {
 			else if (e.key === "ArrowRight")
 				socket.emit("key", {
 					key: "upRight",
+				});
+			if (e.key === "a")
+				socket.emit("key", {
+					key: "upA",
+				});
+			else if (e.key === "d")
+				socket.emit("key", {
+					key: "upD",
 				});
 		}
 	});
