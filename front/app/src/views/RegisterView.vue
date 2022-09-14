@@ -4,31 +4,37 @@
     <input
            
            type="text"
-           v-model="state.nickname"
+           v-model="v$.nickname.$model"
            id="nick"
            name="nickname"
-           required
            />
-    <div :class="{ valid: !v$.$error && v$.$dirty, error: v$.$error }">v$.error: {{ v$.$error }}, v$.dirty: {{ v$.$dirty }}</div>
-    <pre class="left"> {{ v$ }} </pre>
-    <div v-if="v$.nickname.$error">Nickname fiel has an error.</div>
     <br /><br />
+    <p v-for="error in v$.nickname.$errors" :key="error.$uid" class="text-red">
+      {{ error.$message }}
+    <br /><br />
+    </p>
+
     <label for="password">Password:</label><br />
     <input
            type="password"
            v-model="state.password.firstTry"
            id="password"
            name="password"
-           required
            />
     <br /><br />
+    <span v-for="error in v$.password.firstTry.$errors" :key="error.$uid" class="text-red">
+      {{ error.$message }}
+    </span>
     <label for="confirm password">Confirm password:</label><br />
     <input
            type="password"
-           v-model="state.password.confirmation"
+           v-model="v$.password.confirmation.$model"
            placeholder="Confirm password"
            autocomplete="off"
      /><br /><br />
+    <span v-for="error in v$.password.confirmation.$errors" :key="error.$uid" class="text-red">
+      {{ error.$message }}
+    </span>
      <label for="phone">Phone number:</label><br />
      <input
             type="tel"
@@ -37,8 +43,10 @@
             name="phone"
             placeholder="0611111111"
             pattern="[0-9]{10}"
-            required
       /><br /><br />
+    <span v-for="error in v$.phone.$errors" :key="error.$uid" class="text-red">
+      {{ error.$message }}
+    </span>
       <label for="avatar">Choose a profile picture:</label><br />
       <input
              type="file"
@@ -47,15 +55,20 @@
              accept="image/*"
              @change="updateAvatar"
              /><br /><br />
-     <input type="submit" value="Submit" @click.stop.prevent="submitForm()" />
+    <span v-for="error in v$.avatar.$errors" :key="error.$uid" class="text-red">
+      {{ error.$message }}
+    </span>
 
-     <p v-for="error of v$.$errors" :key="error.$uid">
-      <strong>{{ error.$validator }}</strong>
-      <small> on property</small>
-      <strong>{{ error.$property }}</strong>
-      <small> says:</small>
-      <strong>{{ error.$message }}</strong>
-      </p>
+     <input type="submit" value="Submit" @click.stop.prevent="submitForm()" />
+      
+     <div v-if="v$.$invalid && v$.$dirty" class="text-red">
+       <p>Errors:</p>
+       <span v-for="error in v$.$errors" :key="error.$uid">
+         {{ error.$property }} - {{ error.$message }}
+         <br />
+       </span>
+     </div>
+
   </form>
 </template>
 
@@ -81,6 +94,18 @@ export default defineComponent({
       phone: "",
       avatar: File.prototype,
     })
+
+    const rules = computed(() => ({
+      nickname: { required },
+      password: {
+        firstTry: { required },
+        confirmation: { required, sameAs: sameAs(state.password.firstTry) },
+      },
+      phone: { required },
+      avatar: {},
+    }))
+
+    const v$ = useVuelidate(rules, state);
 
     const router = useRouter()
 
@@ -113,21 +138,11 @@ export default defineComponent({
         });
     }
 
-    const rules = computed(() => ({
-      nickname: { required },
-      password: {
-        firstTry: { required },
-        confirmation: { required, sameAs: sameAs(state.password.firstTry) },
-      },
-      phone: { required },
-    }))
-
-    const v$ = useVuelidate(rules, state);
-    v$.value.$validate();
-
-    function submitForm() {
-      //v$.value.$touch();
-      console.log(v$);
+    const submitForm = async () => {
+      const isFormValid = await v$.value.$validate();
+      v$.value.$touch();
+      console.log("v$: " , v$);
+      console.log("isFormValid: " + isFormValid);
 
     }
 
