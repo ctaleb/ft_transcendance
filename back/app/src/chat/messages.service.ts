@@ -92,7 +92,7 @@ export class MessagesService {
           sideCollide: false,
           effect: 'null',
           options: {
-            ballSpeed: { x: 2, y: 2 },
+            ballSpeed: this.getRandomStart(),
             ballsize: 16,
             barSpeed: 7,
             barSize: { x: 40, y: 10 },
@@ -145,12 +145,16 @@ export class MessagesService {
       .input.push(key);
   }
 
-  updateMoveStatus(player: Player, bar: IBar) {
+  updateMoveStatus(player: Player, bar: IBar, playerType: string) {
     player.input.forEach((input) => {
-      if (input === 'downRight') player.right = true;
-      else if (input === 'downLeft') player.left = true;
-      else if (input === 'upRight') player.right = false;
-      else if (input === 'upLeft') player.left = false;
+      if (input === 'downRight')
+        playerType === 'host' ? (player.right = true) : (player.left = true);
+      else if (input === 'downLeft')
+        playerType === 'host' ? (player.left = true) : (player.right = true);
+      else if (input === 'upRight')
+        playerType === 'host' ? (player.right = false) : (player.left = false);
+      else if (input === 'upLeft')
+        playerType === 'host' ? (player.left = false) : (player.right = false);
       else if (input === 'downA') {
         player.smashLeft = 0.01;
         player.smashRight = 0;
@@ -344,9 +348,48 @@ export class MessagesService {
     }
   }
 
+  inverseState(gameState: GameState) {
+    const inverseState: GameState = {
+      ball: {
+        size: gameState.ball.size,
+        pos: { x: 500 - gameState.ball.pos.x, y: 500 - gameState.ball.pos.y },
+        speed: gameState.ball.speed,
+      },
+      hostBar: {
+        size: gameState.hostBar.size,
+        pos: {
+          x: 500 - gameState.hostBar.pos.x,
+          y: 500 - gameState.hostBar.pos.y,
+        },
+        speed: gameState.hostBar.speed,
+        smashing: gameState.hostBar.smashing,
+      },
+      clientBar: {
+        size: gameState.clientBar.size,
+        pos: {
+          x: 500 - gameState.clientBar.pos.x,
+          y: 500 - gameState.clientBar.pos.y,
+        },
+        speed: gameState.clientBar.speed,
+        smashing: gameState.clientBar.smashing,
+      },
+      score: gameState.score,
+    };
+    return inverseState;
+  }
+
+  getRandomStart() {
+    const random = Math.random() * 3 + 1;
+    const pos: IPoint = {
+      x: (4 - random) * (Math.round(Math.random()) * 2 - 1),
+      y: random * (Math.round(Math.random()) * 2 - 1),
+    };
+    return pos;
+  }
+
   resetGameState(game: Game) {
     game.gameState.ball.pos = { x: 250, y: 250 };
-    game.gameState.ball.speed = { x: 2, y: 2 };
+    game.gameState.ball.speed = this.getRandomStart();
     game.gameState.hostBar.pos = { x: 250, y: 460 };
     game.gameState.hostBar.speed = 0;
     game.gameState.hostBar.smashing = false;
@@ -414,8 +457,8 @@ export class MessagesService {
   loop(game: Game) {
     if (!game.room.kickOff) {
       const gameState = game.gameState;
-      this.updateMoveStatus(game.host, gameState.hostBar);
-      this.updateMoveStatus(game.client, gameState.clientBar);
+      this.updateMoveStatus(game.host, gameState.hostBar, 'host');
+      this.updateMoveStatus(game.client, gameState.clientBar, 'client');
 
       this.chargeUp(game);
 

@@ -55,6 +55,9 @@ import paddleUrl from "../assets/paddle_grec.png";
 import energyUrl from "../assets/energy.png";
 import paddleEnergyUrl from "../assets/energy_paddle_grec.png";
 import plateauUrl from "../assets/plateau.png";
+import energyRedUrl from "../assets/energy_red.png";
+import paddleRedUrl from "../assets/paddle_grec_red.png";
+import paddleEnergyRedUrl from "../assets/energy_paddle_red.png";
 import { ref, onMounted, onBeforeMount } from "vue";
 import { io } from "socket.io-client";
 import {
@@ -76,6 +79,12 @@ const plateauImg = new Image();
 plateauImg.src = plateauUrl;
 const energyImg = new Image();
 energyImg.src = energyUrl;
+const energyPaddleRedImg = new Image();
+energyPaddleRedImg.src = paddleEnergyRedUrl;
+const energyRedImg = new Image();
+energyRedImg.src = energyRedUrl;
+const paddleRedImg = new Image();
+paddleRedImg.src = paddleRedUrl;
 
 const canvas = ref<HTMLCanvasElement | null>(null);
 
@@ -146,7 +155,7 @@ function drawSmashingEffect(
 ) {
 	if (bar.smashing) {
 		ctx.drawImage(
-			energyPaddleImg,
+			bar.pos.y < 250 ? energyPaddleRedImg : energyPaddleImg,
 			bar.pos.x - bar.size.x,
 			bar.pos.y - bar.size.y * (1 + smashingPercent / 100 / 2),
 			bar.size.x * 2,
@@ -156,7 +165,7 @@ function drawSmashingEffect(
 	if (bar.smashing) {
 		ctx.globalAlpha = (0.5 * smashingPercent) / 100;
 		ctx.drawImage(
-			energyImg,
+			bar.pos.y < 250 ? energyRedImg : energyImg,
 			bar.pos.x - bar.size.x * 2.5,
 			bar.pos.y - bar.size.y * 4,
 			bar.size.x * 5,
@@ -165,7 +174,7 @@ function drawSmashingEffect(
 		ctx.globalAlpha = 1;
 	}
 	ctx.drawImage(
-		paddleImg,
+		bar.pos.y < 250 ? paddleRedImg : paddleImg,
 		bar.pos.x - bar.size.x,
 		bar.pos.y - bar.size.y,
 		bar.size.x * 2,

@@ -67,7 +67,12 @@ export class MessagesGateway implements OnGatewayInit {
   }
 
   gameLoop = (game: Game) => {
-    this.server.to(game.room.name).emit('ServerUpdate', game.gameState);
+    // this.server.to(game.room.name).emit('ServerUpdate', game.gameState);
+    game.host.socket.emit('ServerUpdate', game.gameState);
+    game.client.socket.emit(
+      'ServerUpdate',
+      this.messagesService.inverseState(game.gameState),
+    );
     const loopTimer = setTimeout(() => {
       if (
         game.gameState.score.client >= game.room.options.scoreMax ||
