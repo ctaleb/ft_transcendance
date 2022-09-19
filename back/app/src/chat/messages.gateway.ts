@@ -24,8 +24,8 @@ export class MessagesGateway implements OnGatewayInit {
 
   constructor(private readonly messagesService: MessagesService) {}
 
-  afterInit(server: any) {
-    this.messagesService.server = this.server;
+  afterInit(server: Server) {
+    this.messagesService.server = server;
   }
 
   @SubscribeMessage('createMessage')
