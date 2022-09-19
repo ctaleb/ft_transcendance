@@ -6,7 +6,7 @@ import {
   ConnectedSocket,
   OnGatewayInit,
 } from '@nestjs/websockets';
-import { MessagesService } from './messages.service';
+import { MessagesService } from './server.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { Server, Socket } from 'socket.io';
 import { Game } from './entities/message.entity';
