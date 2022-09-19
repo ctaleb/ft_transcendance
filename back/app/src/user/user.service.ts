@@ -8,6 +8,7 @@ import { ImageService } from 'src/image/image.service';
 
 @Injectable()
 export class UserService {
+  static setAvatar: any;
   constructor(
     @InjectRepository(UserEntity)
     private _usersRepository: Repository<UserEntity>,
@@ -31,7 +32,7 @@ export class UserService {
     const user = await this._usersRepository.findOneBy({ nickname });
     if (user) {
       const avatar = await this._imageService.getImageById(user.avatarId);
-      return { ...user, ...avatar };
+      return { ...user, avatar };
     }
     throw new HttpException('User not found', HttpStatus.NOT_FOUND);
   }
@@ -55,5 +56,14 @@ export class UserService {
       avatarId: avatar.id,
     });
     return await this._usersRepository.findOneBy({ id: userId });
+  }
+
+  async getIntraUserById(intraId: string) {
+    const user = await this._usersRepository.findOneBy({ intraId });
+    if (user) {
+      const avatar = await this._imageService.getImageById(user.avatarId);
+      return { ...user, avatar };
+    }
+    throw new HttpException('User not found', HttpStatus.NOT_FOUND);
   }
 }

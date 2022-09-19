@@ -7,22 +7,25 @@ import { ImageEntity } from 'src/image/image.entity';
 export class UserEntity extends AbstractEntity {
   @Column({ unique: true })
   public nickname: string;
-
+  
   @Column({ unique: true })
   public phone: string;
-
-  @Column()
+  
+  @Column({nullable: true})
   @Exclude()
   public password: string;
-
+  
   @JoinColumn({ name: 'avatarId' })
   @ManyToOne(() => ImageEntity, {
     nullable: true,
   })
   public avatar?: ImageEntity;
-
+  
   // We add the avatarId column above so that the entity of the user can hold
   // the id of the avatar without joining all of the data of the avatar.
   @Column({ nullable: true })
   public avatarId?: number;
+
+  @Column({ nullable: true })
+  public intraId: string;
 }
