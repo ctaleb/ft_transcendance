@@ -1,6 +1,8 @@
 <template>
 	<div>
-		<h2 style="text-align:center">Welcome on fc_transcendance, please Log in</h2>
+		<h2 style="text-align: center">
+			Welcome on fc_transcendance, please Log in
+		</h2>
 		<form @submit.prevent="login">
 			<label for="username">Username: </label>
 			<input
@@ -119,4 +121,3 @@ methods: {
 },
 });
 </script>
-

@@ -1,4 +1,17 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Request, Response, UseGuards, Get, Param, ParseIntPipe, Res, } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Request,
+  Response,
+  UseGuards,
+  Get,
+  Param,
+  ParseIntPipe,
+  Res,
+} from '@nestjs/common';
 import { UserEntity } from 'src/user/user.entity';
 import { RegistrationDto } from 'src/authentication/registration.dto';
 import { CreateUserDto } from 'src/user/user.dto';
@@ -17,8 +30,8 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @Get('profile')
   async getProfile(@Request() req) {
-     return req.user;
-    }
+    return req.user;
+  }
   @Get('profile-picture/assets/:imagename')
   getPicture(@Param('imagename') imagename, @Res() res): Observable<Object> {
     return of(res.sendFile(join(process.cwd(), "/assets/" + imagename)));
@@ -37,7 +50,7 @@ export class UserController {
     return ret;
   }
   @Get()
-  getAllUsers(){
+  getAllUsers() {
     return this._userService.getAllUsers();
   }
 
@@ -48,4 +61,3 @@ export class UserController {
     return this._userService.setAvatar(id, file);
   }
 }
-

@@ -5,10 +5,9 @@ import { join } from 'path';
 import { DatabaseModule } from './database/database.module';
 import { AuthenticationModule } from './authentication/authentication.module';
 import { ImageModule } from './image/image.module';
-import { MessagesModule } from './chat/messages.module';
+import { MessagesModule } from './server/server.module';
 import { FriendListModule } from './friend_list/friend_list.module';
 import { OauthModule } from './oauth/oauth.module';
-
 
 @Module({
   imports: [
@@ -24,4 +23,4 @@ import { OauthModule } from './oauth/oauth.module';
     OauthModule,
   ],
 })
-export class AppModule {};
+export class AppModule {}
