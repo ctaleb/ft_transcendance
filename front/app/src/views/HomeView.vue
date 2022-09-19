@@ -22,7 +22,8 @@
 		</form>
 		<h3 style="text-align:center">Or <a href="/signup">sign up</a></h3>
 	</div>
-    <div v-if="login_failed_msg">
+    <!--   <div :style="{ color: login_failed_color }" v-if="login_failed_msg"> -->
+    <div class="text-red" v-if="login_failed_msg">
       Login failed. Please try again.
     </div>
 
@@ -38,23 +39,19 @@ let funcs = require('../functions/funcs');
 export default defineComponent({
 data: () => {
 	return {
-        login_failed_msg:  ref(false),
 		username: "",
 		password: "",
+        login_failed_msg:  ref(false),
+        //login_failed_color: 'red',
 	};
 },
 mounted() {
 	let isConnected = funcs.isConnected(localStorage.getItem("token"));
-	console.log(isConnected);
 	if (isConnected)
 		this.$router.push("/portal");
-    else
-        console.log("not connected");
 },
 methods: {
 	async login() {
-
-	console.log("here we are");
 
 	fetch("http://localhost:3000/api/Authentication/login", {
 		method: "POST",
@@ -67,22 +64,19 @@ methods: {
 		}),
 	})
         .then((response) => {
-          console.log("response.status: " + response.status);
           if (response.status != 201) {
-            console.log("fetch failed");
             this.login_failed_msg = true;
             throw response.status;
           }
-          console.log("fetch success");
           return  response.json();
         })
 	.then((value : any) => {
-        console.log("username: " + value.username);
 		localStorage.setItem("token", value.token);
 		localStorage.setItem("user", JSON.stringify(value.user));
 		this.$router.push('/portal');
 	})
-    .catch( function( error ){
+    .catch((error) => {
+      console.log(error);
 	})
   }
 },
