@@ -32,7 +32,7 @@ export class UserService {
     const user = await this._usersRepository.findOneBy({ nickname });
     if (user) {
       const avatar = await this._imageService.getImageById(user.avatarId);
-      return { ...user, ...avatar };
+      return { ...user, avatar };
     }
     throw new HttpException('User not found', HttpStatus.NOT_FOUND);
   }
@@ -62,8 +62,6 @@ export class UserService {
     const user = await this._usersRepository.findOneBy({ intraId });
     if (user) {
       const avatar = await this._imageService.getImageById(user.avatarId);
-      console.log("USER GET FROM INTRA IN SERVICE ---- " + JSON.stringify(user));
-      console.log("AVATAR GET FROM INTRA IN SERVICE ---- " + JSON.stringify(avatar));
       return { ...user, avatar };
     }
     throw new HttpException('User not found', HttpStatus.NOT_FOUND);

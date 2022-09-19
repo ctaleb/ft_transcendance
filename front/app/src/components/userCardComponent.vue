@@ -33,7 +33,7 @@ export default defineComponent({
 		.then((data) => {
 			this.nickname = data.nickname;
 			this.phone = data.phone;
-			let avatar = data.path;
+			let avatar = data.avatar.path;
 			fetch("http://localhost:3000/api/user/profile-picture/" + avatar, {
 				method: "GET",
 				headers: {

@@ -34,7 +34,6 @@ export class UserController {
   @Get('findIntraUser/:intraId')
   async getIntraUserById(@Param('intraId') intraId: string) {
     let ret = await this._userService.getIntraUserById(intraId);
-    console.log("USER IN CONTROLLER -- " + JSON.stringify(ret));
     return ret;
   }
   @Get()
@@ -46,7 +45,6 @@ export class UserController {
   async setAvatar(@Param('id') id: number, @Param('filename') filename: string){
     let path = "./assets/" + filename;
     let file = {filename: filename, path: path, mimetype: "image/jpeg"};
-    console.log(id);
     return this._userService.setAvatar(id, file);
   }
 }

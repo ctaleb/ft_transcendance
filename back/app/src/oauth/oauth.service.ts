@@ -22,7 +22,6 @@ export class OauthService {
     })
     .then((val) => val.json())
     .then(async(token) => {
-      console.log(token);
       if (token.access_token == null)
       {
         throw(UnauthorizedException);
@@ -59,7 +58,6 @@ export class OauthService {
          })
          .then((value) => value.json())
          .then(async(result) => {
-          console.log("RESULT ID --> " + result.id);
            await fetch("http://localhost:3000/api/user/setIntraAvatar/" + result.id + "/" + filename, {
              method: "POST",
             })

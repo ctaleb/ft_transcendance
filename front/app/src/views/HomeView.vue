@@ -65,7 +65,6 @@ mounted() {
 	let code = url.searchParams.get("code");
 	if (code != null)
 	{
-		console.log(code);
 		fetch("http://localhost:3000/api/oauth/" + code, {
 			headers: {
 				"Content-Type": "application/json"
@@ -74,7 +73,6 @@ mounted() {
 		})
 		.then((res) => { return res.json();})
 		.then((token) => {
-			console.log("The token is in front : " + token.access_token);
 			fetch("http://localhost:3000/api/oauth/login/" + token.access_token, {
 				method: "POST",
           	})
@@ -82,7 +80,6 @@ mounted() {
 				return response.json();
 			})
 			.then((value : any) => {
-				console.log("value: " + JSON.stringify(value));
 				localStorage.setItem("token", value.token);
 				localStorage.setItem("user", JSON.stringify(value.user));
 				this.$router.push('/portal');
