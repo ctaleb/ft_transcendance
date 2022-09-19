@@ -46,6 +46,7 @@ export class UserController {
   async setAvatar(@Param('id') id: number, @Param('filename') filename: string){
     let path = "./assets/" + filename;
     let file = {filename: filename, path: path, mimetype: "image/jpeg"};
+    console.log(id);
     return this._userService.setAvatar(id, file);
   }
 }

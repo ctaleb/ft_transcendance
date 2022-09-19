@@ -13,15 +13,16 @@ import { imageFileFilter } from 'src/utils/file-uploading.utils';
 export class OauthService {
   constructor(private jwtService: JwtService) {}
   async connect(code: string): Promise<any> {
-      let token = await fetch("https://api.intra.42.fr/oauth/token", {
+    let token = await fetch("https://api.intra.42.fr/oauth/token", {
       headers: {
         "Content-Type": "multipart/form-data",
       },
-      body: 'grant_type=authorization_code&client_id=1a90768d9956eae0b0360b4588273a1d4a25143a9c8cfc6a0330dac17b9684db&client_secret=fc3b24dee46ae52d1c335e8ef794d2de3dcd530b97fa22aeb19267de032a9f49&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2F&code=' + code,
+      body: 'grant_type=authorization_code&client_id=1a90768d9956eae0b0360b4588273a1d4a25143a9c8cfc6a0330dac17b9684db&client_secret=f6625481926b4356e865d97de76e4bb52ad72575c3ef8393258537d6c581f7f3&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2F&code=' + code,
       method: "POST"
     })
     .then((val) => val.json())
     .then(async(token) => {
+      console.log(token);
       if (token.access_token == null)
       {
         throw(UnauthorizedException);
@@ -58,6 +59,7 @@ export class OauthService {
          })
          .then((value) => value.json())
          .then(async(result) => {
+          console.log("RESULT ID --> " + result.id);
            await fetch("http://localhost:3000/api/user/setIntraAvatar/" + result.id + "/" + filename, {
              method: "POST",
             })
