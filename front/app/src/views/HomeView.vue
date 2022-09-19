@@ -23,7 +23,8 @@
 		<button style="background-color: #e7e7e7; color: black;width: 7em;border: 3px solid black; margin-top: 1em; padding: 0.5em;" type="button" onclick="location.href='https://api.intra.42.fr/oauth/authorize?client_id=1a90768d9956eae0b0360b4588273a1d4a25143a9c8cfc6a0330dac17b9684db&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2F&response_type=code'">Continue with 42</button>
 		<h3 style="text-align:center;margin-top: 0;">Or <a href="/signup">sign up</a></h3>
 	</div>
-    <div v-if="login_failed_msg">
+    <!--   <div :style="{ color: login_failed_color }" v-if="login_failed_msg"> -->
+    <div class="text-red" v-if="login_failed_msg">
       Login failed. Please try again.
     </div>
 
@@ -39,7 +40,6 @@ let funcs = require('../functions/funcs');
 export default defineComponent({
 data: () => {
 	return {
-        login_failed_msg:  ref(false),
 		username: "",
 		password: "",
 		token: {
@@ -49,11 +49,11 @@ data: () => {
 			"scope":null,
 			"created_at":null
 		},
+        login_failed_msg:  ref(false),
 	};
 },
 mounted() {
 	let isConnected = funcs.isConnected(localStorage.getItem("token"));
-	console.log(isConnected);
 	if (isConnected)
 		this.$router.push("/portal");
     else
@@ -95,9 +95,7 @@ mounted() {
 methods: {
 	async login() {
 
-	console.log("here we are");
-
-	fetch("http://localhost:3000/api/authentication/login", {
+	fetch("http://localhost:3000/api/Authentication/login", {
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",
@@ -108,17 +106,13 @@ methods: {
 		}),
 	})
 	.then((response) => {
-		console.log("response.status: " + response.status);
 		if (response.status != 201) {
-			console.log("fetch failed");
 			this.login_failed_msg = true;
 			throw response.status;
 		}
-		console.log("fetch success");
 		return  response.json();
 	})
 	.then((value : any) => {
-        console.log("username: " + value.username);
 		localStorage.setItem("token", value.token);
 		localStorage.setItem("user", JSON.stringify(value.user));
 		this.$router.push('/portal');
