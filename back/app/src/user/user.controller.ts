@@ -1,4 +1,16 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Request, Response, UseGuards, Get, Param, ParseIntPipe, Res, } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Request,
+  Response,
+  UseGuards,
+  Get,
+  Param,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { UserEntity } from 'src/user/user.entity';
 import { RegistrationDto } from 'src/authentication/registration.dto';
 import { CreateUserDto } from 'src/user/user.dto';
@@ -15,12 +27,12 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @Get('profile')
   async getProfile(@Request() req) {
-     return req.user;
-    }
-  @Get('profile-picture/assets/:imagename')
-  getPicture(@Param('imagename') imagename, @Res() res): Observable<Object> {
-    return of(res.sendFile(join(process.cwd(), "/assets/" + imagename)));
+    return req.user;
   }
+  //   @Get('profile-picture/assets/:imagename')
+  //   getPicture(@Param('imagename') imagename, @Res() res): Observable<Object> {
+  //     return of(res.sendFile(join(process.cwd(), "/assets/" + imagename)));
+  //   }
   @Get(':id')
   async getUserById(@Param('id', ParseIntPipe) id: number) {
     return this._userService.getUserById(id);
@@ -30,8 +42,7 @@ export class UserController {
     return this._userService.getUserByNickname(nickname);
   }
   @Get()
-  getAllUsers(){
+  getAllUsers() {
     return this._userService.getAllUsers();
   }
 }
-

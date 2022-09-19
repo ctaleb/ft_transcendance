@@ -1,6 +1,8 @@
 <template>
 	<div>
-		<h2 style="text-align:center">Welcome on fc_transcendance, please Log in</h2>
+		<h2 style="text-align: center">
+			Welcome on fc_transcendance, please Log in
+		</h2>
 		<form @submit.prevent="login">
 			<label for="username">Username: </label>
 			<input
@@ -20,7 +22,7 @@
             /><br /><br />
 			<input type="submit" value="Submit" />
 		</form>
-		<h3 style="text-align:center">Or <a href="/signup">sign up</a></h3>
+		<h3 style="text-align: center">Or <a href="/signup">sign up</a></h3>
 	</div>
     <!--   <div :style="{ color: login_failed_color }" v-if="login_failed_msg"> -->
     <div class="text-red" v-if="login_failed_msg">
@@ -82,4 +84,3 @@ methods: {
 },
 });
 </script>
-

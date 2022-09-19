@@ -1,252 +1,291 @@
 <template>
-  <h1>Score: {{counter}}</h1>
-  <button @click="players = 1">Solo</button>
-  <button @click="players = 2">Multiplayer</button>
-  <body>
-    <canvas ref="canvas" width="500" height="500"></canvas>
-  </body>
+	<div class="score">
+		Score:
+		<div>Host: {{ hostScore }}</div>
+		<div>Client: {{ clientScore }}</div>
+	</div>
+	<div>
+		<button @click="findMatch()" :disabled="startButton">
+			{{ lobbyStatus }}
+		</button>
+	</div>
+	<div>
+		<canvas ref="canvas" width="500" height="500"></canvas>
+	</div>
+
+	<div class="modal hidden">
+		<h1>Ready to play ?</h1>
+		<button @click="confirmGame()">Yes</button>
+		<button @click="denyGame()">No</button>
+	</div>
+	<div class="overlay hidden"></div>
 </template>
+
+<style>
+.hidden {
+	display: none;
+}
+.modal {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	width: 70%;
+	background-color: white;
+	padding: 6rem;
+	border-radius: 5px;
+	box-shadow: 0 3rem 5rem rgba(0, 0, 0, 0.3);
+	z-index: 10;
+}
+.overlay {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(0, 0, 0, 0.6);
+	backdrop-filter: blur(3px);
+	z-index: 5;
+}
+</style>
 
 <script setup lang="ts">
 import ballUrl from "../assets/ball.png";
-import { ref, onMounted } from "vue";
-import { getBaseTransformPreset } from "@vue/compiler-core";
+import paddleUrl from "../assets/paddle_grec.png";
+import energyUrl from "../assets/energy.png";
+import paddleEnergyUrl from "../assets/energy_paddle_grec.png";
+import plateauUrl from "../assets/plateau.png";
+import energyRedUrl from "../assets/energy_red.png";
+import paddleRedUrl from "../assets/paddle_grec_red.png";
+import paddleEnergyRedUrl from "../assets/energy_paddle_red.png";
+import { ref, onMounted, onBeforeMount } from "vue";
+import { io } from "socket.io-client";
+import {
+	GameState,
+	GameRoom,
+	IBall,
+	IBar,
+	IPoint,
+} from "../../../../back/app/src/chat/entities/message.entity";
 
-const ballImg = new Image(); ballImg.src = ballUrl;
+const socket = io("http://" + window.location.hostname + ":3000");
+const ballImg = new Image();
+ballImg.src = ballUrl;
+const paddleImg = new Image();
+paddleImg.src = paddleUrl;
+const energyPaddleImg = new Image();
+energyPaddleImg.src = paddleEnergyUrl;
+const plateauImg = new Image();
+plateauImg.src = plateauUrl;
+const energyImg = new Image();
+energyImg.src = energyUrl;
+const energyPaddleRedImg = new Image();
+energyPaddleRedImg.src = paddleEnergyRedUrl;
+const energyRedImg = new Image();
+energyRedImg.src = energyRedUrl;
+const paddleRedImg = new Image();
+paddleRedImg.src = paddleRedUrl;
 
 const canvas = ref<HTMLCanvasElement | null>(null);
 
-const barHeight = 10;
-const barWidth = 100;
-const barSpeed = 5;
-const padding = 15;
-let barMoving = 0;
-const counter = ref(0);
-let gameOn = false;
-let gameOver = false;
-const players = ref(1);
-let leftMovement = false,
-  rightMovement = false,
-  spaceBar = false,
-  restart = false,
-  leftMovementP2 = false,
-  rightMovementP2 = false;
+const startButton = ref(false);
+const lobbyStatus = ref("Find match");
+const hostScore = ref(0);
+const clientScore = ref(0);
+let loadPercent = 120;
+let kickOff = false;
+let cSmashingPercent = 0;
+let hSmashingPercent = 0;
 
-interface IPoint {
-  x: number;
-  y: number;
+let theRoom: GameRoom;
+
+socket.emit("joiningPlayerList");
+
+function findMatch() {
+	startButton.value = true;
+	lobbyStatus.value = "Looking for an opponent...";
+
+	socket.emit("joinQueue");
 }
 
-interface IBall extends IPoint {
-  speed: IPoint;
-  radius: number;
-  rotation: number;
+function confirmGame() {
+	socket.emit("playerReady", {}, () => {});
+	closeModal();
+}
+
+function denyGame() {
+	socket.emit("playerNotReady", {}, () => {});
+	closeModal();
 }
 
 function drawPlayground(ctx: CanvasRenderingContext2D) {
-  ctx.clearRect(0, 0, canvas.value!.width, canvas.value!.height);
+	ctx.clearRect(0, 0, canvas.value!.width, canvas.value!.height);
 
-  // Draw the border + backgroung
-  ctx.fillStyle = "black";
-  ctx.globalCompositeOperation = "destination-over";
-  ctx.fillStyle = "#FFFFFF";
-  ctx.fillRect(0, 0, canvas.value!.width, canvas.value!.height);
-  ctx.globalCompositeOperation = "source-over";
-  ctx.lineWidth = 3;
-  ctx.strokeStyle = "#000000";
-  ctx.strokeRect(0, 0, canvas.value!.width, canvas.value!.height);
+	// Draw the border + backgroung
+	ctx.drawImage(plateauImg, 0, 0, 500, 500);
 }
 
-function ballMove(ball: IBall, topBar: IPoint, bottomBar: IPoint) {
-  if (ball.x - ball.radius <= 0) {
-    ball.speed.x *= -1;
-    ball.x = 0 + ball.radius;
-    ball.rotation = 0;
-  }
-  if (ball.x + ball.radius > canvas.value!.width) {
-    ball.speed.x *= -1;
-    ball.rotation = 0;
-    ball.x = canvas.value!.width - ball.radius;
-  }
-  if (ball.speed.y > 0) {
-    if (ball.y > canvas.value!.height - padding - ball.radius - barHeight || ball.y <= barHeight + ball.radius + padding) {
-      if (ball.x > topBar.x && ball.x < topBar.x + barWidth) {
-        ball.speed.y *= 1.1;
-        ball.speed.y *= -1;
-        ball.rotation = (20 * ball.speed.y) * barMoving;
-        counter.value++;
-      }
-      else {
-        gameOn = false;
-        gameOver = true;
-      }
-    }
-  }
-  else if (ball.speed.y < 0) {
-    if (ball.y > canvas.value!.height - padding - ball.radius - barHeight || ball.y <= barHeight + ball.radius + padding) {
-      if (ball.x > bottomBar.x && ball.x < bottomBar.x + barWidth) {
-        ball.speed.y *= 1.1;
-        ball.speed.y *= -1;
-        ball.rotation = (20 * ball.speed.y) * barMoving;
-        counter.value++;
-      }
-      else {
-        gameOn = false;
-        gameOver = true;
-      }
-    }
-  }
-
-  ball.x += ball.speed.x
-  if (ball.speed.x > 0 && ball.rotation > 0 || ball.speed.x < 0 && ball.rotation < 0)
-    ball.rotation *= -1;
-  ball.x += ball.rotation / 10;
-  ball.y -= ball.speed.y;
-  ball.rotation *= 0.99;
+function openModal() {
+	document.querySelector(".modal")?.classList.remove("hidden");
+	document.querySelector(".overlay")?.classList.remove("hidden");
 }
 
-function barMove(topBar: IPoint, bottomBar: IPoint) {
-  if (players.value === 1) {
-    if (leftMovement && topBar.x > 0) {
-      topBar.x -= barSpeed;
-      bottomBar.x -= barSpeed;
-      barMoving = -1;
-    }
-    if (rightMovement && topBar.x < canvas.value!.width - barWidth) {
-      topBar.x += barSpeed;
-      bottomBar.x += barSpeed;
-      barMoving = 1;
-    }  
-  }
-  else {
-    if (leftMovement && bottomBar.x > 0) {
-      bottomBar.x -= barSpeed;
-      barMoving = -1;
-    }
-    if (rightMovement && bottomBar.x < canvas.value!.width - barWidth) {
-      bottomBar.x += barSpeed;
-      barMoving = 1;
-    }
-    if (leftMovementP2 && topBar.x > 0) {
-      topBar.x -= barSpeed;
-      barMoving = -1;
-    }
-    if (rightMovementP2 && topBar.x < canvas.value!.width - barWidth) {
-      topBar.x += barSpeed;
-      barMoving = 1;
-    }
-  }
+function closeModal() {
+	document.querySelector(".modal")?.classList.add("hidden");
+	document.querySelector(".overlay")?.classList.add("hidden");
 }
 
-function gameStart() {
-	if (spaceBar) {
-		gameOn = true;
+function kickoffLoading(ctx: any) {
+	if (kickOff) {
+		ctx.beginPath();
+		let arcsize = (loadPercent / 100) * 2 * Math.PI;
+		loadPercent -= 0.4;
+		if (arcsize < 1) return;
+		ctx.arc(250, 250, 20, 1, arcsize);
+		ctx.strokeStyle = "#7AD3FA";
+		ctx.lineWidth = 4;
+		ctx.stroke();
 	}
 }
 
-function gameReset(topBar: IPoint, bottomBar: IPoint, ball: IBall) {
-  if (restart) {
-    topBar.x = canvas.value!.width / 2 - barWidth / 2;
-    topBar.y = padding;
-    bottomBar.x = canvas.value!.width / 2 - barWidth / 2;
-    bottomBar.y = canvas.value!.height - barHeight - padding;
-    ball.x = canvas.value!.width / 2;
-    ball.y = canvas.value!.height / 2;
-    ball.speed.x = 2.6;
-	ball.speed.y = 2;
-    ball.radius = 16;
-    ball.rotation = 0;
-	counter.value = 0;
-    gameOn = false;
-	gameOver = false;
-    restart = false;
-    leftMovement = false;
-    rightMovement = false;
-	leftMovementP2 = false;
-	rightMovementP2 = false;
-    spaceBar = false;
-	barMoving = 0;
-  }
+function drawSmashingEffect(
+	bar: IBar,
+	smashingPercent: number,
+	ctx: CanvasRenderingContext2D
+) {
+	if (bar.smashing) {
+		ctx.drawImage(
+			bar.pos.y < 250 ? energyPaddleRedImg : energyPaddleImg,
+			bar.pos.x - bar.size.x,
+			bar.pos.y - bar.size.y * (1 + smashingPercent / 100 / 2),
+			bar.size.x * 2,
+			bar.size.y * (2 + smashingPercent / 100)
+		);
+	}
+	if (bar.smashing) {
+		ctx.globalAlpha = (0.5 * smashingPercent) / 100;
+		ctx.drawImage(
+			bar.pos.y < 250 ? energyRedImg : energyImg,
+			bar.pos.x - bar.size.x * 2.5,
+			bar.pos.y - bar.size.y * 4,
+			bar.size.x * 5,
+			bar.size.y * 8
+		);
+		ctx.globalAlpha = 1;
+	}
+	ctx.drawImage(
+		bar.pos.y < 250 ? paddleRedImg : paddleImg,
+		bar.pos.x - bar.size.x,
+		bar.pos.y - bar.size.y,
+		bar.size.x * 2,
+		bar.size.y * 2
+	);
 }
 
 onMounted(() => {
-  let ctx = canvas.value?.getContext("2d");
-  if (ctx) {
-    let topBar: IPoint, bottomBar: IPoint;
-    let ball: IBall;
+	let ctx = canvas.value?.getContext("2d");
 
-    topBar = {
-      x: canvas.value!.width / 2 - barWidth / 2,
-      y: padding,
-    };
-    bottomBar = {
-      x: canvas.value!.width / 2 - barWidth / 2,
-      y: canvas.value!.height - barHeight - padding,
-    };
-    ball = {
-      x: canvas.value!.width / 2,
-      y: canvas.value!.height / 2,
-      speed: { x: 2.6, y: 2 },
-      radius: 16,
-      rotation: 0,
-    };
+	socket.on("gameConfirmation", (gameRoom: GameRoom) => {
+		theRoom = gameRoom;
+		openModal();
+	});
 
-    if (ctx) {
-	  window.addEventListener("keydown", (e) => {
-        if (e.key === "ArrowLeft") leftMovement = true;
-        else if (e.key === "ArrowRight") rightMovement = true;
-		else if (e.key === "a") leftMovementP2 = true;
-		else if (e.key === "d") rightMovementP2 = true;
-		else if (e.key === "F2") restart = true;
-      });
-      window.addEventListener("keyup", (e) => {
-        if (e.key === "ArrowLeft") leftMovement = false;
-        else if (e.key === "ArrowRight") rightMovement = false;
-		else if (e.key === "a") leftMovementP2 = false;
-		else if (e.key === "d") rightMovementP2 = false;
-		else if (e.key === "F2") restart = false;
-	  });
-	  if (gameOn === false) {
-        window.addEventListener("keydown", (e) => {
-          if (e.key === " ") spaceBar = true;
-        });
-	    window.addEventListener("keyup", (e) => {
-          if (e.key === " ") spaceBar = false;
-        });
-	  }
-	  window.addEventListener("keydown", (e) => {
-        if (e.key === "`") console.log(players);
-	  });
+	socket.on("kickOff", () => {
+		kickOff = true;
+	});
 
-      const loop = () => {
-        if (!ctx)
-          return;
-        drawPlayground(ctx);
+	socket.on("play", () => {
+		kickOff = false;
+		loadPercent = 120;
+	});
 
-        if (gameOver === true) {
-          gameReset(topBar, bottomBar, ball);
+	socket.on("ServerUpdate", (gameState: GameState) => {
+		let ball = gameState.ball;
+		clientScore.value = gameState.score.client;
+		hostScore.value = gameState.score.host;
+		if (gameState.clientBar.smashing && cSmashingPercent < 100 && !kickOff) {
+			cSmashingPercent += 2;
+		} else if (!gameState.clientBar.smashing || kickOff) cSmashingPercent = 0;
+		if (gameState.hostBar.smashing && hSmashingPercent < 100 && !kickOff) {
+			hSmashingPercent += 2;
+		} else if (!gameState.hostBar.smashing || kickOff) hSmashingPercent = 0;
+		if (ctx) {
+			drawPlayground(ctx);
+			kickoffLoading(ctx);
+			ctx.drawImage(
+				ballImg,
+				ball.pos.x - ball.size,
+				ball.pos.y - ball.size,
+				ball.size * 2,
+				ball.size * 2
+			);
+			ctx.fillStyle = "black";
+			drawSmashingEffect(gameState.clientBar, cSmashingPercent, ctx);
+			drawSmashingEffect(gameState.hostBar, hSmashingPercent, ctx);
 		}
-		if (gameOn === false && gameOver === false) {
-          gameStart();
+	});
+
+	socket.on("Win", (gameRoom: GameRoom) => {
+		theRoom = gameRoom;
+		lobbyStatus.value = "Victory !";
+	});
+
+	socket.on("Lose", (gameRoom: GameRoom) => {
+		theRoom = gameRoom;
+		lobbyStatus.value = "Defeat...";
+	});
+
+	socket.on("startGame", (gameRoom: GameRoom) => {
+		theRoom = gameRoom;
+		lobbyStatus.value = "Play !";
+	});
+
+	window.addEventListener("keydown", (e) => {
+		if (theRoom.status === "playing") {
+			if (e.key === "ArrowLeft")
+				socket.emit("key", {
+					key: "downLeft",
+				});
+			else if (e.key === "ArrowRight")
+				socket.emit("key", {
+					key: "downRight",
+				});
+			if (e.key === "a")
+				socket.emit("key", {
+					key: "downA",
+				});
+			else if (e.key === "d")
+				socket.emit("key", {
+					key: "downD",
+				});
 		}
-        if (gameOn === true) {
-          barMoving = 0;
-          barMove(topBar, bottomBar);
-          ballMove(ball, topBar, bottomBar);
-        }
+	});
 
-        // Draw the ball
-        ctx.drawImage(ballImg, ball.x - ball.radius, ball.y - ball.radius, ball.radius * 2, ball.radius * 2);
-
-        // Draw the bars
-        ctx.fillStyle = "black";
-        ctx.fillRect(topBar.x, topBar.y, barWidth, barHeight);
-        ctx.fillRect(bottomBar.x, bottomBar.y, barWidth, barHeight);
-
-        requestAnimationFrame(loop);
-      };
-      requestAnimationFrame(loop);
-    }
-  }
+	window.addEventListener("keyup", (e) => {
+		if (theRoom.status === "playing") {
+			if (e.key === "ArrowLeft")
+				socket.emit("key", {
+					key: "upLeft",
+				});
+			else if (e.key === "ArrowRight")
+				socket.emit("key", {
+					key: "upRight",
+				});
+			if (e.key === "a")
+				socket.emit("key", {
+					key: "upA",
+				});
+			else if (e.key === "d")
+				socket.emit("key", {
+					key: "upD",
+				});
+		}
+	});
 });
 </script>
+
+<style type="text/css">
+button:disabled {
+	opacity: 0.7;
+}
+</style>
