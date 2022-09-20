@@ -53,7 +53,7 @@ export class UserService {
       avatar = await this._imageService.getDefaultAvatar();
     }
     await this._usersRepository.update(userId, {
-      avatarId: avatar.id,
+      avatarId: avatar.id, // a revoir
     });
     return await this._usersRepository.findOneBy({ id: userId });
   }
@@ -68,7 +68,24 @@ export class UserService {
   }
 
   //PROFILE EDITION
-  async updateNickname(nickname: string) {
+  async updateNickname(oldNickname: string, newNickname: string) {
+    console.log("old nickname: " + oldNickname);
+    console.log("new nickname: " + newNickname);
+    let nickname = oldNickname;
+    let user = await this._usersRepository.findOneBy({nickname});
+    if (user) {
+        const avatar = this._imageService.getImageById(user.avatarId);
+        await this._usersRepository.update(user.id, {nickname:newNickname});
+        const ret_user = await this._usersRepository.findOneBy({id: user.id});
+        return {...ret_user, avatar};
+    }
+    throw new HttpException('User not Found', HttpStatus.NOT_FOUND);
+  }
 
+  async updateAvatar(imageDto: ImageDto, userId: number){
+    const user = await this._usersRepository.findOneBy({id: userId})
+    await this.setAvatar(user.id, imageDto);
+    const avatar = this._imageService.getImageById(user.avatarId);
+    return {...user, avatar};
   }
 }
