@@ -8,6 +8,7 @@ import {
   Response,
   UseGuards,
   Get,
+  Put,
   Param,
   ParseIntPipe,
   Res,
@@ -59,5 +60,11 @@ export class UserController {
     let path = "./assets/" + filename;
     let file = {filename: filename, path: path, mimetype: "image/jpeg"};
     return this._userService.setAvatar(id, file);
+  }
+
+  //PROFILE EDITION
+  @Put('nicknameEdit/:nickname')
+  async editNickname(@Param('nickname') nickname: string) {
+    return this._userService.updateNickname(nickname);
   }
 }

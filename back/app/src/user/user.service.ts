@@ -66,4 +66,9 @@ export class UserService {
     }
     throw new HttpException('User not found', HttpStatus.NOT_FOUND);
   }
+
+  //PROFILE EDITION
+  async updateNickname(nickname: string) {
+
+  }
 }
