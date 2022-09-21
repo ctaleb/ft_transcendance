@@ -66,9 +66,19 @@ import {
 	IBall,
 	IBar,
 	IPoint,
-} from "../../../../back/app/src/chat/entities/message.entity";
+} from "../../../../back/app/src/server/entities/server.entity";
+import config from "../config/config";
 
-const socket = io("http://" + window.location.hostname + ":3000");
+if (config.socket.disconnected) {
+	config.socket = io("http://" + window.location.hostname + ":3000", {
+		auth: {
+			token: localStorage.getItem("token"),
+			user: JSON.parse(localStorage.getItem("user") || "{}"),
+		},
+	});
+}
+const socket = config.socket;
+console.log(socket);
 const ballImg = new Image();
 ballImg.src = ballUrl;
 const paddleImg = new Image();
@@ -99,7 +109,7 @@ let hSmashingPercent = 0;
 
 let theRoom: GameRoom;
 
-socket.emit("joiningPlayerList");
+// socket.emit("joiningPlayerList");
 
 function findMatch() {
 	startButton.value = true;
@@ -190,6 +200,10 @@ onMounted(() => {
 		openModal();
 	});
 
+	socket.on("reconnect", (gameRoom: GameRoom) => {
+		theRoom = gameRoom;
+	});
+
 	socket.on("kickOff", () => {
 		kickOff = true;
 	});
@@ -225,14 +239,18 @@ onMounted(() => {
 		}
 	});
 
-	socket.on("Win", (gameRoom: GameRoom) => {
+	socket.on("Win", (gameRoom: GameRoom, elo_diff: number) => {
 		theRoom = gameRoom;
-		lobbyStatus.value = "Victory !";
+		lobbyStatus.value =
+			"Victory !" + "You gained +" + elo_diff + " elo ! Return to lobby ?";
+		startButton.value = false;
 	});
 
-	socket.on("Lose", (gameRoom: GameRoom) => {
+	socket.on("Lose", (gameRoom: GameRoom, elo_diff: number) => {
 		theRoom = gameRoom;
-		lobbyStatus.value = "Defeat...";
+		lobbyStatus.value =
+			"Defeat..." + "You lost -" + elo_diff + " elo ! Return to lobby ?";
+		startButton.value = false;
 	});
 
 	socket.on("startGame", (gameRoom: GameRoom) => {

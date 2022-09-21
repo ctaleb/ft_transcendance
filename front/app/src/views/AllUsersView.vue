@@ -7,34 +7,33 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import UserCardComponent from "../components/userCardComponent.vue";
-let funcs = require('../functions/funcs');
+let funcs = require("../functions/funcs");
 
 export default defineComponent({
 	components: {
-	   UserCardComponent,
-	 },
+		UserCardComponent,
+	},
 	data() {
-        return {
-            users: [],
-        };
-    },
-    mounted() {
-        let isConnected = funcs.isConnected(localStorage.getItem("token"));
-		if (isConnected == false)
-			this.$router.push("/");
+		return {
+			users: [],
+		};
+	},
+	mounted() {
+		let isConnected = funcs.isConnected(localStorage.getItem("token"));
+		if (isConnected == false) this.$router.push("/");
 		else {
-			fetch("http://localhost:3000/api/user/", {
+			fetch("http://" + window.location.hostname + ":3000/api/user/", {
 				method: "GET",
 				headers: {
-					"Authorization": "Bearer " + localStorage.getItem("token"),
+					Authorization: "Bearer " + localStorage.getItem("token"),
 				},
 			})
-			.then(res => res.json())
-			.then((data) => {
-				this.users = data;
-			})
-			.catch(err => console.log(err.message));
+				.then((res) => res.json())
+				.then((data) => {
+					this.users = data;
+				})
+				.catch((err) => console.log(err.message));
 		}
-	}
+	},
 });
 </script>

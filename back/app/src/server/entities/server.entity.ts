@@ -1,4 +1,3 @@
-import { BooleanSupportOption } from 'prettier';
 import { Socket } from 'socket.io';
 
 export class IPoint {
@@ -65,6 +64,7 @@ export class Message {
 }
 
 export class Player {
+  token: string;
   input: string[];
   smashLeft: number;
   smashRight: number;

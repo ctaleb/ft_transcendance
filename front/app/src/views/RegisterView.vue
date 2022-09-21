@@ -149,7 +149,7 @@ export default defineComponent({
         formData.append("avatar", state.avatar, state.avatar.name);
       }
 
-      fetch("http://localhost:3000/api/authentication/registration", {
+      fetch("http://" + window.location.hostname + ":3000/api/authentication/registration", {
         method: "POST",
         body: formData,
       })

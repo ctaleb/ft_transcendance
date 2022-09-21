@@ -10,12 +10,14 @@ import {
   IPoint,
   Score,
   GameState,
-} from './entities/message.entity';
+} from './entities/server.entity';
 import { Server, Socket } from 'socket.io';
 import { WebSocketServer } from '@nestjs/websockets';
+import { UserEntity } from 'src/user/user.entity';
+import { lookupService } from 'dns';
 
 @Injectable()
-export class MessagesService {
+export class ServerService {
   playerList: Player[] = [];
   playerQueue: Player[] = [];
   rooms: ChatRoom[] = [];
@@ -25,6 +27,24 @@ export class MessagesService {
 
   server: Server = null;
 
+  //generic stuff
+  newUser(token: string, user: UserEntity) {
+    const player: Player = {
+      token: token,
+      input: [],
+      left: false,
+      right: false,
+      name: user.nickname,
+      socket: null,
+      elo: 0,
+      status: 'idle',
+      smashLeft: 0,
+      smashRight: 0,
+    };
+    this.playerList.push(player);
+  }
+
+  //chat stuff
   identify(name: string, clientId: string, room: string) {
     this.clientToUser[clientId] = name;
     if (this.rooms.find((element) => element.name === room) === undefined)
@@ -58,24 +78,61 @@ export class MessagesService {
 
   //game stuff here
 
-  joiningPlayerList(socket: Socket) {
-    const player: Player = {
-      input: [],
-      left: false,
-      right: false,
-      name: `player-${this.playerList.length + 1}`,
-      socket: socket,
-      elo: 0,
-      status: 'idle',
-      smashLeft: 0,
-      smashRight: 0,
-    };
-    this.playerList.push(player);
+  //   joiningPlayerList(socket: Socket) {
+  //     const player: Player = {
+  //       token: null,
+  //       input: [],
+  //       left: false,
+  //       right: false,
+  //       name: `player-${this.playerList.length + 1}`,
+  //       socket: socket,
+  //       elo: 0,
+  //       status: 'idle',
+  //       smashLeft: 0,
+  //       smashRight: 0,
+  //     };
+  //     this.playerList.push(player);
+  //   }
+
+  elo_calc(winner: Player, loser: Player) {
+    const diff = Math.round((winner.elo - loser.elo) / 10);
+    const elo = 10 - diff;
+    winner.elo += elo;
+    loser.elo -= elo;
+    return elo;
+  }
+
+  end_game(game: Game) {
+    game.room.status = 'gameOver';
+    let elo = 0;
+    if (game.gameState.score.client >= game.room.options.scoreMax) {
+      elo = this.elo_calc(game.client, game.host);
+      game.client.socket.emit('Win', game.room, elo);
+      game.host.socket.emit('Lose', game.room, elo);
+    } else if (game.gameState.score.host >= game.room.options.scoreMax) {
+      elo = this.elo_calc(game.host, game.client);
+      game.client.socket.emit('Lose', game.room, elo);
+      game.host.socket.emit('Win', game.room, elo);
+    }
+    game.host.status = 'idle';
+    game.client.status = 'idle';
+    this.games.splice(this.games.indexOf(game), 1);
+  }
+
+  reconnect(player: Player) {
+    let game = this.games.find((element) => element.host.name === player.name);
+    if (!game)
+      game = this.games.find((element) => element.host.name === player.name);
+    console.log(game);
+    if (game) {
+      player.socket.emit('reconnect', game.room);
+    }
   }
 
   joinQueue(socket: Socket) {
     //for later : need to make sure the socket is in only once
     const player = this.playerList.find((element) => element.socket === socket);
+    if (!player) return;
     if (this.playerQueue.length < 1) {
       this.playerQueue.push(player);
       player.status = 'inQueue';
