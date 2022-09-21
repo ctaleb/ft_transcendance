@@ -5,6 +5,7 @@ import { CreateUserDto } from 'src/user/user.dto';
 import { Repository, QueryRunner } from 'typeorm';
 import { ImageDto } from 'src/image/image.dto';
 import { ImageService } from 'src/image/image.service';
+import { unlink } from 'fs';
 
 @Injectable()
 export class UserService {
@@ -83,8 +84,15 @@ export class UserService {
   }
 
   async updateAvatar(imageDto: ImageDto, userId: number){
-    const user = await this._usersRepository.findOneBy({id: userId})
+    const user = await this._usersRepository.findOneBy({id: userId});
+    const oldAvatar = await this._imageService.getImageById(user.avatarId);
+    unlink(oldAvatar.path, (err) => {
+      if (err) throw err;
+      console.log(oldAvatar.path + ' has been deleted');
+    });
+    
     await this.setAvatar(user.id, imageDto);
+    await this._imageService.deleteImage(user.avatarId);
     const userUpdated = await this._usersRepository.findOneBy({id: userId})
     const avatar = await this._imageService.getImageById(userUpdated.avatarId);
     return {...userUpdated, avatar};

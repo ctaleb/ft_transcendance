@@ -58,6 +58,7 @@ export class OauthService {
          })
          .then((value) => value.json())
          .then(async(result) => {
+           console.log("result: " + JSON.stringify(result))
            await fetch("http://localhost:3000/api/user/setIntraAvatar/" + result.id + "/" + filename, {
              method: "POST",
             })

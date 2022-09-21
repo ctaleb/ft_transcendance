@@ -62,6 +62,7 @@ export class UserController {
 
   @Post('setIntraAvatar/:id/:filename')
   async setAvatar(@Param('id') id: number, @Param('filename') filename: string){
+    console.log("user id:" + id);
     let path = "./assets/" + filename;
     let file = {filename: filename, path: path, mimetype: "image/jpeg"};
     return this._userService.setAvatar(id, file);

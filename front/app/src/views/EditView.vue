@@ -23,7 +23,7 @@
             accept="image/*"
             @change="updateAvatar"
             />
-            <input type="submit" value="update profile picture" @click.stop.prevent="updatePicture()"/>
+         <!--   <input type="submit" value="update profile picture" @click.stop.prevent="updatePicture()"/>  -->
             
     
         </div>
@@ -90,6 +90,8 @@ export default defineComponent({
         },
         updateAvatar(event: Event) {
             this.newAvatar = (event.target as HTMLInputElement).files?.[0]!;
+            if (this.newAvatar != File.prototype)
+                this.updatePicture();       
         },
         async updatePicture(){
             let formData = new FormData();
@@ -110,6 +112,4 @@ export default defineComponent({
     }
 });
 </script>
-
-blob:http://localhost:3000/07c77512-a894-41d5-9812-f838a9dac94a
 
