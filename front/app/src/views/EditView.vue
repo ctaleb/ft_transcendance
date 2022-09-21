@@ -14,6 +14,13 @@
                 <input type="submit" value="update nickname" @click.stop.prevent="updateNickname()"/>
                 <div v-if="nicknameUsed">Nickname is already in use.</div>
                 <div v-if="success">Nickname successfully updated.</div>
+                <br /> <br />
+                <input type="text" placeholder="new password" v-model="password"/><br /> <br />
+                <input type="password" placeholder="please confirm new password" v-model="confirmPassword"/>
+                <input type="submit" value="confirm password" @click.stop.prevent="updatePassword()"/>
+                <div v-if="!passwordMatchFlag">Passwords don't match.</div>
+                <div v-if="!ValidPasswordFlag">Password must contains at least one uppercase, one lowercase, one special character, and be between 9 and 13 characters long.</div>
+                <div v-if="updatePasswordSuccess" color="green">Password successfully updated!</div>
             </form>
             <label for="avatar">Update your profile picture:</label><br />
             <input
@@ -45,6 +52,11 @@ export default defineComponent({
             nicknameUsed: ref(false),
             success: ref(false),
             newAvatar: File.prototype,
+            password: ref(""),
+            confirmPassword: ref(""),
+            ValidPasswordFlag: ref(true),
+            passwordMatchFlag: ref(true),
+            updatePasswordSuccess: ref(false),
 		};
 	},
 
@@ -109,7 +121,62 @@ export default defineComponent({
 					this.image = URL.createObjectURL(data);
 				})
         },
+
+        containsUppercase(value: string){
+            return /[A-Z]/.test(value);
+        },
+        containsLowercase(value: string){
+            return /[a-z]/.test(value);
+        },
+        containsSpecial(value: string){
+            return /[#?!@$%^&*-]/.test(value);
+        },
+        containsNumber(value: string){
+            return /[0-9]/.test(value);
+        },
+
+        isValidPassword(password: string){
+            return (this.containsUppercase(password) &&
+                this.containsLowercase(password) &&
+                this.containsSpecial(password) &&
+                this.containsNumber(password) &&
+                password.length >= 9 && password.length <= 13)
+        },
+
+        passwordsMatch(password: string, confirmPassword: string){
+            return password === confirmPassword;
+        },
+        
+        async updatePassword() {
+            if (!this.isValidPassword(this.password)){
+                this.ValidPasswordFlag = false;
+                return;
+            }
+            if (!this.passwordsMatch(this.password, this.confirmPassword)) {
+                this.passwordMatchFlag = false;
+                return;
+            }
+            const updateResult = await fetch("http://localhost:3000/api/user/passwordEdit/" + this.user.id, {
+                method: "PUT",
+                headers: {
+			        "Content-Type": "application/json",
+		        },
+                body: JSON.stringify({
+                    newPassword: this.password,
+		        }),
+            })
+            .then((res) => {return res.json()})
+            .catch((err) => {
+                console.log(err);
+            })
+            if (updateResult.success){
+                this.updatePasswordSuccess = true;
+            }
+        }
     }
 });
 </script>
 
+$2b$10$E58PiGEN.41Qt9wRzfKV3.uxLeU7dw8EcXRzI6jXQU.CWi5AVZhr6
+
+$2b$10$iL1Z6QrYsw0NdoUtRJzHtOOsI7l5Utn8iQTq0xsNYMFvZ2wUy8Z8.

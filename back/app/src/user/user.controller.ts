@@ -28,6 +28,7 @@ import { ImageDto } from 'src/image/image.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { editFileName, imageFileFilter } from 'src/utils/file-uploading.utils';
+import { updatePasswordDto } from './dto/updatePassword';
 
 @Controller('user')
 export class UserController {
@@ -93,5 +94,11 @@ export class UserController {
     }: null,
     userId);
 
+  }
+
+  @Put('passwordEdit/:userId')
+  async editPassword(@Param('userId') userId: number, @Body() newPasswordDto: updatePasswordDto) {
+    
+    return this._userService.updatePassword(newPasswordDto.newPassword, userId);
   }
 }

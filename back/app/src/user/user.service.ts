@@ -6,6 +6,7 @@ import { Repository, QueryRunner } from 'typeorm';
 import { ImageDto } from 'src/image/image.dto';
 import { ImageService } from 'src/image/image.service';
 import { unlink } from 'fs';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
@@ -96,5 +97,13 @@ export class UserService {
     const userUpdated = await this._usersRepository.findOneBy({id: userId})
     const avatar = await this._imageService.getImageById(userUpdated.avatarId);
     return {...userUpdated, avatar};
+  }
+
+  async updatePassword(newPassword: string, userId: number){
+    const user = await this._usersRepository.findOneBy({id: userId});
+    //newPassword = await bcrypt.hash(newPassword, 10);
+    await this._usersRepository.update(userId, {password: newPassword})
+    console.log("newPassword: " + newPassword)
+    return {success: true};
   }
 }
