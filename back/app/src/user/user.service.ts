@@ -85,7 +85,8 @@ export class UserService {
   async updateAvatar(imageDto: ImageDto, userId: number){
     const user = await this._usersRepository.findOneBy({id: userId})
     await this.setAvatar(user.id, imageDto);
-    const avatar = this._imageService.getImageById(user.avatarId);
-    return {...user, avatar};
+    const userUpdated = await this._usersRepository.findOneBy({id: userId})
+    const avatar = await this._imageService.getImageById(userUpdated.avatarId);
+    return {...userUpdated, avatar};
   }
 }

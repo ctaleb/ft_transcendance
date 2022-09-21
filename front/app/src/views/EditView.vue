@@ -40,7 +40,7 @@ export default defineComponent({
 		return {
 			user: JSON.parse(localStorage.getItem("user") || '{}'),
 			avatar: '{}',
-			image: "",
+			image: ref(""),
             nickname: JSON.parse(localStorage.getItem("user") || '{}').nickname,
             nicknameUsed: ref(false),
             success: ref(false),
@@ -58,6 +58,7 @@ export default defineComponent({
 			funcs.getUserById(this.user.id)
 			.then((data: any) => {
 				this.avatar = data.path;
+                console.log("avatar: " + this.avatar)
 				funcs.getUserAvatar(this.avatar)
 				.then((data: any) => {
                     console.log("in mounted: " + data);
@@ -99,13 +100,16 @@ export default defineComponent({
             })
             .then((res) => {return res.json()})
             .catch((err) => {console.log(err)})
+            console.log("fetch_ret.avatar.path: " + fetch_ret.avatar.path)
             funcs.getUserAvatar(fetch_ret.avatar.path)
 				.then((data: any) => {
-                    console.log("in mounted: " + data);
+                    console.log("in updatePicture: " + data);
 					this.image = URL.createObjectURL(data);
 				})
         },
     }
 });
 </script>
+
+blob:http://localhost:3000/07c77512-a894-41d5-9812-f838a9dac94a
 
