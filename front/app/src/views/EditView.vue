@@ -1,38 +1,34 @@
 <template>
-    <div>
-        <div v-if="user!=null">
-            <p> Notre nouvell page {{ user.nickname }} !</p>
-            <p>Created at {{ user.createdAt }}</p>
-            <p>Updated at {{ user.updatedAt }}</p>
-            <img v-bind:src="image" alt="" style="max-width: 450px; max-height: 300px">
-        </div>
-        <p v-else>User = null</p>
+    <div style="margin: 3rem">
+        
+            <h2> {{ user.nickname }} profile edition</h2>
 
         <div>
-            <form>
-                <input type="text" v-model="nickname"/>
-                <input type="submit" value="update nickname" @click.stop.prevent="updateNickname()"/>
+            <div class="edition-section">
+                <input class="text-input" type="text" v-model="nickname"/>
+                <input class="submit-input" type="submit" value="update nickname" @click.stop.prevent="updateNickname()"/>
                 <div v-if="nicknameUsed">Nickname is already in use.</div>
                 <div v-if="success">Nickname successfully updated.</div>
-                <br /> <br />
-                <input type="text" placeholder="new password" v-model="password"/><br /> <br />
-                <input type="password" placeholder="please confirm new password" v-model="confirmPassword"/>
-                <input type="submit" value="confirm password" @click.stop.prevent="updatePassword()"/>
+            </div>
+            <div class="edition-section">
+                <img v-bind:src="image" alt="" class="image" /><br>
+                <label for="avatar">Update your profile picture:</label><br />
+                <input
+                type="file"
+                id="avatar"
+                name="avatar"
+                accept="image/*"
+                @change="updateAvatar"
+                />
+            </div>
+            <div v-if="!user.intraId" class="edition-section">
+                <input class="text-input" type="text" placeholder="new password" v-model="password"/><br /> <br />
+                <input class="text-input" type="password" placeholder="please confirm new password" v-model="confirmPassword"/>
+                <input class="submit-input" type="submit" value="confirm password" @click.stop.prevent="updatePassword()"/>
                 <div v-if="!passwordMatchFlag">Passwords don't match.</div>
                 <div v-if="!ValidPasswordFlag">Password must contains at least one uppercase, one lowercase, one special character, and be between 9 and 13 characters long.</div>
                 <div v-if="updatePasswordSuccess" color="green">Password successfully updated!</div>
-            </form>
-            <label for="avatar">Update your profile picture:</label><br />
-            <input
-            type="file"
-            id="avatar"
-            name="avatar"
-            accept="image/*"
-            @change="updateAvatar"
-            />
-         <!--   <input type="submit" value="update profile picture" @click.stop.prevent="updatePicture()"/>  -->
-            
-    
+            </div>
         </div>
     </div>
 </template>
@@ -177,6 +173,27 @@ export default defineComponent({
 });
 </script>
 
-$2b$10$E58PiGEN.41Qt9wRzfKV3.uxLeU7dw8EcXRzI6jXQU.CWi5AVZhr6
-
-$2b$10$iL1Z6QrYsw0NdoUtRJzHtOOsI7l5Utn8iQTq0xsNYMFvZ2wUy8Z8.
+<style>
+    .edition-section {
+        border: 0.2rem solid black;
+        border-radius: 10px;
+        margin-top: 0.5rem;
+        padding: 0.5rem;
+    }
+    .image {
+        width: 300px;
+        height: 300px;
+        border-style: inset;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    .text-input {
+        padding: 0.7rem;
+        width: 50%;
+        box-sizing: border-box;
+    }
+    .submit-input {
+        padding: 0.7rem;
+        background-color: orange;
+    }
+</style>
