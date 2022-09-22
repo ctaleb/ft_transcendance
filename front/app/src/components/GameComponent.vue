@@ -4,6 +4,7 @@
 		<div>Host: {{ hostScore }}</div>
 		<div>Client: {{ clientScore }}</div>
 	</div>
+	<PowerSliderComponent />
 	<div>
 		<button @click="findMatch()" :disabled="startButton">
 			{{ lobbyStatus }}
@@ -19,37 +20,14 @@
 		<button @click="denyGame()">No</button>
 	</div>
 	<div class="overlay hidden"></div>
+	
 </template>
 
-<style>
-.hidden {
-	display: none;
-}
-.modal {
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
-	width: 70%;
-	background-color: white;
-	padding: 6rem;
-	border-radius: 5px;
-	box-shadow: 0 3rem 5rem rgba(0, 0, 0, 0.3);
-	z-index: 10;
-}
-.overlay {
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	background-color: rgba(0, 0, 0, 0.6);
-	backdrop-filter: blur(3px);
-	z-index: 5;
-}
-</style>
+
 
 <script setup lang="ts">
+
+
 import ballUrl from "../assets/ball.png";
 import paddleUrl from "../assets/paddle_grec.png";
 import energyUrl from "../assets/energy.png";
@@ -67,6 +45,8 @@ import {
 	IBar,
 	IPoint,
 } from "../../../../back/app/src/chat/entities/message.entity";
+
+import PowerSliderComponent from "./PowerSliderComponent.vue";
 
 const socket = io("http://" + window.location.hostname + ":3000");
 const ballImg = new Image();
@@ -289,3 +269,31 @@ button:disabled {
 	opacity: 0.7;
 }
 </style>
+
+<style>
+	.hidden {
+		display: none;
+	}
+	.modal {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		width: 70%;
+		background-color: white;
+		padding: 6rem;
+		border-radius: 5px;
+		box-shadow: 0 3rem 5rem rgba(0, 0, 0, 0.3);
+		z-index: 10;
+	}
+	.overlay {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background-color: rgba(0, 0, 0, 0.6);
+		backdrop-filter: blur(3px);
+		z-index: 5;
+	}
+	</style>

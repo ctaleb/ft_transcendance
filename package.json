@@ -24,6 +24,7 @@
     "passport-jwt": "^4.0.0",
     "passport-local": "^1.0.0",
     "socket.io-client": "^4.5.1",
+    "swiper": "^8.4.2",
     "uninstall": "^0.0.0",
     "vue-cli": "^2.9.6",
     "vue-router": "^4.1.3",
