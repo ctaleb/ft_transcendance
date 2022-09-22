@@ -71,8 +71,6 @@ export class UserService {
 
   //PROFILE EDITION
   async updateNickname(oldNickname: string, newNickname: string) {
-    console.log("old nickname: " + oldNickname);
-    console.log("new nickname: " + newNickname);
     let nickname = oldNickname;
     let user = await this._usersRepository.findOneBy({nickname});
     if (user) {
@@ -103,7 +101,6 @@ export class UserService {
     const user = await this._usersRepository.findOneBy({id: userId});
     //newPassword = await bcrypt.hash(newPassword, 10);
     await this._usersRepository.update(userId, {password: newPassword})
-    console.log("newPassword: " + newPassword)
     return {success: true};
   }
 }

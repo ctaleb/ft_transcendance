@@ -1,5 +1,5 @@
 <template>
-    <div style="margin: 3rem">
+    <div style="margin: 3rem;">
         
             <h2> {{ user.nickname }} profile edition</h2>
 
@@ -66,10 +66,8 @@ export default defineComponent({
 			funcs.getUserById(this.user.id)
 			.then((data: any) => {
 				this.avatar = data.path;
-                console.log("avatar: " + this.avatar)
 				funcs.getUserAvatar(this.avatar)
 				.then((data: any) => {
-                    console.log("in mounted: " + data);
 					this.image = URL.createObjectURL(data);
 				})
 			})
@@ -85,7 +83,6 @@ export default defineComponent({
             .catch((err) => {
                 console.log(err);
             })
-            console.log("end of updateNickname(): " + JSON.stringify(this.user));
             if (fetch_ret.nickname) {
                 localStorage.setItem("user", JSON.stringify(fetch_ret));
                 this.user = fetch_ret;
@@ -110,10 +107,8 @@ export default defineComponent({
             })
             .then((res) => {return res.json()})
             .catch((err) => {console.log(err)})
-            console.log("fetch_ret.avatar.path: " + fetch_ret.avatar.path)
             funcs.getUserAvatar(fetch_ret.avatar.path)
 				.then((data: any) => {
-                    console.log("in updatePicture: " + data);
 					this.image = URL.createObjectURL(data);
 				})
         },
@@ -194,6 +189,6 @@ export default defineComponent({
     }
     .submit-input {
         padding: 0.7rem;
-        background-color: orange;
+        background-color: #5AFF75;
     }
 </style>
