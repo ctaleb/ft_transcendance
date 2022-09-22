@@ -28,18 +28,6 @@ export class UserService {
     throw new HttpException('User not found', HttpStatus.NOT_FOUND);
   }
 
-  getUsersByIds(ids: number[]): UserEntity[] {
-    let users: UserEntity[] = [];
-    ids.forEach((id) => {
-      let user;
-      this.getUserById(id).then((u) => {
-        user = u;
-      });
-      users.push(user);
-    });
-    return users;
-  }
-
   async getUserByNickname(nickname: string): Promise<UserEntity> {
     const user = await this._usersRepository.findOneBy({ nickname });
     if (user) {
