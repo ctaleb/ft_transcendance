@@ -6,6 +6,7 @@ import RegisterView from "../views/RegisterView.vue";
 import ProfileView from "../views/ProfileView.vue";
 import PortalView from "../views/PortalView.vue";
 import AllUsersView from "../views/AllUsersView.vue";
+import EditView from "../views/EditView.vue";
 
 const routes: Array<RouteRecordRaw> = [
 	{
@@ -42,6 +43,11 @@ const routes: Array<RouteRecordRaw> = [
 		path: "/users",
 		name: "users",
 		component: AllUsersView,
+	},
+	{
+		path: "/edit",
+		name: "edit",
+		component: EditView,
 	},
 ];
 
