@@ -48,6 +48,7 @@ import {
 
 import PowerSliderComponent from "./PowerSliderComponent.vue";
 
+
 const socket = io("http://" + window.location.hostname + ":3000");
 const ballImg = new Image();
 ballImg.src = ballUrl;

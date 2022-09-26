@@ -9,10 +9,10 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 /* import specific icons */
-import { faToiletPaper } from '@fortawesome/free-solid-svg-icons'
+import { faArrowLeft, faArrowRight } from '@fortawesome/free-solid-svg-icons'
 
 /* add icons to the library */
-library.add(faToiletPaper)
+library.add(faArrowLeft, faArrowRight)
 
 createApp(App)
 .use(router)
