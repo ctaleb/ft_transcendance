@@ -11,12 +11,12 @@ import {
 
 @Entity({ name: 'friendship' })
 export class FriendshipEntity extends AbstractEntity {
-  @ManyToOne((type) => UserEntity)
   @JoinColumn({ name: 'requesterId' })
+  @ManyToOne((type) => UserEntity)
   public requester: UserEntity;
 
-  @ManyToOne((type) => UserEntity)
   @JoinColumn({ name: 'addresseeId' })
+  @ManyToOne((type) => UserEntity)
   public addressee: UserEntity;
 
   @Column({ nullable: true })

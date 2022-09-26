@@ -31,7 +31,10 @@ export class FriendshipService {
       const adr: UserEntity = await this._userService.getUserByNickname(
         addressee,
       );
-      if (adr.id === req.id) throw new BadRequestException();
+      if (adr.id === req.id)
+        throw new BadRequestException(
+          'Requester and addressee are the same person',
+        );
       const friendship = await this.findFriendship(req, adr);
       if (friendship) {
         if (friendship.status !== 'blocked')
@@ -62,10 +65,57 @@ export class FriendshipService {
       friendship = await this._friendshipRepository.findOneBy({
         requesterId: addressee.id,
         addresseeId: requester.id,
-        status: 'invitation',
       });
     }
     return friendship;
+  }
+
+  async findInvitationsOf(user: UserEntity) {
+    const invitations = await this._friendshipRepository
+      .findBy({
+        addresseeId: user.id,
+        status: 'invitation',
+      })
+      .then(async (data) => {
+        const invits: UserEntity[] = [];
+        for (const entity of data) {
+          const invite = await this._userService.getUserById(
+            entity.requesterId,
+          );
+          invits.push(invite);
+        }
+        return invits;
+      });
+    return invitations;
+  }
+
+  async findFriendsOf(user: UserEntity) {
+    const friends = await this._friendshipRepository
+      .findBy([
+        {
+          addresseeId: user.id,
+          status: 'friend',
+        },
+        {
+          requesterId: user.id,
+          status: 'friend',
+        },
+      ])
+      .then(async (data) => {
+        const result: UserEntity[] = [];
+        for (const entity of data) {
+          if (entity.requesterId === user.id)
+            result.push(
+              await this._userService.getUserById(entity.addresseeId),
+            );
+          else
+            result.push(
+              await this._userService.getUserById(entity.requesterId),
+            );
+        }
+        return result;
+      });
+    return friends;
   }
 
   async befriend(
@@ -81,7 +131,10 @@ export class FriendshipService {
       const adr: UserEntity = await this._userService.getUserByNickname(
         addressee,
       );
-      if (adr.id === req.id) throw new BadRequestException();
+      if (adr.id === req.id)
+        throw new BadRequestException(
+          'Requester and addressee are the same person',
+        );
       const friendship = await this.findFriendship(req, adr);
       if (
         friendship &&
@@ -110,11 +163,18 @@ export class FriendshipService {
       const adr: UserEntity = await this._userService.getUserByNickname(
         addressee,
       );
-      if (adr.id === req.id) throw new BadRequestException();
+      if (adr.id === req.id)
+        throw new BadRequestException(
+          'Requester and addressee are the same person',
+        );
       const friendship = await this.findFriendship(req, adr);
-      if (friendship && friendship.status === 'invitation') {
+      if (
+        friendship &&
+        friendship.status === 'invitation' &&
+        friendship.addresseeId == req.id
+      )
         result = this._friendshipRepository.remove(friendship);
-      } else
+      else
         throw new BadRequestException('Friendship not found or wrong status');
     } catch (error) {
       console.log(error);
@@ -135,6 +195,10 @@ export class FriendshipService {
       const adr: UserEntity = await this._userService.getUserByNickname(
         addressee,
       );
+      if (adr.id === req.id)
+        throw new BadRequestException(
+          'Requester and addressee are the same person',
+        );
       const friendship = await this.findFriendship(req, adr);
       if (friendship && friendship.status === 'friend') {
         result = this._friendshipRepository.remove(friendship);
@@ -159,7 +223,10 @@ export class FriendshipService {
       const adr: UserEntity = await this._userService.getUserByNickname(
         addressee,
       );
-      if (adr.id === req.id) throw new BadRequestException();
+      if (adr.id === req.id)
+        throw new BadRequestException(
+          'Requester and addressee are the same person',
+        );
       const friendship = await this.findFriendship(req, adr);
       if (
         friendship &&
@@ -179,5 +246,20 @@ export class FriendshipService {
       console.log(error);
     }
     return result;
+  }
+
+  async getRelationsOf(username: string) {
+    try {
+      const user: UserEntity = await this._userService.getUserByNickname(
+        username,
+      );
+      return {
+        invitations: await this.findInvitationsOf(user),
+        friends: await this.findFriendsOf(user),
+      };
+    } catch (error) {
+      console.log(error);
+    }
+    return null;
   }
 }

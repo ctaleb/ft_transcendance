@@ -57,4 +57,9 @@ export class FriendshipController {
       friendshipDto.addressee,
     );
   }
+
+  @Get(':username')
+  getRelations(@Param('username') username: string) {
+    return this._friendshipService.getRelationsOf(username);
+  }
 }
