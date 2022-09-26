@@ -8,12 +8,24 @@
       <h3>Invitations:</h3>
       <ul>
         <li v-for="invitation in invitations">
-          {{ invitation.nickname }}
+          <p>{{ invitation.nickname }}</p>
+          <img
+            :src="invitation.image"
+            alt=""
+            style="max-width: 250px; max-height: 200px"
+          />
         </li>
       </ul>
       <h3>Friends:</h3>
       <ul>
-        <li v-for="friend in friends">{{ friend.nickname }}</li>
+        <li v-for="friend in friends">
+          <p>{{ friend.nickname }}</p>
+          <img
+            :src="friend.image"
+            alt=""
+            style="max-width: 250px; max-height: 200px"
+          />
+        </li>
       </ul>
     </div>
   </div>
@@ -24,13 +36,19 @@
 import { defineComponent } from "vue";
 let funcs = require("../functions/funcs");
 
+interface User {
+  nickname: string;
+  path: string;
+  image: string;
+}
+
 export default defineComponent({
   data() {
     return {
       user: JSON.parse(localStorage.getItem("user") || "{}"),
       image: "",
-      invitations: Array.prototype,
-      friends: Array.prototype,
+      invitations: Array<User>(),
+      friends: Array<User>(),
     };
   },
 
@@ -48,12 +66,12 @@ export default defineComponent({
         .then((data) => {
           this.invitations = data.invitations;
           this.friends = data.friends;
-          for (let invitation in this.invitations) {
+          for (let invitation of this.invitations) {
             funcs.getUserAvatar(invitation.path).then((data: any) => {
               invitation.image = URL.createObjectURL(data);
             });
           }
-          for (let friend in this.friends) {
+          for (let friend of this.friends) {
             funcs.getUserAvatar(friend.path).then((data: any) => {
               friend.image = URL.createObjectURL(data);
             });
