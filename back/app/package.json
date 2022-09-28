@@ -46,6 +46,7 @@
     "pg": "^8.7.3",
     "redis": "^4.2.0",
     "reflect-metadata": "^0.1.13",
+    "request": "^2.88.2",
     "rimraf": "^3.0.2",
     "rxjs": "^7.2.0",
     "socket.io": "^4.5.1",

@@ -21,34 +21,6 @@
 	<div class="overlay hidden"></div>
 </template>
 
-<style>
-.hidden {
-	display: none;
-}
-.modal {
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
-	width: 70%;
-	background-color: white;
-	padding: 6rem;
-	border-radius: 5px;
-	box-shadow: 0 3rem 5rem rgba(0, 0, 0, 0.3);
-	z-index: 10;
-}
-.overlay {
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	background-color: rgba(0, 0, 0, 0.6);
-	backdrop-filter: blur(3px);
-	z-index: 5;
-}
-</style>
-
 <script setup lang="ts">
 import ballUrl from "../assets/ball.png";
 import paddleUrl from "../assets/paddle_grec.png";
@@ -123,16 +95,6 @@ function drawPlayground(ctx: CanvasRenderingContext2D) {
 
 	// Draw the border + backgroung
 	ctx.drawImage(plateauImg, 0, 0, 500, 500);
-}
-
-function openModal() {
-	document.querySelector(".modal")?.classList.remove("hidden");
-	document.querySelector(".overlay")?.classList.remove("hidden");
-}
-
-function closeModal() {
-	document.querySelector(".modal")?.classList.add("hidden");
-	document.querySelector(".overlay")?.classList.add("hidden");
 }
 
 function kickoffLoading(ctx: any) {

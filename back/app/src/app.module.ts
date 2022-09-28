@@ -6,8 +6,8 @@ import { DatabaseModule } from './database/database.module';
 import { AuthenticationModule } from './authentication/authentication.module';
 import { ImageModule } from './image/image.module';
 import { MessagesModule } from './server/server.module';
-import { FriendListModule } from './friend_list/friend_list.module';
 import { OauthModule } from './oauth/oauth.module';
+import { FriendshipModule } from './friendship/friendship.module';
 
 @Module({
   imports: [
@@ -19,8 +19,8 @@ import { OauthModule } from './oauth/oauth.module';
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '../../..', 'front/app/dist'),
     }),
-    FriendListModule,
     OauthModule,
+    FriendshipModule,
   ],
 })
 export class AppModule {}
