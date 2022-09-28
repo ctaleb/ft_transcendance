@@ -28,4 +28,8 @@ export class ImageService {
     }
     throw new NotFoundException();
   }
+
+  async deleteImage(id: number) {
+    await this.imageRepository.delete(id);
+  }
 }

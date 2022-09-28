@@ -8,9 +8,12 @@ import {
   Response,
   UseGuards,
   Get,
+  Put,
   Param,
   ParseIntPipe,
   Res,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { UserEntity } from 'src/user/user.entity';
 import { RegistrationDto } from 'src/authentication/registration.dto';
@@ -22,6 +25,10 @@ import { Observable, of } from 'rxjs';
 import { join } from 'path';
 import { get } from 'http';
 import { ImageDto } from 'src/image/image.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { editFileName, imageFileFilter } from 'src/utils/file-uploading.utils';
+import { updatePasswordDto } from './dto/updatePassword';
 
 @Controller('user')
 export class UserController {
@@ -59,5 +66,37 @@ export class UserController {
     let path = "./assets/" + filename;
     let file = {filename: filename, path: path, mimetype: "image/jpeg"};
     return this._userService.setAvatar(id, file);
+  }
+
+  //PROFILE EDITION
+  @Put('nicknameEdit/:oldNickname/:newNickname')
+  async editNickname(@Param('oldNickname') oldNickname: string, @Param('newNickname') newNickname: string) {
+    return this._userService.updateNickname(oldNickname, newNickname);
+  }
+
+  @Put('avatarEdit/:userId')
+  @UseInterceptors(
+    FileInterceptor('avatar', {
+      storage: diskStorage({
+        destination: './assets',
+        filename: editFileName,
+      }),
+      fileFilter: imageFileFilter,
+    }),
+  )
+  async editAvatar(@UploadedFile() avatar: Express.Multer.File, @Param('userId') userId: number){
+    return this._userService.updateAvatar(avatar ?{
+      filename: avatar.originalname,
+      path: avatar.path,
+      mimetype: avatar.mimetype
+    }: null,
+    userId);
+
+  }
+
+  @Put('passwordEdit/:userId')
+  async editPassword(@Param('userId') userId: number, @Body() newPasswordDto: updatePasswordDto) {
+    
+    return this._userService.updatePassword(newPasswordDto.newPassword, userId);
   }
 }
