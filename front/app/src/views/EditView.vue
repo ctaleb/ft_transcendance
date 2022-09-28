@@ -76,7 +76,10 @@ export default defineComponent({
 
   methods: {
         async updateNickname() {
-            let fetch_ret = await fetch("http://localhost:3000/api/user/nicknameEdit/" + this.user.nickname + "/" + this.nickname, {
+            let fetch_ret = await fetch("http://localhost:3000/api/user/nicknameEdit/" + this.nickname, {
+				headers: {
+					Authorization: "Bearer " + localStorage.getItem("token"),
+				},
                 method: "PUT",
             })
             .then((res) => {return res.json()})
@@ -101,7 +104,10 @@ export default defineComponent({
         async updatePicture(){
             let formData = new FormData();
             formData.append("avatar", this.newAvatar);
-            let fetch_ret = await fetch("http://localhost:3000/api/user/avatarEdit/" + this.user.id, {
+            let fetch_ret = await fetch("http://localhost:3000/api/user/avatarEdit", {
+				headers: {
+					"Authorization": "Bearer " + localStorage.getItem("token"),
+				},
                 method: "PUT",
                 body: formData,
             })
@@ -147,10 +153,11 @@ export default defineComponent({
                 this.passwordMatchFlag = false;
                 return;
             }
-            const updateResult = await fetch("http://localhost:3000/api/user/passwordEdit/" + this.user.id, {
+            const updateResult = await fetch("http://localhost:3000/api/user/passwordEdit", {
                 method: "PUT",
                 headers: {
 			        "Content-Type": "application/json",
+					"Authorization": "Bearer " + localStorage.getItem("token"),
 		        },
                 body: JSON.stringify({
                     newPassword: this.password,
