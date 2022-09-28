@@ -1,4 +1,3 @@
-import { BooleanSupportOption } from 'prettier';
 import { Socket } from 'socket.io';
 
 export class IPoint {
@@ -65,6 +64,7 @@ export class Message {
 }
 
 export class Player {
+  token: string;
   input: string[];
   smashLeft: number;
   smashRight: number;
@@ -74,6 +74,7 @@ export class Player {
   socket: Socket;
   elo: number;
   status: string;
+  power: string;
 }
 
 export class Game {
@@ -81,4 +82,20 @@ export class Game {
   gameState: GameState;
   host: Player;
   client: Player;
+  gameSummary: GameSummary;
+}
+
+export class GameSummary {
+  hostName: string;
+  hostScore: number;
+  hostPower: string;
+  hostElo: number;
+  clientName: string;
+  clientScore: number;
+  clientPower: string;
+  clientElo: number;
+  eloChange: number;
+  gameMode: string;
+  gameTime: number;
+  gameDate: Date;
 }

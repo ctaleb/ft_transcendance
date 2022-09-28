@@ -3,6 +3,7 @@ import { OauthService } from './oauth.service';
 import { OauthController } from './oauth.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { jwtConstants } from 'src/authentication/constants';
+import { ServerService } from 'src/server/server.service';
 
 @Module({
   imports: [

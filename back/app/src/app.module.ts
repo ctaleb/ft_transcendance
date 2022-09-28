@@ -5,7 +5,7 @@ import { join } from 'path';
 import { DatabaseModule } from './database/database.module';
 import { AuthenticationModule } from './authentication/authentication.module';
 import { ImageModule } from './image/image.module';
-import { MessagesModule } from './server/server.module';
+import { ServerModule } from './server/server.module';
 import { OauthModule } from './oauth/oauth.module';
 import { FriendshipModule } from './friendship/friendship.module';
 
@@ -14,7 +14,7 @@ import { FriendshipModule } from './friendship/friendship.module';
     UsersModule,
     DatabaseModule,
     ImageModule,
-    MessagesModule,
+    ServerModule,
     AuthenticationModule,
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '../../..', 'front/app/dist'),
