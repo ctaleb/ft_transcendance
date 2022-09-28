@@ -9,6 +9,7 @@
         <router-link to="/profile">Profile</router-link> |
         <router-link to="/chat">Chat</router-link> |
         <router-link to="/users">All users</router-link> |
+        <router-link to="/edit">Profile Editing</router-link> |
         <router-link to="/" v-on:click.prevent="logout()">Logout</router-link>
       </nav>
     </div>
