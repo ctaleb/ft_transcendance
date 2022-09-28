@@ -89,8 +89,8 @@ export class OauthService {
         return res.json();
       })
       .catch((err) => {console.log(err);})
-      const payload = { username: user.login, sub: user.id, };
-      return {token: this.jwtService.sign(payload), user: intraUser};
+      const payload = { username: user.login, sub: user.id };
+      return {token: this.jwtService.sign(intraUser), user: intraUser};
     })
     .catch((err) => {console.log(err);})
     return {token: ret.token, user: ret.user};
