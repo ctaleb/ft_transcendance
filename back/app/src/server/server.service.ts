@@ -10,11 +10,13 @@ import {
   IPoint,
   Score,
   GameState,
+  GameSummary,
 } from './entities/server.entity';
 import { Server, Socket } from 'socket.io';
 import { WebSocketServer } from '@nestjs/websockets';
 import { UserEntity } from 'src/user/user.entity';
 import { lookupService } from 'dns';
+import { hostname } from 'os';
 
 @Injectable()
 export class ServerService {
@@ -40,6 +42,24 @@ export class ServerService {
       status: 'idle',
       smashLeft: 0,
       smashRight: 0,
+      power: '',
+    };
+    this.playerList.push(player);
+  }
+
+  reloadUser(token: string, user: string, sock: Socket) {
+    const player: Player = {
+      token: token,
+      input: [],
+      left: false,
+      right: false,
+      name: user,
+      socket: sock,
+      elo: 0,
+      status: 'idle',
+      smashLeft: 0,
+      smashRight: 0,
+      power: '',
     };
     this.playerList.push(player);
   }
@@ -76,24 +96,7 @@ export class ServerService {
     return this.rooms.find((element) => element.name === room).userList;
   }
 
-  //game stuff here
-
-  //   joiningPlayerList(socket: Socket) {
-  //     const player: Player = {
-  //       token: null,
-  //       input: [],
-  //       left: false,
-  //       right: false,
-  //       name: `player-${this.playerList.length + 1}`,
-  //       socket: socket,
-  //       elo: 0,
-  //       status: 'idle',
-  //       smashLeft: 0,
-  //       smashRight: 0,
-  //     };
-  //     this.playerList.push(player);
-  //   }
-
+  //game stuff
   elo_calc(winner: Player, loser: Player) {
     const diff = Math.round((winner.elo - loser.elo) / 10);
     const elo = 10 - diff;
@@ -102,104 +105,200 @@ export class ServerService {
     return elo;
   }
 
+  inverseSummary(summary: GameSummary) {
+    const inversedSummary: GameSummary = {
+      hostName: summary.clientName,
+      hostScore: summary.clientScore,
+      hostPower: summary.clientPower,
+      hostElo: summary.clientElo,
+      clientElo: summary.hostElo,
+      clientName: summary.hostName,
+      clientPower: summary.hostPower,
+      clientScore: summary.hostScore,
+      eloChange: summary.eloChange,
+      gameMode: summary.gameMode,
+      gameTime: summary.gameTime,
+      gameDate: summary.gameDate,
+    };
+
+    return inversedSummary;
+  }
+
   end_game(game: Game) {
     game.room.status = 'gameOver';
     let elo = 0;
     if (game.gameState.score.client >= game.room.options.scoreMax) {
       elo = this.elo_calc(game.client, game.host);
-      game.client.socket.emit('Win', game.room, elo);
-      game.host.socket.emit('Lose', game.room, elo);
+      this.summarize(game, elo);
+      game.host.socket.emit('Lose', game.room, elo, game.gameSummary);
+      game.client.socket.emit(
+        'Win',
+        game.room,
+        elo,
+        this.inverseSummary(game.gameSummary),
+      );
     } else if (game.gameState.score.host >= game.room.options.scoreMax) {
       elo = this.elo_calc(game.host, game.client);
-      game.client.socket.emit('Lose', game.room, elo);
-      game.host.socket.emit('Win', game.room, elo);
+      this.summarize(game, elo);
+      game.host.socket.emit('Win', game.room, elo, game.gameSummary);
+      game.client.socket.emit(
+        'Lose',
+        game.room,
+        elo,
+        this.inverseSummary(game.gameSummary),
+      );
     }
     game.host.status = 'idle';
     game.client.status = 'idle';
     this.games.splice(this.games.indexOf(game), 1);
   }
 
+  forfeit_game(winner: Player, loser: Player, game: Game) {
+    const elo = this.elo_calc(winner, loser);
+    this.summarize(game, elo);
+    winner.socket.emit('Win', game.room, elo, game.gameSummary);
+    loser.socket.emit('Lose', game.room, elo, game.gameSummary);
+    game.host.status = 'idle';
+    game.client.status = 'idle';
+    this.games.splice(this.games.indexOf(game), 1);
+    this.playerList.splice(this.playerList.indexOf(loser), 1);
+  }
+
   reconnect(player: Player) {
     let game = this.games.find((element) => element.host.name === player.name);
     if (!game)
       game = this.games.find((element) => element.host.name === player.name);
-    console.log(game);
     if (game) {
       player.socket.emit('reconnect', game.room);
+      player.socket.join(game.room.name);
     }
   }
 
+  newGame(client: Player) {
+    const newGame = {
+      room: {
+        name: '',
+        hostName: '',
+        clientName: '',
+        status: 'launching',
+        kickOff: false,
+        barCollide: false,
+        sideCollide: false,
+        effect: 'null',
+        options: {
+          ballSpeed: this.getRandomStart(),
+          ballsize: 16,
+          barSpeed: 7,
+          barSize: { x: 40, y: 10 },
+          scoreMax: 10,
+          chargeMax: 1,
+          timeLimit: 0,
+        },
+      },
+      gameState: {
+        ball: {
+          size: 16,
+          pos: { x: 250, y: 250 },
+          speed: { x: 2, y: 2 },
+        },
+        hostBar: {
+          size: { x: 50, y: 10 },
+          pos: { x: 250, y: 460 },
+          speed: 0,
+          smashing: false,
+        },
+        clientBar: {
+          size: { x: 50, y: 10 },
+          pos: { x: 250, y: 40 },
+          speed: 0,
+          smashing: false,
+        },
+        score: {
+          client: 0,
+          host: 0,
+        },
+      },
+      host: this.playerQueue.shift(),
+      client: client,
+      gameSummary: {
+        hostName: '',
+        hostScore: 0,
+        hostPower: '',
+        hostElo: 0,
+        clientName: '',
+        clientScore: 0,
+        clientPower: '',
+        clientElo: 0,
+        eloChange: 0,
+        gameMode: '',
+        gameTime: 0,
+        gameDate: new Date(),
+      },
+    };
+    return newGame;
+  }
+
+  printList() {
+    console.log('~~ player list ~~');
+    this.playerList.forEach((element) => {
+      console.log(element.name);
+    });
+    console.log('~~ player queue ~~');
+    this.playerQueue.forEach((element) => {
+      console.log(element.name);
+    });
+    console.log('~~ game list ~~');
+    this.games.forEach((element) => {
+      console.log(element.room.name);
+      console.log(element.host.name);
+      console.log(element.client.name);
+    });
+  }
+
+  SocketToPlayer(socket: Socket) {
+    const player = this.playerList.find((element) => element.socket === socket);
+    if (player) return player;
+    return;
+  }
+
+  summarize(game: Game, elo: number) {
+    game.gameSummary.clientName = game.client.name;
+    game.gameSummary.clientElo = game.client.elo;
+    game.gameSummary.clientPower = game.client.power;
+    game.gameSummary.clientScore = game.gameState.score.client;
+    game.gameSummary.hostName = game.host.name;
+    game.gameSummary.hostElo = game.host.elo;
+    game.gameSummary.hostPower = game.host.power;
+    game.gameSummary.hostScore = game.gameState.score.host;
+    game.gameSummary.eloChange = elo;
+    game.gameSummary.gameTime =
+      new Date().getTime() - game.gameSummary.gameDate.getTime();
+  }
+
   joinQueue(socket: Socket) {
-    //for later : need to make sure the socket is in only once
     const player = this.playerList.find((element) => element.socket === socket);
     if (!player) return;
+    if (this.playerQueue.find((element) => element === player))
+      this.playerQueue.splice(this.playerQueue.indexOf(player), 1);
     if (this.playerQueue.length < 1) {
       this.playerQueue.push(player);
       player.status = 'inQueue';
     } else {
-      const roomName = `game-${this.games.length + 1}`;
-      this.games.push({
-        room: {
-          name: roomName,
-          hostName: '',
-          clientName: '',
-          status: 'launching',
-          kickOff: false,
-          barCollide: false,
-          sideCollide: false,
-          effect: 'null',
-          options: {
-            ballSpeed: this.getRandomStart(),
-            ballsize: 16,
-            barSpeed: 7,
-            barSize: { x: 40, y: 10 },
-            scoreMax: 5,
-            chargeMax: 1,
-            timeLimit: 0,
-          },
-        },
-        gameState: {
-          ball: {
-            size: 16,
-            pos: { x: 250, y: 250 },
-            speed: { x: 2, y: 2 },
-          },
-          hostBar: {
-            size: { x: 50, y: 10 },
-            pos: { x: 250, y: 460 },
-            speed: 0,
-            smashing: false,
-          },
-          clientBar: {
-            size: { x: 50, y: 10 },
-            pos: { x: 250, y: 40 },
-            speed: 0,
-            smashing: false,
-          },
-          score: {
-            client: 0,
-            host: 0,
-          },
-        },
-        host: this.playerQueue.shift(),
-        client: player,
-      });
-      const host = this.games.find(
-        (element) => element.room.name === roomName,
-      ).host;
-      host.status = 'inLobby';
-      host.socket.join(roomName);
-      player.status = 'inLobby';
-      player.socket.join(roomName);
-      return this.games[this.games.length - 1];
+      const game = this.newGame(player);
+      this.games.push(game);
+      game.room.name = 'game-' + game.host.name + '-' + game.client.name;
+      game.host.status = 'inLobby';
+      game.host.socket.join(game.room.name);
+      game.client.status = 'inLobby';
+      game.client.socket.join(game.room.name);
+      return game;
     }
     return null;
   }
 
   storeBarMove(socket: Socket, key: string) {
-    this.playerList
-      .find((element) => element.socket === socket)
-      .input.push(key);
+    const player = this.playerList.find((element) => element.socket === socket);
+    if (player) player.input.push(key);
   }
 
   updateMoveStatus(player: Player, bar: IBar, playerType: string) {
@@ -430,7 +529,7 @@ export class ServerService {
         speed: gameState.clientBar.speed,
         smashing: gameState.clientBar.smashing,
       },
-      score: gameState.score,
+      score: { host: gameState.score.client, client: gameState.score.host },
     };
     return inverseState;
   }

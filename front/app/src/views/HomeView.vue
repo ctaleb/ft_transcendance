@@ -143,6 +143,7 @@ export default defineComponent({
 					localStorage.setItem("token", value.token);
 					localStorage.setItem("user", JSON.stringify(value.user));
 					setTimeout(() => {}, 2000);
+
 					config.socket = io("http://" + window.location.hostname + ":3000", {
 						auth: { token: value.token, user: value.user },
 					});

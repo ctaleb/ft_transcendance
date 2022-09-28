@@ -14,7 +14,7 @@
     "core-js": "^3.8.3",
     "socket.io-client": "^4.5.1",
     "tsparticles-engine": "^2.3.1",
-    "vue": "^3.2.37",
+    "vue": "^3.2.39",
     "vue-3-socket.io": "^1.0.5",
     "vue-router": "^4.0.3",
     "vuelidate": "^0.7.7"
