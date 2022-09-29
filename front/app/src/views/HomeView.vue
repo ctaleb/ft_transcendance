@@ -3,7 +3,7 @@
     <h2 style="text-align: center">
       Welcome on fc_transcendance, please Log in
     </h2>
-    <form @submit.prevent="login">
+    <form @submit.prevent="login" style="margin-bottom: 2em">
       <label for="username">Username: </label>
       <input
         v-model="username"
@@ -22,21 +22,18 @@
       /><br /><br />
       <input type="submit" value="Submit" />
     </form>
-    <button
+    <a
       style="
         background-color: #e7e7e7;
         color: black;
-        width: 7em;
         border: 3px solid black;
         margin-top: 1em;
-        padding: 0.5em;
       "
-      type="button"
-      onclick="location.href='https://api.intra.42.fr/oauth/authorize?client_id=1a90768d9956eae0b0360b4588273a1d4a25143a9c8cfc6a0330dac17b9684db&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2F&response_type=code'"
+      v-bind:href="intra_redirection"
     >
       Continue with 42
-    </button>
-    <h3 style="text-align: center; margin-top: 0">
+    </a>
+    <h3 style="text-align: center; margin-top: 2em">
       Or <a href="/signup">sign up</a>
     </h3>
   </div>
@@ -47,6 +44,7 @@
 </template>
 
 <script lang="ts">
+import { processExpression } from "@vue/compiler-core";
 import { defineComponent } from "vue";
 import { ref } from "vue";
 
@@ -57,6 +55,10 @@ export default defineComponent({
     return {
       username: "",
       password: "",
+      intra_redirection:
+        "https://api.intra.42.fr/oauth/authorize?client_id=" +
+        process.env.VUE_APP_42ID +
+        "&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2F&response_type=code",
       token: {
         access_token: null,
         token_type: null,
@@ -77,7 +79,7 @@ export default defineComponent({
     var url = new URL(current_url);
     let code = url.searchParams.get("code");
     if (code != null) {
-      fetch("http://localhost:3000/api/oauth/" + code, {
+      fetch("http://" + window.location.hostname + ":3000/api/oauth/" + code, {
         headers: {
           "Content-Type": "application/json",
         },
@@ -87,7 +89,7 @@ export default defineComponent({
           return res.json();
         })
         .then((token) => {
-          fetch("http://localhost:3000/api/oauth/login/" + token.access_token, {
+          fetch("http://" + window.location.hostname + ":3000/api/oauth/login/" + token.access_token, {
             method: "POST",
           })
             .then((response) => {
@@ -105,7 +107,7 @@ export default defineComponent({
   },
   methods: {
     async login() {
-      fetch("http://localhost:3000/api/Authentication/login", {
+      fetch("http://" + window.location.hostname + ":3000/api/Authentication/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

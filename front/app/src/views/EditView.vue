@@ -93,7 +93,7 @@ export default defineComponent({
   methods: {
     async updateNickname() {
       let fetch_ret = await fetch(
-        "http://localhost:3000/api/user/nicknameEdit/" + this.nickname,
+        "http://" + window.location.hostname + ":3000/api/user/nicknameEdit/" + this.nickname,
         {
           headers: {
             Authorization: "Bearer " + localStorage.getItem("token"),
@@ -124,7 +124,7 @@ export default defineComponent({
     async updatePicture() {
       let formData = new FormData();
       formData.append("avatar", this.newAvatar);
-      let fetch_ret = await fetch("http://localhost:3000/api/user/avatarEdit", {
+      let fetch_ret = await fetch("http://" + window.location.hostname + ":3000/api/user/avatarEdit", {
         headers: {
           Authorization: "Bearer " + localStorage.getItem("token"),
         },
@@ -180,7 +180,7 @@ export default defineComponent({
         return;
       }
       const updateResult = await fetch(
-        "http://localhost:3000/api/user/passwordEdit",
+        "http://" + window.location.hostname + ":3000/api/user/passwordEdit",
         {
           method: "PUT",
           headers: {

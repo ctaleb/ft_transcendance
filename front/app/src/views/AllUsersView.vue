@@ -19,7 +19,7 @@ export default defineComponent({
     };
   },
   mounted() {
-    fetch("http://localhost:3000/api/user/", {
+    fetch("http://" + window.location.hostname + ":3000/api/user/", {
       method: "GET",
       headers: {
         Authorization: "Bearer " + localStorage.getItem("token"),

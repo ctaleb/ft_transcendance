@@ -54,7 +54,7 @@ export default defineComponent({
 
   methods: {
     getRelations() {
-      fetch("http://localhost:3000/api/friendship/" + this.user.nickname, {
+      fetch("http://" + window.location.hostname +":3000/api/friendship/" + this.user.nickname, {
         method: "GET",
         headers: {
           Authorization: "Bearer " + localStorage.getItem("token"),

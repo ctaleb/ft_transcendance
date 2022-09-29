@@ -8,12 +8,14 @@ import { json } from 'stream/consumers';
 import { CreateOauthDto } from './dto/create-oauth.dto';
 import { UpdateOauthDto } from './dto/update-oauth.dto';
 import { imageFileFilter } from 'src/utils/file-uploading.utils';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class OauthService {
   constructor(
     private jwtService: JwtService,
     private userService: UserService,
+    private configService: ConfigService,
   ) {}
   async connect(code: string): Promise<any> {
     const token = await fetch('https://api.intra.42.fr/oauth/token', {
@@ -21,7 +23,11 @@ export class OauthService {
         'Content-Type': 'multipart/form-data',
       },
       body:
-        'grant_type=authorization_code&client_id=1a90768d9956eae0b0360b4588273a1d4a25143a9c8cfc6a0330dac17b9684db&client_secret=f6625481926b4356e865d97de76e4bb52ad72575c3ef8393258537d6c581f7f3&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2F&code=' +
+        'grant_type=authorization_code&client_id=' +
+        this.configService.get<string>('42_ID') +
+        '&client_secret=' +
+        this.configService.get<string>('42_SECRET') +
+        '&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2F&code=' +
         code,
       method: 'POST',
     })
