@@ -66,16 +66,16 @@ export class UserController {
     return this._userService.getAllUsers();
   }
 
-  //@UseGuards(JwtAuthGuard)
-  @Post('setIntraAvatar/:id/:filename')
-  async setAvatar(
-    @Param('id') id: number,
-    @Param('filename') filename: string,
-  ) {
-    const path = './assets/' + filename;
-    const file = { filename: filename, path: path, mimetype: 'image/jpeg' };
-    return this._userService.setAvatar(id, file);
-  }
+  //can be useful if the client call it with token
+  //  @Post('setIntraAvatar/:id/:filename')
+  //  async setAvatar(
+  //    @Param('id') id: number,
+  //    @Param('filename') filename: string,
+  //  ) {
+  //    const path = './assets/' + filename;
+  //    const file = { filename: filename, path: path, mimetype: 'image/jpeg' };
+  //    return this._userService.setAvatar(id, file);
+  //  }
 
   //PROFILE EDITION
   @UseGuards(JwtAuthGuard)

@@ -53,7 +53,6 @@ export class AuthenticationController {
   @Post('login')
   async login(@Request() req, @Response({ passthrough: true }) res) {
     const token = this._authenticationService.login(req.user);
-    return {token: (await token).access_token, user: req.user};
+    return { token: (await token).access_token, user: req.user };
   }
 }
-

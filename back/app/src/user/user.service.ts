@@ -39,10 +39,7 @@ export class UserService {
     throw new HttpException('User not found', HttpStatus.NOT_FOUND);
   }
 
-  async createUser(
-    createUserDto: CreateUserDto,
-    queryRunner: QueryRunner,
-  ): Promise<UserEntity> {
+  async createUser(createUserDto: CreateUserDto): Promise<UserEntity> {
     const user = this._usersRepository.create(createUserDto);
     return this._usersRepository.save(user);
   }
@@ -71,36 +68,34 @@ export class UserService {
 
   //PROFILE EDITION
   async updateNickname(oldNickname: string, newNickname: string) {
-    let nickname = oldNickname;
-    let user = await this._usersRepository.findOneBy({nickname});
+    const nickname = oldNickname;
+    const user = await this._usersRepository.findOneBy({ nickname });
     if (user) {
-        const avatar = this._imageService.getImageById(user.avatarId);
-        await this._usersRepository.update(user.id, {nickname:newNickname});
-        const ret_user = await this._usersRepository.findOneBy({id: user.id});
-        return {...ret_user, avatar};
+      const avatar = this._imageService.getImageById(user.avatarId);
+      await this._usersRepository.update(user.id, { nickname: newNickname });
+      const ret_user = await this._usersRepository.findOneBy({ id: user.id });
+      return { ...ret_user, avatar };
     }
     throw new HttpException('User not Found', HttpStatus.NOT_FOUND);
   }
 
-  async updateAvatar(imageDto: ImageDto, userId: number){
-    const user = await this._usersRepository.findOneBy({id: userId});
+  async updateAvatar(imageDto: ImageDto, userId: number) {
+    const user = await this._usersRepository.findOneBy({ id: userId });
     const oldAvatar = await this._imageService.getImageById(user.avatarId);
     unlink(oldAvatar.path, (err) => {
       if (err) throw err;
       console.log(oldAvatar.path + ' has been deleted');
     });
-    
+
     await this.setAvatar(user.id, imageDto);
     await this._imageService.deleteImage(user.avatarId);
-    const userUpdated = await this._usersRepository.findOneBy({id: userId})
+    const userUpdated = await this._usersRepository.findOneBy({ id: userId });
     const avatar = await this._imageService.getImageById(userUpdated.avatarId);
-    return {...userUpdated, avatar};
+    return { ...userUpdated, avatar };
   }
 
-  async updatePassword(newPassword: string, userId: number){
-    const user = await this._usersRepository.findOneBy({id: userId});
-    //newPassword = await bcrypt.hash(newPassword, 10);
-    await this._usersRepository.update(userId, {password: newPassword})
-    return {success: true};
+  async updatePassword(newPassword: string, userId: number) {
+    await this._usersRepository.update(userId, { password: newPassword });
+    return { success: true };
   }
 }

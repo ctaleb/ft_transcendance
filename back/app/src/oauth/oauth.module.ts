@@ -3,6 +3,13 @@ import { OauthService } from './oauth.service';
 import { OauthController } from './oauth.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { jwtConstants } from 'src/authentication/constants';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { UserEntity } from 'src/user/user.entity';
+import { UsersModule } from 'src/user/user.module';
+import { UserService } from 'src/user/user.service';
+import { ImageModule } from 'src/image/image.module';
+import { ImageService } from 'src/image/image.service';
+import { ImageEntity } from 'src/image/image.entity';
 
 @Module({
   imports: [
@@ -10,8 +17,12 @@ import { jwtConstants } from 'src/authentication/constants';
       secret: jwtConstants.secret,
       signOptions: { expiresIn: '10d' },
     }),
+    TypeOrmModule.forFeature([UserEntity]),
+    TypeOrmModule.forFeature([ImageEntity]),
+    UsersModule,
+    ImageModule,
   ],
   controllers: [OauthController],
-  providers: [OauthService],
+  providers: [OauthService, UserService, ImageService],
 })
 export class OauthModule {}
