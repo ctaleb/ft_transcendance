@@ -5,7 +5,7 @@
     </button>
   </div>
   <div>
-    <canvas ref="canvas" width="500" height="500"></canvas>
+    <canvas ref="canvas"></canvas>
   </div>
 
   <div class="modal hidden">
@@ -74,7 +74,7 @@ import ballUrl from "../assets/ball.png";
 import paddleUrl from "../assets/paddle_grec.png";
 import energyUrl from "../assets/energy.png";
 import paddleEnergyUrl from "../assets/energy_paddle_grec.png";
-import plateauUrl from "../assets/plateau.png";
+import plateauUrl from "../assets/plateauV2.png";
 import energyRedUrl from "../assets/energy_red.png";
 import paddleRedUrl from "../assets/paddle_grec_red.png";
 import paddleEnergyRedUrl from "../assets/energy_paddle_red.png";
@@ -128,6 +128,11 @@ const fillRedImg = new Image();
 fillRedImg.src = fillRedUrl;
 
 const canvas = ref<HTMLCanvasElement | null>(null);
+let ctx: CanvasRenderingContext2D | null | undefined;
+let cHeight = 0;
+let cWidth = 0;
+let scale = 0;
+let offset = 0;
 
 const startButton = ref(false);
 const lobbyStatus = ref("Find match");
@@ -206,9 +211,9 @@ function kickoffLoading(ctx: any) {
     let arcsize = (loadPercent / 100) * 2 * Math.PI;
     loadPercent -= 0.4;
     if (arcsize < 1) return;
-    ctx.arc(250, 250, 20, 1, arcsize);
-    ctx.strokeStyle = "#7AD3FA";
-    ctx.lineWidth = 4;
+    ctx.arc(cWidth / 2, cWidth / 2 + offset, 20 * scale, 1, arcsize);
+    ctx.strokeStyle = "#332b93";
+    ctx.lineWidth = 4 * scale;
     ctx.stroke();
   }
 }
@@ -221,49 +226,73 @@ function drawSmashingEffect(
   if (bar.smashing) {
     ctx.drawImage(
       bar.pos.y < 250 ? energyPaddleRedImg : energyPaddleImg,
-      bar.pos.x - bar.size.x,
-      bar.pos.y - bar.size.y * (1 + smashingPercent / 100 / 2),
-      bar.size.x * 2,
-      bar.size.y * (2 + smashingPercent / 100)
+      bar.pos.x - bar.size.x * scale,
+      bar.pos.y - bar.size.y * scale * (1 + smashingPercent / 100 / 2),
+      bar.size.x * 2 * scale,
+      bar.size.y * (2 + smashingPercent / 100) * scale
     );
   }
   if (bar.smashing) {
     ctx.globalAlpha = (0.5 * smashingPercent) / 100;
     ctx.drawImage(
       bar.pos.y < 250 ? energyRedImg : energyImg,
-      bar.pos.x - bar.size.x * 2.5,
-      bar.pos.y - bar.size.y * 4,
-      bar.size.x * 5,
-      bar.size.y * 8
+      bar.pos.x - bar.size.x * scale * 2.5,
+      bar.pos.y - bar.size.y * scale * 4,
+      bar.size.x * 5 * scale,
+      bar.size.y * 8 * scale
     );
     ctx.globalAlpha = 1;
   }
   ctx.drawImage(
     bar.pos.y < 250 ? paddleRedImg : paddleImg,
-    bar.pos.x - bar.size.x,
-    bar.pos.y - bar.size.y,
-    bar.size.x * 2,
-    bar.size.y * 2
+    bar.pos.x - bar.size.x * scale,
+    bar.pos.y - bar.size.y * scale,
+    bar.size.x * 2 * scale,
+    bar.size.y * 2 * scale
   );
 }
 
 function drawPlayground(ctx: CanvasRenderingContext2D) {
   // Draw the border + backgroung
-  ctx.drawImage(plateauImg, 0, 0, 500, 500);
+  ctx.drawImage(plateauImg, 0, 0, cWidth, cHeight);
 }
 
 function drawScore(ctx: CanvasRenderingContext2D, gameState: GameState) {
   let slot = theRoom.options.scoreMax;
 
   for (let i = 0; i < slot; i++) {
-    ctx.drawImage(slotImg, 125 + (287.5 / slot) * i, 300, 25, 25);
-    if (i < gameState.score.host)
-      ctx.drawImage(fillImg, 125 + (287.5 / slot) * i + 5, 300 + 5, 15, 15);
+    ctx.drawImage(
+      slotImg,
+      cWidth * 0.25 + ((cWidth * 0.5) / slot) * i,
+      cHeight * 0.148 - 25 * scale,
+      20 * scale,
+      20 * scale
+    );
+    if (i < gameState.score.client)
+      ctx.drawImage(
+        fillRedImg,
+        cWidth * 0.25 + ((cWidth * 0.5) / slot) * i + (8 * scale) / 2,
+        cHeight * 0.148 - 25 * scale + (8 * scale) / 2,
+        12 * scale,
+        12 * scale
+      );
   }
   for (let i = 0; i < slot; i++) {
-    ctx.drawImage(slotImg, 125 + (287.5 / slot) * i, 200 - 25, 25, 25);
-    if (i < gameState.score.client)
-      ctx.drawImage(fillRedImg, 125 + (287.5 / slot) * i + 5, 200 - 20, 15, 15);
+    ctx.drawImage(
+      slotImg,
+      cWidth * 0.25 + ((cWidth * 0.5) / slot) * i,
+      cHeight * 0.894 - 25 * scale,
+      20 * scale,
+      20 * scale
+    );
+    if (i < gameState.score.host)
+      ctx.drawImage(
+        fillImg,
+        cWidth * 0.25 + ((cWidth * 0.5) / slot) * i + (8 * scale) / 2,
+        cHeight * 0.894 - 25 * scale + (8 * scale) / 2,
+        12 * scale,
+        12 * scale
+      );
   }
 }
 
@@ -293,8 +322,72 @@ function setDateTime(summary: GameSummary) {
   sumDate.value = summary.gameDate.toString();
 }
 
+let gState: GameState;
+function test(
+  ctx: CanvasRenderingContext2D | null | undefined,
+  gameState: GameState
+) {
+  if (theRoom && ctx) {
+    let ball = gameState.ball;
+    clientScore.value = gameState.score.client;
+    hostScore.value = gameState.score.host;
+    if (gameState.clientBar.smashing && cSmashingPercent < 100 && !kickOff) {
+      cSmashingPercent += 2;
+    } else if (!gameState.clientBar.smashing || kickOff) cSmashingPercent = 0;
+    if (gameState.hostBar.smashing && hSmashingPercent < 100 && !kickOff) {
+      hSmashingPercent += 2;
+    } else if (!gameState.hostBar.smashing || kickOff) hSmashingPercent = 0;
+    if (ctx) {
+      drawPlayground(ctx);
+      drawScore(ctx, gameState);
+      kickoffLoading(ctx);
+      ctx.drawImage(
+        ballImg,
+        ball.pos.x - ball.size * scale,
+        ball.pos.y - ball.size * scale,
+        ball.size * 2 * scale,
+        ball.size * 2 * scale
+      );
+      ctx.fillStyle = "black";
+      drawSmashingEffect(gameState.clientBar, cSmashingPercent, ctx);
+      drawSmashingEffect(gameState.hostBar, hSmashingPercent, ctx);
+    }
+  }
+}
+
+function scaling(ctx: CanvasRenderingContext2D | null | undefined) {
+  if (ctx) {
+    ctx.canvas.height = window.innerHeight * 0.8;
+    if (ctx.canvas.height * 0.69 > window.innerWidth) {
+      ctx.canvas.width = window.innerWidth;
+      ctx.canvas.height = ctx.canvas.width * 1.411;
+    } else {
+      ctx.canvas.width = ctx.canvas.height * 0.69;
+    }
+    cHeight = ctx.canvas.height;
+    cWidth = ctx.canvas.width;
+    scale = cWidth / 500;
+    offset = (cHeight - cWidth) / 2;
+  }
+}
+
+function scalePosition(gameState: GameState) {
+  let scale = cWidth / 500;
+  let offset = (cHeight - cWidth) / 2;
+  gameState.ball.pos.x *= scale;
+  gameState.ball.pos.y *= scale;
+  gameState.ball.pos.y += offset;
+  gameState.hostBar.pos.x *= scale;
+  gameState.hostBar.pos.y *= scale;
+  gameState.hostBar.pos.y += offset;
+  gameState.clientBar.pos.x *= scale;
+  gameState.clientBar.pos.y *= scale;
+  gameState.clientBar.pos.y += offset;
+}
+
 onMounted(() => {
   let ctx = canvas.value?.getContext("2d");
+  scaling(ctx);
   socket.on("gameConfirmation", (gameRoom: GameRoom) => {
     theRoom = gameRoom;
     openModal();
@@ -324,6 +417,8 @@ onMounted(() => {
   });
 
   socket.on("ServerUpdate", (gameState: GameState) => {
+    gState = gameState;
+    scalePosition(gameState);
     if (theRoom) {
       let ball = gameState.ball;
       clientScore.value = gameState.score.client;
@@ -340,10 +435,10 @@ onMounted(() => {
         kickoffLoading(ctx);
         ctx.drawImage(
           ballImg,
-          ball.pos.x - ball.size,
-          ball.pos.y - ball.size,
-          ball.size * 2,
-          ball.size * 2
+          ball.pos.x - ball.size * scale,
+          ball.pos.y - ball.size * scale,
+          ball.size * 2 * scale,
+          ball.size * 2 * scale
         );
         ctx.fillStyle = "black";
         drawSmashingEffect(gameState.clientBar, cSmashingPercent, ctx);
@@ -432,6 +527,11 @@ onMounted(() => {
           key: "upD",
         });
     }
+  });
+
+  window.addEventListener("resize", (e) => {
+    scaling(ctx);
+    test(ctx, gState);
   });
 });
 </script>
