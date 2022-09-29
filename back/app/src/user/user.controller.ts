@@ -32,79 +32,100 @@ import { updatePasswordDto } from './dto/updatePassword';
 
 @Controller('user')
 export class UserController {
-	constructor(private readonly _userService: UserService) {}
-	
-	@UseGuards(JwtAuthGuard)
-	@Get('profile')
-	async getProfile(@Request() req) {
-		return req.user;
-	}
-	@UseGuards(JwtAuthGuard)
-	@Get('profile-picture/assets/:imagename')
-	getPicture(@Param('imagename') imagename, @Res() res): Observable<Object> {
-		return of(res.sendFile(join(process.cwd(), "/assets/" + imagename)));
-	}
-	@UseGuards(JwtAuthGuard)
-	@Get(':id')
-	async getUserById(@Param('id', ParseIntPipe) id: number) {
-		return this._userService.getUserById(id);
-	}
-	@UseGuards(JwtAuthGuard)
-	@Get('bynickname/:nickname')
-	async getUserByNickname(@Param('nickname') nickname: string) {
-		return this._userService.getUserByNickname(nickname);
-	}
-	//@UseGuards(JwtAuthGuard)
-	@Get('findIntraUser/:intraId')
-	async getIntraUserById(@Param('intraId') intraId: string) {
-		let ret = await this._userService.getIntraUserById(intraId);
-		return ret;
-	}
-	@UseGuards(JwtAuthGuard)
-	@Get()
-	getAllUsers() {
-		return this._userService.getAllUsers();
-	}
-	
-	//@UseGuards(JwtAuthGuard)
-	@Post('setIntraAvatar/:id/:filename')
-	async setAvatar(@Param('id') id: number, @Param('filename') filename: string){
-		let path = "./assets/" + filename;
-		let file = {filename: filename, path: path, mimetype: "image/jpeg"};
-		return this._userService.setAvatar(id, file);
-	}
+  constructor(private readonly _userService: UserService) {}
 
-	//PROFILE EDITION
-	@UseGuards(JwtAuthGuard)
-	@Put('nicknameEdit/:newNickname')
-	async editNickname(@Request() req, @Param('newNickname') newNickname: string) {
-		return this._userService.updateNickname(req.user.payload.nickname, newNickname);
-	}
-	
-	@UseGuards(JwtAuthGuard)
-	@Put('avatarEdit/')
-	@UseInterceptors(
-		FileInterceptor('avatar', {
-		storage: diskStorage({
-			destination: './assets',
-			filename: editFileName,
-		}),
-		fileFilter: imageFileFilter,
-		}),
-	)
-	async editAvatar(@UploadedFile() avatar: Express.Multer.File, @Request() req){
-		return this._userService.updateAvatar(avatar ?{
-		filename: avatar.originalname,
-		path: avatar.path,
-		mimetype: avatar.mimetype
-		}: null, req.user.payload.id);
+  @UseGuards(JwtAuthGuard)
+  @Get('profile')
+  async getProfile(@Request() req) {
+    return req.user;
+  }
+  @UseGuards(JwtAuthGuard)
+  @Get('profile-picture/assets/:imagename')
+  getPicture(@Param('imagename') imagename, @Res() res): Observable<Object> {
+    return of(res.sendFile(join(process.cwd(), '/assets/' + imagename)));
+  }
+  @UseGuards(JwtAuthGuard)
+  @Get(':id')
+  async getUserById(@Param('id', ParseIntPipe) id: number) {
+    return this._userService.getUserById(id);
+  }
+  @UseGuards(JwtAuthGuard)
+  @Get('bynickname/:nickname')
+  async getUserByNickname(@Param('nickname') nickname: string) {
+    return this._userService.getUserByNickname(nickname);
+  }
+  //@UseGuards(JwtAuthGuard)
+  @Get('findIntraUser/:intraId')
+  async getIntraUserById(@Param('intraId') intraId: string) {
+    const ret = await this._userService.getIntraUserById(intraId);
+    return ret;
+  }
+  @UseGuards(JwtAuthGuard)
+  @Get()
+  getAllUsers() {
+    return this._userService.getAllUsers();
+  }
 
-	}
-	
-	@UseGuards(JwtAuthGuard)
-	@Put('passwordEdit')
-	async editPassword(@Request() req, @Body() newPasswordDto: updatePasswordDto) {
-		
-		return this._userService.updatePassword(newPasswordDto.newPassword, req.user.payload.id);
-	}
+  //@UseGuards(JwtAuthGuard)
+  @Post('setIntraAvatar/:id/:filename')
+  async setAvatar(
+    @Param('id') id: number,
+    @Param('filename') filename: string,
+  ) {
+    const path = './assets/' + filename;
+    const file = { filename: filename, path: path, mimetype: 'image/jpeg' };
+    return this._userService.setAvatar(id, file);
+  }
+
+  //PROFILE EDITION
+  @UseGuards(JwtAuthGuard)
+  @Put('nicknameEdit/:newNickname')
+  async editNickname(
+    @Request() req,
+    @Param('newNickname') newNickname: string,
+  ) {
+    return this._userService.updateNickname(
+      req.user.payload.nickname,
+      newNickname,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Put('avatarEdit/')
+  @UseInterceptors(
+    FileInterceptor('avatar', {
+      storage: diskStorage({
+        destination: './assets',
+        filename: editFileName,
+      }),
+      fileFilter: imageFileFilter,
+    }),
+  )
+  async editAvatar(
+    @UploadedFile() avatar: Express.Multer.File,
+    @Request() req,
+  ) {
+    return this._userService.updateAvatar(
+      avatar
+        ? {
+            filename: avatar.originalname,
+            path: avatar.path,
+            mimetype: avatar.mimetype,
+          }
+        : null,
+      req.user.payload.id,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Put('passwordEdit')
+  async editPassword(
+    @Request() req,
+    @Body() newPasswordDto: updatePasswordDto,
+  ) {
+    return this._userService.updatePassword(
+      newPasswordDto.newPassword,
+      req.user.payload.id,
+    );
+  }
 }

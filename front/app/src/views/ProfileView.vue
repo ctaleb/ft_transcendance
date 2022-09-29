@@ -82,16 +82,12 @@ export default defineComponent({
   },
 
   mounted() {
-    let isConnected = funcs.isConnected(localStorage.getItem("token"));
-    if (isConnected == false) this.$router.push("/");
-    else {
-      funcs.getUserById(this.user.id).then((data: any) => {
-        funcs.getUserAvatar(data.path).then((data: any) => {
-          this.image = URL.createObjectURL(data);
-        });
+    funcs.getUserById(this.user.id).then((data: any) => {
+      funcs.getUserAvatar(data.path).then((data: any) => {
+        this.image = URL.createObjectURL(data);
       });
-      this.getRelations();
-    }
+    });
+    this.getRelations();
   },
 });
 </script>
