@@ -8,10 +8,12 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "@fontsource/roboto": "^4.5.8",
     "@vuelidate/core": "^2.0.0-alpha.44",
     "@vuelidate/validators": "^2.0.0-alpha.31",
     "axios": "^0.27.2",
     "core-js": "^3.8.3",
+    "css.gg": "^2.0.0",
     "socket.io-client": "^4.5.1",
     "tsparticles-engine": "^2.3.1",
     "vue": "^3.2.37",
