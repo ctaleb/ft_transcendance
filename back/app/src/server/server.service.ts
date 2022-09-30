@@ -190,7 +190,7 @@ export class ServerService {
           ballsize: 16,
           barSpeed: 7,
           barSize: { x: 40, y: 10 },
-          scoreMax: 10,
+          scoreMax: 1,
           chargeMax: 1,
           timeLimit: 0,
         },
@@ -382,13 +382,15 @@ export class ServerService {
           ball.pos.x > clientBar.pos.x - clientBar.size.x - ball.size
         ) {
           ball.speed.y *= -1;
-          ball.speed.y *= client.smashRight + client.smashLeft + 1;
+          console.log(M);
           if (client.smashLeft > 0) {
             ball.speed.x = 1 * M + client.smashLeft;
+            ball.speed.y *= client.smashLeft;
           } else if (client.smashRight > 0) {
             ball.speed.x = -1 * M - client.smashRight;
+            ball.speed.y *= client.smashRight;
           }
-          ball.speed.y = 1 * M + client.smashRight + client.smashLeft;
+          ball.speed.y = 1 * M * (client.smashRight + client.smashLeft + 1);
           client.smashLeft = 0;
           client.smashRight = 0;
           clientBar.smashing = false;
@@ -406,14 +408,16 @@ export class ServerService {
           ball.pos.x < hostBar.pos.x + hostBar.size.x + ball.size &&
           ball.pos.x > hostBar.pos.x - hostBar.size.x - ball.size
         ) {
+          console.log(M);
           ball.speed.y *= -1;
-          ball.speed.y *= client.smashRight + client.smashLeft + 1;
           if (host.smashLeft > 0) {
             ball.speed.x = -1 * M - host.smashLeft;
+            ball.speed.y *= client.smashLeft;
           } else if (host.smashRight > 0) {
             ball.speed.x = 1 * M + host.smashRight;
+            ball.speed.y *= client.smashRight;
           }
-          ball.speed.y = -1 * M - host.smashLeft - host.smashRight;
+          ball.speed.y = -1 * M * (client.smashRight + client.smashLeft + 1);
           host.smashLeft = 0;
           host.smashRight = 0;
           hostBar.smashing = false;
@@ -430,7 +434,7 @@ export class ServerService {
         ball.pos.x - ball.size < clientBar.pos.x + clientBar.size.x
       ) {
         if (ball.pos.y - ball.size < clientBar.pos.y) {
-          ball.speed.x *= -1;
+          if (!ball.speed.x) ball.speed.x *= -1;
           ball.pos.y += ball.speed.y;
           ball.pos.x += ball.speed.x;
           room.sideCollide = true;
@@ -441,7 +445,7 @@ export class ServerService {
         ball.pos.x + ball.size > clientBar.pos.x - clientBar.size.x
       ) {
         if (ball.pos.y - ball.size < clientBar.pos.y) {
-          ball.speed.x *= -1;
+          if (ball.speed.x) ball.speed.x *= -1;
           ball.pos.y += ball.speed.y;
           ball.pos.x += ball.speed.x;
           room.sideCollide = true;
@@ -453,7 +457,7 @@ export class ServerService {
         ball.pos.x - ball.size < hostBar.pos.x + hostBar.size.x
       ) {
         if (ball.pos.y + ball.size > hostBar.pos.y) {
-          ball.speed.x *= -1;
+          if (!ball.speed.x) ball.speed.x *= -1;
           ball.pos.y += ball.speed.y;
           ball.pos.x += ball.speed.x;
           room.sideCollide = true;
@@ -464,7 +468,7 @@ export class ServerService {
         ball.pos.x + ball.size > hostBar.pos.x - hostBar.size.x
       ) {
         if (ball.pos.y + ball.size > hostBar.pos.y) {
-          ball.speed.x *= -1;
+          if (ball.speed.x) ball.speed.x *= -1;
           ball.pos.y += ball.speed.y;
           ball.pos.x += ball.speed.x;
           room.sideCollide = true;
