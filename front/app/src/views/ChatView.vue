@@ -37,8 +37,8 @@
 import { io } from "socket.io-client";
 import { onBeforeMount, onMounted, ref } from "vue";
 
-const socket = io("http://" + window.location.hostname + ":3000");
-console.log(window.location.hostname);
+// const socket = io("http://" + window.location.hostname + ":3000");
+// console.log(window.location.hostname);
 
 const messages = ref([]);
 const messageText = ref("");

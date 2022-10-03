@@ -47,9 +47,10 @@
 import { processExpression } from "@vue/compiler-core";
 import { defineComponent } from "vue";
 import { ref } from "vue";
+import { io, Socket } from "socket.io-client";
+import config from "../config/config";
 
 let funcs = require("../functions/funcs");
-
 export default defineComponent({
   data: () => {
     return {
@@ -89,15 +90,28 @@ export default defineComponent({
           return res.json();
         })
         .then((token) => {
-          fetch("http://" + window.location.hostname + ":3000/api/oauth/login/" + token.access_token, {
-            method: "POST",
-          })
+          fetch(
+            "http://" +
+              window.location.hostname +
+              ":3000/api/oauth/login/" +
+              token.access_token,
+            {
+              method: "POST",
+            }
+          )
             .then((response) => {
               return response.json();
             })
             .then((value: any) => {
               localStorage.setItem("token", value.token);
               localStorage.setItem("user", JSON.stringify(value.user));
+
+              config.socket = io(
+                "http://" + window.location.hostname + ":3000",
+                {
+                  auth: { token: value.token, user: value.user },
+                }
+              );
               this.$router.push("/portal");
             })
             .catch((err) => console.log(err));
@@ -107,16 +121,19 @@ export default defineComponent({
   },
   methods: {
     async login() {
-      fetch("http://" + window.location.hostname + ":3000/api/Authentication/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username: this.username,
-          password: this.password,
-        }),
-      })
+      fetch(
+        "http://" + window.location.hostname + ":3000/api/Authentication/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            username: this.username,
+            password: this.password,
+          }),
+        }
+      )
         .then((response) => {
           if (response.status != 201) {
             this.login_failed_msg = true;
@@ -127,6 +144,11 @@ export default defineComponent({
         .then((value: any) => {
           localStorage.setItem("token", value.token);
           localStorage.setItem("user", JSON.stringify(value.user));
+          setTimeout(() => {}, 2000);
+
+          config.socket = io("http://" + window.location.hostname + ":3000", {
+            auth: { token: value.token, user: value.user },
+          });
           this.$router.push("/portal");
         })
         .catch((error) => {
