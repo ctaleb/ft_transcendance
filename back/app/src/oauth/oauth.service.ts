@@ -43,52 +43,36 @@ export class OauthService {
         })
           .then((val) => val.json())
           .then(async (res) => {
-            const user = await fetch(
-              'http://localhost:3000/api/user/findIntraUser/' + res.id,
-              {
-                method: 'GET',
-              },
-            ).then((res) => {
-              return res.json();
-            });
-            if (user.message) {
-              const formData = new FormData();
-              formData.append('nickname', res.login);
-              formData.append('phone', res.phone);
-              formData.append('intraId', res.id);
-              const filename: string =
-                res.login + '.' + getUrlExtension(res.image_url);
-              const file_path: string = './assets/' + filename;
-              download(res.image_url, file_path, function () {
-                console.log('done');
-              });
-              await fetch(
-                'http://localhost:3000/api/authentication/registration',
-                {
-                  method: 'POST',
-                  body: formData,
-                },
-              ).catch((err) => {
-                console.log(err);
-              });
-              await fetch(
-                'http://localhost:3000/api/user/findIntraUser/' + res.id,
-                {
-                  method: 'GET',
-                },
-              )
-                .then((value) => value.json())
-                .then(async (result) => {
-                  this.userService.setAvatar(result.id, {
-                    filename: filename,
-                    path: './assets/' + filename,
-                    mimetype: 'image/jpeg',
-                  });
+            const user = await this.userService
+              .getIntraUserById(res.id)
+              .catch(async (err) => {
+                const formData = new FormData();
+                formData.append('nickname', res.login);
+                formData.append('phone', res.phone);
+                formData.append('intraId', res.id);
+                const filename: string =
+                  res.login + '.' + getUrlExtension(res.image_url);
+                const file_path: string = './assets/' + filename;
+                download(res.image_url, file_path, function () {
+                  console.log('done');
                 });
-            }
-          })
-          .catch((err) => {
-            console.log(err);
+                await fetch(
+                  'http://localhost:3000/api/authentication/registration',
+                  {
+                    method: 'POST',
+                    body: formData,
+                  },
+                ).catch((err) => {
+                  console.log(err);
+                });
+                const user_needs_avatar =
+                  await this.userService.getIntraUserById(res.id);
+                await this.userService.setAvatar(user_needs_avatar.id, {
+                  filename: filename,
+                  path: './assets/' + filename,
+                  mimetype: 'image/jpeg',
+                });
+              });
           });
         return token;
       })
@@ -108,19 +92,7 @@ export class OauthService {
         return val.json();
       })
       .then(async (user) => {
-        const intraUser = await fetch(
-          'http://localhost:3000/api/user/findIntraUser/' + user.id,
-          {
-            method: 'GET',
-          },
-        )
-          .then((res) => {
-            return res.json();
-          })
-          .catch((err) => {
-            console.log(err);
-          });
-        const payload = { username: user.login, sub: user.id };
+        const intraUser = await this.userService.getIntraUserById(user.id);
         return { token: this.jwtService.sign(intraUser), user: intraUser };
       })
       .catch((err) => {
