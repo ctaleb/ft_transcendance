@@ -57,13 +57,10 @@ export class AuthenticationController {
   @Post('login')
   async login(@Request() req, @Response({ passthrough: true }) res) {
     const token = this._authenticationService.login(req.user);
-<<<<<<< HEAD
-=======
     this.serverService.newUser((await token).access_token, req.user);
     this.serverService.playerList.forEach((element) => {
       console.log(element.name + ' - ' + element.socket);
     });
->>>>>>> 65c496d76483b753e18d5c0fad70626c0cfbfead
     return { token: (await token).access_token, user: req.user };
   }
 }
