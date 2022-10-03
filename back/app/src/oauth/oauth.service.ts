@@ -24,7 +24,7 @@ export class OauthService {
       },
       body:
         'grant_type=authorization_code&client_id=' +
-        this.configService.get<string>('42_ID') +
+        this.configService.get<string>('VUE_APP_42_ID') +
         '&client_secret=' +
         this.configService.get<string>('42_SECRET') +
         '&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2F&code=' +
