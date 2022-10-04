@@ -4,7 +4,7 @@
 		<div>Host: {{ hostScore }}</div>
 		<div>Client: {{ clientScore }}</div>
 	</div>
-	<PowerSliderComponent />
+	<PowerSliderComponent v-model="power"/>
 	<div>
 		<button @click="findMatch()" :disabled="startButton">
 			{{ lobbyStatus }}
@@ -20,6 +20,8 @@
 		<button @click="denyGame()">No</button>
 	</div>
 	<div class="overlay hidden"></div>
+
+	<div class="power">   power: {{ power }}</div>
 	
 </template>
 
@@ -79,6 +81,8 @@ let cSmashingPercent = 0;
 let hSmashingPercent = 0;
 
 let theRoom: GameRoom;
+
+const power = ref("power");
 
 socket.emit("joiningPlayerList");
 
@@ -296,5 +300,8 @@ button:disabled {
 		background-color: rgba(0, 0, 0, 0.6);
 		backdrop-filter: blur(3px);
 		z-index: 5;
+	}
+	.power {
+		margin-top: 5rem;
 	}
 	</style>
