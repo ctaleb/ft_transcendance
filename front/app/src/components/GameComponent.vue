@@ -82,7 +82,7 @@ let hSmashingPercent = 0;
 
 let theRoom: GameRoom;
 
-const power = ref("power");
+const power = ref(0);
 
 socket.emit("joiningPlayerList");
 

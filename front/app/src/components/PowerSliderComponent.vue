@@ -48,7 +48,7 @@
 <script setup lang="ts" >
 
 import { Emitter } from "@socket.io/component-emitter";
-import { onMounted, computed } from "vue";
+import { onMounted, ref } from "vue";
 import "./style.css";
 
 const props = defineProps({
@@ -60,6 +60,8 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue'])
 
+const current = ref(0)
+
 onMounted( () => {
 
   // I will be creating a different pen with touch support but right // now I have no time for it due to school
@@ -68,14 +70,6 @@ onMounted( () => {
   const slides = document.querySelectorAll(".item");
   const button = document.querySelectorAll(".button");
 
-  const current = computed({
-    get() {
-      return props.modelValue
-    },
-    set(val) {
-      emit('update:modelValue', val);
-    }
-  })
 
   let prev = slides.length - 1;
   let next = 1;
@@ -113,6 +107,7 @@ onMounted( () => {
     slides[prev].classList.add("prev");
     slides[next].classList.add("next");
     console.log("current: " + current.value);
+    emit('update:modelValue', current.value);
 
   }
 
