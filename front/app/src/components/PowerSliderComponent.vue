@@ -45,45 +45,41 @@
 		</div>
   </div>
 </template>
+
 <script setup lang="ts" >
 
-import { Emitter } from "@socket.io/component-emitter";
-import { onMounted, ref } from "vue";
+import { onMounted } from "vue";
 import "./style.css";
-
 
 const emit = defineEmits(['update:modelValue'])
 
-const current = ref(0)
+let current = 0
 
 onMounted( () => {
 
-  // I will be creating a different pen with touch support but right // now I have no time for it due to school
-
-  const slider = document.querySelector(".items");
   const slides = document.querySelectorAll(".item");
   const button = document.querySelectorAll(".button");
 
-
-  let prev = slides.length - 1;
+  const number_of_powers = slides.length;
+  let prev = number_of_powers - 1;
   let next = 1;
 
   // To activate default power if none selected:
-  emit('update:modelValue', slides[current.value].id);
+  emit('update:modelValue', slides[current].id);
 
 
   for (let i = 0; i < button.length; i++) {
     button[i].addEventListener("click", () => i == 0 ? gotoPrev() : gotoNext());
   }
 
-  const gotoPrev = () => current.value > 0 ? gotoNum(current.value - 1) : gotoNum(slides.length - 1);
+  const gotoPrev = () => current > 0 ? gotoNum(current - 1) : gotoNum(number_of_powers - 1);
 
-  const gotoNext = () => current.value < 4 ? gotoNum(current.value + 1) : gotoNum(0);
+  const gotoNext = () => current < number_of_powers - 1 ? gotoNum(current + 1) : gotoNum(0);
 
   const gotoNum = (number: number) => {
-    current.value = number;
-    prev = current.value - 1;
-    next = current.value + 1;
+    current = number;
+    prev = current - 1;
+    next = current + 1;
 
     for (let i = 0; i < slides.length; i++) {
       slides[i].classList.remove("active");
@@ -91,21 +87,21 @@ onMounted( () => {
       slides[i].classList.remove("next");
     }
 
-    if (next == 5) {
+    if (next == number_of_powers) {
       next = 0;
     }
 
     if (prev == -1) {
-      prev = 4;
+      prev = number_of_powers - 1;
     }
 
-    slides[current.value].classList.add("active");
+    slides[current].classList.add("active");
     //config.json: activePower = slides[current]
     slides[prev].classList.add("prev");
     slides[next].classList.add("next");
-    console.log("current: " + slides[current.value].id);
+    console.log("current: " + slides[current].id);
 
-    emit('update:modelValue', slides[current.value].id);
+    emit('update:modelValue', slides[current].id);
 
   }
 
