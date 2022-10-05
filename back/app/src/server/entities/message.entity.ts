@@ -74,6 +74,7 @@ export class Player {
   socket: Socket;
   elo: number;
   status: string;
+  power: string;
 }
 
 export class Game {

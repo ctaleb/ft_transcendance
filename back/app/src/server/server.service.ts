@@ -69,13 +69,16 @@ export class MessagesService {
       status: 'idle',
       smashLeft: 0,
       smashRight: 0,
+      power: ""
     };
     this.playerList.push(player);
   }
 
-  joinQueue(socket: Socket) {
+  joinQueue(socket: Socket, power: string) {
     //for later : need to make sure the socket is in only once
     const player = this.playerList.find((element) => element.socket === socket);
+    player.power = power;
+
     if (this.playerQueue.length < 1) {
       this.playerQueue.push(player);
       player.status = 'inQueue';
@@ -143,6 +146,12 @@ export class MessagesService {
     this.playerList
       .find((element) => element.socket === socket)
       .input.push(key);
+  }
+
+  handlePowerActivation(socket: Socket) {
+    this.playerList
+      .find((element) => element.socket === socket)
+      .input.push("power");
   }
 
   updateMoveStatus(player: Player, bar: IBar, playerType: string) {

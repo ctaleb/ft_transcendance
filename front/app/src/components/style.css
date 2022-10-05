@@ -19,7 +19,6 @@ body {
   transform: translate(-50%, -50%);
   width: 250px;
   height: 250px;
-  border-radius: 50%;
   overflow: visible;
   transition: all 300ms ease-in-out;
   z-index: -1;
@@ -29,6 +28,7 @@ body {
 .item img {
   width: 100%;
   height: 100%;
+  border-radius: 50%;
   object-fit: cover;
 }
 
@@ -37,7 +37,8 @@ body {
 .item.active {
   opacity: 1;
   z-index: 99;
-  box-shadow: 0px 0px 105px -35px rgba(0, 0, 0, 0.75);
+  box-shadow: 0px 0px 105px -35px rgba(0, 0, 0, 0.90);
+  border-radius: 50%;
 }
 
 .item.active .info {

@@ -90,7 +90,7 @@ function findMatch() {
 	startButton.value = true;
 	lobbyStatus.value = "Looking for an opponent...";
 
-	socket.emit("joinQueue");
+	socket.emit("joinQueue", power.value);
 }
 
 function confirmGame() {
@@ -243,6 +243,10 @@ onMounted(() => {
 				socket.emit("key", {
 					key: "downD",
 				});
+			if (e.key === "Space")
+				socket.emit("key", {
+					key: "space",
+				})
 		}
 	});
 
@@ -266,6 +270,7 @@ onMounted(() => {
 				});
 		}
 	});
+
 });
 </script>
 
@@ -305,3 +310,6 @@ button:disabled {
 		margin-top: 5rem;
 	}
 	</style>
+
+// eventKeyListener sur barre espace pour envoyer signal key 
+handle key 

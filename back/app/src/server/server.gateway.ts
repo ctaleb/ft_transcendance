@@ -100,14 +100,18 @@ export class MessagesGateway implements OnGatewayInit {
     @ConnectedSocket()
     client: Socket,
   ) {
-    this.messagesService.storeBarMove(client, key);
+    if (key === "space")
+      this.messagesService.handlePowerActivation(client)
+    else
+      this.messagesService.storeBarMove(client, key);
   }
 
   // Game Core
 
   @SubscribeMessage('joinQueue')
-  joinQueue(@ConnectedSocket() client: Socket) {
-    const game = this.messagesService.joinQueue(client);
+  joinQueue(@ConnectedSocket() client: Socket, @MessageBody() power: string) {
+    const game = this.messagesService.joinQueue(client, power);
+    console.log("power: " + power);
     if (game) {
       this.server.to(game.room.name).emit('gameConfirmation', game.room);
       setTimeout(() => {
