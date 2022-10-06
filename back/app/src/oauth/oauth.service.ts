@@ -47,6 +47,7 @@ export class OauthService {
               .getIntraUserById(res.id)
               .catch(async (err) => {
                 const formData = new FormData();
+                //try to find to modify user's nickname if it exists
                 formData.append('nickname', res.login);
                 formData.append('phone', res.phone);
                 formData.append('intraId', res.id);
