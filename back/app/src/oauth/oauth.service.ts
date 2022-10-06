@@ -43,7 +43,7 @@ export class OauthService {
         })
           .then((val) => val.json())
           .then(async (res) => {
-            const user = await this.userService
+            await this.userService
               .getIntraUserById(res.id)
               .catch(async (err) => {
                 const formData = new FormData();
