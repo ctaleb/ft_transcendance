@@ -93,7 +93,10 @@ export default defineComponent({
   methods: {
     async updateNickname() {
       let fetch_ret = await fetch(
-        "http://" + window.location.hostname + ":3000/api/user/nicknameEdit/" + this.nickname,
+        "http://" +
+          window.location.hostname +
+          ":3000/api/user/nicknameEdit/" +
+          this.nickname,
         {
           headers: {
             Authorization: "Bearer " + localStorage.getItem("token"),
@@ -107,9 +110,11 @@ export default defineComponent({
         .catch((err) => {
           console.log(err);
         });
-      if (fetch_ret.nickname) {
-        localStorage.setItem("user", JSON.stringify(fetch_ret));
-        this.user = fetch_ret;
+      console.log(JSON.stringify(fetch_ret));
+      if (fetch_ret.user) {
+        localStorage.setItem("user", JSON.stringify(fetch_ret.user));
+        localStorage.setItem("token", fetch_ret.token);
+        this.user = fetch_ret.user;
         this.nicknameUsed = false;
         this.success = true;
       } else {
@@ -124,13 +129,16 @@ export default defineComponent({
     async updatePicture() {
       let formData = new FormData();
       formData.append("avatar", this.newAvatar);
-      let fetch_ret = await fetch("http://" + window.location.hostname + ":3000/api/user/avatarEdit", {
-        headers: {
-          Authorization: "Bearer " + localStorage.getItem("token"),
-        },
-        method: "PUT",
-        body: formData,
-      })
+      let fetch_ret = await fetch(
+        "http://" + window.location.hostname + ":3000/api/user/avatarEdit",
+        {
+          headers: {
+            Authorization: "Bearer " + localStorage.getItem("token"),
+          },
+          method: "PUT",
+          body: formData,
+        }
+      )
         .then((res) => {
           return res.json();
         })

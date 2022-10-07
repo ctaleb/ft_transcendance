@@ -7,6 +7,8 @@ import { ImageDto } from 'src/image/image.dto';
 import { ImageService } from 'src/image/image.service';
 import { unlink } from 'fs';
 import * as bcrypt from 'bcrypt';
+import { JwtService } from '@nestjs/jwt';
+import { jwtConstants } from 'src/authentication/constants';
 
 @Injectable()
 export class UserService {
@@ -15,6 +17,7 @@ export class UserService {
     @InjectRepository(UserEntity)
     private _usersRepository: Repository<UserEntity>,
     private _imageService: ImageService,
+    private _jwtService: JwtService,
   ) {}
 
   getAllUsers() {
@@ -71,10 +74,17 @@ export class UserService {
     const nickname = oldNickname;
     const user = await this._usersRepository.findOneBy({ nickname });
     if (user) {
-      const avatar = this._imageService.getImageById(user.avatarId);
+      const userExists = await this._usersRepository.findOneBy({
+        nickname: newNickname,
+      });
+      if (userExists) {
+        throw new HttpException('User not Found', HttpStatus.NOT_FOUND);
+      }
       await this._usersRepository.update(user.id, { nickname: newNickname });
-      const ret_user = await this._usersRepository.findOneBy({ id: user.id });
-      return { ...ret_user, avatar };
+      const user_with_password = await this.getUserByNickname(newNickname);
+      const { password, ...user_without_password } = user_with_password;
+      const token = this._jwtService.sign(user_without_password);
+      return { user: user_without_password, token: token };
     }
     throw new HttpException('User not Found', HttpStatus.NOT_FOUND);
   }
