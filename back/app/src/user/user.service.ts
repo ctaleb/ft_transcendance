@@ -55,7 +55,7 @@ export class UserService {
       avatar = await this._imageService.getDefaultAvatar();
     }
     await this._usersRepository.update(userId, {
-      avatarId: avatar.id, // a revoir
+      avatarId: avatar.id,
     });
     return await this._usersRepository.findOneBy({ id: userId });
   }

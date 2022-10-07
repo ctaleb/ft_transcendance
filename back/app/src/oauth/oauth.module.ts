@@ -10,6 +10,7 @@ import { UserService } from 'src/user/user.service';
 import { ImageModule } from 'src/image/image.module';
 import { ImageService } from 'src/image/image.service';
 import { ImageEntity } from 'src/image/image.entity';
+import { AuthenticationService } from 'src/authentication/authentication.service';
 
 @Module({
   imports: [
@@ -23,6 +24,6 @@ import { ImageEntity } from 'src/image/image.entity';
     ImageModule,
   ],
   controllers: [OauthController],
-  providers: [OauthService, UserService, ImageService],
+  providers: [OauthService, UserService, ImageService, AuthenticationService],
 })
 export class OauthModule {}

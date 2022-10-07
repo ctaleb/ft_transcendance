@@ -9,6 +9,7 @@ import { CreateOauthDto } from './dto/create-oauth.dto';
 import { UpdateOauthDto } from './dto/update-oauth.dto';
 import { imageFileFilter } from 'src/utils/file-uploading.utils';
 import { ConfigService } from '@nestjs/config';
+import { AuthenticationService } from 'src/authentication/authentication.service';
 
 @Injectable()
 export class OauthService {
@@ -16,6 +17,7 @@ export class OauthService {
     private jwtService: JwtService,
     private userService: UserService,
     private configService: ConfigService,
+    private authenticationService: AuthenticationService,
   ) {}
   async check42NicknameUsed(originalLogin: string) {
     let userCheck;
@@ -66,26 +68,22 @@ export class OauthService {
             await this.userService
               .getIntraUserById(res.id)
               .catch(async (err) => {
-                const formData = new FormData();
                 res.login = await this.check42NicknameUsed(res.login);
-                formData.append('nickname', res.login);
-                formData.append('phone', res.phone);
-                formData.append('intraId', res.id);
+                const registrationDto = {
+                  nickname: res.login,
+                  phone: res.phone,
+                  intraId: res.id,
+                };
                 const filename: string =
                   res.login + '.' + getUrlExtension(res.image_url);
                 const file_path: string = './assets/' + filename;
                 download(res.image_url, file_path, function () {
                   console.log('done');
                 });
-                await fetch(
-                  'http://localhost:3000/api/authentication/registration',
-                  {
-                    method: 'POST',
-                    body: formData,
-                  },
-                ).catch((err) => {
-                  console.log(err);
-                });
+                await this.authenticationService.registration(
+                  registrationDto,
+                  null,
+                );
                 const user_needs_avatar =
                   await this.userService.getIntraUserById(res.id);
                 await this.userService.setAvatar(user_needs_avatar.id, {
