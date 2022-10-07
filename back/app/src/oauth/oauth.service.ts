@@ -17,6 +17,26 @@ export class OauthService {
     private userService: UserService,
     private configService: ConfigService,
   ) {}
+  async check42NicknameUsed(originalLogin: string) {
+    let userCheck;
+    try {
+      userCheck = await this.userService.getUserByNickname(originalLogin);
+    } catch {
+      return originalLogin;
+    }
+    let loginToTest = originalLogin;
+    let count = 1;
+    while (userCheck) {
+      loginToTest = originalLogin + String(count++);
+      try {
+        userCheck = await this.userService.getUserByNickname(loginToTest);
+      } catch {
+        return loginToTest;
+      }
+    }
+    return originalLogin;
+  }
+
   async connect(code: string): Promise<any> {
     const token = await fetch('https://api.intra.42.fr/oauth/token', {
       headers: {
@@ -47,7 +67,7 @@ export class OauthService {
               .getIntraUserById(res.id)
               .catch(async (err) => {
                 const formData = new FormData();
-                //try to find to modify user's nickname if it exists
+                res.login = await this.check42NicknameUsed(res.login);
                 formData.append('nickname', res.login);
                 formData.append('phone', res.phone);
                 formData.append('intraId', res.id);
