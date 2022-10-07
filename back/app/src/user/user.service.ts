@@ -101,11 +101,22 @@ export class UserService {
     await this._imageService.deleteImage(user.avatarId);
     const userUpdated = await this._usersRepository.findOneBy({ id: userId });
     const avatar = await this._imageService.getImageById(userUpdated.avatarId);
-    return { ...userUpdated, avatar };
+
+    const user_with_password = await this.getUserByNickname(
+      userUpdated.nickname,
+    );
+    const { password, ...user_without_password } = user_with_password;
+    const token = this._jwtService.sign(user_without_password);
+    return { user: user_without_password, avatar: avatar, token: token };
   }
 
   async updatePassword(newPassword: string, userId: number) {
     await this._usersRepository.update(userId, { password: newPassword });
     return { success: true };
+  }
+
+  async deleteAccount(user: any) {
+    this._usersRepository.delete({ id: user.id });
+    this._imageService.deleteImage(user.avatarId);
   }
 }

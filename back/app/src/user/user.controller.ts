@@ -14,6 +14,7 @@ import {
   Res,
   UseInterceptors,
   UploadedFile,
+  Delete,
 } from '@nestjs/common';
 import { UserEntity } from 'src/user/user.entity';
 import { RegistrationDto } from 'src/authentication/registration.dto';
@@ -127,5 +128,11 @@ export class UserController {
       newPasswordDto.newPassword,
       req.user.payload.id,
     );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('delete')
+  async deleteAccount(@Request() req) {
+    return await this._userService.deleteAccount(req.user.payload);
   }
 }

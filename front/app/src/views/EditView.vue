@@ -55,6 +55,13 @@
         </div>
       </div>
     </div>
+    <button
+      type="button"
+      id="deleteAccountButton"
+      @click.stop.prevent="deleteAccount()"
+    >
+      DELETE MY ACCOUNT
+    </button>
   </div>
 </template>
 
@@ -147,6 +154,8 @@ export default defineComponent({
         });
       funcs.getUserAvatar(fetch_ret.avatar.path).then((data: any) => {
         this.image = URL.createObjectURL(data);
+        localStorage.setItem("user", JSON.stringify(fetch_ret.user));
+        localStorage.setItem("token", fetch_ret.token);
       });
     },
 
@@ -210,6 +219,21 @@ export default defineComponent({
         this.updatePasswordSuccess = true;
       }
     },
+
+    async deleteAccount() {
+      await fetch(
+        "http://" + window.location.hostname + ":3000/api/user/delete",
+        {
+          headers: {
+            Authorization: "Bearer " + localStorage.getItem("token"),
+          },
+          method: "DELETE",
+        }
+      );
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      this.$router.push("/");
+    },
   },
 });
 </script>
@@ -236,5 +260,13 @@ export default defineComponent({
 .submit-input {
   padding: 0.7rem;
   background-color: #5aff75;
+}
+#deleteAccountButton {
+  background-color: #e13511;
+  border-radius: 20px;
+  width: 15rem;
+  box-sizing: border-box;
+  padding: 1rem;
+  margin-top: 2rem;
 }
 </style>
