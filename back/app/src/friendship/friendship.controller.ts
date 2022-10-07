@@ -13,8 +13,8 @@ import { JwtAuthGuard } from 'src/authentication/jwt-auth.guard';
 import { FriendshipDto } from './friendship.dto';
 import { FriendshipService } from './friendship.service';
 
-// @UseGuards(JwtAuthGuard)
 @Controller('friendship')
+@UseGuards(JwtAuthGuard)
 export class FriendshipController {
   constructor(private readonly _friendshipService: FriendshipService) {}
 

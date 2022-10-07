@@ -18,6 +18,7 @@ button {
 }
 
 .search {
+  margin: auto;
   position: relative;
   display: flex;
   width: 40%;
@@ -41,6 +42,11 @@ button {
       background: inherit;
       font-size: 2em;
       height: auto;
+      color: grey;
+    }
+    .searchField:focus {
+      outline: none;
+      caret-color: grey;
     }
     .searchIcon {
       position: relative;
@@ -49,6 +55,57 @@ button {
     }
   }
   button {
+    position: relative;
     margin-left: 1em;
+    height: auto;
+    width: 50%;
+    color: #aa9e7d;
+    border: 3px solid;
+    border-image-slice: 1;
+    border-image-source: linear-gradient(to bottom, #c1a36b, #635e4f);
+    background: linear-gradient(to bottom right, #191e2a, #182121);
+    padding: 0;
+  }
+  button:hover {
+    background-color: auto;
+  }
+}
+
+.invitations {
+  .invitation {
+    position: relative;
+    display: flex;
+    width: 80%;
+    height: 20%;
+    margin: 1rem auto;
+    border: 1px solid #7a6235;
+    img {
+      width: 15%;
+      height: 15%;
+    }
+    .invitationInfo {
+      width: 70%;
+      text-align: left;
+      padding: 2em;
+      h2 {
+        padding-left: 1em;
+        max-width: 50%;
+        text-decoration: underline #7a6235;
+      }
+    }
+    .invitationAction {
+      width: 15%;
+      position: absolute;
+      display: flex;
+      height: 30%;
+      bottom: 0;
+      right: 0;
+      button {
+        color: #c1a36b;
+        background: transparent;
+        border: 1px solid #836529;
+        padding-left: 1em;
+      }
+    }
   }
 }

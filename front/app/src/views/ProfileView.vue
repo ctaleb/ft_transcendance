@@ -11,23 +11,26 @@
           type="text"
           class="searchField"
           name="searchFriend"
+          v-model="searchFriend"
           placeholder="Player name"
         />
       </div>
-      <button>Add Friend</button>
+      <button @click="invite()">Add Friend</button>
     </div>
-    <h3>Invitations:</h3>
-    <div>
-      <span v-for="invitation in invitations">
-        <p>{{ invitation.nickname }}</p>
-        <img
-          :src="invitation.image"
-          alt=""
-          style="max-width: 250px; max-height: 200px"
-        />
-        <button @click="befriend(invitation)">Accept</button>
-        <button @click="decline(invitation)">Decline</button>
-        <button @click="block(invitation)">Block</button>
+    <h1>Invitations:</h1>
+    <div class="invitations">
+      <span class="invitation" v-for="invitation in invitations">
+        <img :src="invitation.image" alt="" />
+        <div class="invitationInfo">
+          <h2>{{ invitation.nickname }}</h2>
+        </div>
+        <div class="invitationAction">
+          <button @click="befriend(invitation)">
+            <i class="gg-check"></i>
+          </button>
+          <button @click="decline(invitation)"><i class="gg-close"></i></button>
+          <button @click="block(invitation)"><i class="gg-block"></i></button>
+        </div>
       </span>
     </div>
     <h3>Friends:</h3>
@@ -66,6 +69,7 @@ export default defineComponent({
       image: "",
       invitations: Array<User>(),
       friends: Array<User>(),
+      searchFriend: "",
     };
   },
 
@@ -103,12 +107,35 @@ export default defineComponent({
         .catch((err) => console.log(err.message));
     },
 
+    invite() {
+      if (this.searchFriend.length <= 0) return;
+      fetch(
+        "http://" + window.location.hostname + ":3000/api/friendship/invite",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + localStorage.getItem("token"),
+          },
+          body: JSON.stringify({
+            requester: this.user.nickname,
+            addressee: this.searchFriend,
+          }),
+        }
+      ).then((res) => {
+        if (res.status !== 201) {
+          console.log(res.statusText);
+        }
+      });
+    },
+
     befriend(invitation: User) {
       fetch(
         "http://" + window.location.hostname + ":3000/api/friendship/befriend",
         {
           method: "PUT",
           headers: {
+            "Content-Type": "application/json",
             Authorization: "Bearer " + localStorage.getItem("token"),
           },
           body: JSON.stringify({
@@ -126,6 +153,60 @@ export default defineComponent({
         .then((data) => {
           this.invitations.splice(this.invitations.indexOf(invitation), 1);
           this.friends.push(invitation);
+        })
+        .catch((err) => console.log(err));
+    },
+
+    decline(invitation: User) {
+      fetch(
+        "http://" + window.location.hostname + ":3000/api/friendship/decline",
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + localStorage.getItem("token"),
+          },
+          body: JSON.stringify({
+            requester: this.user.nickname,
+            addressee: invitation.nickname,
+          }),
+        }
+      )
+        .then((res) => {
+          if (res.status !== 201) {
+            throw res.statusText;
+          }
+          return res.json();
+        })
+        .then((data) => {
+          this.invitations.splice(this.invitations.indexOf(invitation), 1);
+        })
+        .catch((err) => console.log(err));
+    },
+
+    block(invitation: User) {
+      fetch(
+        "http://" + window.location.hostname + ":3000/api/friendship/block",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + localStorage.getItem("token"),
+          },
+          body: JSON.stringify({
+            requester: this.user.nickname,
+            addressee: invitation.nickname,
+          }),
+        }
+      )
+        .then((res) => {
+          if (res.status !== 201) {
+            throw res.statusText;
+          }
+          return res.json();
+        })
+        .then((data) => {
+          this.invitations.splice(this.invitations.indexOf(invitation), 1);
         })
         .catch((err) => console.log(err));
     },
