@@ -32,9 +32,12 @@ export class ServerGateway
   }
 
   handleConnection(@ConnectedSocket() client: Socket) {
-    // if (!client.handshake) return;
-    const hsToken = client.handshake.auth.token;
-    const hsNick = client.handshake.auth.user.nickname;
+    let hsToken;
+    let hsNick;
+    if (client.handshake) {
+      hsToken = client.handshake.auth.token;
+      hsNick = client.handshake.auth.user.nickname;
+    }
     const user = this.serverService.playerList.find(
       (element) => element.name === hsNick,
     );

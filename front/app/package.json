@@ -14,6 +14,7 @@
     "core-js": "^3.8.3",
     "dayjs": "^1.11.5",
     "fireworks-canvas": "^2.6.2",
+    "dotenv": "^16.0.2",
     "socket.io-client": "^4.5.1",
     "tsparticles-engine": "^2.3.1",
     "vue": "^3.2.39",
