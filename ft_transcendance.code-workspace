@@ -21,8 +21,10 @@
 	},
 	"settings": {
 		"material-icon-theme.activeIconPack": "nest",
-		"prettier.useTabs": true,
+		"prettier.useTabs": false,
 		"prettier.tabWidth": 2,
-		"git.ignoreLimitWarning": true
+		"git.ignoreLimitWarning": true,
+		"editor.defaultFormatter": "esbenp.prettier-vscode",
+		"editor.formatOnSave": true
 	}
 }

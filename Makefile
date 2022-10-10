@@ -12,7 +12,7 @@ front:
 
 frontbuild:
 	cd ./front/app && npm run build
-	cd ./front/app && npm run serve --  --port 3000 --watch
+	cd ./front/app && npm run serve --  --port 4000 --watch
 database:
 	docker exec -it database bash
 

@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { UserController } from 'src/user/user.controller';
+import { FriendshipService } from './friendship.service';
+import { FriendshipController } from './friendship.controller';
 import { UserService } from 'src/user/user.service';
-import { UserEntity } from './user.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AuthenticationModule } from 'src/authentication/authentication.module';
-import { ImageService } from '../image/image.service';
+import { FriendshipEntity } from './entities/friendship.entity';
+import { UserEntity } from 'src/user/user.entity';
 import { ImageModule } from 'src/image/image.module';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { jwtConstants } from 'src/authentication/constants';
@@ -15,10 +15,11 @@ import { jwtConstants } from 'src/authentication/constants';
       secret: jwtConstants.secret,
       signOptions: { expiresIn: '10d' },
     }),
+    TypeOrmModule.forFeature([FriendshipEntity]),
     TypeOrmModule.forFeature([UserEntity]),
     ImageModule,
   ],
-  controllers: [UserController],
-  providers: [UserService],
+  controllers: [FriendshipController],
+  providers: [FriendshipService, UserService, JwtService],
 })
-export class UsersModule {}
+export class FriendshipModule {}
