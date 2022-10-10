@@ -49,12 +49,15 @@ export class OauthService {
         this.configService.get<string>('VUE_APP_42_ID') +
         '&client_secret=' +
         this.configService.get<string>('42_SECRET') +
-        '&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2F&code=' +
+        '&redirect_uri=' +
+        this.configService.get<string>('VUE_APP_42_URI') +
+        '&code=' +
         code,
       method: 'POST',
     })
       .then((val) => val.json())
       .then(async (token) => {
+        console.log('token--> ' + JSON.stringify(token));
         if (token.access_token == null) {
           throw UnauthorizedException;
         }
