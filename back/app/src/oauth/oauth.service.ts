@@ -80,13 +80,7 @@ export class OauthService {
                 download(res.image_url, file_path, function () {
                   console.log('done');
                 });
-                await this.authenticationService.registration(
-                  registrationDto,
-                  null,
-                );
-                const user_needs_avatar =
-                  await this.userService.getIntraUserById(res.id);
-                await this.userService.setAvatar(user_needs_avatar.id, {
+                await this.authenticationService.registration(registrationDto, {
                   filename: filename,
                   path: './assets/' + filename,
                   mimetype: 'image/jpeg',
