@@ -54,7 +54,7 @@ export default defineComponent({
 
   methods: {
     getRelations() {
-      fetch("http://localhost:3000/api/friendship/" + this.user.nickname, {
+      fetch("http://" + window.location.hostname +":3000/api/friendship/" + this.user.nickname, {
         method: "GET",
         headers: {
           Authorization: "Bearer " + localStorage.getItem("token"),
@@ -82,16 +82,12 @@ export default defineComponent({
   },
 
   mounted() {
-    let isConnected = funcs.isConnected(localStorage.getItem("token"));
-    if (isConnected == false) this.$router.push("/");
-    else {
-      funcs.getUserById(this.user.id).then((data: any) => {
-        funcs.getUserAvatar(data.path).then((data: any) => {
-          this.image = URL.createObjectURL(data);
-        });
+    funcs.getUserById(this.user.id).then((data: any) => {
+      funcs.getUserAvatar(data.path).then((data: any) => {
+        this.image = URL.createObjectURL(data);
       });
-      this.getRelations();
-    }
+    });
+    this.getRelations();
   },
 });
 </script>

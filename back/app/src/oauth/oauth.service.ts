@@ -8,19 +8,48 @@ import { json } from 'stream/consumers';
 import { CreateOauthDto } from './dto/create-oauth.dto';
 import { UpdateOauthDto } from './dto/update-oauth.dto';
 import { imageFileFilter } from 'src/utils/file-uploading.utils';
+import { ConfigService } from '@nestjs/config';
+import { AuthenticationService } from 'src/authentication/authentication.service';
 
 @Injectable()
 export class OauthService {
-  constructor(private jwtService: JwtService) {}
+  constructor(
+    private jwtService: JwtService,
+    private userService: UserService,
+    private configService: ConfigService,
+    private authenticationService: AuthenticationService,
+  ) {}
+  async check42NicknameUsed(originalLogin: string) {
+    let userCheck;
+    try {
+      userCheck = await this.userService.getUserByNickname(originalLogin);
+    } catch {
+      return originalLogin;
+    }
+    let loginToTest = originalLogin;
+    let count = 1;
+    while (userCheck) {
+      loginToTest = originalLogin + String(count++);
+      try {
+        userCheck = await this.userService.getUserByNickname(loginToTest);
+      } catch {
+        return loginToTest;
+      }
+    }
+    return originalLogin;
+  }
+
   async connect(code: string): Promise<any> {
-    let token = await fetch('https://api.intra.42.fr/oauth/token', {
+    const token = await fetch('https://api.intra.42.fr/oauth/token', {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
       body:
-        'grant_type=authorization_code&client_id=1a90768d9956eae0b0360b4588273a1d4a25143a9c8cfc6a0330dac17b9684db&client_secret=f6625481926b4356e865d97de76e4bb52ad72575c3ef8393258537d6c581f7f3&redirect_uri=http%3A%2F%2F' +
-        window.location.hostname +
-        '%3A3000%2F&code=' +
+        'grant_type=authorization_code&client_id=' +
+        this.configService.get<string>('VUE_APP_42_ID') +
+        '&client_secret=' +
+        this.configService.get<string>('42_SECRET') +
+        '&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2F&code=' +
         code,
       method: 'POST',
     })
@@ -36,68 +65,33 @@ export class OauthService {
         })
           .then((val) => val.json())
           .then(async (res) => {
-            let user = await fetch(
-              'http://' +
-                window.location.hostname +
-                ':3000/api/user/findIntraUser/' +
-                res.id,
-              {
-                method: 'GET',
-              },
-            ).then((res) => {
-              return res.json();
-            });
-            if (user.message) {
-              var formData = new FormData();
-              formData.append('nickname', res.login);
-              formData.append('phone', res.phone);
-              formData.append('intraId', res.id);
-              let filename: string =
-                res.login + '.' + getUrlExtension(res.image_url);
-              let file_path: string = './assets/' + filename;
-              download(res.image_url, file_path, function () {
-                console.log('done');
-              });
-              await fetch(
-                'http://' +
-                  window.location.hostname +
-                  ':3000/api/authentication/registration',
-                {
-                  method: 'POST',
-                  body: formData,
-                },
-              ).catch((err) => {
-                console.log(err);
-              });
-              await fetch(
-                'http://' +
-                  window.location.hostname +
-                  ':3000/api/user/findIntraUser/' +
-                  res.id,
-                {
-                  method: 'GET',
-                },
-              )
-                .then((value) => value.json())
-                .then(async (result) => {
-                  await fetch(
-                    'http://' +
-                      window.location.hostname +
-                      ':3000/api/user/setIntraAvatar/' +
-                      result.id +
-                      '/' +
-                      filename,
-                    {
-                      method: 'POST',
-                    },
-                  ).catch((err) => {
-                    console.log(err);
-                  });
+            await this.userService
+              .getIntraUserById(res.id)
+              .catch(async (err) => {
+                res.login = await this.check42NicknameUsed(res.login);
+                const registrationDto = {
+                  nickname: res.login,
+                  phone: res.phone,
+                  intraId: res.id,
+                };
+                const filename: string =
+                  res.login + '.' + getUrlExtension(res.image_url);
+                const file_path: string = './assets/' + filename;
+                download(res.image_url, file_path, function () {
+                  console.log('done');
                 });
-            }
-          })
-          .catch((err) => {
-            console.log(err);
+                await this.authenticationService.registration(
+                  registrationDto,
+                  null,
+                );
+                const user_needs_avatar =
+                  await this.userService.getIntraUserById(res.id);
+                await this.userService.setAvatar(user_needs_avatar.id, {
+                  filename: filename,
+                  path: './assets/' + filename,
+                  mimetype: 'image/jpeg',
+                });
+              });
           });
         return token;
       })
@@ -108,7 +102,7 @@ export class OauthService {
   }
 
   async login(token: any) {
-    let ret: any = await fetch('https://api.intra.42.fr/v2/me', {
+    const ret: any = await fetch('https://api.intra.42.fr/v2/me', {
       headers: {
         Authorization: 'Bearer ' + token,
       },
@@ -117,23 +111,8 @@ export class OauthService {
         return val.json();
       })
       .then(async (user) => {
-        let intraUser = await fetch(
-          'http://' +
-            window.location.hostname +
-            ':3000/api/user/findIntraUser/' +
-            user.id,
-          {
-            method: 'GET',
-          },
-        )
-          .then((res) => {
-            return res.json();
-          })
-          .catch((err) => {
-            console.log(err);
-          });
-        const payload = { username: user.login, sub: user.id };
-        return { token: this.jwtService.sign(payload), user: intraUser };
+        const intraUser = await this.userService.getIntraUserById(user.id);
+        return { token: this.jwtService.sign(intraUser), user: intraUser };
       })
       .catch((err) => {
         console.log(err);

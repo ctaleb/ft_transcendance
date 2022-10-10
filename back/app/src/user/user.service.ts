@@ -7,6 +7,8 @@ import { ImageDto } from 'src/image/image.dto';
 import { ImageService } from 'src/image/image.service';
 import { unlink } from 'fs';
 import * as bcrypt from 'bcrypt';
+import { JwtService } from '@nestjs/jwt';
+import { jwtConstants } from 'src/authentication/constants';
 
 @Injectable()
 export class UserService {
@@ -15,6 +17,7 @@ export class UserService {
     @InjectRepository(UserEntity)
     private _usersRepository: Repository<UserEntity>,
     private _imageService: ImageService,
+    private _jwtService: JwtService,
   ) {}
 
   getAllUsers() {
@@ -39,10 +42,7 @@ export class UserService {
     throw new HttpException('User not found', HttpStatus.NOT_FOUND);
   }
 
-  async createUser(
-    createUserDto: CreateUserDto,
-    queryRunner: QueryRunner,
-  ): Promise<UserEntity> {
+  async createUser(createUserDto: CreateUserDto): Promise<UserEntity> {
     const user = this._usersRepository.create(createUserDto);
     return this._usersRepository.save(user);
   }
@@ -55,7 +55,7 @@ export class UserService {
       avatar = await this._imageService.getDefaultAvatar();
     }
     await this._usersRepository.update(userId, {
-      avatarId: avatar.id, // a revoir
+      avatarId: avatar.id,
     });
     return await this._usersRepository.findOneBy({ id: userId });
   }
@@ -71,36 +71,52 @@ export class UserService {
 
   //PROFILE EDITION
   async updateNickname(oldNickname: string, newNickname: string) {
-    let nickname = oldNickname;
-    let user = await this._usersRepository.findOneBy({nickname});
+    const nickname = oldNickname;
+    const user = await this._usersRepository.findOneBy({ nickname });
     if (user) {
-        const avatar = this._imageService.getImageById(user.avatarId);
-        await this._usersRepository.update(user.id, {nickname:newNickname});
-        const ret_user = await this._usersRepository.findOneBy({id: user.id});
-        return {...ret_user, avatar};
+      const userExists = await this._usersRepository.findOneBy({
+        nickname: newNickname,
+      });
+      if (userExists) {
+        throw new HttpException('User not Found', HttpStatus.NOT_FOUND);
+      }
+      await this._usersRepository.update(user.id, { nickname: newNickname });
+      const user_with_password = await this.getUserByNickname(newNickname);
+      const { password, ...user_without_password } = user_with_password;
+      const token = this._jwtService.sign(user_without_password);
+      return { user: user_without_password, token: token };
     }
     throw new HttpException('User not Found', HttpStatus.NOT_FOUND);
   }
 
-  async updateAvatar(imageDto: ImageDto, userId: number){
-    const user = await this._usersRepository.findOneBy({id: userId});
+  async updateAvatar(imageDto: ImageDto, userId: number) {
+    const user = await this._usersRepository.findOneBy({ id: userId });
     const oldAvatar = await this._imageService.getImageById(user.avatarId);
     unlink(oldAvatar.path, (err) => {
       if (err) throw err;
       console.log(oldAvatar.path + ' has been deleted');
     });
-    
+
     await this.setAvatar(user.id, imageDto);
     await this._imageService.deleteImage(user.avatarId);
-    const userUpdated = await this._usersRepository.findOneBy({id: userId})
+    const userUpdated = await this._usersRepository.findOneBy({ id: userId });
     const avatar = await this._imageService.getImageById(userUpdated.avatarId);
-    return {...userUpdated, avatar};
+
+    const user_with_password = await this.getUserByNickname(
+      userUpdated.nickname,
+    );
+    const { password, ...user_without_password } = user_with_password;
+    const token = this._jwtService.sign(user_without_password);
+    return { user: user_without_password, avatar: avatar, token: token };
   }
 
-  async updatePassword(newPassword: string, userId: number){
-    const user = await this._usersRepository.findOneBy({id: userId});
-    //newPassword = await bcrypt.hash(newPassword, 10);
-    await this._usersRepository.update(userId, {password: newPassword})
-    return {success: true};
+  async updatePassword(newPassword: string, userId: number) {
+    await this._usersRepository.update(userId, { password: newPassword });
+    return { success: true };
+  }
+
+  async deleteAccount(user: any) {
+    this._usersRepository.delete({ id: user.id });
+    this._imageService.deleteImage(user.avatarId);
   }
 }

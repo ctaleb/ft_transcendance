@@ -12,6 +12,6 @@ export class CreateUserDto {
   readonly phone: string;
 
   readonly password?: string;
-  
+
   readonly intraId?: string;
 }

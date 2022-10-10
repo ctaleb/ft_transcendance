@@ -19,13 +19,16 @@ export class AuthenticationService {
     private jwtService: JwtService,
   ) {}
 
-  async registration(registrationDto: RegistrationDto, imageDto: ImageDto): Promise<UserEntity> {
+  async registration(
+    registrationDto: RegistrationDto,
+    imageDto: ImageDto,
+  ): Promise<UserEntity> {
     let user: UserEntity;
     const queryRunner = this._dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      user = await this._userService.createUser(registrationDto, queryRunner);
+      user = await this._userService.createUser(registrationDto);
       user = await this._userService.setAvatar(user.id, imageDto);
       await queryRunner.commitTransaction();
     } catch (error) {
@@ -48,21 +51,20 @@ export class AuthenticationService {
   }
 
   async validateUser(username: string, plainPassword: string): Promise<any> {
-   const user = await this._userService.getUserByNickname(username);
+    const user = await this._userService.getUserByNickname(username);
     if (user) {
-        if (bcrypt.compareSync(plainPassword, user.password))
-        {
-            const { password, ...ret } = user;
-            return ret;
-        }
+      if (bcrypt.compareSync(plainPassword, user.password)) {
+        const { password, ...ret } = user;
+        return ret;
+      }
     }
     return null;
   }
 
   async login(user: any) {
-    const payload = { username: user.nickname, sub: user.id };
+    //const payload = { username: user.nickname, sub: user.id };
     return {
-      access_token: this.jwtService.sign(payload),
+      access_token: this.jwtService.sign(user),
     };
   }
 }

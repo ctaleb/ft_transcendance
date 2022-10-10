@@ -12,6 +12,7 @@
     "@vuelidate/validators": "^2.0.0-alpha.31",
     "axios": "^0.27.2",
     "core-js": "^3.8.3",
+    "dotenv": "^16.0.2",
     "socket.io-client": "^4.5.1",
     "tsparticles-engine": "^2.3.1",
     "vue": "^3.2.39",

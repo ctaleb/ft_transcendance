@@ -17,13 +17,13 @@ export class OauthController {
 
   @Post(':code')
   async connect(@Param('code') code: string) {
-    let token = await this.oauthService.connect(code);
+    const token = await this.oauthService.connect(code);
     return token;
   }
 
   @Post('login/:access_token')
   async login(@Param('access_token') access_token: string) {
-    let result = await this.oauthService.login(access_token);
+    const result = await this.oauthService.login(access_token);
     return { token: result.token, user: result.user };
   }
 }
