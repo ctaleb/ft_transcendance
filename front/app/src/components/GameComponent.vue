@@ -1,5 +1,5 @@
 <template>
-  <PowerSliderComponent />
+  <PowerSliderComponent v-model="power" />
   <div>
     <button @click="findMatch()" :disabled="startButton">
       {{ lobbyStatus }}
@@ -14,6 +14,9 @@
     <button @click="confirmGame()">Yes</button>
     <button @click="denyGame()">No</button>
   </div>
+
+  <div class="power">Selected power: {{ power }}</div>
+
   <div class="sumModal hidden">
     <div class="summary" id="summary">
       <div class="playerCol">
@@ -141,6 +144,8 @@ const color = ref("white");
 const sumTitle = ref("");
 const sumDate = ref("");
 const sumTime = ref("");
+
+const power = ref("");
 
 // const stylesheet = document.styleSheets[0].cssRules[10].cssText;
 // const vtitle = [...stylesheet.cssRules].find((r) => r.cssText === ".title");
@@ -469,5 +474,9 @@ button:disabled {
   background-color: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(3px);
   z-index: 5;
+}
+.power {
+  position: absolute;
+  bottom: 0;
 }
 </style>
