@@ -6,67 +6,23 @@
     </button>
   </div>
   <div>
-    <canvas ref="canvas" width="500" height="500"></canvas>
+    <canvas class="canvas hidden" ref="canvas"></canvas>
   </div>
 
-  <div class="modal hidden">
-    <h1>Ready to play ?</h1>
-    <button @click="confirmGame()">Yes</button>
-    <button @click="denyGame()">No</button>
-  </div>
-
-  <div class="power">Selected power: {{ power }}</div>
-
-  <div class="sumModal hidden">
-    <div class="summary" id="summary">
-      <div class="playerCol">
-        <div class="score">
-          <div>{{ gameSummary.hostScore }}</div>
-        </div>
-        <div class="playerName">{{ gameSummary.hostName }}</div>
-        <div class="player">
-          <div class="elo"><div class="playerImage"></div></div>
-          <div class="elo">
-            <div>{{ gameSummary.hostElo }} elo</div>
-            <div>+ {{ gameSummary.eloChange }}</div>
-          </div>
-        </div>
-        <div class="power">
-          <div>{{ gameSummary.hostPower }}</div>
-        </div>
-      </div>
-      <div class="midcol">
-        <div class="titleVictory">
-          <div id="title">
-            {{ sumTitle }}
-            <div class="date">
-              {{ sumDate }}
-            </div>
-          </div>
-          <div class="time">{{ sumTime }}</div>
-        </div>
-        <div class="versus">VS</div>
-        <button @click="closeSummary()">Close</button>
-      </div>
-      <div class="playerCol">
-        <div class="score">
-          <div>{{ gameSummary.clientScore }}</div>
-        </div>
-        <div class="playerName">{{ gameSummary.clientName }}</div>
-        <div class="player">
-          <div class="elo">
-            <div>{{ gameSummary.clientElo }} elo</div>
-            <div>+ {{ gameSummary.eloChange }}</div>
-          </div>
-          <div class="elo"><div class="playerImage"></div></div>
-        </div>
-        <div class="power">
-          <div>{{ gameSummary.clientPower }}</div>
-        </div>
-      </div>
+  <div v-if="modal || summary" class="overlay">
+    <div v-if="modal" class="modal">
+      <h1>Ready to play ?</h1>
+      <button @click="confirmGame()">Yes</button>
+      <button @click="denyGame()">No</button>
     </div>
+    <Modal
+      v-else-if="summary"
+      :title="sumTitle"
+      :data="gameSummary"
+      @close="showSummary(false)"
+    ></Modal>
   </div>
-  <div class="overlay hidden"></div>
+  <div class="power">Selected power: {{ power }}</div>
 </template>
 
 <style lang="scss">
@@ -78,7 +34,7 @@ import ballUrl from "../assets/ball.png";
 import paddleUrl from "../assets/paddle_grec.png";
 import energyUrl from "../assets/energy.png";
 import paddleEnergyUrl from "../assets/energy_paddle_grec.png";
-import plateauUrl from "../assets/plateau.png";
+import plateauUrl from "../assets/plateauV2.png";
 import energyRedUrl from "../assets/energy_red.png";
 import paddleRedUrl from "../assets/paddle_grec_red.png";
 import paddleEnergyRedUrl from "../assets/energy_paddle_red.png";
@@ -98,6 +54,9 @@ import {
 import config from "../config/config";
 import { title } from "process";
 import PowerSliderComponent from "./PowerSliderComponent.vue";
+import Summary from "./Summary.vue";
+import { GameSummaryData } from "@/types/GameSummary";
+import Modal from "./Summary/Modal.vue";
 
 if (config.socket.disconnected) {
   config.socket = io("http://" + window.location.hostname + ":3000", {
@@ -133,6 +92,11 @@ const fillRedImg = new Image();
 fillRedImg.src = fillRedUrl;
 
 const canvas = ref<HTMLCanvasElement | null>(null);
+let ctx: CanvasRenderingContext2D | null | undefined;
+let cHeight = 0;
+let cWidth = 0;
+let scale = 0;
+let offset = 0;
 
 const startButton = ref(false);
 const lobbyStatus = ref("Find match");
@@ -141,14 +105,13 @@ const clientScore = ref(0);
 const hostName = ref("Host");
 const clientName = ref("Client");
 const color = ref("white");
-const sumTitle = ref("");
+const sumTitle = ref("Placeholder");
 const sumDate = ref("");
-const sumTime = ref("");
+const sumTime = ref(0);
+const modal = ref(false);
+const summary = ref(true);
 
 const power = ref("");
-
-// const stylesheet = document.styleSheets[0].cssRules[10].cssText;
-// const vtitle = [...stylesheet.cssRules].find((r) => r.cssText === ".title");
 
 let loadPercent = 120;
 let kickOff = false;
@@ -156,28 +119,32 @@ let cSmashingPercent = 0;
 let hSmashingPercent = 0;
 
 let theRoom: GameRoom;
-const gameSummary = reactive({
-  hostElo: 0,
-  hostName: "",
-  hostPower: "",
-  hostScore: 0,
-  clientElo: 0,
-  clientName: "",
-  clientPower: "",
-  clientScore: 0,
-  eloChange: 0,
-  gameMode: "",
-  gameTime: 0,
-  gameDate: new Date(),
+const gameSummary = reactive<GameSummaryData>({
+  host: {
+    elo: 1500,
+    name: "Host",
+    power: "",
+    score: 0,
+    eloChange: 25,
+  },
+  client: {
+    elo: 42,
+    name: "Client",
+    power: "",
+    score: 0,
+    eloChange: -12,
+  },
+  gamemode: "",
+  start: new Date(),
+  end: new Date(),
 });
 
-function openModal() {
-  document.querySelector(".modal")?.classList.remove("hidden");
-  document.querySelector(".overlay")?.classList.remove("hidden");
+function showModal(show: boolean) {
+  modal.value = show;
 }
-function closeModal() {
-  document.querySelector(".modal")?.classList.add("hidden");
-  document.querySelector(".overlay")?.classList.add("hidden");
+
+function showSummary(show: boolean) {
+  summary.value = show;
 }
 
 function findMatch() {
@@ -189,22 +156,12 @@ function findMatch() {
 
 function confirmGame() {
   socket.emit("playerReady", {}, () => {});
-  closeModal();
+  showModal(false);
 }
 
 function denyGame() {
   socket.emit("playerNotReady", {}, () => {});
-  closeModal();
-}
-
-function openSummary() {
-  document.querySelector(".sumModal")?.classList.remove("hidden");
-  document.querySelector(".overlay")?.classList.remove("hidden");
-}
-
-function closeSummary() {
-  document.querySelector(".sumModal")?.classList.add("hidden");
-  document.querySelector(".overlay")?.classList.add("hidden");
+  showModal(false);
 }
 
 function kickoffLoading(ctx: any) {
@@ -213,9 +170,9 @@ function kickoffLoading(ctx: any) {
     let arcsize = (loadPercent / 100) * 2 * Math.PI;
     loadPercent -= 0.4;
     if (arcsize < 1) return;
-    ctx.arc(250, 250, 20, 1, arcsize);
-    ctx.strokeStyle = "#7AD3FA";
-    ctx.lineWidth = 4;
+    ctx.arc(cWidth / 2, cWidth / 2 + offset, 20 * scale, 1, arcsize);
+    ctx.strokeStyle = "#5eadde";
+    ctx.lineWidth = 4 * scale;
     ctx.stroke();
   }
 }
@@ -228,87 +185,170 @@ function drawSmashingEffect(
   if (bar.smashing) {
     ctx.drawImage(
       bar.pos.y < 250 ? energyPaddleRedImg : energyPaddleImg,
-      bar.pos.x - bar.size.x,
-      bar.pos.y - bar.size.y * (1 + smashingPercent / 100 / 2),
-      bar.size.x * 2,
-      bar.size.y * (2 + smashingPercent / 100)
+      bar.pos.x - bar.size.x * scale,
+      bar.pos.y - bar.size.y * scale * (1 + smashingPercent / 100 / 2),
+      bar.size.x * 2 * scale,
+      bar.size.y * (2 + smashingPercent / 100) * scale
     );
   }
   if (bar.smashing) {
     ctx.globalAlpha = (0.5 * smashingPercent) / 100;
     ctx.drawImage(
       bar.pos.y < 250 ? energyRedImg : energyImg,
-      bar.pos.x - bar.size.x * 2.5,
-      bar.pos.y - bar.size.y * 4,
-      bar.size.x * 5,
-      bar.size.y * 8
+      bar.pos.x - bar.size.x * scale * 2.5,
+      bar.pos.y - bar.size.y * scale * 4,
+      bar.size.x * 5 * scale,
+      bar.size.y * 8 * scale
     );
     ctx.globalAlpha = 1;
   }
   ctx.drawImage(
     bar.pos.y < 250 ? paddleRedImg : paddleImg,
-    bar.pos.x - bar.size.x,
-    bar.pos.y - bar.size.y,
-    bar.size.x * 2,
-    bar.size.y * 2
+    bar.pos.x - bar.size.x * scale,
+    bar.pos.y - bar.size.y * scale,
+    bar.size.x * 2 * scale,
+    bar.size.y * 2 * scale
   );
 }
 
 function drawPlayground(ctx: CanvasRenderingContext2D) {
   // Draw the border + backgroung
-  ctx.drawImage(plateauImg, 0, 0, 500, 500);
+  ctx.drawImage(plateauImg, 0, 0, cWidth, cHeight);
 }
 
 function drawScore(ctx: CanvasRenderingContext2D, gameState: GameState) {
   let slot = theRoom.options.scoreMax;
 
   for (let i = 0; i < slot; i++) {
-    ctx.drawImage(slotImg, 125 + (287.5 / slot) * i, 300, 25, 25);
-    if (i < gameState.score.host)
-      ctx.drawImage(fillImg, 125 + (287.5 / slot) * i + 5, 300 + 5, 15, 15);
+    ctx.drawImage(
+      slotImg,
+      cWidth * 0.25 + ((cWidth * 0.5) / (slot + 1)) * (i + 1) - 10 * scale,
+      cHeight * 0.148 - 25 * scale,
+      20 * scale,
+      20 * scale
+    );
+    if (i < gameState.score.client)
+      ctx.drawImage(
+        fillRedImg,
+        cWidth * 0.25 + ((cWidth * 0.5) / (slot + 1)) * (i + 1) - 6 * scale,
+        cHeight * 0.148 - 25 * scale + (8 * scale) / 2,
+        12 * scale,
+        12 * scale
+      );
   }
   for (let i = 0; i < slot; i++) {
-    ctx.drawImage(slotImg, 125 + (287.5 / slot) * i, 200 - 25, 25, 25);
-    if (i < gameState.score.client)
-      ctx.drawImage(fillRedImg, 125 + (287.5 / slot) * i + 5, 200 - 20, 15, 15);
+    ctx.drawImage(
+      slotImg,
+      cWidth * 0.25 + ((cWidth * 0.5) / (slot + 1)) * (i + 1) - 10 * scale,
+      cHeight * 0.894 - 25 * scale,
+      20 * scale,
+      20 * scale
+    );
+    if (i < gameState.score.host)
+      ctx.drawImage(
+        fillImg,
+        cWidth * 0.25 + ((cWidth * 0.5) / (slot + 1)) * (i + 1) - 6 * scale,
+        cHeight * 0.894 - 25 * scale + (8 * scale) / 2,
+        12 * scale,
+        12 * scale
+      );
   }
 }
 
 function updateSummary(summary: GameSummary) {
-  gameSummary.hostElo = summary.hostElo;
-  gameSummary.hostName = summary.hostName;
-  gameSummary.hostPower = summary.hostPower;
-  gameSummary.hostScore = summary.hostScore;
-  gameSummary.clientElo = summary.clientElo;
-  gameSummary.clientName = summary.clientName;
-  gameSummary.clientPower = summary.clientPower;
-  gameSummary.clientScore = summary.clientScore;
-  gameSummary.eloChange = summary.eloChange;
-  gameSummary.gameMode = summary.gameMode;
-  gameSummary.gameTime = summary.gameTime;
-  gameSummary.gameDate = summary.gameDate;
-  setDateTime(gameSummary);
+  // gameSummary.hostElo = summary.hostElo;
+  // gameSummary.hostName = summary.hostName;
+  // gameSummary.hostPower = summary.hostPower;
+  // gameSummary.hostScore = summary.hostScore;
+  // gameSummary.clientElo = summary.clientElo;
+  // gameSummary.clientName = summary.clientName;
+  // gameSummary.clientPower = summary.clientPower;
+  // gameSummary.clientScore = summary.clientScore;
+  // gameSummary.eloChange = summary.eloChange;
+  // gameSummary.gameMode = summary.gameMode;
+  // gameSummary.gameTime = summary.gameTime;
+  // gameSummary.gameDate = summary.gameDate;
+  // setDateTime(gameSummary);
 }
 
 function setDateTime(summary: GameSummary) {
-  let hours = Math.floor(summary.gameTime / 3600000);
-  let minutes = Math.floor(
-    summary.gameTime - summary.gameTime / 3600000 / 60000
-  );
-  let seconds = Math.floor(summary.gameTime - summary.gameTime / 60000);
-  sumTime.value = hours + "H" + minutes + "M" + seconds + "S";
+  sumTime.value = new Date().getDate() - new Date(summary.gameDate).getDate();
   sumDate.value = summary.gameDate.toString();
+}
+
+let gState: GameState;
+function test(
+  ctx: CanvasRenderingContext2D | null | undefined,
+  gameState: GameState
+) {
+  if (theRoom && ctx) {
+    let ball = gameState.ball;
+    clientScore.value = gameState.score.client;
+    hostScore.value = gameState.score.host;
+    if (gameState.clientBar.smashing && cSmashingPercent < 100 && !kickOff) {
+      cSmashingPercent += 2;
+    } else if (!gameState.clientBar.smashing || kickOff) cSmashingPercent = 0;
+    if (gameState.hostBar.smashing && hSmashingPercent < 100 && !kickOff) {
+      hSmashingPercent += 2;
+    } else if (!gameState.hostBar.smashing || kickOff) hSmashingPercent = 0;
+    if (ctx) {
+      drawPlayground(ctx);
+      drawScore(ctx, gameState);
+      kickoffLoading(ctx);
+      ctx.drawImage(
+        ballImg,
+        ball.pos.x - ball.size * scale,
+        ball.pos.y - ball.size * scale,
+        ball.size * 2 * scale,
+        ball.size * 2 * scale
+      );
+      ctx.fillStyle = "black";
+      drawSmashingEffect(gameState.clientBar, cSmashingPercent, ctx);
+      drawSmashingEffect(gameState.hostBar, hSmashingPercent, ctx);
+    }
+  }
+}
+
+function scaling(ctx?: CanvasRenderingContext2D | null) {
+  if (ctx) {
+    ctx.canvas.height = window.innerHeight * 0.8;
+    if (ctx.canvas.height * 0.69 > window.innerWidth) {
+      ctx.canvas.width = window.innerWidth;
+      ctx.canvas.height = ctx.canvas.width * 1.449;
+    } else {
+      ctx.canvas.width = ctx.canvas.height * 0.69;
+    }
+    cHeight = ctx.canvas.height;
+    cWidth = ctx.canvas.width;
+    scale = cWidth / 500;
+    offset = (cHeight - cWidth) / 2;
+  }
+}
+
+function scalePosition(gameState: GameState) {
+  let scale = cWidth / 500;
+  let offset = (cHeight - cWidth) / 2;
+  gameState.ball.pos.x *= scale;
+  gameState.ball.pos.y *= scale;
+  gameState.ball.pos.y += offset;
+  gameState.hostBar.pos.x *= scale;
+  gameState.hostBar.pos.y *= scale;
+  gameState.hostBar.pos.y += offset;
+  gameState.clientBar.pos.x *= scale;
+  gameState.clientBar.pos.y *= scale;
+  gameState.clientBar.pos.y += offset;
 }
 
 onMounted(() => {
   let ctx = canvas.value?.getContext("2d");
+  scaling(ctx);
   socket.on("gameConfirmation", (gameRoom: GameRoom) => {
     theRoom = gameRoom;
-    openModal();
+    showModal(true);
   });
 
   socket.on("gameConfirmationTimeout", () => {
-    closeModal();
+    showModal(false);
     startButton.value = true;
     lobbyStatus.value = "Find Match";
   });
@@ -331,6 +371,8 @@ onMounted(() => {
   });
 
   socket.on("ServerUpdate", (gameState: GameState) => {
+    gState = gameState;
+    scalePosition(gameState);
     if (theRoom) {
       let ball = gameState.ball;
       clientScore.value = gameState.score.client;
@@ -347,10 +389,10 @@ onMounted(() => {
         kickoffLoading(ctx);
         ctx.drawImage(
           ballImg,
-          ball.pos.x - ball.size,
-          ball.pos.y - ball.size,
-          ball.size * 2,
-          ball.size * 2
+          ball.pos.x - ball.size * scale,
+          ball.pos.y - ball.size * scale,
+          ball.size * 2 * scale,
+          ball.size * 2 * scale
         );
         ctx.fillStyle = "black";
         drawSmashingEffect(gameState.clientBar, cSmashingPercent, ctx);
@@ -369,9 +411,8 @@ onMounted(() => {
       updateSummary(summary);
       color.value = "green";
       sumTitle.value = "Victory";
-      document.getElementById("title")!.style.color = "green";
-      document.getElementById("summary")!.style.borderColor = "green";
-      openSummary();
+      document.querySelector(".canvas")?.classList.add("hidden");
+      showSummary(true);
     }
   );
 
@@ -385,9 +426,8 @@ onMounted(() => {
       updateSummary(summary);
       color.value = "red";
       sumTitle.value = "Defeat";
-      document.getElementById("title")!.style.color = "red";
-      document.getElementById("summary")!.style.borderColor = "red";
-      openSummary();
+      document.querySelector(".canvas")?.classList.add("hidden");
+      showSummary(true);
     }
   );
 
@@ -396,6 +436,7 @@ onMounted(() => {
     hostName.value = theRoom.hostName;
     clientName.value = theRoom.clientName;
     lobbyStatus.value = "Play !";
+    document.querySelector(".canvas")?.classList.remove("hidden");
   });
 
   window.addEventListener("keydown", (e) => {
@@ -439,6 +480,11 @@ onMounted(() => {
           key: "upD",
         });
     }
+  });
+
+  window.addEventListener("resize", (e) => {
+    scaling(ctx);
+    test(ctx, gState);
   });
 });
 </script>

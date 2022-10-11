@@ -190,7 +190,7 @@ export class ServerService {
           ballsize: 16,
           barSpeed: 7,
           barSize: { x: 40, y: 10 },
-          scoreMax: 10,
+          scoreMax: 3,
           chargeMax: 1,
           timeLimit: 0,
         },
@@ -381,21 +381,33 @@ export class ServerService {
           ball.pos.x < clientBar.pos.x + clientBar.size.x + ball.size &&
           ball.pos.x > clientBar.pos.x - clientBar.size.x - ball.size
         ) {
-          ball.speed.y *= -1;
-          ball.speed.y *= client.smashRight + client.smashLeft + 1;
+          console.log('Client = ');
+          console.log(
+            'initial ball speed : ' + ball.speed.x + ' & ' + ball.speed.y,
+          );
+          console.log(
+            'Smash power (L/R) : ' +
+              client.smashLeft +
+              ' & ' +
+              client.smashRight,
+          );
           if (client.smashLeft > 0) {
             ball.speed.x = 1 * M + client.smashLeft;
+            ball.speed.y = 1 * M + client.smashLeft;
           } else if (client.smashRight > 0) {
             ball.speed.x = -1 * M - client.smashRight;
+            ball.speed.y = 1 * M + client.smashRight;
+          } else {
+            ball.speed.y *= -1;
           }
-          ball.speed.y = 1 * M + client.smashRight + client.smashLeft;
+          clientBar.smashing = false;
           client.smashLeft = 0;
           client.smashRight = 0;
-          clientBar.smashing = false;
-          ball.pos.y += ball.speed.y;
-          ball.pos.x += ball.speed.x;
           room.barCollide = true;
           this.storeEffect(clientBar, room);
+          console.log(
+            'out ball speed : ' + ball.speed.x + ' & ' + ball.speed.y,
+          );
         }
       }
       if (
@@ -406,21 +418,30 @@ export class ServerService {
           ball.pos.x < hostBar.pos.x + hostBar.size.x + ball.size &&
           ball.pos.x > hostBar.pos.x - hostBar.size.x - ball.size
         ) {
-          ball.speed.y *= -1;
-          ball.speed.y *= client.smashRight + client.smashLeft + 1;
+          console.log('Host = ');
+          console.log(
+            'initial ball speed : ' + ball.speed.x + ' & ' + ball.speed.y,
+          );
+          console.log(
+            'Smash power (L/R) : ' + host.smashLeft + ' & ' + host.smashRight,
+          );
           if (host.smashLeft > 0) {
             ball.speed.x = -1 * M - host.smashLeft;
+            ball.speed.y = 1 * M + host.smashLeft;
           } else if (host.smashRight > 0) {
             ball.speed.x = 1 * M + host.smashRight;
+            ball.speed.y = 1 * M + host.smashRight;
+          } else {
+            ball.speed.y *= -1;
           }
-          ball.speed.y = -1 * M - host.smashLeft - host.smashRight;
+          hostBar.smashing = false;
           host.smashLeft = 0;
           host.smashRight = 0;
-          hostBar.smashing = false;
-          ball.pos.y += ball.speed.y;
-          ball.pos.x += ball.speed.x;
           room.barCollide = true;
           this.storeEffect(hostBar, room);
+          console.log(
+            'out ball speed : ' + ball.speed.x + ' & ' + ball.speed.y,
+          );
         }
       }
     }
@@ -430,7 +451,7 @@ export class ServerService {
         ball.pos.x - ball.size < clientBar.pos.x + clientBar.size.x
       ) {
         if (ball.pos.y - ball.size < clientBar.pos.y) {
-          ball.speed.x *= -1;
+          if (!ball.speed.x) ball.speed.x *= -1;
           ball.pos.y += ball.speed.y;
           ball.pos.x += ball.speed.x;
           room.sideCollide = true;
@@ -441,7 +462,7 @@ export class ServerService {
         ball.pos.x + ball.size > clientBar.pos.x - clientBar.size.x
       ) {
         if (ball.pos.y - ball.size < clientBar.pos.y) {
-          ball.speed.x *= -1;
+          if (ball.speed.x) ball.speed.x *= -1;
           ball.pos.y += ball.speed.y;
           ball.pos.x += ball.speed.x;
           room.sideCollide = true;
@@ -453,7 +474,7 @@ export class ServerService {
         ball.pos.x - ball.size < hostBar.pos.x + hostBar.size.x
       ) {
         if (ball.pos.y + ball.size > hostBar.pos.y) {
-          ball.speed.x *= -1;
+          if (!ball.speed.x) ball.speed.x *= -1;
           ball.pos.y += ball.speed.y;
           ball.pos.x += ball.speed.x;
           room.sideCollide = true;
@@ -464,7 +485,7 @@ export class ServerService {
         ball.pos.x + ball.size > hostBar.pos.x - hostBar.size.x
       ) {
         if (ball.pos.y + ball.size > hostBar.pos.y) {
-          ball.speed.x *= -1;
+          if (ball.speed.x) ball.speed.x *= -1;
           ball.pos.y += ball.speed.y;
           ball.pos.x += ball.speed.x;
           room.sideCollide = true;
@@ -557,8 +578,14 @@ export class ServerService {
     game.room.effect = 'null';
     game.host.smashLeft = 0;
     game.host.smashRight = 0;
+    game.host.input = [];
+    game.host.left = false;
+    game.host.right = false;
     game.client.smashLeft = 0;
     game.client.smashRight = 0;
+    game.client.input = [];
+    game.client.left = false;
+    game.client.right = false;
   }
 
   startRound(room: GameRoom) {
@@ -599,12 +626,12 @@ export class ServerService {
     }
     if (
       game.host.smashLeft > 0 &&
-      game.client.smashLeft < game.room.options.chargeMax
+      game.host.smashLeft < game.room.options.chargeMax
     ) {
       game.host.smashLeft += 0.01;
     } else if (
       game.host.smashRight > 0 &&
-      game.client.smashRight < game.room.options.chargeMax
+      game.host.smashRight < game.room.options.chargeMax
     ) {
       game.host.smashRight += 0.01;
     }
