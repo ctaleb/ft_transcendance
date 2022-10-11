@@ -59,7 +59,10 @@ export default defineComponent({
       intra_redirection:
         "https://api.intra.42.fr/oauth/authorize?client_id=" +
         process.env.VUE_APP_42_ID +
-        "&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2F&response_type=code",
+        "&redirect_uri=" +
+        process.env.VUE_APP_42_URI +
+        "&response_type=code",
+
       token: {
         access_token: null,
         token_type: null,
