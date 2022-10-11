@@ -17,7 +17,7 @@
       </div>
       <button @click="invite()">Add Friend</button>
     </div>
-    <h1>Invitations:</h1>
+    <h1 v-if="invitations.length">Invitations:</h1>
     <div class="invitations">
       <span class="invitation" v-for="invitation in invitations">
         <img :src="invitation.image" alt="" />
@@ -33,15 +33,16 @@
         </div>
       </span>
     </div>
-    <h3>Friends:</h3>
-    <div>
-      <span v-for="friend in friends">
+    <h1 v-if="friends.length">Friends:</h1>
+    <div class="friends">
+      <span class="friend" v-for="friend in friends">
+        <div class="image">
+          <img :src="friend.image" alt="" />
+          <button @click="unfriend(friend)">
+            <i class="gg-more-vertical-o"></i>
+          </button>
+        </div>
         <p>{{ friend.nickname }}</p>
-        <img
-          :src="friend.image"
-          alt=""
-          style="max-width: 250px; max-height: 200px"
-        />
       </span>
     </div>
   </div>
@@ -53,7 +54,7 @@
 </style>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { ref, defineComponent } from "vue";
 let funcs = require("../functions/funcs");
 
 interface User {
@@ -122,11 +123,14 @@ export default defineComponent({
             addressee: this.searchFriend,
           }),
         }
-      ).then((res) => {
-        if (res.status !== 201) {
-          console.log(res.statusText);
-        }
-      });
+      )
+        .then((res) => {
+          if (res.status !== 200) {
+            throw res.statusText;
+          }
+        })
+        .catch((err) => console.log(err));
+      this.searchFriend = "";
     },
 
     befriend(invitation: User) {
@@ -145,7 +149,7 @@ export default defineComponent({
         }
       )
         .then((res) => {
-          if (res.status !== 201) {
+          if (res.status !== 200) {
             throw res.statusText;
           }
           return res.json();
@@ -173,7 +177,7 @@ export default defineComponent({
         }
       )
         .then((res) => {
-          if (res.status !== 201) {
+          if (res.status !== 200) {
             throw res.statusText;
           }
           return res.json();
@@ -200,13 +204,40 @@ export default defineComponent({
         }
       )
         .then((res) => {
-          if (res.status !== 201) {
+          if (res.status !== 200) {
             throw res.statusText;
           }
           return res.json();
         })
         .then((data) => {
           this.invitations.splice(this.invitations.indexOf(invitation), 1);
+        })
+        .catch((err) => console.log(err));
+    },
+
+    unfriend(friend: User) {
+      fetch(
+        "http://" + window.location.hostname + ":3000/api/friendship/unfriend",
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + localStorage.getItem("token"),
+          },
+          body: JSON.stringify({
+            requester: this.user.nickname,
+            addressee: friend.nickname,
+          }),
+        }
+      )
+        .then((res) => {
+          if (res.status !== 200) {
+            throw res.statusText;
+          }
+          return res.json();
+        })
+        .then((data) => {
+          this.friends.splice(this.friends.indexOf(friend), 1);
         })
         .catch((err) => console.log(err));
     },

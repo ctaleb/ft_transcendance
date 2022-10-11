@@ -18,7 +18,7 @@ button {
 }
 
 .search {
-  margin: auto;
+  margin: 3rem auto;
   position: relative;
   display: flex;
   width: 40%;
@@ -29,7 +29,6 @@ button {
     position: relative;
     display: flex;
     justify-content: flex-start;
-    // font-family: "Roboto";
     border: 3px solid;
     border-image-slice: 1;
     border-image-source: linear-gradient(to bottom, #242218, #c1a36b);
@@ -106,6 +105,46 @@ button {
         border: 1px solid #836529;
         padding-left: 1em;
       }
+    }
+  }
+}
+
+.friends {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  margin: auto;
+  width: 80%;
+  gap: 1rem 2rem;
+  .friend {
+    position: relative;
+    width: 20%;
+    height: auto;
+    .image {
+      position: relative;
+      width: 70%;
+      margin-left: 15%;
+      height: 15rem;
+      border: unset;
+      display: table;
+      img {
+        position: relative;
+        display: table-row;
+        width: 100%;
+        height: 15rem;
+        object-fit: cover;
+      }
+      button {
+        position: absolute;
+        bottom: 5%;
+        left: 10%;
+        width: 5%;
+        color: #c1a36b;
+        background: transparent;
+      }
+    }
+    p {
+      font-size: 1.5em;
     }
   }
 }

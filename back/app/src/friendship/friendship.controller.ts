@@ -20,7 +20,7 @@ export class FriendshipController {
 
   @Post('invite')
   invite(@Body() friendshipDto: FriendshipDto) {
-    return this._friendshipService.invite(
+    this._friendshipService.invite(
       friendshipDto.requester,
       friendshipDto.addressee,
     );
