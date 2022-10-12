@@ -113,7 +113,6 @@ export default defineComponent({
             Authorization: "Bearer " + localStorage.getItem("token"),
           },
           body: JSON.stringify({
-            requester: this.user.nickname,
             addressee: this.searchFriend,
           }),
         }
@@ -137,7 +136,6 @@ export default defineComponent({
             Authorization: "Bearer " + localStorage.getItem("token"),
           },
           body: JSON.stringify({
-            requester: this.user.nickname,
             addressee: invitation.nickname,
           }),
         }
@@ -165,7 +163,6 @@ export default defineComponent({
             Authorization: "Bearer " + localStorage.getItem("token"),
           },
           body: JSON.stringify({
-            requester: this.user.nickname,
             addressee: invitation.nickname,
           }),
         }
@@ -192,7 +189,6 @@ export default defineComponent({
             Authorization: "Bearer " + localStorage.getItem("token"),
           },
           body: JSON.stringify({
-            requester: this.user.nickname,
             addressee: invitation.nickname,
           }),
         }
@@ -219,7 +215,6 @@ export default defineComponent({
             Authorization: "Bearer " + localStorage.getItem("token"),
           },
           body: JSON.stringify({
-            requester: this.user.nickname,
             addressee: friend.nickname,
           }),
         }

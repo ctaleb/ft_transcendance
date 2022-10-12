@@ -1,4 +1,9 @@
-import { BadRequestException, HttpException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpException,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import { FriendshipEntity } from './entities/friendship.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -13,11 +18,12 @@ import { ServerService } from 'src/server/server.service';
 
 @Injectable()
 export class FriendshipService {
+  @Inject(ServerService)
+  private readonly _serverService: ServerService;
   constructor(
     @InjectRepository(FriendshipEntity)
     private _friendshipRepository: Repository<FriendshipEntity>,
     private _userService: UserService,
-    private _serverService: ServerService,
   ) {}
 
   async invite(

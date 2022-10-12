@@ -20,7 +20,7 @@ import { hostname } from 'os';
 
 @Injectable()
 export class ServerService {
-  playerList: Player[] = [];
+  public playerList: Player[] = [];
   playerQueue: Player[] = [];
   rooms: ChatRoom[] = [];
   games: Game[] = [];
@@ -167,7 +167,7 @@ export class ServerService {
   reconnect(player: Player) {
     let game = this.games.find((element) => element.host.name === player.name);
     if (!game)
-      game = this.games.find((element) => element.host.name === player.name);
+      game = this.games.find((element) => element.client.name === player.name);
     if (game) {
       player.socket.emit('reconnect', game.room);
       player.socket.join(game.room.name);

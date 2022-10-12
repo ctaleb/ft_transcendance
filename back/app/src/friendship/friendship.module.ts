@@ -9,6 +9,7 @@ import { ImageModule } from 'src/image/image.module';
 import { ServerService } from 'src/server/server.service';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { jwtConstants } from 'src/authentication/constants';
+import { ServerModule } from 'src/server/server.module';
 
 @Module({
   imports: [
@@ -19,8 +20,9 @@ import { jwtConstants } from 'src/authentication/constants';
     TypeOrmModule.forFeature([FriendshipEntity]),
     TypeOrmModule.forFeature([UserEntity]),
     ImageModule,
+    ServerModule,
   ],
   controllers: [FriendshipController],
-  providers: [FriendshipService, UserService, ServerService, JwtService],
+  providers: [FriendshipService, UserService, JwtService],
 })
 export class FriendshipModule {}
