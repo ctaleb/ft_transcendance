@@ -18,6 +18,8 @@
 <script lang="ts">
 import { store } from "./store";
 import { defineComponent } from "vue";
+import { io, Socket } from "socket.io-client";
+import config from "./config/config";
 export default defineComponent({
   data() {
     return {
@@ -28,6 +30,7 @@ export default defineComponent({
     logout() {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
+      config.socket.emit("disco", {});
     },
     openModal() {
       document.querySelector(".modal")?.classList.remove("hidden");
@@ -70,18 +73,7 @@ nav {
 .hidden {
   display: none;
 }
-.modal {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 70%;
-  background-color: white;
-  padding: 6rem;
-  border-radius: 5px;
-  box-shadow: 0 3rem 5rem rgba(0, 0, 0, 0.3);
-  z-index: 10;
-}
+
 .overlay {
   position: absolute;
   top: 0;

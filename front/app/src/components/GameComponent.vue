@@ -1,46 +1,70 @@
 <template>
-	<div class="score">
-		Score:
-		<div>Host: {{ hostScore }}</div>
-		<div>Client: {{ clientScore }}</div>
-	</div>
-	<div>
-		<button @click="findMatch()" :disabled="startButton">
-			{{ lobbyStatus }}
-		</button>
-	</div>
-	<div>
-		<canvas ref="canvas" width="500" height="500"></canvas>
-	</div>
+  <div>
+    <button @click="findMatch()" :disabled="startButton">
+      {{ lobbyStatus }}
+    </button>
+  </div>
+  <div>
+    <canvas class="canvas hidden" ref="canvas"></canvas>
+  </div>
 
-	<div class="modal hidden">
-		<h1>Ready to play ?</h1>
-		<button @click="confirmGame()">Yes</button>
-		<button @click="denyGame()">No</button>
-	</div>
-	<div class="overlay hidden"></div>
+  <div v-if="modal || summary" class="overlay">
+    <div v-if="modal" class="modal">
+      <h1>Ready to play ?</h1>
+      <button @click="confirmGame()">Yes</button>
+      <button @click="denyGame()">No</button>
+    </div>
+    <Modal
+      v-else-if="summary"
+      :title="sumTitle"
+      :data="gameSummary"
+      @close="showSummary(false)"
+    ></Modal>
+  </div>
 </template>
+
+<style lang="scss">
+@import "../style/summary.scss";
+</style>
 
 <script setup lang="ts">
 import ballUrl from "../assets/ball.png";
 import paddleUrl from "../assets/paddle_grec.png";
 import energyUrl from "../assets/energy.png";
 import paddleEnergyUrl from "../assets/energy_paddle_grec.png";
-import plateauUrl from "../assets/plateau.png";
+import plateauUrl from "../assets/plateauV2.png";
 import energyRedUrl from "../assets/energy_red.png";
 import paddleRedUrl from "../assets/paddle_grec_red.png";
 import paddleEnergyRedUrl from "../assets/energy_paddle_red.png";
-import { ref, onMounted, onBeforeMount } from "vue";
+import slotUrl from "../assets/slot.png";
+import fillUrl from "../assets/fill_slot.png";
+import fillRedUrl from "../assets/slot_fill_enemy.png";
+import { ref, reactive, onMounted, onBeforeMount } from "vue";
 import { io } from "socket.io-client";
 import {
-	GameState,
-	GameRoom,
-	IBall,
-	IBar,
-	IPoint,
-} from "../../../../back/app/src/chat/entities/message.entity";
+  GameState,
+  GameRoom,
+  GameSummary,
+  IBall,
+  IBar,
+  IPoint,
+} from "../../../../back/app/src/server/entities/server.entity";
+import config from "../config/config";
+import { title } from "process";
+import Summary from "./Summary.vue";
+import { GameSummaryData } from "@/types/GameSummary";
+import Modal from "./Summary/Modal.vue";
 
-const socket = io("http://" + window.location.hostname + ":3000");
+if (config.socket.disconnected) {
+  config.socket = io("http://" + window.location.hostname + ":3000", {
+    auth: {
+      token: localStorage.getItem("token"),
+      user: JSON.parse(localStorage.getItem("user") || "{}"),
+    },
+  });
+}
+const socket = config.socket;
+console.log(socket);
 const ballImg = new Image();
 ballImg.src = ballUrl;
 const paddleImg = new Image();
@@ -57,197 +81,411 @@ const energyRedImg = new Image();
 energyRedImg.src = energyRedUrl;
 const paddleRedImg = new Image();
 paddleRedImg.src = paddleRedUrl;
+const slotImg = new Image();
+slotImg.src = slotUrl;
+const fillImg = new Image();
+fillImg.src = fillUrl;
+const fillRedImg = new Image();
+fillRedImg.src = fillRedUrl;
 
 const canvas = ref<HTMLCanvasElement | null>(null);
+let ctx: CanvasRenderingContext2D | null | undefined;
+let cHeight = 0;
+let cWidth = 0;
+let scale = 0;
+let offset = 0;
 
 const startButton = ref(false);
 const lobbyStatus = ref("Find match");
 const hostScore = ref(0);
 const clientScore = ref(0);
+const hostName = ref("Host");
+const clientName = ref("Client");
+const color = ref("white");
+const sumTitle = ref("Placeholder");
+const sumDate = ref("");
+const sumTime = ref(0);
+const modal = ref(false);
+const summary = ref(true);
+
 let loadPercent = 120;
 let kickOff = false;
 let cSmashingPercent = 0;
 let hSmashingPercent = 0;
 
 let theRoom: GameRoom;
+const gameSummary = reactive<GameSummaryData>({
+  host: {
+    elo: 1500,
+    name: "Host",
+    power: "",
+    score: 0,
+    eloChange: 25,
+  },
+  client: {
+    elo: 42,
+    name: "Client",
+    power: "",
+    score: 0,
+    eloChange: -12,
+  },
+  gamemode: "",
+  start: new Date(),
+  end: new Date(),
+});
 
-socket.emit("joiningPlayerList");
+function showModal(show: boolean) {
+  modal.value = show;
+}
+
+function showSummary(show: boolean) {
+  summary.value = show;
+}
 
 function findMatch() {
-	startButton.value = true;
-	lobbyStatus.value = "Looking for an opponent...";
+  startButton.value = true;
+  lobbyStatus.value = "Looking for an opponent...";
 
-	socket.emit("joinQueue");
+  socket.emit("joinQueue");
 }
 
 function confirmGame() {
-	socket.emit("playerReady", {}, () => {});
-	closeModal();
+  socket.emit("playerReady", {}, () => {});
+  showModal(false);
 }
 
 function denyGame() {
-	socket.emit("playerNotReady", {}, () => {});
-	closeModal();
-}
-
-function drawPlayground(ctx: CanvasRenderingContext2D) {
-	ctx.clearRect(0, 0, canvas.value!.width, canvas.value!.height);
-
-	// Draw the border + backgroung
-	ctx.drawImage(plateauImg, 0, 0, 500, 500);
+  socket.emit("playerNotReady", {}, () => {});
+  showModal(false);
 }
 
 function kickoffLoading(ctx: any) {
-	if (kickOff) {
-		ctx.beginPath();
-		let arcsize = (loadPercent / 100) * 2 * Math.PI;
-		loadPercent -= 0.4;
-		if (arcsize < 1) return;
-		ctx.arc(250, 250, 20, 1, arcsize);
-		ctx.strokeStyle = "#7AD3FA";
-		ctx.lineWidth = 4;
-		ctx.stroke();
-	}
+  if (kickOff) {
+    ctx.beginPath();
+    let arcsize = (loadPercent / 100) * 2 * Math.PI;
+    loadPercent -= 0.4;
+    if (arcsize < 1) return;
+    ctx.arc(cWidth / 2, cWidth / 2 + offset, 20 * scale, 1, arcsize);
+    ctx.strokeStyle = "#5eadde";
+    ctx.lineWidth = 4 * scale;
+    ctx.stroke();
+  }
 }
 
 function drawSmashingEffect(
-	bar: IBar,
-	smashingPercent: number,
-	ctx: CanvasRenderingContext2D
+  bar: IBar,
+  smashingPercent: number,
+  ctx: CanvasRenderingContext2D
 ) {
-	if (bar.smashing) {
-		ctx.drawImage(
-			bar.pos.y < 250 ? energyPaddleRedImg : energyPaddleImg,
-			bar.pos.x - bar.size.x,
-			bar.pos.y - bar.size.y * (1 + smashingPercent / 100 / 2),
-			bar.size.x * 2,
-			bar.size.y * (2 + smashingPercent / 100)
-		);
-	}
-	if (bar.smashing) {
-		ctx.globalAlpha = (0.5 * smashingPercent) / 100;
-		ctx.drawImage(
-			bar.pos.y < 250 ? energyRedImg : energyImg,
-			bar.pos.x - bar.size.x * 2.5,
-			bar.pos.y - bar.size.y * 4,
-			bar.size.x * 5,
-			bar.size.y * 8
-		);
-		ctx.globalAlpha = 1;
-	}
-	ctx.drawImage(
-		bar.pos.y < 250 ? paddleRedImg : paddleImg,
-		bar.pos.x - bar.size.x,
-		bar.pos.y - bar.size.y,
-		bar.size.x * 2,
-		bar.size.y * 2
-	);
+  if (bar.smashing) {
+    ctx.drawImage(
+      bar.pos.y < 250 ? energyPaddleRedImg : energyPaddleImg,
+      bar.pos.x - bar.size.x * scale,
+      bar.pos.y - bar.size.y * scale * (1 + smashingPercent / 100 / 2),
+      bar.size.x * 2 * scale,
+      bar.size.y * (2 + smashingPercent / 100) * scale
+    );
+  }
+  if (bar.smashing) {
+    ctx.globalAlpha = (0.5 * smashingPercent) / 100;
+    ctx.drawImage(
+      bar.pos.y < 250 ? energyRedImg : energyImg,
+      bar.pos.x - bar.size.x * scale * 2.5,
+      bar.pos.y - bar.size.y * scale * 4,
+      bar.size.x * 5 * scale,
+      bar.size.y * 8 * scale
+    );
+    ctx.globalAlpha = 1;
+  }
+  ctx.drawImage(
+    bar.pos.y < 250 ? paddleRedImg : paddleImg,
+    bar.pos.x - bar.size.x * scale,
+    bar.pos.y - bar.size.y * scale,
+    bar.size.x * 2 * scale,
+    bar.size.y * 2 * scale
+  );
+}
+
+function drawPlayground(ctx: CanvasRenderingContext2D) {
+  // Draw the border + backgroung
+  ctx.drawImage(plateauImg, 0, 0, cWidth, cHeight);
+}
+
+function drawScore(ctx: CanvasRenderingContext2D, gameState: GameState) {
+  let slot = theRoom.options.scoreMax;
+
+  for (let i = 0; i < slot; i++) {
+    ctx.drawImage(
+      slotImg,
+      cWidth * 0.25 + ((cWidth * 0.5) / (slot + 1)) * (i + 1) - 10 * scale,
+      cHeight * 0.148 - 25 * scale,
+      20 * scale,
+      20 * scale
+    );
+    if (i < gameState.score.client)
+      ctx.drawImage(
+        fillRedImg,
+        cWidth * 0.25 + ((cWidth * 0.5) / (slot + 1)) * (i + 1) - 6 * scale,
+        cHeight * 0.148 - 25 * scale + (8 * scale) / 2,
+        12 * scale,
+        12 * scale
+      );
+  }
+  for (let i = 0; i < slot; i++) {
+    ctx.drawImage(
+      slotImg,
+      cWidth * 0.25 + ((cWidth * 0.5) / (slot + 1)) * (i + 1) - 10 * scale,
+      cHeight * 0.894 - 25 * scale,
+      20 * scale,
+      20 * scale
+    );
+    if (i < gameState.score.host)
+      ctx.drawImage(
+        fillImg,
+        cWidth * 0.25 + ((cWidth * 0.5) / (slot + 1)) * (i + 1) - 6 * scale,
+        cHeight * 0.894 - 25 * scale + (8 * scale) / 2,
+        12 * scale,
+        12 * scale
+      );
+  }
+}
+
+function updateSummary(summary: GameSummary) {
+  // gameSummary.hostElo = summary.hostElo;
+  // gameSummary.hostName = summary.hostName;
+  // gameSummary.hostPower = summary.hostPower;
+  // gameSummary.hostScore = summary.hostScore;
+  // gameSummary.clientElo = summary.clientElo;
+  // gameSummary.clientName = summary.clientName;
+  // gameSummary.clientPower = summary.clientPower;
+  // gameSummary.clientScore = summary.clientScore;
+  // gameSummary.eloChange = summary.eloChange;
+  // gameSummary.gameMode = summary.gameMode;
+  // gameSummary.gameTime = summary.gameTime;
+  // gameSummary.gameDate = summary.gameDate;
+  // setDateTime(gameSummary);
+}
+
+function setDateTime(summary: GameSummary) {
+  sumTime.value = new Date().getDate() - new Date(summary.gameDate).getDate();
+  sumDate.value = summary.gameDate.toString();
+}
+
+let gState: GameState;
+function test(
+  ctx: CanvasRenderingContext2D | null | undefined,
+  gameState: GameState
+) {
+  if (theRoom && ctx) {
+    let ball = gameState.ball;
+    clientScore.value = gameState.score.client;
+    hostScore.value = gameState.score.host;
+    if (gameState.clientBar.smashing && cSmashingPercent < 100 && !kickOff) {
+      cSmashingPercent += 2;
+    } else if (!gameState.clientBar.smashing || kickOff) cSmashingPercent = 0;
+    if (gameState.hostBar.smashing && hSmashingPercent < 100 && !kickOff) {
+      hSmashingPercent += 2;
+    } else if (!gameState.hostBar.smashing || kickOff) hSmashingPercent = 0;
+    if (ctx) {
+      drawPlayground(ctx);
+      drawScore(ctx, gameState);
+      kickoffLoading(ctx);
+      ctx.drawImage(
+        ballImg,
+        ball.pos.x - ball.size * scale,
+        ball.pos.y - ball.size * scale,
+        ball.size * 2 * scale,
+        ball.size * 2 * scale
+      );
+      ctx.fillStyle = "black";
+      drawSmashingEffect(gameState.clientBar, cSmashingPercent, ctx);
+      drawSmashingEffect(gameState.hostBar, hSmashingPercent, ctx);
+    }
+  }
+}
+
+function scaling(ctx?: CanvasRenderingContext2D | null) {
+  if (ctx) {
+    ctx.canvas.height = window.innerHeight * 0.8;
+    if (ctx.canvas.height * 0.69 > window.innerWidth) {
+      ctx.canvas.width = window.innerWidth;
+      ctx.canvas.height = ctx.canvas.width * 1.449;
+    } else {
+      ctx.canvas.width = ctx.canvas.height * 0.69;
+    }
+    cHeight = ctx.canvas.height;
+    cWidth = ctx.canvas.width;
+    scale = cWidth / 500;
+    offset = (cHeight - cWidth) / 2;
+  }
+}
+
+function scalePosition(gameState: GameState) {
+  let scale = cWidth / 500;
+  let offset = (cHeight - cWidth) / 2;
+  gameState.ball.pos.x *= scale;
+  gameState.ball.pos.y *= scale;
+  gameState.ball.pos.y += offset;
+  gameState.hostBar.pos.x *= scale;
+  gameState.hostBar.pos.y *= scale;
+  gameState.hostBar.pos.y += offset;
+  gameState.clientBar.pos.x *= scale;
+  gameState.clientBar.pos.y *= scale;
+  gameState.clientBar.pos.y += offset;
 }
 
 onMounted(() => {
-	let ctx = canvas.value?.getContext("2d");
+  let ctx = canvas.value?.getContext("2d");
+  scaling(ctx);
+  socket.on("gameConfirmation", (gameRoom: GameRoom) => {
+    theRoom = gameRoom;
+    showModal(true);
+  });
 
-	socket.on("gameConfirmation", (gameRoom: GameRoom) => {
-		theRoom = gameRoom;
-		openModal();
-	});
+  socket.on("gameConfirmationTimeout", () => {
+    showModal(false);
+    startButton.value = true;
+    lobbyStatus.value = "Find Match";
+  });
 
-	socket.on("kickOff", () => {
-		kickOff = true;
-	});
+  socket.on("reconnect", (gameRoom: GameRoom) => {
+    theRoom = gameRoom;
+    hostName.value = theRoom.hostName;
+    clientName.value = theRoom.clientName;
+    lobbyStatus.value = "Play !";
+    startButton.value = false;
+  });
 
-	socket.on("play", () => {
-		kickOff = false;
-		loadPercent = 120;
-	});
+  socket.on("kickOff", () => {
+    kickOff = true;
+  });
 
-	socket.on("ServerUpdate", (gameState: GameState) => {
-		let ball = gameState.ball;
-		clientScore.value = gameState.score.client;
-		hostScore.value = gameState.score.host;
-		if (gameState.clientBar.smashing && cSmashingPercent < 100 && !kickOff) {
-			cSmashingPercent += 2;
-		} else if (!gameState.clientBar.smashing || kickOff) cSmashingPercent = 0;
-		if (gameState.hostBar.smashing && hSmashingPercent < 100 && !kickOff) {
-			hSmashingPercent += 2;
-		} else if (!gameState.hostBar.smashing || kickOff) hSmashingPercent = 0;
-		if (ctx) {
-			drawPlayground(ctx);
-			kickoffLoading(ctx);
-			ctx.drawImage(
-				ballImg,
-				ball.pos.x - ball.size,
-				ball.pos.y - ball.size,
-				ball.size * 2,
-				ball.size * 2
-			);
-			ctx.fillStyle = "black";
-			drawSmashingEffect(gameState.clientBar, cSmashingPercent, ctx);
-			drawSmashingEffect(gameState.hostBar, hSmashingPercent, ctx);
-		}
-	});
+  socket.on("play", () => {
+    kickOff = false;
+    loadPercent = 120;
+  });
 
-	socket.on("Win", (gameRoom: GameRoom) => {
-		theRoom = gameRoom;
-		lobbyStatus.value = "Victory !";
-	});
+  socket.on("ServerUpdate", (gameState: GameState) => {
+    gState = gameState;
+    scalePosition(gameState);
+    if (theRoom) {
+      let ball = gameState.ball;
+      clientScore.value = gameState.score.client;
+      hostScore.value = gameState.score.host;
+      if (gameState.clientBar.smashing && cSmashingPercent < 100 && !kickOff) {
+        cSmashingPercent += 2;
+      } else if (!gameState.clientBar.smashing || kickOff) cSmashingPercent = 0;
+      if (gameState.hostBar.smashing && hSmashingPercent < 100 && !kickOff) {
+        hSmashingPercent += 2;
+      } else if (!gameState.hostBar.smashing || kickOff) hSmashingPercent = 0;
+      if (ctx) {
+        drawPlayground(ctx);
+        drawScore(ctx, gameState);
+        kickoffLoading(ctx);
+        ctx.drawImage(
+          ballImg,
+          ball.pos.x - ball.size * scale,
+          ball.pos.y - ball.size * scale,
+          ball.size * 2 * scale,
+          ball.size * 2 * scale
+        );
+        ctx.fillStyle = "black";
+        drawSmashingEffect(gameState.clientBar, cSmashingPercent, ctx);
+        drawSmashingEffect(gameState.hostBar, hSmashingPercent, ctx);
+      }
+    }
+  });
 
-	socket.on("Lose", (gameRoom: GameRoom) => {
-		theRoom = gameRoom;
-		lobbyStatus.value = "Defeat...";
-	});
+  socket.on(
+    "Win",
+    (gameRoom: GameRoom, elo_diff: number, summary: GameSummary) => {
+      theRoom = gameRoom;
+      lobbyStatus.value =
+        "Victory ! You gained +" + elo_diff + " elo ! Return to lobby ?";
+      startButton.value = false;
+      updateSummary(summary);
+      color.value = "green";
+      sumTitle.value = "Victory";
+      document.querySelector(".canvas")?.classList.add("hidden");
+      showSummary(true);
+    }
+  );
 
-	socket.on("startGame", (gameRoom: GameRoom) => {
-		theRoom = gameRoom;
-		lobbyStatus.value = "Play !";
-	});
+  socket.on(
+    "Lose",
+    (gameRoom: GameRoom, elo_diff: number, summary: GameSummary) => {
+      theRoom = gameRoom;
+      lobbyStatus.value =
+        "Defeat... You lost -" + elo_diff + " elo ! Return to lobby ?";
+      startButton.value = false;
+      updateSummary(summary);
+      color.value = "red";
+      sumTitle.value = "Defeat";
+      document.querySelector(".canvas")?.classList.add("hidden");
+      showSummary(true);
+    }
+  );
 
-	window.addEventListener("keydown", (e) => {
-		if (theRoom.status === "playing") {
-			if (e.key === "ArrowLeft")
-				socket.emit("key", {
-					key: "downLeft",
-				});
-			else if (e.key === "ArrowRight")
-				socket.emit("key", {
-					key: "downRight",
-				});
-			if (e.key === "a")
-				socket.emit("key", {
-					key: "downA",
-				});
-			else if (e.key === "d")
-				socket.emit("key", {
-					key: "downD",
-				});
-		}
-	});
+  socket.on("startGame", (gameRoom: GameRoom) => {
+    theRoom = gameRoom;
+    hostName.value = theRoom.hostName;
+    clientName.value = theRoom.clientName;
+    lobbyStatus.value = "Play !";
+    document.querySelector(".canvas")?.classList.remove("hidden");
+  });
 
-	window.addEventListener("keyup", (e) => {
-		if (theRoom.status === "playing") {
-			if (e.key === "ArrowLeft")
-				socket.emit("key", {
-					key: "upLeft",
-				});
-			else if (e.key === "ArrowRight")
-				socket.emit("key", {
-					key: "upRight",
-				});
-			if (e.key === "a")
-				socket.emit("key", {
-					key: "upA",
-				});
-			else if (e.key === "d")
-				socket.emit("key", {
-					key: "upD",
-				});
-		}
-	});
+  window.addEventListener("keydown", (e) => {
+    if (theRoom && theRoom.status === "playing") {
+      if (e.key === "ArrowLeft")
+        socket.emit("key", {
+          key: "downLeft",
+        });
+      else if (e.key === "ArrowRight")
+        socket.emit("key", {
+          key: "downRight",
+        });
+      if (e.key === "a")
+        socket.emit("key", {
+          key: "downA",
+        });
+      else if (e.key === "d")
+        socket.emit("key", {
+          key: "downD",
+        });
+    }
+    if (e.key === "o") socket.emit("debugging");
+  });
+
+  window.addEventListener("keyup", (e) => {
+    if (theRoom && theRoom.status === "playing") {
+      if (e.key === "ArrowLeft")
+        socket.emit("key", {
+          key: "upLeft",
+        });
+      else if (e.key === "ArrowRight")
+        socket.emit("key", {
+          key: "upRight",
+        });
+      if (e.key === "a")
+        socket.emit("key", {
+          key: "upA",
+        });
+      else if (e.key === "d")
+        socket.emit("key", {
+          key: "upD",
+        });
+    }
+  });
+
+  window.addEventListener("resize", (e) => {
+    scaling(ctx);
+    test(ctx, gState);
+  });
 });
 </script>
 
 <style type="text/css">
 button:disabled {
-	opacity: 0.7;
+  opacity: 0.7;
 }
 </style>

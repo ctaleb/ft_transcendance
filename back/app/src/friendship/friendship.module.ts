@@ -6,17 +6,21 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { FriendshipEntity } from './entities/friendship.entity';
 import { UserEntity } from 'src/user/user.entity';
 import { ImageModule } from 'src/image/image.module';
-import { MessagesModule } from 'src/server/server.module';
-import { MessagesService } from 'src/server/server.service';
-import { MessagesGateway } from 'src/server/server.gateway';
+import { ServerService } from 'src/server/server.service';
+import { JwtModule, JwtService } from '@nestjs/jwt';
+import { jwtConstants } from 'src/authentication/constants';
 
 @Module({
   imports: [
+    JwtModule.register({
+      secret: jwtConstants.secret,
+      signOptions: { expiresIn: '10d' },
+    }),
     TypeOrmModule.forFeature([FriendshipEntity]),
     TypeOrmModule.forFeature([UserEntity]),
     ImageModule,
   ],
   controllers: [FriendshipController],
-  providers: [FriendshipService, UserService, MessagesGateway, MessagesService],
+  providers: [FriendshipService, UserService, ServerService, JwtService],
 })
 export class FriendshipModule {}

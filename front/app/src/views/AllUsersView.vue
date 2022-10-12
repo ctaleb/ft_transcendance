@@ -19,21 +19,17 @@ export default defineComponent({
     };
   },
   mounted() {
-    let isConnected = funcs.isConnected(localStorage.getItem("token"));
-    if (isConnected == false) this.$router.push("/");
-    else {
-      fetch("http://" + window.location.hostname + ":3000/api/user/", {
-        method: "GET",
-        headers: {
-          Authorization: "Bearer " + localStorage.getItem("token"),
-        },
+    fetch("http://" + window.location.hostname + ":3000/api/user/", {
+      method: "GET",
+      headers: {
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        this.users = data;
       })
-        .then((res) => res.json())
-        .then((data) => {
-          this.users = data;
-        })
-        .catch((err) => console.log(err.message));
-    }
+      .catch((err) => console.log(err.message));
   },
 });
 </script>

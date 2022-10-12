@@ -4,6 +4,11 @@ import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import * as cookieParser from 'cookie-parser';
 import { Server } from 'socket.io';
+import { createServer } from 'http';
+import * as http from 'http';
+
+// const httpServer = createServer();
+// const io = new Server(httpServer, {});
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -17,5 +22,6 @@ async function bootstrap() {
   app.useGlobalInterceptors(new ClassSerializerInterceptor(reflector));
 
   await app.listen(3000);
+  //   http.createServer(app.getHttpAdapter().getInstance()).listen(80);
 }
 bootstrap();

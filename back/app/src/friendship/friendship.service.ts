@@ -9,8 +9,7 @@ import {
   CannotAcceptFriendshipRequestException,
   FriendshipAlreadyExistsException,
 } from './friendship.exception';
-import { MessagesGateway } from 'src/server/server.gateway';
-import { MessagesService } from 'src/server/server.service';
+import { ServerService } from 'src/server/server.service';
 
 @Injectable()
 export class FriendshipService {
@@ -18,8 +17,7 @@ export class FriendshipService {
     @InjectRepository(FriendshipEntity)
     private _friendshipRepository: Repository<FriendshipEntity>,
     private _userService: UserService,
-    private _messagesGateway: MessagesGateway,
-    private _messagesService: MessagesService,
+    private _serverService: ServerService,
   ) {}
 
   async invite(
@@ -53,7 +51,7 @@ export class FriendshipService {
         status: 'invitation',
       });
       result = this._friendshipRepository.save(invitation);
-      const invited = this._messagesService.playerList.find(
+      const invited = this._serverService.playerList.find(
         (element) => element.name === addressee,
       );
       invited?.socket.emit('friendshipInvite');
