@@ -150,8 +150,9 @@ function showSummary(show: boolean) {
 function findMatch() {
   startButton.value = true;
   lobbyStatus.value = "Looking for an opponent...";
-
-  socket.emit("joinQueue");
+  socket.emit("joinQueue", {
+    power: power.value,
+  });
 }
 
 function confirmGame() {
@@ -457,6 +458,11 @@ onMounted(() => {
         socket.emit("key", {
           key: "downD",
         });
+      else if (e.key === " ") {
+        socket.emit("key", {
+          key: "downSpace",
+        });
+      }
     }
     if (e.key === "o") socket.emit("debugging");
   });

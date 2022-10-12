@@ -275,9 +275,10 @@ export class ServerService {
       new Date().getTime() - game.gameSummary.gameDate.getTime();
   }
 
-  joinQueue(socket: Socket) {
+  joinQueue(socket: Socket, power: string) {
     const player = this.playerList.find((element) => element.socket === socket);
     if (!player) return;
+    player.power = power;
     if (this.playerQueue.find((element) => element === player))
       this.playerQueue.splice(this.playerQueue.indexOf(player), 1);
     if (this.playerQueue.length < 1) {
@@ -301,9 +302,27 @@ export class ServerService {
     if (player) player.input.push(key);
   }
 
-  updateMoveStatus(player: Player, bar: IBar, playerType: string) {
+  storePower(socket: Socket) {
+    const player = this.playerList.find((element) => element.socket === socket);
+    if (player) player.input.push('downSpace');
+  }
+  activePower(power: string, playerType: string, gameState: GameState) {
+    if (power == 'elastico' && playerType === 'host')
+      gameState.hostBar.size.x *= 1.5;
+    if (power == 'elastico' && playerType === 'client')
+      gameState.clientBar.size.x *= 1.5;
+  }
+
+  updateMoveStatus(
+    player: Player,
+    bar: IBar,
+    playerType: string,
+    gameState: GameState,
+  ) {
     player.input.forEach((input) => {
-      if (input === 'downRight')
+      if (input === 'downSpace')
+        this.activePower(player.power, playerType, gameState);
+      else if (input === 'downRight')
         playerType === 'host' ? (player.right = true) : (player.left = true);
       else if (input === 'downLeft')
         playerType === 'host' ? (player.left = true) : (player.right = true);
@@ -640,9 +659,13 @@ export class ServerService {
   loop(game: Game) {
     if (!game.room.kickOff) {
       const gameState = game.gameState;
-      this.updateMoveStatus(game.host, gameState.hostBar, 'host');
-      this.updateMoveStatus(game.client, gameState.clientBar, 'client');
-
+      this.updateMoveStatus(game.host, gameState.hostBar, 'host', gameState);
+      this.updateMoveStatus(
+        game.client,
+        gameState.clientBar,
+        'client',
+        gameState,
+      );
       this.chargeUp(game);
 
       this.moveBar(gameState.hostBar, game.host);

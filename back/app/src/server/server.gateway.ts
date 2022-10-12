@@ -186,15 +186,21 @@ export class ServerGateway
     @ConnectedSocket()
     client: Socket,
   ) {
-    this.serverService.storeBarMove(client, key);
+    console.log('KEY == ' + key);
+    if (key != 'downSpace') this.serverService.storeBarMove(client, key);
+    else this.serverService.storePower(client);
   }
 
   // Game Core
+  //@body() powerString as additional arg
   @SubscribeMessage('joinQueue')
-  joinQueue(@ConnectedSocket() client: Socket) {
+  joinQueue(
+    @ConnectedSocket() client: Socket,
+    @MessageBody('power') power: string,
+  ) {
     const player = this.serverService.SocketToPlayer(client);
     if (!player || !(player.status === 'idle')) return;
-    const game = this.serverService.joinQueue(client);
+    const game = this.serverService.joinQueue(client, power);
     if (game) {
       this.server.to(game.room.name).emit('gameConfirmation', game.room);
       setTimeout(() => {
