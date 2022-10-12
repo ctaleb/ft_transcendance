@@ -311,6 +311,10 @@ export class ServerService {
       gameState.hostBar.size.x *= 1.5;
     if (power == 'elastico' && playerType === 'client')
       gameState.clientBar.size.x *= 1.5;
+    if (power == 'minimo' && playerType === 'host')
+      gameState.clientBar.size.x *= 0.5;
+    if (power == 'minimo' && playerType === 'client')
+      gameState.hostBar.size.x *= 0.5;
   }
 
   updateMoveStatus(
