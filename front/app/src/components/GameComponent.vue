@@ -1,5 +1,5 @@
 <template>
-  <PowerSliderComponent v-model="power" />
+  <PowerSliderComponent v-model="power" id="powerSlider" />
   <div>
     <button @click="findMatch()" :disabled="startButton">
       {{ lobbyStatus }}
@@ -157,6 +157,7 @@ function findMatch() {
 
 function confirmGame() {
   socket.emit("playerReady", {}, () => {});
+  document.getElementById("powerSlider")?.classList.add("hidden");
   showModal(false);
 }
 
