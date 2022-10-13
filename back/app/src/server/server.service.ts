@@ -8,15 +8,13 @@ import {
   IBar,
   IBall,
   IPoint,
-  Score,
+  IPower,
   GameState,
   GameSummary,
+  PowerElastico,
 } from './entities/server.entity';
 import { Server, Socket } from 'socket.io';
-import { WebSocketServer } from '@nestjs/websockets';
 import { UserEntity } from 'src/user/user.entity';
-import { lookupService } from 'dns';
-import { hostname } from 'os';
 
 @Injectable()
 export class ServerService {
@@ -235,6 +233,12 @@ export class ServerService {
         gameDate: new Date(),
       },
     };
+    this.initPower(
+      newGame.client,
+      newGame.gameState,
+      newGame.gameState.clientBar,
+    );
+    this.initPower(newGame.host, newGame.gameState, newGame.gameState.hostBar);
     return newGame;
   }
 
@@ -255,6 +259,16 @@ export class ServerService {
     });
   }
 
+  initPower(player: Player, gameState: GameState, bar: IBar) {
+    if (player.power.name == 'elastico')
+      player.power = new PowerElastico(bar, player.power.name);
+  }
+
+  handlePower(game: Game) {
+    game.client.power.handle();
+    game.host.power.handle();
+  }
+
   SocketToPlayer(socket: Socket) {
     const player = this.playerList.find((element) => element.socket === socket);
     if (player) return player;
@@ -264,21 +278,21 @@ export class ServerService {
   summarize(game: Game, elo: number) {
     game.gameSummary.clientName = game.client.name;
     game.gameSummary.clientElo = game.client.elo;
-    game.gameSummary.clientPower = game.client.power;
+    game.gameSummary.clientPower = game.client.power.name;
     game.gameSummary.clientScore = game.gameState.score.client;
     game.gameSummary.hostName = game.host.name;
     game.gameSummary.hostElo = game.host.elo;
-    game.gameSummary.hostPower = game.host.power;
+    game.gameSummary.hostPower = game.host.power.name;
     game.gameSummary.hostScore = game.gameState.score.host;
     game.gameSummary.eloChange = elo;
     game.gameSummary.gameTime =
       new Date().getTime() - game.gameSummary.gameDate.getTime();
   }
 
-  joinQueue(socket: Socket, power: string) {
+  joinQueue(socket: Socket, powerName: string) {
     const player = this.playerList.find((element) => element.socket === socket);
     if (!player) return;
-    player.power = power;
+    player.power = new IPower(powerName);
     if (this.playerQueue.find((element) => element === player))
       this.playerQueue.splice(this.playerQueue.indexOf(player), 1);
     if (this.playerQueue.length < 1) {
@@ -297,24 +311,9 @@ export class ServerService {
     return null;
   }
 
-  storeBarMove(socket: Socket, key: string) {
+  storeInput(socket: Socket, key: string) {
     const player = this.playerList.find((element) => element.socket === socket);
     if (player) player.input.push(key);
-  }
-
-  storePower(socket: Socket) {
-    const player = this.playerList.find((element) => element.socket === socket);
-    if (player) player.input.push('downSpace');
-  }
-  activePower(power: string, playerType: string, gameState: GameState) {
-    if (power == 'elastico' && playerType === 'host')
-      gameState.hostBar.size.x *= 1.5;
-    if (power == 'elastico' && playerType === 'client')
-      gameState.clientBar.size.x *= 1.5;
-    if (power == 'minimo' && playerType === 'host')
-      gameState.clientBar.size.x *= 0.5;
-    if (power == 'minimo' && playerType === 'client')
-      gameState.hostBar.size.x *= 0.5;
   }
 
   updateMoveStatus(
@@ -324,8 +323,7 @@ export class ServerService {
     gameState: GameState,
   ) {
     player.input.forEach((input) => {
-      if (input === 'downSpace')
-        this.activePower(player.power, playerType, gameState);
+      if (input === 'downSpace') player.power.active();
       else if (input === 'downRight')
         playerType === 'host' ? (player.right = true) : (player.left = true);
       else if (input === 'downLeft')
@@ -414,6 +412,9 @@ export class ServerService {
               ' & ' +
               client.smashRight,
           );
+          if (client.power.isActive) {
+            client.power.handle();
+          } else client.power.chargeUp();
           if (client.smashLeft > 0) {
             ball.speed.x = 1 * M + client.smashLeft;
             ball.speed.y = 1 * M + client.smashLeft;
@@ -448,6 +449,9 @@ export class ServerService {
           console.log(
             'Smash power (L/R) : ' + host.smashLeft + ' & ' + host.smashRight,
           );
+          if (host.power.isActive) {
+            host.power.handle();
+          } else host.power.chargeUp();
           if (host.smashLeft > 0) {
             ball.speed.x = -1 * M - host.smashLeft;
             ball.speed.y = 1 * M + host.smashLeft;
@@ -671,7 +675,7 @@ export class ServerService {
         gameState,
       );
       this.chargeUp(game);
-
+      this.handlePower(game);
       this.moveBar(gameState.hostBar, game.host);
       this.moveBar(gameState.clientBar, game.client);
 

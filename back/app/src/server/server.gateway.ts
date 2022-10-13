@@ -186,9 +186,7 @@ export class ServerGateway
     @ConnectedSocket()
     client: Socket,
   ) {
-    console.log('KEY == ' + key);
-    if (key != 'downSpace') this.serverService.storeBarMove(client, key);
-    else this.serverService.storePower(client);
+    this.serverService.storeInput(client, key);
   }
 
   // Game Core

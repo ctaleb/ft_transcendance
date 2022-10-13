@@ -74,7 +74,7 @@ export class Player {
   socket: Socket;
   elo: number;
   status: string;
-  power: string;
+  power: IPower;
 }
 
 export class Game {
@@ -98,4 +98,58 @@ export class GameSummary {
   gameMode: string;
   gameTime: number;
   gameDate: Date;
+}
+
+export class IPower {
+  name: string;
+  maxCharge: number;
+  currentCharge: number;
+  isActive: boolean;
+
+  constructor(name: string) {
+    this.name = name;
+    this.currentCharge = 0;
+    this.isActive = false;
+  }
+
+  active() {
+    this.isActive = true;
+    this.currentCharge = 0;
+  }
+  handle() {
+    console.log('lol');
+  }
+  chargeUp() {
+    this.currentCharge++;
+  }
+}
+
+export class PowerElastico extends IPower {
+  timeLeft: number;
+  initialBarSize: number;
+  bar: IBar;
+
+  constructor(bar: IBar, name: string) {
+    super(name);
+    this.maxCharge = 8;
+    this.timeLeft = 0;
+    this.initialBarSize = bar.size.x;
+    this.bar = bar;
+  }
+
+  active() {
+    this.isActive = true;
+    this.currentCharge = 0;
+    this.timeLeft = 4;
+  }
+  handle() {
+    if (this.timeLeft == 4) {
+      this.bar.size.x *= 1.5;
+      this.timeLeft--;
+    } else if (this.timeLeft) this.timeLeft--;
+    else {
+      this.isActive = false;
+      this.bar.size.x = this.initialBarSize;
+    }
+  }
 }
