@@ -5,7 +5,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { jwtConstants } from 'src/authentication/constants';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserEntity } from 'src/user/user.entity';
-import { UsersModule } from 'src/user/user.module';
+import { UserModule } from 'src/user/user.module';
 import { UserService } from 'src/user/user.service';
 import { ImageModule } from 'src/image/image.module';
 import { ImageService } from 'src/image/image.service';
@@ -20,7 +20,7 @@ import { AuthenticationService } from 'src/authentication/authentication.service
     }),
     TypeOrmModule.forFeature([UserEntity]),
     TypeOrmModule.forFeature([ImageEntity]),
-    UsersModule,
+    UserModule,
     ImageModule,
   ],
   controllers: [OauthController],

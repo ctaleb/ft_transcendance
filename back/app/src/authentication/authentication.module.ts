@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { UsersModule } from 'src/user/user.module';
+import { UserModule } from 'src/user/user.module';
 import { AuthenticationController } from 'src/authentication/authentication.controller';
 import { AuthenticationService } from 'src/authentication/authentication.service';
 import { UserEntity } from 'src/user/user.entity';
@@ -17,7 +17,7 @@ import { ServerModule } from 'src/server/server.module';
 
 @Module({
   imports: [
-    UsersModule,
+    UserModule,
     ImageModule,
     PassportModule,
     TypeOrmModule.forFeature([UserEntity]),

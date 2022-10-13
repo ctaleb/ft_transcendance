@@ -17,6 +17,10 @@ import { WebSocketServer } from '@nestjs/websockets';
 import { UserEntity } from 'src/user/user.entity';
 import { lookupService } from 'dns';
 import { hostname } from 'os';
+import { InjectRepository } from '@nestjs/typeorm';
+import { MatchHistoryEntity } from './entities/match_history.entity';
+import { Repository } from 'typeorm';
+import { UserService } from 'src/user/user.service';
 
 @Injectable()
 export class ServerService {
@@ -28,6 +32,12 @@ export class ServerService {
   clientToUser = [];
 
   server: Server = null;
+
+  constructor(
+    @InjectRepository(MatchHistoryEntity)
+    private _matchHistoryRepository: Repository<MatchHistoryEntity>,
+    private _userService: UserService,
+  ) {}
 
   //generic stuff
   newUser(token: string, user: UserEntity) {
@@ -273,6 +283,33 @@ export class ServerService {
     game.gameSummary.eloChange = elo;
     game.gameSummary.gameTime =
       new Date().getTime() - game.gameSummary.gameDate.getTime();
+    this.saveGameSummaryToDatabase(game.gameSummary);
+  }
+
+  async saveGameSummaryToDatabase(gameSummary: GameSummary) {
+    try {
+      const host: UserEntity = await this._userService.getUserByNickname(
+        gameSummary.hostName,
+      );
+      const client: UserEntity = await this._userService.getUserByNickname(
+        gameSummary.clientName,
+      );
+      const match = this._matchHistoryRepository.create({
+        host,
+        client,
+        hostScore: gameSummary.hostScore,
+        hostPower: gameSummary.hostPower,
+        hostElo: gameSummary.hostElo,
+        clientScore: gameSummary.clientScore,
+        clientPower: gameSummary.clientPower,
+        clientElo: gameSummary.clientElo,
+        eloChange: gameSummary.eloChange,
+        gameMode: gameSummary.gameMode,
+      });
+      this._matchHistoryRepository.save(match);
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   joinQueue(socket: Socket) {
