@@ -412,9 +412,7 @@ export class ServerService {
               ' & ' +
               client.smashRight,
           );
-          if (client.power.isActive) {
-            client.power.handle();
-          } else client.power.chargeUp();
+          client.power.handle();
           if (client.smashLeft > 0) {
             ball.speed.x = 1 * M + client.smashLeft;
             ball.speed.y = 1 * M + client.smashLeft;
@@ -443,15 +441,13 @@ export class ServerService {
           ball.pos.x > hostBar.pos.x - hostBar.size.x - ball.size
         ) {
           console.log('Host = ');
-          console.log(
-            'initial ball speed : ' + ball.speed.x + ' & ' + ball.speed.y,
-          );
-          console.log(
-            'Smash power (L/R) : ' + host.smashLeft + ' & ' + host.smashRight,
-          );
-          if (host.power.isActive) {
-            host.power.handle();
-          } else host.power.chargeUp();
+          // console.log(
+          //   'initial ball speed : ' + ball.speed.x + ' & ' + ball.speed.y,
+          // );
+          // console.log(
+          //   'Smash power (L/R) : ' + host.smashLeft + ' & ' + host.smashRight,
+          // );
+          host.power.handle();
           if (host.smashLeft > 0) {
             ball.speed.x = -1 * M - host.smashLeft;
             ball.speed.y = 1 * M + host.smashLeft;
@@ -466,9 +462,9 @@ export class ServerService {
           host.smashRight = 0;
           room.barCollide = true;
           this.storeEffect(hostBar, room);
-          console.log(
-            'out ball speed : ' + ball.speed.x + ' & ' + ball.speed.y,
-          );
+          // console.log(
+          //   'out ball speed : ' + ball.speed.x + ' & ' + ball.speed.y,
+          // );
         }
       }
     }
@@ -583,11 +579,13 @@ export class ServerService {
   }
 
   getRandomStart() {
-    const random = Math.random() * 3 + 1;
-    const pos: IPoint = {
-      x: (4 - random) * (Math.round(Math.random()) * 2 - 1),
-      y: random * (Math.round(Math.random()) * 2 - 1),
-    };
+    // const random = Math.random() * 3 + 1;
+    // const pos: IPoint = {
+    //   x: (4 - random) * (Math.round(Math.random()) * 2 - 1),
+    //   y: random * (Math.round(Math.random()) * 2 - 1),
+    // };
+    // return pos;
+    const pos: IPoint = { x: 0, y: 1 };
     return pos;
   }
 
@@ -675,7 +673,7 @@ export class ServerService {
         gameState,
       );
       this.chargeUp(game);
-      this.handlePower(game);
+      //this.handlePower(game);
       this.moveBar(gameState.hostBar, game.host);
       this.moveBar(gameState.clientBar, game.client);
 

@@ -105,6 +105,7 @@ export class IPower {
   maxCharge: number;
   currentCharge: number;
   isActive: boolean;
+  timeLeft: number;
 
   constructor(name: string) {
     this.name = name;
@@ -118,13 +119,10 @@ export class IPower {
   }
   handle() {}
 
-  chargeUp() {
-    this.currentCharge++;
-  }
+  chargeUp() {}
 }
 
 export class PowerElastico extends IPower {
-  timeLeft: number;
   initialBarSize: number;
   bar: IBar;
 
@@ -137,18 +135,30 @@ export class PowerElastico extends IPower {
   }
 
   active() {
-    this.isActive = true;
-    this.currentCharge = 0;
-    this.timeLeft = 4;
+    console.log('-- in active() --');
+    console.log('current charge: ' + this.currentCharge);
+    console.log('isActive: ' + this.isActive);
+    console.log('timeLeft: ' + this.timeLeft);
+    if (this.isActive === false && this.currentCharge >= 2) {
+      this.isActive = true;
+      this.currentCharge = 0;
+      this.timeLeft = 3;
+      this.bar.size.x *= 1.5;
+    }
   }
   handle() {
-    if (this.timeLeft == 4) {
-      this.bar.size.x *= 1.5;
+    console.log('-- in handle() --');
+    console.log('current charge: ' + this.currentCharge);
+    console.log('isActive: ' + this.isActive);
+    console.log('timeLeft: ' + this.timeLeft);
+    if (this.isActive) {
       this.timeLeft--;
-    } else if (this.timeLeft) this.timeLeft--;
-    else {
-      this.isActive = false;
-      this.bar.size.x = this.initialBarSize;
+      if (this.timeLeft == 0) {
+        this.isActive = false;
+        this.bar.size.x = this.initialBarSize;
+      }
+    } else {
+      this.currentCharge++;
     }
   }
 }
