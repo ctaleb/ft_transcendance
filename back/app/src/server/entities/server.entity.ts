@@ -116,9 +116,8 @@ export class IPower {
     this.isActive = true;
     this.currentCharge = 0;
   }
-  handle() {
-    console.log('lol');
-  }
+  handle() {}
+
   chargeUp() {
     this.currentCharge++;
   }

@@ -40,7 +40,7 @@ export class ServerService {
       status: 'idle',
       smashLeft: 0,
       smashRight: 0,
-      power: '',
+      power: new IPower('init'),
     };
     this.playerList.push(player);
   }
@@ -57,7 +57,7 @@ export class ServerService {
       status: 'idle',
       smashLeft: 0,
       smashRight: 0,
-      power: '',
+      power: new IPower('init'),
     };
     this.playerList.push(player);
   }
