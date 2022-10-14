@@ -22,6 +22,14 @@ import { store } from "./store";
 import { defineComponent } from "vue";
 import { io, Socket } from "socket.io-client";
 import config from "./config/config";
+if (!config.socket.id && localStorage.getItem("user")) {
+  config.socket = io("http://" + window.location.hostname + ":3000", {
+    auth: {
+      token: localStorage.getItem("token"),
+      user: JSON.parse(localStorage.getItem("user") || "{}"),
+    },
+  });
+}
 export default defineComponent({
   data() {
     return {

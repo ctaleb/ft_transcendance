@@ -63,25 +63,11 @@ export class Message {
   message: string;
 }
 
-export class Player {
-  token: string;
-  input: string[];
-  smashLeft: number;
-  smashRight: number;
-  left: boolean;
-  right: boolean;
-  name: string;
-  socket: Socket;
-  elo: number;
-  status: string;
-  power: string;
-}
-
 export class Game {
   room: GameRoom;
   gameState: GameState;
-  host: Player;
-  client: Player;
+  host: User;
+  client: User;
   gameSummary: GameSummary;
 }
 
@@ -98,4 +84,28 @@ export class GameSummary {
   gameMode: string;
   gameTime: number;
   gameDate: Date;
+}
+
+export class GameData {
+  input: string[];
+  smashLeft: number;
+  smashRight: number;
+  left: boolean;
+  right: boolean;
+  elo: number;
+  status: string;
+  power: string;
+}
+
+export class ChatData {
+  RoomList: string[];
+}
+
+export class User {
+  token: string;
+  socket: Socket;
+  name: string;
+  status: string;
+  gameData: GameData;
+  chatData: ChatData;
 }

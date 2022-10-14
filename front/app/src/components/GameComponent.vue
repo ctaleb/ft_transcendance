@@ -55,14 +55,6 @@ import Summary from "./Summary.vue";
 import { GameSummaryData } from "@/types/GameSummary";
 import Modal from "./Summary/Modal.vue";
 
-if (config.socket.disconnected) {
-  config.socket = io("http://" + window.location.hostname + ":3000", {
-    auth: {
-      token: localStorage.getItem("token"),
-      user: JSON.parse(localStorage.getItem("user") || "{}"),
-    },
-  });
-}
 const socket = config.socket;
 console.log(socket);
 const ballImg = new Image();
@@ -454,6 +446,7 @@ onMounted(() => {
         });
     }
     if (e.key === "o") socket.emit("debugging");
+    if (e.key === "i") socket.emit("chatting");
   });
 
   window.addEventListener("keyup", (e) => {
