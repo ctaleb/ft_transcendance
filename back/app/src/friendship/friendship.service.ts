@@ -60,7 +60,7 @@ export class FriendshipService {
       const invited = this._serverService.playerList.find(
         (element) => element.name === addressee,
       );
-      invited?.socket.emit('friendshipInvite');
+      invited?.socket.emit('friendshipInvite', requester);
     } catch (error) {
       console.log(error);
     }

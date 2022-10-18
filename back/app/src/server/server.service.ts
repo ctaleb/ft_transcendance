@@ -10,13 +10,9 @@ import {
   IPoint,
   Score,
   GameState,
-  GameSummary,
 } from './entities/server.entity';
 import { Server, Socket } from 'socket.io';
-import { WebSocketServer } from '@nestjs/websockets';
 import { UserEntity } from 'src/user/user.entity';
-import { lookupService } from 'dns';
-import { hostname } from 'os';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MatchHistoryEntity } from './entities/match_history.entity';
 import { Repository } from 'typeorm';
@@ -115,22 +111,18 @@ export class ServerService {
     return elo;
   }
 
-  inverseSummary(summary: GameSummary) {
-    const inversedSummary: GameSummary = {
-      hostName: summary.clientName,
-      hostScore: summary.clientScore,
-      hostPower: summary.clientPower,
-      hostElo: summary.clientElo,
-      clientElo: summary.hostElo,
-      clientName: summary.hostName,
-      clientPower: summary.hostPower,
-      clientScore: summary.hostScore,
-      eloChange: summary.eloChange,
-      gameMode: summary.gameMode,
-      gameTime: summary.gameTime,
-      gameDate: summary.gameDate,
-    };
-
+  inverseSummary(summary: MatchHistoryEntity) {
+    const inversedSummary: MatchHistoryEntity = JSON.parse(
+      JSON.stringify(summary),
+    ); // deep copy
+    inversedSummary.client = summary.host;
+    inversedSummary.clientElo = summary.hostElo;
+    inversedSummary.clientPower = summary.hostPower;
+    inversedSummary.clientScore = summary.hostScore;
+    inversedSummary.host = summary.client;
+    inversedSummary.hostElo = summary.clientElo;
+    inversedSummary.hostPower = summary.clientPower;
+    inversedSummary.hostScore = summary.clientScore;
     return inversedSummary;
   }
 
@@ -230,20 +222,7 @@ export class ServerService {
       },
       host: this.playerQueue.shift(),
       client: client,
-      gameSummary: {
-        hostName: '',
-        hostScore: 0,
-        hostPower: '',
-        hostElo: 0,
-        clientName: '',
-        clientScore: 0,
-        clientPower: '',
-        clientElo: 0,
-        eloChange: 0,
-        gameMode: '',
-        gameTime: 0,
-        gameDate: new Date(),
-      },
+      gameSummary: null,
     };
     return newGame;
   }
@@ -271,42 +250,27 @@ export class ServerService {
     return;
   }
 
-  summarize(game: Game, elo: number) {
-    game.gameSummary.clientName = game.client.name;
-    game.gameSummary.clientElo = game.client.elo;
-    game.gameSummary.clientPower = game.client.power;
-    game.gameSummary.clientScore = game.gameState.score.client;
-    game.gameSummary.hostName = game.host.name;
-    game.gameSummary.hostElo = game.host.elo;
-    game.gameSummary.hostPower = game.host.power;
-    game.gameSummary.hostScore = game.gameState.score.host;
-    game.gameSummary.eloChange = elo;
-    game.gameSummary.gameTime =
-      new Date().getTime() - game.gameSummary.gameDate.getTime();
-    this.saveGameSummaryToDatabase(game.gameSummary);
-  }
-
-  async saveGameSummaryToDatabase(gameSummary: GameSummary) {
+  async summarize(game: Game, elo: number) {
     try {
       const host: UserEntity = await this._userService.getUserByNickname(
-        gameSummary.hostName,
+        game.host.name,
       );
       const client: UserEntity = await this._userService.getUserByNickname(
-        gameSummary.clientName,
+        game.client.name,
       );
       const match = this._matchHistoryRepository.create({
         host,
         client,
-        hostScore: gameSummary.hostScore,
-        hostPower: gameSummary.hostPower,
-        hostElo: gameSummary.hostElo,
-        clientScore: gameSummary.clientScore,
-        clientPower: gameSummary.clientPower,
-        clientElo: gameSummary.clientElo,
-        eloChange: gameSummary.eloChange,
-        gameMode: gameSummary.gameMode,
+        hostScore: game.gameState.score.host,
+        hostPower: game.host.power,
+        hostElo: game.host.elo,
+        clientScore: game.gameState.score.client,
+        clientPower: game.client.power,
+        clientElo: game.client.elo,
+        eloChange: elo,
+        gameMode: '',
       });
-      this._matchHistoryRepository.save(match);
+      game.gameSummary = await this._matchHistoryRepository.save(match);
     } catch (error) {
       console.log(error);
     }

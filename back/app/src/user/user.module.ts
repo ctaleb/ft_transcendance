@@ -8,6 +8,8 @@ import { ImageService } from '../image/image.service';
 import { ImageModule } from 'src/image/image.module';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { jwtConstants } from 'src/authentication/constants';
+import { FriendshipModule } from 'src/friendship/friendship.module';
+import { FriendshipService } from 'src/friendship/friendship.service';
 
 @Module({
   imports: [

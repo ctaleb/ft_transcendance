@@ -4,15 +4,19 @@
       <nav>
         <router-link to="/portal">Portal</router-link> |
         <router-link to="/game">Game</router-link> |
-        <router-link to="/profile">Profile</router-link> |
-        <router-link to="/chat">Chat</router-link> |
+        <router-link to="/profile"
+          >Profile<span
+            :class="'dot' + (this.profileNotificationBadge ? '' : ' hidden')"
+          ></span>
+        </router-link>
+        | <router-link to="/chat">Chat</router-link> |
         <router-link to="/users">All users</router-link> |
         <router-link to="/edit">Profile Editing</router-link> |
         <router-link to="/" v-on:click.prevent="logout()">Logout</router-link>
       </nav>
     </div>
     <router-view />
-    <friend-alert />
+    <friend-alert :requester-name="this.incomingFriendRequest" />
   </div>
 </template>
 
@@ -37,6 +41,8 @@ export default defineComponent({
     return {
       isConnected: store.isConnected,
       socket: config.socket,
+      incomingFriendRequest: "",
+      profileNotificationBadge: true,
     };
   },
   methods: {
@@ -55,8 +61,8 @@ export default defineComponent({
     },
   },
   mounted() {
-    this.socket.on("friendshipInvite", () => {
-      console.log("friendshipInvite Recieved");
+    this.socket.on("friendshipInvite", (requester: string) => {
+      this.incomingFriendRequest = requester;
     });
   },
   components: { FriendAlert },
@@ -64,6 +70,11 @@ export default defineComponent({
 </script>
 
 <style lang="scss">
+* {
+  background-color: #010b12;
+  color: #aa9e7d;
+}
+
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -77,10 +88,10 @@ nav {
 
   a {
     font-weight: bold;
-    color: #2c3e50;
+    color: #f0e68c;
 
     &.router-link-exact-active {
-      color: #42b983;
+      color: #d2691e;
     }
   }
 }
@@ -102,5 +113,28 @@ nav {
   background-color: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(3px);
   z-index: 5;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  background: #e7d899;
+  border-radius: 50%;
+  animation: beat 2000ms infinite;
+  opacity: 60%;
+  box-shadow: 0 0 0 2px rgba(200, 150, 100, 1), 0 0 0 3px #e7d899;
+}
+
+@keyframes beat {
+  0% {
+    box-shadow: 0 0 0 0px rgba(200, 150, 100, 1), 0 0 0 1px #e7d899;
+  }
+  50% {
+    box-shadow: 0 0 2px 3px rgba(140, 110, 80, 1), 0 0 0 4px #e7d899;
+    opacity: 100%;
+  }
+  100% {
+    box-shadow: 0 0 0 0px rgba(200, 150, 100, 1), 0 0 0 1px #e7d899;
+  }
 }
 </style>

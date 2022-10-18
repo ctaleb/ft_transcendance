@@ -2,9 +2,6 @@
 @import "css.gg/icons/all.scss";
 
 .profileView {
-  background-color: #010b12;
-  color: #aa9e7d;
-
   img {
     border: 2px solid #c1a36b;
   }
@@ -80,7 +77,8 @@ button {
     border: 1px solid #7a6235;
     img {
       width: 15%;
-      height: 15%;
+      height: 15rem;
+      object-fit: cover;
     }
     .invitationInfo {
       width: 70%;
