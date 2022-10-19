@@ -5,10 +5,12 @@
         <router-link to="/portal">Portal</router-link> |
         <router-link to="/game">Game</router-link> |
         <router-link to="/profile"
-          >Profile<span
+          >Profile
+          <div
             :class="'dot' + (this.profileNotificationBadge ? '' : ' hidden')"
-          ></span>
-        </router-link>
+          ></div
+        ></router-link>
+
         | <router-link to="/chat">Chat</router-link> |
         <router-link to="/users">All users</router-link> |
         <router-link to="/edit">Profile Editing</router-link> |
@@ -42,7 +44,7 @@ export default defineComponent({
       isConnected: store.isConnected,
       socket: config.socket,
       incomingFriendRequest: "",
-      profileNotificationBadge: true,
+      profileNotificationBadge: false,
     };
   },
   methods: {
@@ -60,9 +62,27 @@ export default defineComponent({
       document.querySelector(".overlay")?.classList.add("hidden");
     },
   },
+  beforeMount() {
+    if (localStorage.getItem("user")) {
+      fetch(
+        "http://" + window.location.hostname + ":3000/api/friendship/block",
+        {
+          method: "GET",
+          headers: {
+            Authorization: "Bearer " + localStorage.getItem("token"),
+          },
+        }
+      )
+        .then((res) => res.json())
+        .then((data) => {
+          this.profileNotificationBadge = data;
+        });
+    }
+  },
   mounted() {
     this.socket.on("friendshipInvite", (requester: string) => {
       this.incomingFriendRequest = requester;
+      this.profileNotificationBadge = true;
     });
   },
   components: { FriendAlert },
@@ -116,6 +136,7 @@ nav {
 }
 
 .dot {
+  display: inline-block;
   width: 10px;
   height: 10px;
   background: #e7d899;
@@ -123,6 +144,7 @@ nav {
   animation: beat 2000ms infinite;
   opacity: 60%;
   box-shadow: 0 0 0 2px rgba(200, 150, 100, 1), 0 0 0 3px #e7d899;
+  margin-bottom: 3px;
 }
 
 @keyframes beat {

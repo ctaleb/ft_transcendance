@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { FriendshipService } from './friendship.service';
 import { FriendshipController } from './friendship.controller';
 import { UserService } from 'src/user/user.service';
@@ -10,6 +10,7 @@ import { ServerService } from 'src/server/server.service';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { jwtConstants } from 'src/authentication/constants';
 import { ServerModule } from 'src/server/server.module';
+import { UserModule } from 'src/user/user.module';
 
 @Module({
   imports: [
@@ -18,11 +19,11 @@ import { ServerModule } from 'src/server/server.module';
       signOptions: { expiresIn: '10d' },
     }),
     TypeOrmModule.forFeature([FriendshipEntity]),
-    TypeOrmModule.forFeature([UserEntity]),
     ImageModule,
     ServerModule,
+    UserModule,
   ],
   controllers: [FriendshipController],
-  providers: [FriendshipService, UserService, JwtService],
+  providers: [FriendshipService, JwtService],
 })
 export class FriendshipModule {}

@@ -2,6 +2,8 @@ import {
   Injectable,
   HttpStatus,
   HttpException,
+  forwardRef,
+  Inject,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from 'src/user/user.entity';
@@ -11,6 +13,8 @@ import { ImageDto } from 'src/image/image.dto';
 import { ImageService } from 'src/image/image.service';
 import { unlink } from 'fs';
 import { JwtService } from '@nestjs/jwt';
+import { FriendshipService } from 'src/friendship/friendship.service';
+import { FriendshipEntity } from 'src/friendship/entities/friendship.entity';
 
 @Injectable()
 export class UserService {
@@ -18,7 +22,8 @@ export class UserService {
   constructor(
     @InjectRepository(UserEntity)
     private _usersRepository: Repository<UserEntity>,
-    // private _friendshipService: FriendshipService,
+    @InjectRepository(FriendshipEntity)
+    private _friendshipRepository: Repository<FriendshipEntity>,
     private _imageService: ImageService,
     private _jwtService: JwtService,
   ) {}
@@ -119,7 +124,16 @@ export class UserService {
   }
 
   async deleteAccount(user: any) {
+    // this._friendshipRepository
+    //   .createQueryBuilder()
+    //   .delete()
+    //   .from(FriendshipEntity)
+    //   .where('requesterId = :userId', { userId: user.id })
+    //   .orWhere('addresseeId = :userId', { userId: user.id })
+    //   .execute();
+
+    console.log('Tout va bien');
     this._usersRepository.delete({ id: user.id });
-    this._imageService.deleteImage(user.avatarId);
+    if (user.avatarId !== 0) this._imageService.deleteImage(user.avatarId);
   }
 }

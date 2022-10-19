@@ -14,6 +14,7 @@ import { JwtStrategy } from './jwt.strategy';
 import { jwtConstants } from './constants';
 import { ServerService } from 'src/server/server.service';
 import { ServerModule } from 'src/server/server.module';
+import { FriendshipEntity } from 'src/friendship/entities/friendship.entity';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { ServerModule } from 'src/server/server.module';
     ImageModule,
     PassportModule,
     TypeOrmModule.forFeature([UserEntity]),
+    TypeOrmModule.forFeature([FriendshipEntity]),
     MulterModule.register({ dest: './assets' }),
     JwtModule.register({
       secret: jwtConstants.secret,

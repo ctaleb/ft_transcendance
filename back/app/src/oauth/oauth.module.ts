@@ -11,6 +11,8 @@ import { ImageModule } from 'src/image/image.module';
 import { ImageService } from 'src/image/image.service';
 import { ImageEntity } from 'src/image/image.entity';
 import { AuthenticationService } from 'src/authentication/authentication.service';
+import { FriendshipModule } from 'src/friendship/friendship.module';
+import { FriendshipEntity } from 'src/friendship/entities/friendship.entity';
 
 @Module({
   imports: [
@@ -20,6 +22,7 @@ import { AuthenticationService } from 'src/authentication/authentication.service
     }),
     TypeOrmModule.forFeature([UserEntity]),
     TypeOrmModule.forFeature([ImageEntity]),
+    TypeOrmModule.forFeature([FriendshipEntity]),
     UserModule,
     ImageModule,
   ],

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { CreateMessageDto } from './dto/create-message.dto';
 import {
   ChatRoom,
@@ -32,6 +32,7 @@ export class ServerService {
   constructor(
     @InjectRepository(MatchHistoryEntity)
     private _matchHistoryRepository: Repository<MatchHistoryEntity>,
+    @Inject(forwardRef(() => UserService))
     private _userService: UserService,
   ) {}
 

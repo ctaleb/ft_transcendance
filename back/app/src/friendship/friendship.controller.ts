@@ -63,4 +63,11 @@ export class FriendshipController {
   getRelations(@Request() req) {
     return this._friendshipService.getRelationsOf(req.user.payload.nickname);
   }
+
+  @Get('has-invitations')
+  hasInvitations(@Request() req) {
+    return this._friendshipService.hasPendingInvitations(
+      req.user.payload.nickname,
+    );
+  }
 }

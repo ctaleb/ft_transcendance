@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  forwardRef,
   HttpException,
   Inject,
   Injectable,
@@ -23,6 +24,7 @@ export class FriendshipService {
   constructor(
     @InjectRepository(FriendshipEntity)
     private _friendshipRepository: Repository<FriendshipEntity>,
+    @Inject(forwardRef(() => UserService))
     private _userService: UserService,
   ) {}
 
@@ -273,5 +275,17 @@ export class FriendshipService {
       console.log(error);
     }
     return null;
+  }
+
+  async hasPendingInvitations(username: string) {
+    try {
+      const user: UserEntity = await this._userService.getUserByNickname(
+        username,
+      );
+      return (await this.findInvitationsOf(user)).length === 0 ? false : true;
+    } catch (error) {
+      console.log(error);
+    }
+    return false;
   }
 }
