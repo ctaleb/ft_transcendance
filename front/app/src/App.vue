@@ -7,7 +7,7 @@
         <router-link to="/profile"
           >Profile
           <div
-            :class="'dot' + (this.profileNotificationBadge ? '' : ' hidden')"
+            :class="'dot' + (this.profileNotificationBadge ? ' show' : '')"
           ></div
         ></router-link>
 
@@ -73,7 +73,9 @@ export default defineComponent({
           },
         }
       )
-        .then((res) => res.json())
+        .then((res) => {
+          return res.json();
+        })
         .then((data) => {
           this.profileNotificationBadge = data;
         });
@@ -82,6 +84,7 @@ export default defineComponent({
   mounted() {
     this.socket.on("friendshipInvite", (requester: string) => {
       this.incomingFriendRequest = requester;
+      console.log("incoming friend request");
       this.profileNotificationBadge = true;
     });
   },
@@ -120,10 +123,6 @@ nav {
   color: red;
 }
 
-.hidden {
-  display: none;
-}
-
 .overlay {
   position: absolute;
   top: 0;
@@ -136,7 +135,7 @@ nav {
 }
 
 .dot {
-  display: inline-block;
+  display: none;
   width: 10px;
   height: 10px;
   background: #e7d899;
@@ -145,6 +144,10 @@ nav {
   opacity: 60%;
   box-shadow: 0 0 0 2px rgba(200, 150, 100, 1), 0 0 0 3px #e7d899;
   margin-bottom: 3px;
+
+  &.show {
+    display: inline-block;
+  }
 }
 
 @keyframes beat {
