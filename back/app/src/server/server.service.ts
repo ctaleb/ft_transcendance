@@ -29,11 +29,11 @@ export class ServerService {
   server: Server = null;
 
   //generic stuff
-  newUser(token: string, user: UserEntity, sock?: Socket) {
+  newUser(token: string, user: string, sock?: Socket) {
     const newUser: User = {
       token: token,
       socket: null,
-      name: user.nickname,
+      name: user,
       status: 'idle',
       gameData: {
         input: [],

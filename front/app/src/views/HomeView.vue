@@ -110,11 +110,15 @@ export default defineComponent({
               localStorage.setItem("user", JSON.stringify(value.user));
 
               config.socket = io(
-                "http://" + window.location.hostname + ":3000",
+                "http://" + window.location.hostname + ":3500",
                 {
                   auth: { token: value.token, user: value.user },
+                  // path: "/api/socket.io/",
+                  transports: ["websocket"],
+                  autoConnect: false,
                 }
               );
+              config.socket.connect();
               this.$router.push("/portal");
             })
             .catch((err) => console.log(err));
@@ -149,9 +153,13 @@ export default defineComponent({
           localStorage.setItem("user", JSON.stringify(value.user));
           setTimeout(() => {}, 2000);
 
-          config.socket = io("http://" + window.location.hostname + ":3000", {
+          config.socket = io("http://" + window.location.hostname + ":3500", {
             auth: { token: value.token, user: value.user },
+            // path: "/api/socket.io/",
+            transports: ["websocket"],
+            autoConnect: false,
           });
+          config.socket.connect();
           this.$router.push("/portal");
         })
         .catch((error) => {

@@ -14,7 +14,7 @@ import { Server, Socket } from 'socket.io';
 import { Game } from './entities/server.entity';
 import { UserEntity } from 'src/user/user.entity';
 
-@WebSocketGateway({
+@WebSocketGateway(3500, {
   cors: {
     origin: '*',
   },
@@ -38,7 +38,7 @@ export class ServerGateway
       hsToken = client.handshake.auth.token;
       hsNick = client.handshake.auth.user.nickname;
     }
-    console.log(hsNick);
+    console.log(hsNick + ' trying to connect to socket');
     const user = this.serverService.userList.find(
       (element) => element.name === hsNick,
     );

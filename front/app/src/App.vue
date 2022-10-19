@@ -22,15 +22,25 @@ import { store } from "./store";
 import { defineComponent } from "vue";
 import { io, Socket } from "socket.io-client";
 import config from "./config/config";
+console.log(config.socket.id);
 if (!config.socket.id && localStorage.getItem("user")) {
-  config.socket = io("http://" + window.location.hostname + ":3000", {
+  console.log(config.socket);
+  config.socket = io("http://" + window.location.hostname + ":3500", {
     auth: {
       token: localStorage.getItem("token"),
       user: JSON.parse(localStorage.getItem("user") || "{}"),
     },
+    path: "/api/socket.io/",
+    transports: ["websocket"],
+    autoConnect: false,
   });
+  config.socket.connect();
+  console.log(config.socket.id);
 }
 export default defineComponent({
+  created() {
+    window.addEventListener("beforeunload", this.handler);
+  },
   data() {
     return {
       isConnected: store.isConnected,
@@ -41,6 +51,11 @@ export default defineComponent({
       localStorage.removeItem("token");
       localStorage.removeItem("user");
       config.socket.emit("disco", {});
+      config.socket = io("http://" + window.location.hostname + ":3500", {
+        transports: ["websocket"],
+        // path: "/api/socket.io/",
+        autoConnect: false,
+      });
     },
     openModal() {
       document.querySelector(".modal")?.classList.remove("hidden");
@@ -49,6 +64,16 @@ export default defineComponent({
     closeModal() {
       document.querySelector(".modal")?.classList.add("hidden");
       document.querySelector(".overlay")?.classList.add("hidden");
+    },
+    handler: function handler() {
+      // console.log("event recieved");
+      // config.socket.emit("disco", {});
+      config.socket.disconnect;
+      config.socket = io("http://" + window.location.hostname + ":3500", {
+        transports: ["websocket"],
+        path: "/api/socket.io/",
+        autoConnect: false,
+      });
     },
   },
 });
