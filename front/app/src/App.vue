@@ -17,14 +17,14 @@
         <router-link to="/" v-on:click.prevent="logout()">Logout</router-link>
       </nav>
     </div>
-    <router-view />
+    <router-view @notification="changeNotificationValue" />
     <friend-alert :requester-name="this.incomingFriendRequest" />
   </div>
 </template>
 
 <script lang="ts">
 import { store } from "./store";
-import { defineComponent } from "vue";
+import { defineComponent, watch } from "vue";
 import { io, Socket } from "socket.io-client";
 import config from "./config/config";
 import FriendAlert from "./components/FriendAlert.vue";
@@ -61,32 +61,46 @@ export default defineComponent({
       document.querySelector(".modal")?.classList.add("hidden");
       document.querySelector(".overlay")?.classList.add("hidden");
     },
-  },
-  beforeMount() {
-    if (localStorage.getItem("user")) {
-      fetch(
-        "http://" + window.location.hostname + ":3000/api/friendship/block",
-        {
-          method: "GET",
-          headers: {
-            Authorization: "Bearer " + localStorage.getItem("token"),
-          },
-        }
-      )
-        .then((res) => {
-          return res.json();
-        })
-        .then((data) => {
-          this.profileNotificationBadge = data;
-        });
-    }
+    changeNotificationValue(value: boolean) {
+      this.profileNotificationBadge = value;
+    },
   },
   mounted() {
     this.socket.on("friendshipInvite", (requester: string) => {
       this.incomingFriendRequest = requester;
-      console.log("incoming friend request");
       this.profileNotificationBadge = true;
     });
+    watch(
+      () => this.$route.path,
+      () => {
+        if (
+          localStorage.getItem("token") &&
+          this.profileNotificationBadge === false
+        ) {
+          fetch(
+            "http://" +
+              window.location.hostname +
+              ":3000/api/friendship/has-invitations",
+            {
+              method: "GET",
+              headers: {
+                Authorization: "Bearer " + localStorage.getItem("token"),
+              },
+            }
+          )
+            .then((res) => {
+              return res.json();
+            })
+            .then((data) => {
+              this.profileNotificationBadge = data;
+            })
+            .catch((err) => {
+              console.log(err);
+              this.profileNotificationBadge = false;
+            });
+        }
+      }
+    );
   },
   components: { FriendAlert },
 });

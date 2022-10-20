@@ -66,12 +66,8 @@ export class FriendshipController {
 
   @Get('has-invitations')
   hasInvitations(@Request() req) {
-    let result: boolean;
-    this._friendshipService
-      .hasPendingInvitations(req.user.payload.nickname)
-      .then((data) => {
-        result = data;
-      });
-    return result;
+    return this._friendshipService.hasPendingInvitations(
+      req.user.payload.nickname,
+    );
   }
 }

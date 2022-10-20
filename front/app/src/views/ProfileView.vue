@@ -64,6 +64,8 @@ interface User {
 }
 
 export default defineComponent({
+  emits: ["notification"],
+
   data() {
     return {
       user: JSON.parse(localStorage.getItem("user") || "{}"),
@@ -100,6 +102,10 @@ export default defineComponent({
           }
         })
         .catch((err) => console.log(err.message));
+    },
+
+    checkNotificationBadge() {
+      if (this.invitations.length === 0) this.$emit("notification", false);
     },
 
     invite() {
@@ -149,6 +155,7 @@ export default defineComponent({
         .then((data) => {
           this.invitations.splice(this.invitations.indexOf(invitation), 1);
           this.friends.push(invitation);
+          this.checkNotificationBadge();
         })
         .catch((err) => console.log(err));
     },
@@ -175,6 +182,7 @@ export default defineComponent({
         })
         .then((data) => {
           this.invitations.splice(this.invitations.indexOf(invitation), 1);
+          this.checkNotificationBadge();
         })
         .catch((err) => console.log(err));
     },
@@ -201,6 +209,7 @@ export default defineComponent({
         })
         .then((data) => {
           this.invitations.splice(this.invitations.indexOf(invitation), 1);
+          this.checkNotificationBadge();
         })
         .catch((err) => console.log(err));
     },
