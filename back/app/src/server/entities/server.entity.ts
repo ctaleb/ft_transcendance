@@ -37,7 +37,6 @@ export class GameOptions {
   barSize: IPoint;
   scoreMax: number;
   chargeMax: number;
-  timeLimit: number;
 }
 
 export class ChatRoom {

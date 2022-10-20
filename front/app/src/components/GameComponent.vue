@@ -1,28 +1,138 @@
 <template>
-  <PowerSliderComponent v-model="power" id="powerSlider" />
   <div>
-    <button @click="findMatch()" :disabled="startButton">
-      {{ lobbyStatus }}
-    </button>
+    <button @click="toggleGameQueue()">CHANGE MODE</button>
   </div>
-  <div>
-    <canvas class="canvas hidden" ref="canvas"></canvas>
-  </div>
-
-  <div v-if="modal || summary" class="overlay">
-    <div v-if="modal" class="modal">
-      <h1>Ready to play ?</h1>
-      <button @click="confirmGame()">Yes</button>
-      <button @click="denyGame()">No</button>
+  <div :class="'ladder' + (toggleLadder ? '' : ' hidden')">
+    <!-- <PowerSliderComponent v-model="power" id="powerSlider" /> -->
+    <div>
+      <button @click="findMatch()" :disabled="startButton">
+        {{ lobbyStatus }}
+      </button>
     </div>
-    <Modal
-      v-else-if="summary"
-      :title="sumTitle"
-      :data="gameSummary"
-      @close="showSummary(false)"
-    ></Modal>
+    <div>
+      <canvas class="canvas hidden" ref="canvas"></canvas>
+    </div>
+
+    <div v-if="modal || summary" class="overlay">
+      <div v-if="modal" class="modal">
+        <h1>Ready to play ?</h1>
+        <button @click="confirmGame()">Yes</button>
+        <button @click="denyGame()">No</button>
+      </div>
+      <Modal
+        v-else-if="summary"
+        :title="sumTitle"
+        :data="gameSummary"
+        @close="showSummary(false)"
+      ></Modal>
+    </div>
+    <div class="power">Selected power: {{ power }}</div>
   </div>
-  <div class="power">Selected power: {{ power }}</div>
+  <div :class="'custom' + (toggleLadder ? ' hidden' : '')">
+    <div>
+      <div>
+        <label for="score">Max Score: {{ score }}</label>
+        <div>
+          1<input
+            v-model="score"
+            type="range"
+            id="score"
+            name="score"
+            min="1"
+            max="100"
+          />100
+        </div>
+      </div>
+      <div>
+        <label for="ballSpeed">Initial Ball Speed: {{ ballSpeed }}</label>
+        <div>
+          1<input
+            v-model="ballSpeed"
+            type="range"
+            id="ballSpeed"
+            name="ballSpeed"
+            min="1"
+            max="5"
+          />5
+        </div>
+      </div>
+      <div>
+        <label for="ballSize">Ball Size Factor: {{ ballSize }}</label>
+        <div>
+          10<input
+            v-model="ballSize"
+            type="range"
+            id="ballSize"
+            name="ballSize"
+            min="-10"
+            max="10"
+          />10
+        </div>
+      </div>
+      <div>
+        <label for="barSpeed">Maximum Bar Speed: {{ barSpeed }}</label>
+        <div>
+          1<input
+            v-model="barSpeed"
+            type="range"
+            id="barSpeed"
+            name="barSpeed"
+            min="1"
+            max="20"
+          />20
+        </div>
+      </div>
+      <div>
+        <label for="barSize">Bar Size Factor: {{ barSize }}</label>
+        <div>
+          -10<input
+            v-model="barSize"
+            type="range"
+            id="barSize"
+            name="barSize"
+            min="-10"
+            max="10"
+          />10
+        </div>
+      </div>
+      <div>
+        <label for="smashStrength"
+          >Smash Strength Factor (0 to disable): {{ smashStrength }}</label
+        >
+        <div>
+          0<input
+            v-model="smashStrength"
+            type="range"
+            id="smashStrength"
+            name="smashStrength"
+            min="0"
+            max="10"
+          />10
+        </div>
+      </div>
+      <div>
+        <label for="spinStrength"
+          >Spin Factor (0 to disable): {{ spinStrength }}</label
+        >
+        <div>
+          0<input
+            v-model="spinStrength"
+            type="range"
+            id="spinStrength"
+            name="spinStrength"
+            min="0"
+            max="10"
+          />10
+        </div>
+      </div>
+      <div>
+        <label for="invitee">User to Invite: </label>
+        <input v-model="invitee" placeholder="User Name" />
+      </div>
+      <!-- <input type="checkbox" id="switch" /><label for="switch">Toggle</label> -->
+    </div>
+  </div>
+  <PowerSliderComponent v-model="power" id="powerSlider" />
 </template>
 
 <style lang="scss">
@@ -110,6 +220,16 @@ const sumDate = ref("");
 const sumTime = ref(0);
 const modal = ref(false);
 const summary = ref(true);
+const toggleLadder = ref(true);
+
+const invitee = ref("");
+const score = ref(5);
+const ballSpeed = ref(3);
+const ballSize = ref(1);
+const barSpeed = ref(7);
+const barSize = ref(1);
+const smashStrength = ref(1);
+const spinStrength = ref(1);
 
 const power = ref("");
 
@@ -153,6 +273,10 @@ function findMatch() {
   socket.emit("joinQueue", {
     power: power.value,
   });
+}
+
+function toggleGameQueue() {
+  toggleLadder.value = toggleLadder.value ? false : true;
 }
 
 function confirmGame() {

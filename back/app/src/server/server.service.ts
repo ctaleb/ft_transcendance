@@ -190,7 +190,6 @@ export class ServerService {
           barSize: { x: 40, y: 10 },
           scoreMax: 3,
           chargeMax: 1,
-          timeLimit: 0,
         },
       },
       gameState: {
@@ -578,6 +577,7 @@ export class ServerService {
     return inverseState;
   }
 
+  //need optional parameter speed
   getRandomStart() {
     // const random = Math.random() * 3 + 1;
     // const pos: IPoint = {
