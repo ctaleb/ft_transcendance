@@ -57,82 +57,98 @@
         </div>
       </div>
       <div>
-        <label for="ballSize">Ball Size Factor: {{ ballSize }}</label>
+        <label for="ballSize"
+          >Ball Size Factor (0 for half size): {{ ballSize }}</label
+        >
         <div>
-          10<input
+          0<input
             v-model="ballSize"
             type="range"
             id="ballSize"
             name="ballSize"
-            min="-10"
+            min="0"
             max="10"
           />10
         </div>
       </div>
       <div>
-        <label for="barSpeed">Maximum Bar Speed: {{ barSpeed }}</label>
+        <label for="barSpeed"
+          >Bar Speed Factor (0 for half speed): {{ barSpeed }}</label
+        >
         <div>
-          1<input
+          0<input
             v-model="barSpeed"
             type="range"
             id="barSpeed"
             name="barSpeed"
-            min="1"
-            max="20"
-          />20
+            min="0"
+            max="10"
+          />10
         </div>
       </div>
       <div>
-        <label for="barSize">Bar Size Factor: {{ barSize }}</label>
+        <label for="barSize"
+          >Bar Size Factor (0 for half size): {{ barSize }}</label
+        >
         <div>
-          -10<input
+          0<input
             v-model="barSize"
             type="range"
             id="barSize"
             name="barSize"
-            min="-10"
+            min="0"
             max="10"
           />10
         </div>
       </div>
       <div>
+        <input v-model="smashes" type="checkbox" id="switch" /><label
+          for="smashes"
+          >Toggle smashes</label
+        >
+      </div>
+      <div>
         <label for="smashStrength"
-          >Smash Strength Factor (0 to disable): {{ smashStrength }}</label
+          >Smash Strength Factor: {{ smashStrength }}</label
         >
         <div>
-          0<input
+          1<input
             v-model="smashStrength"
             type="range"
             id="smashStrength"
             name="smashStrength"
-            min="0"
+            min="1"
             max="10"
+            :disabled="smashes == false"
           />10
         </div>
       </div>
       <div>
-        <label for="spinStrength"
-          >Spin Factor (0 to disable): {{ spinStrength }}</label
+        <input v-model="effects" type="checkbox" id="switch" /><label
+          for="effects"
+          >Toggle effects</label
         >
-        <div>
-          0<input
-            v-model="spinStrength"
-            type="range"
-            id="spinStrength"
-            name="spinStrength"
-            min="0"
-            max="10"
-          />10
-        </div>
+      </div>
+      <div>
+        <input v-model="powers" type="checkbox" id="switch" /><label
+          for="powers"
+          >Toggle powers</label
+        >
       </div>
       <div>
         <label for="invitee">User to Invite: </label>
         <input v-model="invitee" placeholder="User Name" />
       </div>
-      <!-- <input type="checkbox" id="switch" /><label for="switch">Toggle</label> -->
+      <div>
+        <button @click="sendInvite()" :disabled="startButton">
+          Send Invite
+        </button>
+      </div>
     </div>
   </div>
-  <PowerSliderComponent v-model="power" id="powerSlider" />
+  <div :class="'powerSlider' + (powers ? '' : ' hidden')">
+    <PowerSliderComponent v-model="power" id="powerSlider" />
+  </div>
 </template>
 
 <style lang="scss">
@@ -160,6 +176,7 @@ import {
   IBall,
   IBar,
   IPoint,
+  GameOptions,
 } from "../../../../back/app/src/server/entities/server.entity";
 import config from "../config/config";
 import { title } from "process";
@@ -219,7 +236,7 @@ const sumTitle = ref("Placeholder");
 const sumDate = ref("");
 const sumTime = ref(0);
 const modal = ref(false);
-const summary = ref(true);
+const summary = ref(false);
 const toggleLadder = ref(true);
 
 const invitee = ref("");
@@ -230,6 +247,11 @@ const barSpeed = ref(7);
 const barSize = ref(1);
 const smashStrength = ref(1);
 const spinStrength = ref(1);
+const effects = ref(true);
+const powers = ref(true);
+const smashes = ref(true);
+
+let gameOpts: GameOptions;
 
 const power = ref("");
 
@@ -273,6 +295,26 @@ function findMatch() {
   socket.emit("joinQueue", {
     power: power.value,
   });
+}
+function sendInvite() {
+  startButton.value = false;
+  lobbyStatus.value = "Sending invite...";
+  updateOpts();
+  socket.emit("customInvite", {});
+}
+
+function updateOpts() {
+  gameOpts = {
+    scoreMax: score.value,
+    ballSpeed: ballSpeed.value,
+    ballSize: ballSize.value,
+    barSpeed: barSpeed.value,
+    barSize: barSize.value,
+    smashStrength: smashStrength.value,
+    effects: effects.value,
+    powers: powers.value,
+    smashes: smashes.value,
+  };
 }
 
 function toggleGameQueue() {

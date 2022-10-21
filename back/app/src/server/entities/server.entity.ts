@@ -31,12 +31,15 @@ export class GameState {
 }
 
 export class GameOptions {
-  ballSpeed: IPoint;
-  ballsize: number;
-  barSpeed: number;
-  barSize: IPoint;
   scoreMax: number;
-  chargeMax: number;
+  ballSpeed: number;
+  ballSize: number;
+  barSpeed: number;
+  barSize: number;
+  smashStrength: number;
+  effects: boolean;
+  powers: boolean;
+  smashes: boolean;
 }
 
 export class ChatRoom {

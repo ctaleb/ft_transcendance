@@ -16,6 +16,10 @@ import {
 import { Server, Socket } from 'socket.io';
 import { UserEntity } from 'src/user/user.entity';
 
+const chargeMax = 1;
+const ballSize = 16;
+const barSize: IPoint = { x: 50, y: 10 };
+
 @Injectable()
 export class ServerService {
   playerList: Player[] = [];
@@ -184,28 +188,27 @@ export class ServerService {
         sideCollide: false,
         effect: 'null',
         options: {
+          scoreMax: 3,
           ballSpeed: this.getRandomStart(),
           ballsize: 16,
           barSpeed: 7,
           barSize: { x: 40, y: 10 },
-          scoreMax: 3,
-          chargeMax: 1,
         },
       },
       gameState: {
         ball: {
-          size: 16,
+          size: ballSize,
           pos: { x: 250, y: 250 },
           speed: { x: 2, y: 2 },
         },
         hostBar: {
-          size: { x: 50, y: 10 },
+          size: barSize,
           pos: { x: 250, y: 460 },
           speed: 0,
           smashing: false,
         },
         clientBar: {
-          size: { x: 50, y: 10 },
+          size: barSize,
           pos: { x: 250, y: 40 },
           speed: 0,
           smashing: false,
@@ -239,6 +242,20 @@ export class ServerService {
     );
     this.initPower(newGame.host, newGame.gameState, newGame.gameState.hostBar);
     return newGame;
+  }
+
+  initGameValues(game: Game) {
+    game.gameState.ball.speed.x *= game.room.options.ballSpeed;
+    game.gameState.ball.speed.y *= game.room.options.ballSpeed;
+    game.gameState.ball.size *=
+      game.room.options.ballSize == 0 ? 0.5 : game.room.options.ballSize;
+    game.gameState.clientBar.speed *=
+      game.room.options.barSpeed == 0 ? 0.5 : game.room.options.barSpeed;
+    game.gameState.clientBar.size.x *=
+      game.room.options.barSize == 0 ? 0.5 : game.room.options.barSize;
+    game.gameState.clientBar.size.y *=
+      game.room.options.barSize == 0 ? 0.5 : game.room.options.barSize;
+    game.gameState.hostBar = game.gameState.clientBar;
   }
 
   printList() {
@@ -638,26 +655,17 @@ export class ServerService {
   }
 
   chargeUp(game: Game) {
-    if (
-      game.client.smashLeft > 0 &&
-      game.client.smashLeft < game.room.options.chargeMax
-    ) {
+    if (game.client.smashLeft > 0 && game.client.smashLeft < chargeMax) {
       game.client.smashLeft += 0.01;
     } else if (
       game.client.smashRight > 0 &&
-      game.client.smashRight < game.room.options.chargeMax
+      game.client.smashRight < chargeMax
     ) {
       game.client.smashRight += 0.01;
     }
-    if (
-      game.host.smashLeft > 0 &&
-      game.host.smashLeft < game.room.options.chargeMax
-    ) {
+    if (game.host.smashLeft > 0 && game.host.smashLeft < chargeMax) {
       game.host.smashLeft += 0.01;
-    } else if (
-      game.host.smashRight > 0 &&
-      game.host.smashRight < game.room.options.chargeMax
-    ) {
+    } else if (game.host.smashRight > 0 && game.host.smashRight < chargeMax) {
       game.host.smashRight += 0.01;
     }
   }
