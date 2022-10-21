@@ -21,10 +21,10 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
   app.useGlobalInterceptors(new ClassSerializerInterceptor(reflector));
 
-  const httpServer = createServer();
-  const io = new Server(httpServer, {
-    path: '/api/socket.io/',
-  });
+  //   const httpServer = createServer();
+  //   const io = new Server(httpServer, {
+  //     path: '/api/socket.io/',
+  //   });
 
   await app.init();
   // http.createServer(app.getHttpAdapter().getInstance()).listen(3000);

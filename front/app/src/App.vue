@@ -30,7 +30,7 @@ if (!config.socket.id && localStorage.getItem("user")) {
       token: localStorage.getItem("token"),
       user: JSON.parse(localStorage.getItem("user") || "{}"),
     },
-    path: "/api/socket.io/",
+    // path: "/api/socket.io/",
     transports: ["websocket"],
     autoConnect: false,
   });
@@ -71,7 +71,7 @@ export default defineComponent({
       config.socket.disconnect;
       config.socket = io("http://" + window.location.hostname + ":3500", {
         transports: ["websocket"],
-        path: "/api/socket.io/",
+        // path: "/api/socket.io/",
         autoConnect: false,
       });
     },

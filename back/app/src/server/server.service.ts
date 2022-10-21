@@ -173,7 +173,7 @@ export class ServerService {
   reconnect(player: User) {
     let game = this.games.find((element) => element.host.name === player.name);
     if (!game)
-      game = this.games.find((element) => element.host.name === player.name);
+      game = this.games.find((element) => element.client.name === player.name);
     if (game) {
       player.socket.emit('reconnect', game.room);
       player.socket.join(game.room.name);
@@ -196,7 +196,7 @@ export class ServerService {
           ballsize: 16,
           barSpeed: 7,
           barSize: { x: 40, y: 10 },
-          scoreMax: 3,
+          scoreMax: 100,
           chargeMax: 1,
           timeLimit: 0,
         },
@@ -629,8 +629,8 @@ export class ServerService {
   }
 
   nadal(ball: IBall, effect: string) {
-    if (effect === 'doLeft') this.rotateVector(ball.speed, 0.3);
-    else if (effect === 'doRight') this.rotateVector(ball.speed, -0.3);
+    if (effect === 'doLeft') this.rotateVector(ball.speed, 0.5);
+    else if (effect === 'doRight') this.rotateVector(ball.speed, -0.5);
   }
 
   chargeUp(game: Game) {

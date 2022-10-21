@@ -98,7 +98,7 @@ const sumTitle = ref("Placeholder");
 const sumDate = ref("");
 const sumTime = ref(0);
 const modal = ref(false);
-const summary = ref(true);
+const summary = ref(false);
 
 let loadPercent = 120;
 let kickOff = false;
@@ -341,11 +341,13 @@ onMounted(() => {
   });
 
   socket.on("reconnect", (gameRoom: GameRoom) => {
+    console.log("reconnecting");
     theRoom = gameRoom;
     hostName.value = theRoom.hostName;
     clientName.value = theRoom.clientName;
     lobbyStatus.value = "Play !";
     startButton.value = false;
+    document.querySelector(".canvas")?.classList.remove("hidden");
   });
 
   socket.on("kickOff", () => {

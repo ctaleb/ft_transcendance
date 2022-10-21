@@ -44,6 +44,7 @@ export class ServerGateway
     );
     if (user && user.token === hsToken) {
       user.socket = client;
+      console.log(user.name + ' rejoining game ' + user.status);
       if (user.status === 'ready') this.serverService.reconnect(user);
     } else {
       this.serverService.newUser(hsToken, hsNick, client);
