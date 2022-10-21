@@ -300,7 +300,11 @@ function sendInvite() {
   startButton.value = false;
   lobbyStatus.value = "Sending invite...";
   updateOpts();
-  socket.emit("customInvite", {});
+  socket.emit("customInvite", {
+    gameOpts,
+    power: power.value,
+    invitee: invitee.value,
+  });
 }
 
 function updateOpts() {
@@ -606,6 +610,8 @@ onMounted(() => {
     lobbyStatus.value = "Play !";
     document.querySelector(".canvas")?.classList.remove("hidden");
   });
+
+  socket.on("customInvitation", () => {});
 
   window.addEventListener("keydown", (e) => {
     if (theRoom && theRoom.status === "playing") {

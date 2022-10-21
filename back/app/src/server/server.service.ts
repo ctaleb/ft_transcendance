@@ -12,6 +12,7 @@ import {
   GameState,
   GameSummary,
   PowerElastico,
+  GameOptions,
 } from './entities/server.entity';
 import { Server, Socket } from 'socket.io';
 import { UserEntity } from 'src/user/user.entity';
@@ -189,10 +190,14 @@ export class ServerService {
         effect: 'null',
         options: {
           scoreMax: 3,
-          ballSpeed: this.getRandomStart(),
-          ballsize: 16,
-          barSpeed: 7,
-          barSize: { x: 40, y: 10 },
+          ballSpeed: 2,
+          ballSize: 1,
+          barSpeed: 1,
+          barSize: 1,
+          smashStrength: 1,
+          effects: true,
+          powers: true,
+          smashes: true,
         },
       },
       gameState: {
@@ -337,9 +342,10 @@ export class ServerService {
     bar: IBar,
     playerType: string,
     gameState: GameState,
+    gameOptions: GameOptions,
   ) {
     player.input.forEach((input) => {
-      if (input === 'downSpace') player.power.active();
+      if (input === 'downSpace' && gameOptions.powers) player.power.active();
       else if (input === 'downRight')
         playerType === 'host' ? (player.right = true) : (player.left = true);
       else if (input === 'downLeft')
@@ -348,11 +354,11 @@ export class ServerService {
         playerType === 'host' ? (player.right = false) : (player.left = false);
       else if (input === 'upLeft')
         playerType === 'host' ? (player.left = false) : (player.right = false);
-      else if (input === 'downA') {
+      else if (input === 'downA' && gameOptions.smashes) {
         player.smashLeft = 0.01;
         player.smashRight = 0;
         bar.smashing = true;
-      } else if (input === 'downD') {
+      } else if (input === 'downD' && gameOptions.smashes) {
         player.smashRight = 0.01;
         player.smashLeft = 0;
         bar.smashing = true;
@@ -367,8 +373,9 @@ export class ServerService {
     player.input = [];
   }
 
-  moveBar(bar: IBar, player: Player) {
-    const speedLimit = player.smashLeft > 0 || player.smashRight > 0 ? 2 : 7;
+  moveBar(bar: IBar, player: Player, factor: number) {
+    const speedLimit =
+      player.smashLeft > 0 || player.smashRight > 0 ? 2 * factor : 7 * factor;
     if ((player.left && player.right) || (!player.left && !player.right))
       bar.speed = 0;
     else if (player.left && !player.right) {
@@ -673,17 +680,28 @@ export class ServerService {
   loop(game: Game) {
     if (!game.room.kickOff) {
       const gameState = game.gameState;
-      this.updateMoveStatus(game.host, gameState.hostBar, 'host', gameState);
+      this.updateMoveStatus(
+        game.host,
+        gameState.hostBar,
+        'host',
+        gameState,
+        game.room.options,
+      );
       this.updateMoveStatus(
         game.client,
         gameState.clientBar,
         'client',
         gameState,
+        game.room.options,
       );
       this.chargeUp(game);
       //this.handlePower(game);
-      this.moveBar(gameState.hostBar, game.host);
-      this.moveBar(gameState.clientBar, game.client);
+      this.moveBar(gameState.hostBar, game.host, game.room.options.barSpeed);
+      this.moveBar(
+        gameState.clientBar,
+        game.client,
+        game.room.options.barSpeed,
+      );
 
       this.barBallCollision(
         gameState.hostBar,

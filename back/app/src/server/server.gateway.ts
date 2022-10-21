@@ -11,7 +11,7 @@ import {
 import { ServerService } from './server.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { Server, Socket } from 'socket.io';
-import { Game } from './entities/server.entity';
+import { Game, GameOptions } from './entities/server.entity';
 import { UserEntity } from 'src/user/user.entity';
 
 @WebSocketGateway({
@@ -232,6 +232,27 @@ export class ServerGateway
         }
       }, 5000);
     }
+  }
+
+  @SubscribeMessage('customInvite')
+  customInvite(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() gameOpts: GameOptions,
+    power: string,
+    invitee: string,
+  ) {
+    const host = this.serverService.SocketToPlayer(socket);
+    if (!host || !(host.status === 'idle')) return;
+    host.status = 'inviting';
+    const client = this.serverService.playerList.find(
+      (element) => element.name === invitee,
+    );
+    if (!client || !(client.status === 'idle')) {
+      host.status = 'idle';
+      return;
+    }
+    client.status = 'inviting';
+    client.socket.emit('customInvitation');
   }
 
   @SubscribeMessage('playerReady')
