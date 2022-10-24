@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="main_container">
     <h2 style="text-align: center">
       Welcome on fc_transcendance, please Log in
     </h2>
@@ -22,20 +22,9 @@
       /><br /><br />
       <input type="submit" value="Submit" />
     </form>
-    <a
-      style="
-        background-color: #e7e7e7;
-        color: black;
-        border: 3px solid black;
-        margin-top: 1em;
-      "
-      v-bind:href="intra_redirection"
-    >
-      Continue with 42
-    </a>
-    <h3 style="text-align: center; margin-top: 2em">
-      Or <a href="/signup">sign up</a>
-    </h3>
+    <a id="login42" v-bind:href="intra_redirection"> Continue with 42 </a>
+    <ButtonComponent :link="intra_redirection" />
+    <h3>Or <a href="/signup">sign up</a></h3>
   </div>
   <!--   <div :style="{ color: login_failed_color }" v-if="login_failed_msg"> -->
   <div class="text-red" v-if="login_failed_msg">
@@ -73,6 +62,7 @@ export default defineComponent({
       login_failed_msg: ref(false),
     };
   },
+
   mounted() {
     let isConnected = funcs.isConnected(localStorage.getItem("token"));
     if (isConnected) this.$router.push("/portal");
@@ -163,3 +153,24 @@ export default defineComponent({
   },
 });
 </script>
+
+<style lang="scss">
+#login42 {
+  position: relative;
+  margin-left: 1em;
+  height: auto;
+  width: 50%;
+  color: #aa9e7d;
+  border: 3px solid;
+  border-image-slice: 1;
+  border-image-source: linear-gradient(to bottom, #c1a36b, #635e4f);
+  background: linear-gradient(to bottom right, #191e2a, #182121);
+  padding: 0;
+}
+#login42:hover {
+  background-color: auto;
+}
+.main_container {
+  background-color: pink;
+}
+</style>
