@@ -5,12 +5,14 @@ import { JwtModule } from '@nestjs/jwt';
 import { jwtConstants } from 'src/authentication/constants';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserEntity } from 'src/user/user.entity';
-import { UsersModule } from 'src/user/user.module';
+import { UserModule } from 'src/user/user.module';
 import { UserService } from 'src/user/user.service';
 import { ImageModule } from 'src/image/image.module';
 import { ImageService } from 'src/image/image.service';
 import { ImageEntity } from 'src/image/image.entity';
 import { AuthenticationService } from 'src/authentication/authentication.service';
+import { FriendshipModule } from 'src/friendship/friendship.module';
+import { FriendshipEntity } from 'src/friendship/entities/friendship.entity';
 
 @Module({
   imports: [
@@ -20,7 +22,8 @@ import { AuthenticationService } from 'src/authentication/authentication.service
     }),
     TypeOrmModule.forFeature([UserEntity]),
     TypeOrmModule.forFeature([ImageEntity]),
-    UsersModule,
+    TypeOrmModule.forFeature([FriendshipEntity]),
+    UserModule,
     ImageModule,
   ],
   controllers: [OauthController],

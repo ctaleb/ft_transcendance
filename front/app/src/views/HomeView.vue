@@ -108,11 +108,12 @@ export default defineComponent({
             .then((value: any) => {
               localStorage.setItem("token", value.token);
               localStorage.setItem("user", JSON.stringify(value.user));
-
+              config.hsToken = value.token;
+              config.hsNick = value.user;
               config.socket = io(
                 "http://" + window.location.hostname + ":3000",
                 {
-                  auth: { token: value.token, user: value.user },
+                  auth: { token: config.hsToken, user: config.hsNick },
                 }
               );
               this.$router.push("/portal");
@@ -148,9 +149,10 @@ export default defineComponent({
           localStorage.setItem("token", value.token);
           localStorage.setItem("user", JSON.stringify(value.user));
           setTimeout(() => {}, 2000);
-
+          config.hsToken = value.token;
+          config.hsNick = value.user;
           config.socket = io("http://" + window.location.hostname + ":3000", {
-            auth: { token: value.token, user: value.user },
+            auth: { token: config.hsToken, user: config.hsNick },
           });
           this.$router.push("/portal");
         })

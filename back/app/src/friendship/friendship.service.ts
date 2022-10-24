@@ -1,4 +1,10 @@
-import { BadRequestException, HttpException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  forwardRef,
+  HttpException,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import { FriendshipEntity } from './entities/friendship.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -9,12 +15,16 @@ import {
   CannotAcceptFriendshipRequestException,
   FriendshipAlreadyExistsException,
 } from './friendship.exception';
+import { ServerService } from 'src/server/server.service';
 
 @Injectable()
 export class FriendshipService {
+  @Inject(ServerService)
+  private readonly _serverService: ServerService;
   constructor(
     @InjectRepository(FriendshipEntity)
     private _friendshipRepository: Repository<FriendshipEntity>,
+    @Inject(forwardRef(() => UserService))
     private _userService: UserService,
   ) {}
 
@@ -49,6 +59,10 @@ export class FriendshipService {
         status: 'invitation',
       });
       result = this._friendshipRepository.save(invitation);
+      const invited = this._serverService.playerList.find(
+        (element) => element.name === addressee,
+      );
+      invited?.socket.emit('friendshipInvite', requester);
     } catch (error) {
       console.log(error);
     }
@@ -261,5 +275,17 @@ export class FriendshipService {
       console.log(error);
     }
     return null;
+  }
+
+  async hasPendingInvitations(username: string) {
+    try {
+      const user: UserEntity = await this._userService.getUserByNickname(
+        username,
+      );
+      return (await this.findInvitationsOf(user)).length === 0 ? false : true;
+    } catch (error) {
+      console.log(error);
+    }
+    return false;
   }
 }
