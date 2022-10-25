@@ -1,30 +1,39 @@
 <template>
   <div class="main_container">
-    <h2 style="text-align: center">
-      Welcome on fc_transcendance, please Log in
-    </h2>
+    <img
+      src="https://findicons.com/files/icons/1275/naruto_vol_1/256/uzumaki_naruto.png"
+      width="80"
+      height="80"
+      alt=""
+    />
+    <h1 style="text-align: center">SUP3RP0NG</h1>
     <form @submit.prevent="login" style="margin-bottom: 2em">
-      <label for="username">Username: </label>
       <input
+        class="input"
+        placeholder="Username"
         v-model="username"
         type="text"
         id="username"
         name="username"
         required
       /><br /><br />
-      <label for="password">Password: </label>
       <input
+        class="input"
+        placeholder="Password"
         v-model="password"
         type="password"
         id="password"
         name="password"
         required
       /><br /><br />
-      <input type="submit" value="Submit" />
+      <input type="submit" value="Connexion" class="button classic_login_btn" />
     </form>
-    <a id="login42" v-bind:href="intra_redirection"> Continue with 42 </a>
+    <hr class="solid divider" />
+    <a class="button pulse" v-bind:href="intra_redirection">
+      Continue with 42
+    </a>
     <ButtonComponent :link="intra_redirection" />
-    <h3>Or <a href="/signup">sign up</a></h3>
+    <a id="signup_link" ref="/signup">New account</a>
   </div>
   <!--   <div :style="{ color: login_failed_color }" v-if="login_failed_msg"> -->
   <div class="text-red" v-if="login_failed_msg">
@@ -155,22 +164,95 @@ export default defineComponent({
 </script>
 
 <style lang="scss">
-#login42 {
+img {
+  margin-top: 3rem;
+}
+h1 {
+  margin-top: 1rem;
+}
+.button {
   position: relative;
-  margin-left: 1em;
   height: auto;
-  width: 50%;
+  padding: 5px;
   color: #aa9e7d;
   border: 3px solid;
   border-image-slice: 1;
   border-image-source: linear-gradient(to bottom, #c1a36b, #635e4f);
   background: linear-gradient(to bottom right, #191e2a, #182121);
-  padding: 0;
 }
-#login42:hover {
-  background-color: auto;
-}
+
 .main_container {
-  background-color: pink;
+  //  https://i.gifer.com/QgxJ.gif
+  background-image: url("https://cdna.artstation.com/p/assets/images/images/015/582/594/4k/artur-sadlos-leg-never-sh270-background-as-v001.jpg?1548866512&dl=1");
+  background-size: cover;
+  border: 2px solid;
+  border-image-slice: 1;
+  border-image-source: linear-gradient(to bottom, #c1a36b, #635e4f);
+  border-radius: 10px;
+  box-shadow: 5px 5px 5px #5c5b58;
+  color: #aa9e7d;
+  width: 60rem;
+  margin: 10rem auto;
+}
+.input {
+  padding: 8px;
+  border-radius: 50px;
+  border-image-slice: 1;
+  border-image-source: linear-gradient(to bottom, #c1a36b, #635e4f);
+  border-radius: 10px;
+  width: 12rem;
+}
+#signup_link {
+  color: white;
+  display: block;
+  margin-top: 2rem;
+  margin-bottom: 3rem;
+  font-size: 20px;
+  text-decoration: underline;
+}
+.classic_login_btn {
+  width: 12rem;
+  margin-left: 0;
+}
+.divider {
+  margin: 2rem auto;
+  border-color: #aa9e7d;
+  width: 12rem;
+}
+// Animate the size, outside
+.pulse:hover,
+.pulse:focus {
+  animation: pulse 1s;
+  box-shadow: 0 0 0 2em transparent;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 var(--hover);
+  }
+}
+$colors: (
+  pulse: #aa9e7d,
+);
+
+// Sass variables compile to a static string; CSS variables are dynamic and inherited
+// Loop through the map and set CSS custom properties using Sass variables
+@each $button, $color in $colors {
+  .#{$button} {
+    --color: #{$color};
+    --hover: #{adjust-hue($color, 45deg)};
+  }
+}
+
+// Now every button will have different colors as set above. We get to use the same structure, only changing the custom properties.
+button {
+  color: var(--color);
+  transition: 0.25s;
+
+  &:hover,
+  &:focus {
+    border-color: var(--hover);
+    color: #fff;
+  }
 }
 </style>
