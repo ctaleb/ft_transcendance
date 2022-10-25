@@ -231,8 +231,8 @@ img {
   border-radius: 10px;
   box-shadow: 5px 5px 5px #5c5b58;
   color: #aa9e7d;
+  margin: 20rem auto;
   width: 60rem;
-  margin: 10rem auto;
 }
 .input {
   padding: 8px;
