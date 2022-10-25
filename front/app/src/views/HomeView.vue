@@ -52,6 +52,7 @@ import config from "../config/config";
 
 let funcs = require("../functions/funcs");
 export default defineComponent({
+  props: ["incomingFriendRequest"],
   data: () => {
     return {
       username: "",
@@ -73,6 +74,7 @@ export default defineComponent({
       login_failed_msg: ref(false),
     };
   },
+  emits: ["notification"],
   mounted() {
     let isConnected = funcs.isConnected(localStorage.getItem("token"));
     if (isConnected) this.$router.push("/portal");
