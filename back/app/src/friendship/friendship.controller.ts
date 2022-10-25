@@ -53,7 +53,7 @@ export class FriendshipController {
 
   @Put('block')
   block(@Request() req, @Body() friendshipDto: FriendshipDto) {
-    return this._friendshipService.blockFriendship(
+    return this._friendshipService.block(
       req.user.payload.nickname,
       friendshipDto.addressee,
     );

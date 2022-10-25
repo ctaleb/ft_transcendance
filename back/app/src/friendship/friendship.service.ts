@@ -49,9 +49,7 @@ export class FriendshipService {
       if (friendship) {
         if (friendship.status !== 'blocked')
           throw new FriendshipAlreadyExistsException();
-        else if (friendship.requesterId === req.id)
-          this._friendshipRepository.remove(friendship);
-        else throw new BlockedFriendshipException();
+        else throw new BlockedFriendshipException(); // if I blocked someone or the other way
       }
       const invitation: FriendshipEntity = this._friendshipRepository.create({
         requester: req,
@@ -224,7 +222,51 @@ export class FriendshipService {
     return result;
   }
 
-  async blockFriendship(
+  async block(requester: string, addressee: string): Promise<FriendshipEntity> {
+    let result: Promise<FriendshipEntity>;
+
+    try {
+      const req: UserEntity = await this._userService.getUserByNickname(
+        requester,
+      );
+      const adr: UserEntity = await this._userService.getUserByNickname(
+        addressee,
+      );
+      if (adr.id === req.id)
+        throw new BadRequestException(
+          'Requester and addressee are the same person',
+        );
+      const friendship = await this.findFriendship(req, adr);
+      if (friendship && friendship.status !== 'blocked') {
+        this._friendshipRepository.remove(friendship);
+        const blocked = this._friendshipRepository.create({
+          requester: req,
+          addressee: adr,
+          status: 'blocked',
+        });
+        result = this._friendshipRepository.save(blocked);
+      } else if (friendship === null) {
+        const blocked = this._friendshipRepository.create({
+          requester: req,
+          addressee: adr,
+          status: 'blocked',
+        });
+        result = this._friendshipRepository.save(blocked);
+      } else if (friendship.addresseeId === req.id) {
+        const blocked = this._friendshipRepository.create({
+          requester: req,
+          addressee: adr,
+          status: 'blocked',
+        });
+        result = this._friendshipRepository.save(blocked);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+    return result;
+  }
+
+  async unblock(
     requester: string,
     addressee: string,
   ): Promise<FriendshipEntity> {
@@ -241,21 +283,16 @@ export class FriendshipService {
         throw new BadRequestException(
           'Requester and addressee are the same person',
         );
-      const friendship = await this.findFriendship(req, adr);
-      if (
-        friendship &&
-        friendship.status === 'invitation' &&
-        friendship.requesterId === adr.id
-      ) {
+      const friendship = await this._friendshipRepository.findOneBy({
+        requesterId: req.id,
+        addresseeId: adr.id,
+        status: 'blocked',
+      });
+      if (friendship) {
         this._friendshipRepository.remove(friendship);
-        const blocked = this._friendshipRepository.create({
-          requester: req,
-          addressee: adr,
-          status: 'blocked',
-        });
-        result = this._friendshipRepository.save(blocked);
-      } else
+      } else {
         throw new BadRequestException('Friendship not found or wrong status');
+      }
     } catch (error) {
       console.log(error);
     }
