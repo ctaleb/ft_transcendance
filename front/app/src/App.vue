@@ -2,26 +2,32 @@
   <div>
     <div v-if="$route.path != '/' && $route.path != '/signup'">
       <nav>
-        <!-- <router-link to="/signin">Sign in</router-link> |
-			  <router-link to="/signup">Sign up</router-link> -->
         <router-link to="/portal">Portal</router-link> |
         <router-link to="/game">Game</router-link> |
-        <router-link to="/profile">Profile</router-link> |
-        <router-link to="/chat">Chat</router-link> |
+        <router-link to="/profile"
+          >Profile
+          <div
+            :class="'dot' + (this.profileNotificationBadge ? ' show' : '')"
+          ></div
+        ></router-link>
+
+        | <router-link to="/chat">Chat</router-link> |
         <router-link to="/users">All users</router-link> |
         <router-link to="/edit">Profile Editing</router-link> |
         <router-link to="/" v-on:click.prevent="logout()">Logout</router-link>
       </nav>
     </div>
-    <router-view />
+    <router-view @notification="changeNotificationValue" />
+    <friend-alert :requester-name="this.incomingFriendRequest" />
   </div>
 </template>
 
 <script lang="ts">
 import { store } from "./store";
-import { defineComponent } from "vue";
+import { defineComponent, watch } from "vue";
 import { io, Socket } from "socket.io-client";
 import config from "./config/config";
+import FriendAlert from "./components/FriendAlert.vue";
 console.log(config.socket.id);
 if (!config.socket.id && localStorage.getItem("user")) {
   console.log(config.socket);
@@ -44,6 +50,9 @@ export default defineComponent({
   data() {
     return {
       isConnected: store.isConnected,
+      socket: config.socket,
+      incomingFriendRequest: "",
+      profileNotificationBadge: false,
     };
   },
   methods: {
@@ -65,6 +74,9 @@ export default defineComponent({
       document.querySelector(".modal")?.classList.add("hidden");
       document.querySelector(".overlay")?.classList.add("hidden");
     },
+	changeNotificationValue(value: boolean) {
+	  this.profileNotificationBadge = value;
+	},
     handler: function handler() {
       // console.log("event recieved");
       // config.socket.emit("disco", {});
@@ -74,12 +86,56 @@ export default defineComponent({
         // path: "/api/socket.io/",
         autoConnect: false,
       });
-    },
   },
+  mounted() {
+    this.socket.on("friendshipInvite", (requester: string) => {
+      this.incomingFriendRequest = requester;
+      this.profileNotificationBadge = true;
+    });
+    watch(
+      () => this.$route.path,
+      () => {
+        if (
+          localStorage.getItem("token") &&
+          this.profileNotificationBadge === false
+        ) {
+          fetch(
+            "http://" +
+              window.location.hostname +
+              ":3000/api/friendship/has-invitations",
+            {
+              method: "GET",
+              headers: {
+                Authorization: "Bearer " + localStorage.getItem("token"),
+              },
+            }
+          )
+            .then((res) => {
+              return res.json();
+            })
+            .then((data) => {
+              this.profileNotificationBadge = data;
+            })
+            .catch((err) => {
+              console.log(err);
+              this.profileNotificationBadge = false;
+            });
+        }
+      }
+    );
+  },
+},
+  components: { FriendAlert },
 });
+
 </script>
 
 <style lang="scss">
+* {
+  background-color: #010b12;
+  color: #aa9e7d;
+}
+
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -93,10 +149,10 @@ nav {
 
   a {
     font-weight: bold;
-    color: #2c3e50;
+    color: #f0e68c;
 
     &.router-link-exact-active {
-      color: #42b983;
+      color: #d2691e;
     }
   }
 }
@@ -118,5 +174,34 @@ nav {
   background-color: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(3px);
   z-index: 5;
+}
+
+.dot {
+  display: none;
+  width: 10px;
+  height: 10px;
+  background: #e7d899;
+  border-radius: 50%;
+  animation: beat 2000ms infinite;
+  opacity: 60%;
+  box-shadow: 0 0 0 2px rgba(200, 150, 100, 1), 0 0 0 3px #e7d899;
+  margin-bottom: 3px;
+
+  &.show {
+    display: inline-block;
+  }
+}
+
+@keyframes beat {
+  0% {
+    box-shadow: 0 0 0 0px rgba(200, 150, 100, 1), 0 0 0 1px #e7d899;
+  }
+  50% {
+    box-shadow: 0 0 2px 3px rgba(140, 110, 80, 1), 0 0 0 4px #e7d899;
+    opacity: 100%;
+  }
+  100% {
+    box-shadow: 0 0 0 0px rgba(200, 150, 100, 1), 0 0 0 1px #e7d899;
+  }
 }
 </style>

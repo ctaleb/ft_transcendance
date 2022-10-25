@@ -108,7 +108,6 @@ export default defineComponent({
             .then((value: any) => {
               localStorage.setItem("token", value.token);
               localStorage.setItem("user", JSON.stringify(value.user));
-
               config.socket = io(
                 "http://" + window.location.hostname + ":3500",
                 {

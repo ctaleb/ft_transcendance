@@ -8,58 +8,66 @@ import {
   Delete,
   UseGuards,
   Put,
+  Request,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/authentication/jwt-auth.guard';
 import { FriendshipDto } from './friendship.dto';
 import { FriendshipService } from './friendship.service';
 
-// @UseGuards(JwtAuthGuard)
 @Controller('friendship')
+@UseGuards(JwtAuthGuard)
 export class FriendshipController {
   constructor(private readonly _friendshipService: FriendshipService) {}
 
   @Post('invite')
-  invite(@Body() friendshipDto: FriendshipDto) {
-    return this._friendshipService.invite(
-      friendshipDto.requester,
+  invite(@Request() req, @Body() friendshipDto: FriendshipDto) {
+    this._friendshipService.invite(
+      req.user.payload.nickname,
       friendshipDto.addressee,
     );
   }
 
   @Put('befriend')
-  befriend(@Body() friendshipDto: FriendshipDto) {
+  befriend(@Request() req, @Body() friendshipDto: FriendshipDto) {
     return this._friendshipService.befriend(
-      friendshipDto.requester,
+      req.user.payload.nickname,
       friendshipDto.addressee,
     );
   }
 
   @Delete('decline')
-  decline(@Body() friendshipDto: FriendshipDto) {
+  decline(@Request() req, @Body() friendshipDto: FriendshipDto) {
     return this._friendshipService.declineFriendship(
-      friendshipDto.requester,
+      req.user.payload.nickname,
       friendshipDto.addressee,
     );
   }
 
   @Delete('unfriend')
-  unfriend(@Body() friendshipDto: FriendshipDto) {
+  unfriend(@Request() req, @Body() friendshipDto: FriendshipDto) {
     return this._friendshipService.unfriend(
-      friendshipDto.requester,
+      req.user.payload.nickname,
       friendshipDto.addressee,
     );
   }
 
   @Put('block')
-  block(@Body() friendshipDto: FriendshipDto) {
+  block(@Request() req, @Body() friendshipDto: FriendshipDto) {
     return this._friendshipService.blockFriendship(
-      friendshipDto.requester,
+      req.user.payload.nickname,
       friendshipDto.addressee,
     );
   }
 
-  @Get(':username')
-  getRelations(@Param('username') username: string) {
-    return this._friendshipService.getRelationsOf(username);
+  @Get()
+  getRelations(@Request() req) {
+    return this._friendshipService.getRelationsOf(req.user.payload.nickname);
+  }
+
+  @Get('has-invitations')
+  hasInvitations(@Request() req) {
+    return this._friendshipService.hasPendingInvitations(
+      req.user.payload.nickname,
+    );
   }
 }

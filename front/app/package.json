@@ -8,10 +8,12 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "@fontsource/roboto": "^4.5.8",
     "@vuelidate/core": "^2.0.0-alpha.44",
     "@vuelidate/validators": "^2.0.0-alpha.31",
     "axios": "^0.27.2",
     "core-js": "^3.8.3",
+    "css.gg": "^2.0.0",
     "dayjs": "^1.11.5",
     "dotenv": "^16.0.3",
     "dotenv-webpack": "^8.0.1",
@@ -21,6 +23,7 @@
     "vue": "^3.2.39",
     "vue-3-socket.io": "^1.0.5",
     "vue-router": "^4.0.3",
+    "vue-video": "^0.1.7",
     "vuelidate": "^0.7.7"
   },
   "devDependencies": {

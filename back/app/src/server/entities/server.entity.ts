@@ -1,4 +1,5 @@
 import { Socket } from 'socket.io';
+import { MatchHistoryEntity } from './match_history.entity';
 
 export class IPoint {
   x: number;
@@ -68,22 +69,7 @@ export class Game {
   gameState: GameState;
   host: User;
   client: User;
-  gameSummary: GameSummary;
-}
-
-export class GameSummary {
-  hostName: string;
-  hostScore: number;
-  hostPower: string;
-  hostElo: number;
-  clientName: string;
-  clientScore: number;
-  clientPower: string;
-  clientElo: number;
-  eloChange: number;
-  gameMode: string;
-  gameTime: number;
-  gameDate: Date;
+  gameSummary: MatchHistoryEntity;
 }
 
 export class GameData {
