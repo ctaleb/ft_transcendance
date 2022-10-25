@@ -1,4 +1,9 @@
 <template>
+  <div id="backgroundVideo">
+    <video class="video" ref="video" autoplay loop muted>
+      <source src="../assets/homepageBackground.mp4" type="video/mp4" />
+    </video>
+  </div>
   <div class="main_container">
     <img
       src="https://findicons.com/files/icons/1275/naruto_vol_1/256/uzumaki_naruto.png"
@@ -6,7 +11,15 @@
       height="80"
       alt=""
     />
-    <h1 style="text-align: center">SUP3RP0NG</h1>
+    <h1 class="main_title">
+      <marquee
+        direction="right"
+        behavior="alternate"
+        style="border-left: #aa9e7d 4px SOLID; border-right: #aa9e7d 4px SOLID"
+      >
+        SUP3RP0NG
+      </marquee>
+    </h1>
     <form @submit.prevent="login" style="margin-bottom: 2em">
       <input
         class="input"
@@ -26,14 +39,20 @@
         name="password"
         required
       /><br /><br />
-      <input type="submit" value="Connexion" class="button classic_login_btn" />
+      <button
+        type="submit"
+        value="Connexion"
+        class="button classic_login_btn pulse"
+      >
+        Connexion
+      </button>
     </form>
     <hr class="solid divider" />
     <a class="button pulse" v-bind:href="intra_redirection">
       Continue with 42
     </a>
     <ButtonComponent :link="intra_redirection" />
-    <a id="signup_link" ref="/signup">New account</a>
+    <a id="signup_link" href="/signup">New account</a>
   </div>
   <!--   <div :style="{ color: login_failed_color }" v-if="login_failed_msg"> -->
   <div class="text-red" v-if="login_failed_msg">
@@ -43,17 +62,23 @@
 
 <script lang="ts">
 import { processExpression } from "@vue/compiler-core";
-import { defineComponent } from "vue";
+import { defineComponent, Ref } from "vue";
 import { ref } from "vue";
 import { io, Socket } from "socket.io-client";
 import config from "../config/config";
 
 let funcs = require("../functions/funcs");
 export default defineComponent({
+  computed: {
+    videoElement() {
+      return this.$refs.video;
+    },
+  },
   data: () => {
     return {
       username: "",
       password: "",
+      background_url: "../assets/stars.webm",
       intra_redirection:
         "https://api.intra.42.fr/oauth/authorize?client_id=" +
         process.env.VUE_APP_42_ID +
@@ -164,11 +189,26 @@ export default defineComponent({
 </script>
 
 <style lang="scss">
+@import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Press+Start+2P&display=swap");
+
+#backgroundVideo {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  min-width: 100%;
+  min-height: 100%;
+  z-index: -1;
+}
+
 img {
   margin-top: 3rem;
 }
-h1 {
-  margin-top: 1rem;
+.main_title {
+  //  font-family: "Press Start 2P", cursive;
+  font-family: "Orbitron", sans-serif;
+  margin: 1rem auto;
+  width: 20rem;
 }
 .button {
   position: relative;
@@ -196,9 +236,8 @@ h1 {
 }
 .input {
   padding: 8px;
-  border-radius: 50px;
-  border-image-slice: 1;
-  border-image-source: linear-gradient(to bottom, #c1a36b, #635e4f);
+  border-radius: 60px;
+  border: solid 3px #aa9e7d;
   border-radius: 10px;
   width: 12rem;
 }
@@ -223,7 +262,7 @@ h1 {
 .pulse:hover,
 .pulse:focus {
   animation: pulse 1s;
-  box-shadow: 0 0 0 2em transparent;
+  box-shadow: 0 0 0 0.5em transparent;
 }
 
 @keyframes pulse {
