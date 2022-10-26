@@ -1,4 +1,4 @@
-<template>
+<template @update-invitations="getRelations()">
   <div v-if="user != null" class="profileView">
     <p>Hello {{ user.nickname }} !</p>
     <p>Created at {{ user.createdAt }}</p>
@@ -47,6 +47,10 @@
     </div>
   </div>
   <p v-else>User = null</p>
+  <friend-alert
+    :requester-name="this.incomingFriendRequest"
+    @update-invitations="this.getRelations()"
+  />
 </template>
 
 <style lang="scss">
@@ -56,6 +60,7 @@
 <script lang="ts">
 import { ref, defineComponent } from "vue";
 let funcs = require("../functions/funcs");
+import FriendAlert from "../components/FriendAlert.vue";
 
 interface User {
   nickname: string;
@@ -64,8 +69,7 @@ interface User {
 }
 
 export default defineComponent({
-  emits: ["notification"],
-
+  props: ["incomingFriendRequest"],
   data() {
     return {
       user: JSON.parse(localStorage.getItem("user") || "{}"),
@@ -75,7 +79,7 @@ export default defineComponent({
       searchFriend: "",
     };
   },
-
+  emits: ["notification", "updateInvitations"],
   methods: {
     getRelations() {
       fetch("http://" + window.location.hostname + ":3000/api/friendship", {
@@ -249,5 +253,6 @@ export default defineComponent({
     });
     this.getRelations();
   },
+  components: { FriendAlert },
 });
 </script>
