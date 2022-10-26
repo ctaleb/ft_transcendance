@@ -127,7 +127,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss">
-* {
+body {
   background-color: #010b12;
   color: #aa9e7d;
 }
