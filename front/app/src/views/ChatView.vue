@@ -36,22 +36,26 @@
 
 <script setup lang="ts">
 import { io } from "socket.io-client";
-import { onBeforeMount, onMounted, ref } from "vue";
+import { Message } from "../../../../back/app/src/server/entities/server.entity";
+import { onBeforeMount, onMounted, reactive, ref } from "vue";
+import config from "../config/config";
 import FriendAlert from "../components/FriendAlert.vue";
 
 // const socket = io("http://" + window.location.hostname + ":3000");
 // console.log(window.location.hostname);
 
+const socket = config.socket;
+// const messages = ref([]);
 const props = defineProps(['incomingFriendRequest']);
 const emit = defineEmits(["notification"]);
-
-const messages = ref([]);
 const messageText = ref("");
 const joined = ref(false);
 const name = ref("");
 const room = ref("");
-const users = ref([]);
 // let room = "";
+
+let users: String[] = reactive<String[]>([]);
+let messages: Message[] = reactive<Message[]>([]);
 
 onBeforeMount(() => {
   // socket.on("newUser", (name) => {
@@ -72,16 +76,20 @@ const joinRoom = () => {
     joined.value = true;
   });
 
-  socket.emit("findAllMessages", { room: room.value }, (response) => {
-    messages.value = response;
+  socket.emit(
+    "findAllMessages",
+    { room: room.value },
+    (response: Message[]) => {
+      messages = response;
+    }
+  );
+
+  socket.emit("findAllUsers", { room: room.value }, (response: String[]) => {
+    users = response;
   });
 
-  socket.emit("findAllUsers", { room: room.value }, (response) => {
-    users.value = response;
-  });
-
-  socket.on("message", (message) => {
-    messages.value.push(message);
+  socket.on("message", (message: Message) => {
+    messages.push(message);
   });
 };
 
@@ -89,7 +97,7 @@ const sendMessage = () => {
   socket.emit(
     "createMessage",
     { message: messageText.value, room: room.value },
-    (response) => {
+    () => {
       messageText.value = "";
     }
   );
@@ -98,8 +106,8 @@ const sendMessage = () => {
 // let timer;
 const refreshUsers = () => {
   // timer = setTimeout(() => {
-  socket.emit("findAllUsers", { room: room.value }, (response) => {
-    users.value = response;
+  socket.emit("findAllUsers", { room: room.value }, (response: String[]) => {
+    users = response;
     console.log(users);
   });
   // }, 1000);

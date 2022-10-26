@@ -59,7 +59,7 @@ export class FriendshipService {
         status: 'invitation',
       });
       result = await this._friendshipRepository.save(invitation);
-      const invited = this._serverService.playerList.find(
+      const invited = this._serverService.userList.find(
         (element) => element.name === addressee,
       );
       invited?.socket.emit('friendshipInvite', requester);

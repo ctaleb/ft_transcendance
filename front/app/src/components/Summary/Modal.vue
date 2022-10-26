@@ -32,22 +32,22 @@ const emit = defineEmits<{
 </script>
 
 <style lang="scss" scoped>
-.modal::v-deep {
+.modal {
   display: flex;
   justify-content: space-between;
   color: #bcaf7b;
 
-  p,
-  h2,
-  h3 {
+  &:deep(p),
+  &:deep(h2),
+  &:deep(h3) {
     margin: 0;
   }
 
-  h2 {
+  &:deep(h2) {
     font-size: 2.5rem;
   }
 
-  h3 {
+  &:deep(h3) {
     font-weight: normal;
     font-size: 1.5rem;
     margin-bottom: 10px;

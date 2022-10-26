@@ -6,9 +6,7 @@
         <router-link to="/game">Game</router-link> |
         <router-link to="/profile"
           >Profile
-          <div
-            :class="'dot' + (this.profileNotificationBadge ? ' show' : '')"
-          ></div
+          <div :class="'dot' + (profileNotificationBadge ? ' show' : '')"></div
         ></router-link>
 
         | <router-link to="/chat">Chat</router-link> |
@@ -17,7 +15,10 @@
         <router-link to="/" v-on:click.prevent="logout()">Logout</router-link>
       </nav>
     </div>
-    <router-view @notification="changeNotificationValue" :incoming-friend-request="incomingFriendRequest" />
+    <router-view
+      @notification="changeNotificationValue"
+      :incoming-friend-request="incomingFriendRequest"
+    />
   </div>
 </template>
 
@@ -26,17 +27,24 @@ import { store } from "./store";
 import { defineComponent, watch } from "vue";
 import { io, Socket } from "socket.io-client";
 import config from "./config/config";
-
 if (!config.socket.id && localStorage.getItem("user")) {
-  config.socket = io("http://" + window.location.hostname + ":3000", {
+  console.log(config.socket);
+  config.socket = io("http://" + window.location.hostname + ":3500", {
     auth: {
       token: localStorage.getItem("token"),
       user: JSON.parse(localStorage.getItem("user") || "{}"),
     },
+    // path: "/api/socket.io/",
+    transports: ["websocket"],
+    autoConnect: false,
   });
+  config.socket.connect();
+  console.log(config.socket.id);
 }
-
 export default defineComponent({
+  created() {
+    window.addEventListener("beforeunload", this.handler);
+  },
   data() {
     return {
       isConnected: store.isConnected,
@@ -50,6 +58,11 @@ export default defineComponent({
       localStorage.removeItem("token");
       localStorage.removeItem("user");
       config.socket.emit("disco", {});
+      config.socket = io("http://" + window.location.hostname + ":3500", {
+        transports: ["websocket"],
+        // path: "/api/socket.io/",
+        autoConnect: false,
+      });
     },
     openModal() {
       document.querySelector(".modal")?.classList.remove("hidden");
@@ -62,43 +75,53 @@ export default defineComponent({
     changeNotificationValue(value: boolean) {
       this.profileNotificationBadge = value;
     },
-  },
-  mounted() {
-    this.socket.on("friendshipInvite", (requester: string) => {
-      this.incomingFriendRequest = requester;
-      this.profileNotificationBadge = true;
-    });
-    watch(
-      () => this.$route.path,
-      () => {
-        if (
-          localStorage.getItem("token") &&
-          this.profileNotificationBadge === false
-        ) {
-          fetch(
-            "http://" +
-              window.location.hostname +
-              ":3000/api/friendship/has-invitations",
-            {
-              method: "GET",
-              headers: {
-                Authorization: "Bearer " + localStorage.getItem("token"),
-              },
-            }
-          )
-            .then((res) => {
-              return res.json();
-            })
-            .then((data) => {
-              this.profileNotificationBadge = data;
-            })
-            .catch((err) => {
-              console.log(err);
-              this.profileNotificationBadge = false;
-            });
+    handler: function handler() {
+      // console.log("event recieved");
+      // config.socket.emit("disco", {});
+      config.socket.disconnect;
+      config.socket = io("http://" + window.location.hostname + ":3500", {
+        transports: ["websocket"],
+        // path: "/api/socket.io/",
+        autoConnect: false,
+      });
+    },
+    mounted() {
+      this.socket.on("friendshipInvite", (requester: string) => {
+        this.incomingFriendRequest = requester;
+        this.profileNotificationBadge = true;
+      });
+      watch(
+        () => this.$route.path,
+        () => {
+          if (
+            localStorage.getItem("token") &&
+            this.profileNotificationBadge === false
+          ) {
+            fetch(
+              "http://" +
+                window.location.hostname +
+                ":3000/api/friendship/has-invitations",
+              {
+                method: "GET",
+                headers: {
+                  Authorization: "Bearer " + localStorage.getItem("token"),
+                },
+              }
+            )
+              .then((res) => {
+                return res.json();
+              })
+              .then((data) => {
+                this.profileNotificationBadge = data;
+              })
+              .catch((err) => {
+                console.log(err);
+                this.profileNotificationBadge = false;
+              });
+          }
         }
-      }
-    );
+      );
+    },
   },
 });
 </script>
@@ -132,6 +155,10 @@ nav {
 
 .text-red {
   color: red;
+}
+
+.hidden {
+  display: none;
 }
 
 .overlay {

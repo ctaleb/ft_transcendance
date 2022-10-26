@@ -110,14 +110,16 @@ export default defineComponent({
             .then((value: any) => {
               localStorage.setItem("token", value.token);
               localStorage.setItem("user", JSON.stringify(value.user));
-              config.hsToken = value.token;
-              config.hsNick = value.user;
               config.socket = io(
-                "http://" + window.location.hostname + ":3000",
+                "http://" + window.location.hostname + ":3500",
                 {
-                  auth: { token: config.hsToken, user: config.hsNick },
+                  auth: { token: value.token, user: value.user },
+                  // path: "/api/socket.io/",
+                  transports: ["websocket"],
+                  autoConnect: false,
                 }
               );
+              config.socket.connect();
               this.$router.push("/portal");
             })
             .catch((err) => console.log(err));
@@ -151,11 +153,14 @@ export default defineComponent({
           localStorage.setItem("token", value.token);
           localStorage.setItem("user", JSON.stringify(value.user));
           setTimeout(() => {}, 2000);
-          config.hsToken = value.token;
-          config.hsNick = value.user;
-          config.socket = io("http://" + window.location.hostname + ":3000", {
-            auth: { token: config.hsToken, user: config.hsNick },
+
+          config.socket = io("http://" + window.location.hostname + ":3500", {
+            auth: { token: value.token, user: value.user },
+            // path: "/api/socket.io/",
+            transports: ["websocket"],
+            autoConnect: false,
           });
+          config.socket.connect();
           this.$router.push("/portal");
         })
         .catch((error) => {
