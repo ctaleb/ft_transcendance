@@ -17,8 +17,7 @@
         <router-link to="/" v-on:click.prevent="logout()">Logout</router-link>
       </nav>
     </div>
-    <router-view @notification="changeNotificationValue" />
-    <friend-alert :requester-name="this.incomingFriendRequest" />
+    <router-view @notification="changeNotificationValue" :incoming-friend-request="incomingFriendRequest" />
   </div>
 </template>
 
@@ -27,7 +26,6 @@ import { store } from "./store";
 import { defineComponent, watch } from "vue";
 import { io, Socket } from "socket.io-client";
 import config from "./config/config";
-import FriendAlert from "./components/FriendAlert.vue";
 
 if (!config.socket.id && localStorage.getItem("user")) {
   config.socket = io("http://" + window.location.hostname + ":3000", {
@@ -102,7 +100,6 @@ export default defineComponent({
       }
     );
   },
-  components: { FriendAlert },
 });
 </script>
 

@@ -32,7 +32,7 @@ export class FriendshipService {
     requester: string,
     addressee: string,
   ): Promise<FriendshipEntity> {
-    let result: Promise<FriendshipEntity>;
+    let result: FriendshipEntity;
 
     try {
       const req: UserEntity = await this._userService.getUserByNickname(
@@ -56,7 +56,7 @@ export class FriendshipService {
         addressee: adr,
         status: 'invitation',
       });
-      result = this._friendshipRepository.save(invitation);
+      result = await this._friendshipRepository.save(invitation);
       const invited = this._serverService.playerList.find(
         (element) => element.name === addressee,
       );
