@@ -43,6 +43,7 @@
           </button>
         </div>
         <p>{{ friend.nickname }}</p>
+        <button style="color: white" @click="privateConv(friend)">Chat</button>
       </span>
     </div>
   </div>
@@ -61,6 +62,8 @@
 import { ref, defineComponent } from "vue";
 let funcs = require("../functions/funcs");
 import FriendAlert from "../components/FriendAlert.vue";
+import config from "../config/config";
+const socket = config.socket;
 
 interface User {
   nickname: string;
@@ -79,7 +82,7 @@ export default defineComponent({
       searchFriend: "",
     };
   },
-  emits: ["notification", "updateInvitations"],
+  emits: ["notification", "updateInvitations", "createPrivateConv"],
   methods: {
     getRelations() {
       fetch("http://" + window.location.hostname + ":3000/api/friendship", {
@@ -243,9 +246,19 @@ export default defineComponent({
         })
         .catch((err) => console.log(err));
     },
+    privateConv(friend: User) {
+      console.log("Need to launch the conv");
+      socket.emit("createPrivateConv", {
+        message: "Hey the serv, can you crete a conv please ?",
+        friend: friend,
+      });
+    },
   },
 
   mounted() {
+    socket.on("Message to the client", (requester: string) => {
+      console.log(requester);
+    });
     funcs.getUserById(this.user.id).then((data: any) => {
       funcs.getUserAvatar(data.path).then((data: any) => {
         this.image = URL.createObjectURL(data);

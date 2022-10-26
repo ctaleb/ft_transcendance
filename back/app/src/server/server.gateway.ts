@@ -255,4 +255,19 @@ export class ServerGateway
     );
     if (player) player.status = 'idle';
   }
+
+  //Private conv version Lolo
+  @SubscribeMessage('createPrivateConv')
+  handleMessage(
+    client: Socket,
+    @MessageBody('message') message: string,
+    @MessageBody('friend') friend: UserEntity,
+  ): void {
+    console.log('The payload is  --> ');
+    console.log(message);
+    console.log(friend);
+    this.server.emit('Message to the client', {
+      message: 'This is sent by server to the client',
+    });
+  }
 }
