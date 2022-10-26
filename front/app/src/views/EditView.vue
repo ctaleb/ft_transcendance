@@ -63,14 +63,17 @@
       DELETE MY ACCOUNT
     </button>
   </div>
+  <friend-alert :requester-name="this.incomingFriendRequest" />
 </template>
 
 <script lang="ts">
 import userCardComponentVue from "@/components/userCardComponent.vue";
 import { defineComponent, ref } from "vue";
+import FriendAlert from "../components/FriendAlert.vue";
 let funcs = require("../functions/funcs");
 
 export default defineComponent({
+  props: ['incomingFriendRequest'],
   data() {
     return {
       user: JSON.parse(localStorage.getItem("user") || "{}"),
@@ -87,7 +90,7 @@ export default defineComponent({
       updatePasswordSuccess: ref(false),
     };
   },
-
+  emits: ["notification"],
   mounted() {
     funcs.getUserById(this.user.id).then((data: any) => {
       this.avatar = data.path;
@@ -96,7 +99,7 @@ export default defineComponent({
       });
     });
   },
-
+  components: { FriendAlert },
   methods: {
     async updateNickname() {
       let fetch_ret = await fetch(
