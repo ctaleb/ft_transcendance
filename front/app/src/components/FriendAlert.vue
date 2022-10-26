@@ -8,12 +8,15 @@
 
 <script setup lang="ts">
 import { onMounted, Ref, ref, watch } from "vue";
+import { useRoute } from "vue-router";
 import follow_alert_src from "../assets/alert_follow.webm";
 
 const videoPlayer: Ref<HTMLVideoElement | null> = ref(null);
 const show = ref(false);
+const route = useRoute();
 
 const props = defineProps(["requesterName"]);
+const emit = defineEmits(["updateInvitations"]);
 
 onMounted(() => {
   let play = () => {
@@ -37,6 +40,9 @@ onMounted(() => {
     () => props.requesterName,
     () => {
       play();
+      if (route.path === "/profile") {
+        emit("updateInvitations");
+      }
     }
   );
 });
@@ -64,21 +70,23 @@ onMounted(() => {
   .alert-top-element {
     position: absolute;
     left: 25%;
-    top: 35%;
+    top: 34%;
     width: 50%;
     z-index: 5;
     color: white;
     font-size: 1.4em;
+    background-color: transparent;
   }
 
   .alert-bot-element {
     position: absolute;
     left: 25%;
-    top: 45%;
+    top: 44%;
     width: 50%;
     z-index: 5;
     color: white;
     font-size: 1.4em;
+    background-color: transparent;
   }
 
   & > video {

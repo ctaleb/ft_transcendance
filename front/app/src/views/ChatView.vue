@@ -29,6 +29,7 @@
       </div>
     </div>
   </div>
+  <friend-alert :requester-name="props.incomingFriendRequest" />
 </template>
 
 <style></style>
@@ -38,12 +39,15 @@ import { io } from "socket.io-client";
 import { Message } from "../../../../back/app/src/server/entities/server.entity";
 import { onBeforeMount, onMounted, reactive, ref } from "vue";
 import config from "../config/config";
+import FriendAlert from "../components/FriendAlert.vue";
 
 // const socket = io("http://" + window.location.hostname + ":3000");
 // console.log(window.location.hostname);
 
 const socket = config.socket;
 // const messages = ref([]);
+const props = defineProps(['incomingFriendRequest']);
+const emit = defineEmits(["notification"]);
 const messageText = ref("");
 const joined = ref(false);
 const name = ref("");
