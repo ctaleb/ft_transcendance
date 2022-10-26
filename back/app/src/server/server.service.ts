@@ -1,21 +1,24 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { CreateMessageDto } from './dto/create-message.dto';
 import {
   ChatRoom,
   Game,
   GameRoom,
-  Player,
+  User,
   IBar,
   IBall,
   IPoint,
   IPower,
   GameState,
-  GameSummary,
   PowerElastico,
   GameOptions,
 } from './entities/server.entity';
 import { Server, Socket } from 'socket.io';
 import { UserEntity } from 'src/user/user.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { MatchHistoryEntity } from './entities/match_history.entity';
+import { DeepPartial, Repository } from 'typeorm';
+import { UserService } from 'src/user/user.service';
 
 const chargeMax = 1;
 const ballSize = 16;
@@ -23,8 +26,8 @@ const barSize: IPoint = { x: 50, y: 10 };
 
 @Injectable()
 export class ServerService {
-  playerList: Player[] = [];
-  playerQueue: Player[] = [];
+  userList: User[] = [];
+  playerQueue: User[] = [];
   rooms: ChatRoom[] = [];
   games: Game[] = [];
 
@@ -32,40 +35,54 @@ export class ServerService {
 
   server: Server = null;
 
+  constructor(
+    @InjectRepository(MatchHistoryEntity)
+    private _matchHistoryRepository: Repository<MatchHistoryEntity>,
+    @Inject(forwardRef(() => UserService))
+    private _userService: UserService,
+  ) {}
+
   //generic stuff
-  newUser(token: string, user: UserEntity) {
-    const player: Player = {
+  newUser(token: string, user: string, sock?: Socket) {
+    const newUser: User = {
       token: token,
-      input: [],
-      left: false,
-      right: false,
-      name: user.nickname,
       socket: null,
-      elo: 0,
+      name: user,
       status: 'idle',
-      smashLeft: 0,
-      smashRight: 0,
-      power: new IPower('init'),
+      gameData: {
+        input: [],
+        left: false,
+        right: false,
+        elo: 0,
+        smashLeft: 0,
+        smashRight: 0,
+        status: 'idle',
+        power: new IPower('init'),
+      },
+      chatData: {
+        RoomList: [],
+      },
     };
-    this.playerList.push(player);
+    if (sock) newUser.socket = sock;
+    this.userList.push(newUser);
   }
 
-  reloadUser(token: string, user: string, sock: Socket) {
-    const player: Player = {
-      token: token,
-      input: [],
-      left: false,
-      right: false,
-      name: user,
-      socket: sock,
-      elo: 0,
-      status: 'idle',
-      smashLeft: 0,
-      smashRight: 0,
-      power: new IPower('init'),
-    };
-    this.playerList.push(player);
-  }
+  //   reloadUser(token: string, user: string, sock: Socket) {
+  //     const player: Player = {
+  //       token: token,
+  //       input: [],
+  //       left: false,
+  //       right: false,
+  //       name: user,
+  //       socket: sock,
+  //       elo: 0,
+  //       status: 'idle',
+  //       smashLeft: 0,
+  //       smashRight: 0,
+  //       power: '',
+  //     };
+  //     this.userList.push(player);
+  //   }
 
   //chat stuff
   identify(name: string, clientId: string, room: string) {
@@ -100,39 +117,35 @@ export class ServerService {
   }
 
   //game stuff
-  elo_calc(winner: Player, loser: Player) {
-    const diff = Math.round((winner.elo - loser.elo) / 10);
+  elo_calc(winner: User, loser: User) {
+    const diff = Math.round((winner.gameData.elo - loser.gameData.elo) / 10);
     const elo = 10 - diff;
-    winner.elo += elo;
-    loser.elo -= elo;
+    winner.gameData.elo += elo;
+    loser.gameData.elo -= elo;
     return elo;
   }
 
-  inverseSummary(summary: GameSummary) {
-    const inversedSummary: GameSummary = {
-      hostName: summary.clientName,
-      hostScore: summary.clientScore,
-      hostPower: summary.clientPower,
-      hostElo: summary.clientElo,
-      clientElo: summary.hostElo,
-      clientName: summary.hostName,
-      clientPower: summary.hostPower,
-      clientScore: summary.hostScore,
-      eloChange: summary.eloChange,
-      gameMode: summary.gameMode,
-      gameTime: summary.gameTime,
-      gameDate: summary.gameDate,
-    };
-
+  async inverseSummary(summary: MatchHistoryEntity) {
+    const inversedSummary: MatchHistoryEntity = JSON.parse(
+      JSON.stringify(summary),
+    ); // deep copy
+    inversedSummary.client = summary.host;
+    inversedSummary.clientElo = summary.hostElo;
+    inversedSummary.clientPower = summary.hostPower;
+    inversedSummary.clientScore = summary.hostScore;
+    inversedSummary.host = summary.client;
+    inversedSummary.hostElo = summary.clientElo;
+    inversedSummary.hostPower = summary.clientPower;
+    inversedSummary.hostScore = summary.clientScore;
     return inversedSummary;
   }
 
-  end_game(game: Game) {
+  async end_game(game: Game) {
     game.room.status = 'gameOver';
     let elo = 0;
     if (game.gameState.score.client >= game.room.options.scoreMax) {
       elo = this.elo_calc(game.client, game.host);
-      this.summarize(game, elo);
+      await this.summarize(game, elo);
       game.host.socket.emit('Lose', game.room, elo, game.gameSummary);
       game.client.socket.emit(
         'Win',
@@ -142,7 +155,7 @@ export class ServerService {
       );
     } else if (game.gameState.score.host >= game.room.options.scoreMax) {
       elo = this.elo_calc(game.host, game.client);
-      this.summarize(game, elo);
+      await this.summarize(game, elo);
       game.host.socket.emit('Win', game.room, elo, game.gameSummary);
       game.client.socket.emit(
         'Lose',
@@ -156,7 +169,7 @@ export class ServerService {
     this.games.splice(this.games.indexOf(game), 1);
   }
 
-  forfeit_game(winner: Player, loser: Player, game: Game) {
+  forfeit_game(winner: User, loser: User, game: Game) {
     const elo = this.elo_calc(winner, loser);
     this.summarize(game, elo);
     winner.socket.emit('Win', game.room, elo, game.gameSummary);
@@ -164,20 +177,20 @@ export class ServerService {
     game.host.status = 'idle';
     game.client.status = 'idle';
     this.games.splice(this.games.indexOf(game), 1);
-    this.playerList.splice(this.playerList.indexOf(loser), 1);
+    this.userList.splice(this.userList.indexOf(loser), 1);
   }
 
-  reconnect(player: Player) {
+  reconnect(player: User) {
     let game = this.games.find((element) => element.host.name === player.name);
     if (!game)
-      game = this.games.find((element) => element.host.name === player.name);
+      game = this.games.find((element) => element.client.name === player.name);
     if (game) {
       player.socket.emit('reconnect', game.room);
       player.socket.join(game.room.name);
     }
   }
 
-  newGame(client: Player) {
+  newGame(client: User) {
     const newGame = {
       room: {
         name: '',
@@ -225,20 +238,7 @@ export class ServerService {
       },
       host: this.playerQueue.shift(),
       client: client,
-      gameSummary: {
-        hostName: '',
-        hostScore: 0,
-        hostPower: '',
-        hostElo: 0,
-        clientName: '',
-        clientScore: 0,
-        clientPower: '',
-        clientElo: 0,
-        eloChange: 0,
-        gameMode: '',
-        gameTime: 0,
-        gameDate: new Date(),
-      },
+      gameSummary: null,
     };
     this.initPower(
       newGame.client,
@@ -265,7 +265,7 @@ export class ServerService {
 
   printList() {
     console.log('~~ player list ~~');
-    this.playerList.forEach((element) => {
+    this.userList.forEach((element) => {
       console.log(element.name);
     });
     console.log('~~ player queue ~~');
@@ -280,40 +280,52 @@ export class ServerService {
     });
   }
 
-  initPower(player: Player, gameState: GameState, bar: IBar) {
-    if (player.power.name == 'elastico')
-      player.power = new PowerElastico(bar, player.power.name);
+  initPower(user: User, gameState: GameState, bar: IBar) {
+    if (user.gameData.power.name == 'elastico')
+      user.gameData.power = new PowerElastico(bar, user.gameData.power.name);
   }
 
   handlePower(game: Game) {
-    game.client.power.handle();
-    game.host.power.handle();
+    game.client.gameData.power.handle();
+    game.host.gameData.power.handle();
   }
 
   SocketToPlayer(socket: Socket) {
-    const player = this.playerList.find((element) => element.socket === socket);
+    const player = this.userList.find((element) => element.socket === socket);
     if (player) return player;
     return;
   }
 
-  summarize(game: Game, elo: number) {
-    game.gameSummary.clientName = game.client.name;
-    game.gameSummary.clientElo = game.client.elo;
-    game.gameSummary.clientPower = game.client.power.name;
-    game.gameSummary.clientScore = game.gameState.score.client;
-    game.gameSummary.hostName = game.host.name;
-    game.gameSummary.hostElo = game.host.elo;
-    game.gameSummary.hostPower = game.host.power.name;
-    game.gameSummary.hostScore = game.gameState.score.host;
-    game.gameSummary.eloChange = elo;
-    game.gameSummary.gameTime =
-      new Date().getTime() - game.gameSummary.gameDate.getTime();
+  async summarize(game: Game, elo: number) {
+    try {
+      const host: UserEntity = await this._userService.getUserByNickname(
+        game.host.name,
+      );
+      const client: UserEntity = await this._userService.getUserByNickname(
+        game.client.name,
+      );
+      const match = this._matchHistoryRepository.create({
+        host,
+        client,
+        hostScore: game.gameState.score.host,
+        hostPower: game.host.gameData.power.name,
+        hostElo: game.host.gameData.elo,
+        clientScore: game.gameState.score.client,
+        clientPower: game.client.gameData.power.name,
+        clientElo: game.client.gameData.elo,
+        eloChange: elo,
+        gameMode: '',
+      });
+      game.gameSummary = await this._matchHistoryRepository.save(match);
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   joinQueue(socket: Socket, powerName: string) {
-    const player = this.playerList.find((element) => element.socket === socket);
+    const player = this.userList.find((element) => element.socket === socket);
     if (!player) return;
-    player.power = new IPower(powerName);
+    player.gameData.power = new IPower(powerName);
     if (this.playerQueue.find((element) => element === player))
       this.playerQueue.splice(this.playerQueue.indexOf(player), 1);
     if (this.playerQueue.length < 1) {
@@ -333,54 +345,65 @@ export class ServerService {
   }
 
   storeInput(socket: Socket, key: string) {
-    const player = this.playerList.find((element) => element.socket === socket);
-    if (player) player.input.push(key);
+    const player = this.userList.find((element) => element.socket === socket);
+    if (player) player.gameData.input.push(key);
   }
 
   updateMoveStatus(
-    player: Player,
+    player: User,
     bar: IBar,
     playerType: string,
-    gameState: GameState,
     gameOptions: GameOptions,
   ) {
-    player.input.forEach((input) => {
-      if (input === 'downSpace' && gameOptions.powers) player.power.active();
-      else if (input === 'downRight')
-        playerType === 'host' ? (player.right = true) : (player.left = true);
+    player.gameData.input.forEach((input) => {
+      if (input === 'downRight')
+        playerType === 'host'
+          ? (player.gameData.right = true)
+          : (player.gameData.left = true);
       else if (input === 'downLeft')
-        playerType === 'host' ? (player.left = true) : (player.right = true);
+        playerType === 'host'
+          ? (player.gameData.left = true)
+          : (player.gameData.right = true);
       else if (input === 'upRight')
-        playerType === 'host' ? (player.right = false) : (player.left = false);
+        playerType === 'host'
+          ? (player.gameData.right = false)
+          : (player.gameData.left = false);
       else if (input === 'upLeft')
-        playerType === 'host' ? (player.left = false) : (player.right = false);
+        playerType === 'host'
+          ? (player.gameData.left = false)
+          : (player.gameData.right = false);
       else if (input === 'downA' && gameOptions.smashes) {
-        player.smashLeft = 0.01;
-        player.smashRight = 0;
+        player.gameData.smashLeft = 0.01;
+        player.gameData.smashRight = 0;
         bar.smashing = true;
       } else if (input === 'downD' && gameOptions.smashes) {
-        player.smashRight = 0.01;
-        player.smashLeft = 0;
+        player.gameData.smashRight = 0.01;
+        player.gameData.smashLeft = 0;
         bar.smashing = true;
       } else if (input === 'upA') {
-        player.smashLeft = 0;
+        player.gameData.smashLeft = 0;
         bar.smashing = false;
       } else if (input === 'upD') {
-        player.smashRight = 0;
+        player.gameData.smashRight = 0;
         bar.smashing = false;
       }
     });
-    player.input = [];
+    player.gameData.input = [];
   }
 
-  moveBar(bar: IBar, player: Player, factor: number) {
+  moveBar(bar: IBar, player: User, factor: number) {
     const speedLimit =
-      player.smashLeft > 0 || player.smashRight > 0 ? 2 * factor : 7 * factor;
-    if ((player.left && player.right) || (!player.left && !player.right))
+      player.gameData.smashLeft > 0 || player.gameData.smashRight > 0
+        ? 2 * factor
+        : 7 * factor;
+    if (
+      (player.gameData.left && player.gameData.right) ||
+      (!player.gameData.left && !player.gameData.right)
+    )
       bar.speed = 0;
-    else if (player.left && !player.right) {
+    else if (player.gameData.left && !player.gameData.right) {
       if (bar.speed > -speedLimit) bar.speed -= 1;
-    } else if (!player.left && player.right) {
+    } else if (!player.gameData.left && player.gameData.right) {
       if (bar.speed < speedLimit) bar.speed += 1;
     }
 
@@ -410,8 +433,8 @@ export class ServerService {
     clientBar: IBar,
     ball: IBall,
     room: GameRoom,
-    host: Player,
-    client: Player,
+    host: User,
+    client: User,
   ) {
     const M =
       Math.sqrt(Math.pow(ball.speed.x, 2) + Math.pow(ball.speed.y, 2)) /
@@ -431,23 +454,23 @@ export class ServerService {
           );
           console.log(
             'Smash power (L/R) : ' +
-              client.smashLeft +
+              client.gameData.smashLeft +
               ' & ' +
-              client.smashRight,
+              client.gameData.smashRight,
           );
-          client.power.handle();
-          if (client.smashLeft > 0) {
-            ball.speed.x = 1 * M + client.smashLeft;
-            ball.speed.y = 1 * M + client.smashLeft;
-          } else if (client.smashRight > 0) {
-            ball.speed.x = -1 * M - client.smashRight;
-            ball.speed.y = 1 * M + client.smashRight;
+          client.gameData.power.handle();
+          if (client.gameData.smashLeft > 0) {
+            ball.speed.x = 1 * M + client.gameData.smashLeft;
+            ball.speed.y = 1 * M + client.gameData.smashLeft;
+          } else if (client.gameData.smashRight > 0) {
+            ball.speed.x = -1 * M - client.gameData.smashRight;
+            ball.speed.y = 1 * M + client.gameData.smashRight;
           } else {
             ball.speed.y *= -1;
           }
           clientBar.smashing = false;
-          client.smashLeft = 0;
-          client.smashRight = 0;
+          client.gameData.smashLeft = 0;
+          client.gameData.smashRight = 0;
           room.barCollide = true;
           this.storeEffect(clientBar, room);
           console.log(
@@ -464,25 +487,19 @@ export class ServerService {
           ball.pos.x > hostBar.pos.x - hostBar.size.x - ball.size
         ) {
           console.log('Host = ');
-          // console.log(
-          //   'initial ball speed : ' + ball.speed.x + ' & ' + ball.speed.y,
-          // );
-          // console.log(
-          //   'Smash power (L/R) : ' + host.smashLeft + ' & ' + host.smashRight,
-          // );
-          host.power.handle();
-          if (host.smashLeft > 0) {
-            ball.speed.x = -1 * M - host.smashLeft;
-            ball.speed.y = 1 * M + host.smashLeft;
-          } else if (host.smashRight > 0) {
-            ball.speed.x = 1 * M + host.smashRight;
-            ball.speed.y = 1 * M + host.smashRight;
+          host.gameData.power.handle();
+          if (host.gameData.smashLeft > 0) {
+            ball.speed.x = -1 * M - host.gameData.smashLeft;
+            ball.speed.y = 1 * M + host.gameData.smashLeft;
+          } else if (host.gameData.smashRight > 0) {
+            ball.speed.x = 1 * M + host.gameData.smashRight;
+            ball.speed.y = 1 * M + host.gameData.smashRight;
           } else {
             ball.speed.y *= -1;
           }
           hostBar.smashing = false;
-          host.smashLeft = 0;
-          host.smashRight = 0;
+          host.gameData.smashLeft = 0;
+          host.gameData.smashRight = 0;
           room.barCollide = true;
           this.storeEffect(hostBar, room);
           // console.log(
@@ -603,14 +620,14 @@ export class ServerService {
 
   //need optional parameter speed
   getRandomStart() {
-    // const random = Math.random() * 3 + 1;
-    // const pos: IPoint = {
-    //   x: (4 - random) * (Math.round(Math.random()) * 2 - 1),
-    //   y: random * (Math.round(Math.random()) * 2 - 1),
-    // };
-    // return pos;
-    const pos: IPoint = { x: 0, y: 1 };
+    const random = Math.random() * 3 + 1;
+    const pos: IPoint = {
+      x: (4 - random) * (Math.round(Math.random()) * 2 - 1),
+      y: random * (Math.round(Math.random()) * 2 - 1),
+    };
     return pos;
+    // const pos: IPoint = { x: 0, y: 1 };
+    // return pos;
   }
 
   resetGameState(game: Game) {
@@ -625,16 +642,16 @@ export class ServerService {
     game.room.barCollide = false;
     game.room.sideCollide = false;
     game.room.effect = 'null';
-    game.host.smashLeft = 0;
-    game.host.smashRight = 0;
-    game.host.input = [];
-    game.host.left = false;
-    game.host.right = false;
-    game.client.smashLeft = 0;
-    game.client.smashRight = 0;
-    game.client.input = [];
-    game.client.left = false;
-    game.client.right = false;
+    game.host.gameData.smashLeft = 0;
+    game.host.gameData.smashRight = 0;
+    game.host.gameData.input = [];
+    game.host.gameData.left = false;
+    game.host.gameData.right = false;
+    game.client.gameData.smashLeft = 0;
+    game.client.gameData.smashRight = 0;
+    game.client.gameData.input = [];
+    game.client.gameData.left = false;
+    game.client.gameData.right = false;
   }
 
   startRound(room: GameRoom) {
@@ -657,23 +674,32 @@ export class ServerService {
   }
 
   nadal(ball: IBall, effect: string) {
-    if (effect === 'doLeft') this.rotateVector(ball.speed, 0.3);
-    else if (effect === 'doRight') this.rotateVector(ball.speed, -0.3);
+    if (effect === 'doLeft') this.rotateVector(ball.speed, 0.5);
+    else if (effect === 'doRight') this.rotateVector(ball.speed, -0.5);
   }
 
   chargeUp(game: Game) {
-    if (game.client.smashLeft > 0 && game.client.smashLeft < chargeMax) {
-      game.client.smashLeft += 0.01;
-    } else if (
-      game.client.smashRight > 0 &&
-      game.client.smashRight < chargeMax
+    if (
+      game.client.gameData.smashLeft > 0 &&
+      game.client.gameData.smashLeft < chargeMax
     ) {
-      game.client.smashRight += 0.01;
+      game.client.gameData.smashLeft += 0.01;
+    } else if (
+      game.client.gameData.smashRight > 0 &&
+      game.client.gameData.smashRight < chargeMax
+    ) {
+      game.client.gameData.smashRight += 0.01;
     }
-    if (game.host.smashLeft > 0 && game.host.smashLeft < chargeMax) {
-      game.host.smashLeft += 0.01;
-    } else if (game.host.smashRight > 0 && game.host.smashRight < chargeMax) {
-      game.host.smashRight += 0.01;
+    if (
+      game.host.gameData.smashLeft > 0 &&
+      game.host.gameData.smashLeft < chargeMax
+    ) {
+      game.host.gameData.smashLeft += 0.01;
+    } else if (
+      game.host.gameData.smashRight > 0 &&
+      game.host.gameData.smashRight < chargeMax
+    ) {
+      game.host.gameData.smashRight += 0.01;
     }
   }
 
@@ -684,14 +710,12 @@ export class ServerService {
         game.host,
         gameState.hostBar,
         'host',
-        gameState,
         game.room.options,
       );
       this.updateMoveStatus(
         game.client,
         gameState.clientBar,
         'client',
-        gameState,
         game.room.options,
       );
       this.chargeUp(game);

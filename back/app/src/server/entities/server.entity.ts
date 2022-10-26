@@ -1,4 +1,5 @@
 import { Socket } from 'socket.io';
+import { MatchHistoryEntity } from './match_history.entity';
 
 export class IPoint {
   x: number;
@@ -65,41 +66,36 @@ export class Message {
   message: string;
 }
 
-export class Player {
-  token: string;
+export class Game {
+  room: GameRoom;
+  gameState: GameState;
+  host: User;
+  client: User;
+  gameSummary: MatchHistoryEntity;
+}
+
+export class GameData {
   input: string[];
   smashLeft: number;
   smashRight: number;
   left: boolean;
   right: boolean;
-  name: string;
-  socket: Socket;
   elo: number;
   status: string;
   power: IPower;
 }
 
-export class Game {
-  room: GameRoom;
-  gameState: GameState;
-  host: Player;
-  client: Player;
-  gameSummary: GameSummary;
+export class ChatData {
+  RoomList: string[];
 }
 
-export class GameSummary {
-  hostName: string;
-  hostScore: number;
-  hostPower: string;
-  hostElo: number;
-  clientName: string;
-  clientScore: number;
-  clientPower: string;
-  clientElo: number;
-  eloChange: number;
-  gameMode: string;
-  gameTime: number;
-  gameDate: Date;
+export class User {
+  token: string;
+  socket: Socket;
+  name: string;
+  status: string;
+  gameData: GameData;
+  chatData: ChatData;
 }
 
 export class IPower {

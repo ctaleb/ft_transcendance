@@ -14,7 +14,7 @@ import { Server, Socket } from 'socket.io';
 import { Game, GameOptions } from './entities/server.entity';
 import { UserEntity } from 'src/user/user.entity';
 
-@WebSocketGateway({
+@WebSocketGateway(3500, {
   cors: {
     origin: '*',
   },
@@ -38,22 +38,25 @@ export class ServerGateway
       hsToken = client.handshake.auth.token;
       hsNick = client.handshake.auth.user.nickname;
     }
-    const user = this.serverService.playerList.find(
+    console.log(hsNick + ' trying to connect to socket');
+    const user = this.serverService.userList.find(
       (element) => element.name === hsNick,
     );
     if (user && user.token === hsToken) {
       user.socket = client;
+      console.log(user.name + ' rejoining game ' + user.status);
       if (user.status === 'ready') this.serverService.reconnect(user);
     } else {
-      this.serverService.reloadUser(hsToken, hsNick, client);
+      this.serverService.newUser(hsToken, hsNick, client);
     }
+    console.log('Socket ' + client.id + ' successfully connected');
   }
 
   @SubscribeMessage('debugging')
   debug(@ConnectedSocket() client: Socket) {
     console.log('~~~~~~~~~~~ debugging ~~~~~~~~~~');
-    console.log(this.serverService.playerList.length);
-    this.serverService.playerList.forEach((element) => {
+    console.log(this.serverService.userList.length);
+    this.serverService.userList.forEach((element) => {
       console.log(element.name + ' - ' + element.socket.id);
     });
     console.log(this.serverService.games.length);
@@ -65,10 +68,17 @@ export class ServerGateway
     console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
   }
 
+  @SubscribeMessage('chatting')
+  debugchat() {
+    console.log('~~~~~~~~~~~ chat debugging ~~~~~~~~~~');
+
+    console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
+  }
+
   @SubscribeMessage('disco')
   disco(@ConnectedSocket() client: Socket) {
     let ingame = false;
-    const player = this.serverService.playerList.find(
+    const player = this.serverService.userList.find(
       (element) => element.socket === client,
     );
     if (player) {
@@ -79,8 +89,8 @@ export class ServerGateway
           this.serverService.playerQueue.indexOf(player),
           1,
         );
-        this.serverService.playerList.splice(
-          this.serverService.playerList.indexOf(player),
+        this.serverService.userList.splice(
+          this.serverService.userList.indexOf(player),
           1,
         );
       } else {
@@ -99,8 +109,8 @@ export class ServerGateway
           }
         });
         if (!ingame) {
-          this.serverService.playerList.splice(
-            this.serverService.playerList.indexOf(player),
+          this.serverService.userList.splice(
+            this.serverService.userList.indexOf(player),
             1,
           );
         }
@@ -244,7 +254,7 @@ export class ServerGateway
     const host = this.serverService.SocketToPlayer(socket);
     if (!host || !(host.status === 'idle')) return;
     host.status = 'inviting';
-    const client = this.serverService.playerList.find(
+    const client = this.serverService.userList.find(
       (element) => element.name === invitee,
     );
     if (!client || !(client.status === 'idle')) {
@@ -257,7 +267,7 @@ export class ServerGateway
 
   @SubscribeMessage('playerReady')
   playerReady(@ConnectedSocket() client: Socket) {
-    const player = this.serverService.playerList.find(
+    const player = this.serverService.userList.find(
       (element) => element.socket === client,
     );
     if (player) player.status = 'ready';
@@ -265,7 +275,7 @@ export class ServerGateway
 
   @SubscribeMessage('playerNotReady')
   playerNotReady(@ConnectedSocket() client: Socket) {
-    const player = this.serverService.playerList.find(
+    const player = this.serverService.userList.find(
       (element) => element.socket === client,
     );
     if (player) player.status = 'idle';

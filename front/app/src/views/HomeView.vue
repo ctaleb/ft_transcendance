@@ -1,41 +1,58 @@
 <template>
-  <div>
-    <h2 style="text-align: center">
-      Welcome on fc_transcendance, please Log in
-    </h2>
+  <div id="backgroundVideo">
+    <video class="video" ref="video" autoplay loop muted>
+      <source src="../assets/homepageBackground.mp4" type="video/mp4" />
+    </video>
+  </div>
+  <div class="main_container">
+    <img
+      src="https://findicons.com/files/icons/1275/naruto_vol_1/256/uzumaki_naruto.png"
+      width="80"
+      height="80"
+      alt=""
+    />
+    <h1 class="main_title">
+      <marquee
+        direction="right"
+        behavior="alternate"
+        style="border-left: #aa9e7d 4px SOLID; border-right: #aa9e7d 4px SOLID"
+      >
+        SUP3RP0NG
+      </marquee>
+    </h1>
     <form @submit.prevent="login" style="margin-bottom: 2em">
-      <label for="username">Username: </label>
       <input
+        class="input"
+        placeholder="Username"
         v-model="username"
         type="text"
         id="username"
         name="username"
         required
       /><br /><br />
-      <label for="password">Password: </label>
       <input
+        class="input"
+        placeholder="Password"
         v-model="password"
         type="password"
         id="password"
         name="password"
         required
       /><br /><br />
-      <input type="submit" value="Submit" />
+      <button
+        type="submit"
+        value="Connexion"
+        class="button classic_login_btn pulse"
+      >
+        Connexion
+      </button>
     </form>
-    <a
-      style="
-        background-color: #e7e7e7;
-        color: black;
-        border: 3px solid black;
-        margin-top: 1em;
-      "
-      v-bind:href="intra_redirection"
-    >
+    <hr class="solid divider" />
+    <a class="button pulse" v-bind:href="intra_redirection">
       Continue with 42
     </a>
-    <h3 style="text-align: center; margin-top: 2em">
-      Or <a href="/signup">sign up</a>
-    </h3>
+    <ButtonComponent :link="intra_redirection" />
+    <a id="signup_link" href="/signup">New account</a>
   </div>
   <!--   <div :style="{ color: login_failed_color }" v-if="login_failed_msg"> -->
   <div class="text-red" v-if="login_failed_msg">
@@ -45,17 +62,24 @@
 
 <script lang="ts">
 import { processExpression } from "@vue/compiler-core";
-import { defineComponent } from "vue";
+import { defineComponent, Ref } from "vue";
 import { ref } from "vue";
 import { io, Socket } from "socket.io-client";
 import config from "../config/config";
 
 let funcs = require("../functions/funcs");
 export default defineComponent({
+  computed: {
+    videoElement() {
+      return this.$refs.video;
+    },
+  },
+  props: ["incomingFriendRequest"],
   data: () => {
     return {
       username: "",
       password: "",
+      background_url: "../assets/stars.webm",
       intra_redirection:
         "https://api.intra.42.fr/oauth/authorize?client_id=" +
         process.env.VUE_APP_42_ID +
@@ -73,6 +97,7 @@ export default defineComponent({
       login_failed_msg: ref(false),
     };
   },
+  emits: ["notification"],
   mounted() {
     let isConnected = funcs.isConnected(localStorage.getItem("token"));
     if (isConnected) this.$router.push("/portal");
@@ -108,13 +133,16 @@ export default defineComponent({
             .then((value: any) => {
               localStorage.setItem("token", value.token);
               localStorage.setItem("user", JSON.stringify(value.user));
-
               config.socket = io(
-                "http://" + window.location.hostname + ":3000",
+                "http://" + window.location.hostname + ":3500",
                 {
                   auth: { token: value.token, user: value.user },
+                  // path: "/api/socket.io/",
+                  transports: ["websocket"],
+                  autoConnect: false,
                 }
               );
+              config.socket.connect();
               this.$router.push("/portal");
             })
             .catch((err) => console.log(err));
@@ -149,9 +177,13 @@ export default defineComponent({
           localStorage.setItem("user", JSON.stringify(value.user));
           setTimeout(() => {}, 2000);
 
-          config.socket = io("http://" + window.location.hostname + ":3000", {
+          config.socket = io("http://" + window.location.hostname + ":3500", {
             auth: { token: value.token, user: value.user },
+            // path: "/api/socket.io/",
+            transports: ["websocket"],
+            autoConnect: false,
           });
+          config.socket.connect();
           this.$router.push("/portal");
         })
         .catch((error) => {
@@ -161,3 +193,111 @@ export default defineComponent({
   },
 });
 </script>
+
+<style lang="scss">
+@import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Press+Start+2P&display=swap");
+
+#backgroundVideo {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  min-width: 100%;
+  min-height: 100%;
+  z-index: -1;
+}
+
+img {
+  margin-top: 3rem;
+}
+.main_title {
+  //  font-family: "Press Start 2P", cursive;
+  font-family: "Orbitron", sans-serif;
+  margin: 1rem auto;
+  width: 20rem;
+}
+.button {
+  position: relative;
+  height: auto;
+  padding: 5px;
+  color: #aa9e7d;
+  border: 3px solid;
+  border-image-slice: 1;
+  border-image-source: linear-gradient(to bottom, #c1a36b, #635e4f);
+  background: linear-gradient(to bottom right, #191e2a, #182121);
+}
+
+.main_container {
+  //  https://i.gifer.com/QgxJ.gif
+  background-image: url("https://cdna.artstation.com/p/assets/images/images/015/582/594/4k/artur-sadlos-leg-never-sh270-background-as-v001.jpg?1548866512&dl=1");
+  background-size: cover;
+  border: 2px solid;
+  border-image-slice: 1;
+  border-image-source: linear-gradient(to bottom, #c1a36b, #635e4f);
+  border-radius: 10px;
+  box-shadow: 5px 5px 5px #5c5b58;
+  color: #aa9e7d;
+  margin: 20rem auto;
+  width: 60rem;
+}
+.input {
+  padding: 8px;
+  border-radius: 60px;
+  border: solid 3px #aa9e7d;
+  border-radius: 10px;
+  width: 12rem;
+}
+#signup_link {
+  color: white;
+  display: block;
+  margin-top: 2rem;
+  margin-bottom: 3rem;
+  font-size: 20px;
+  text-decoration: underline;
+}
+.classic_login_btn {
+  width: 12rem;
+  margin-left: 0;
+}
+.divider {
+  margin: 2rem auto;
+  border-color: #aa9e7d;
+  width: 12rem;
+}
+// Animate the size, outside
+.pulse:hover,
+.pulse:focus {
+  animation: pulse 1s;
+  box-shadow: 0 0 0 0.5em transparent;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 var(--hover);
+  }
+}
+$colors: (
+  pulse: #aa9e7d,
+);
+
+// Sass variables compile to a static string; CSS variables are dynamic and inherited
+// Loop through the map and set CSS custom properties using Sass variables
+@each $button, $color in $colors {
+  .#{$button} {
+    --color: #{$color};
+    --hover: #{adjust-hue($color, 45deg)};
+  }
+}
+
+// Now every button will have different colors as set above. We get to use the same structure, only changing the custom properties.
+button {
+  color: var(--color);
+  transition: 0.25s;
+
+  &:hover,
+  &:focus {
+    border-color: var(--hover);
+    color: #fff;
+  }
+}
+</style>
