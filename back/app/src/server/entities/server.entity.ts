@@ -64,24 +64,34 @@ export class Message {
   message: string;
 }
 
-export class Player {
-  token: string;
+export class Game {
+  room: GameRoom;
+  gameState: GameState;
+  host: User;
+  client: User;
+  gameSummary: MatchHistoryEntity;
+}
+
+export class GameData {
   input: string[];
   smashLeft: number;
   smashRight: number;
   left: boolean;
   right: boolean;
-  name: string;
-  socket: Socket;
   elo: number;
   status: string;
   power: string;
 }
 
-export class Game {
-  room: GameRoom;
-  gameState: GameState;
-  host: Player;
-  client: Player;
-  gameSummary: MatchHistoryEntity;
+export class ChatData {
+  RoomList: string[];
+}
+
+export class User {
+  token: string;
+  socket: Socket;
+  name: string;
+  status: string;
+  gameData: GameData;
+  chatData: ChatData;
 }

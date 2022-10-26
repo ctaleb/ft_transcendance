@@ -8,7 +8,7 @@ export class UserEntity extends AbstractEntity {
   @Column({ unique: true })
   public nickname: string;
 
-  @Column({ unique: true })
+  @Column({ unique: false })
   public phone: string;
 
   @Column({ nullable: true })
