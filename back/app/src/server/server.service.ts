@@ -17,6 +17,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { MatchHistoryEntity } from './entities/match_history.entity';
 import { Repository } from 'typeorm';
 import { UserService } from 'src/user/user.service';
+import { Channel } from './entities/channel';
 
 @Injectable()
 export class ServerService {
@@ -24,6 +25,7 @@ export class ServerService {
   playerQueue: Player[] = [];
   rooms: ChatRoom[] = [];
   games: Game[] = [];
+  channels: Channel[] = [];
 
   clientToUser = [];
 
@@ -668,4 +670,7 @@ export class ServerService {
       this.goal(game);
     }
   }
+
+  // Channel chat stuff
+  createChannel();
 }
