@@ -25,6 +25,8 @@
 </template>
 <script lang="ts" setup>
 import { onMounted, Ref, ref, watch } from "vue";
+import config from "../config/config";
+const socket = config.socket;
 
 const props = defineProps(["destNickname"]);
 const emit = defineEmits(["closeWindow"]);
@@ -33,6 +35,11 @@ let nickname = props["destNickname"];
 
 function sendPrivateMessage(nickname: string): void {
   console.log(nickname);
+  socket.emit("deliverMessage", {
+    message: privateMessage.value,
+    friendNickname: nickname,
+  });
+  privateMessage.value = "";
 }
 function closePrivateConv(nickname: string): void {
   emit("closeWindow", nickname);

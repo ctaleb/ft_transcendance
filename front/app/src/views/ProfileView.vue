@@ -273,7 +273,6 @@ export default defineComponent({
       });
     },
     closePrivateConv(nickname: string) {
-      console.log("emit received by " + nickname);
       this.conversations.forEach((conv) => {
         if (conv.nickname === nickname) conv.displayChatWindow = false;
       });

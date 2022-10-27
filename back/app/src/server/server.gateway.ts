@@ -257,23 +257,17 @@ export class ServerGateway
   }
 
   //Private conv version Lolo
-  @SubscribeMessage('createPrivateConv')
+  @SubscribeMessage('deliverMessage')
   handleMessage(
     client: Socket,
-    @MessageBody('message') message: string,
-    @MessageBody('friend') friend: UserEntity,
+    @MessageBody('message') messageToDeliver: string,
+    @MessageBody('friendNickname') friendNickname: string,
   ): void {
-    console.log('The payload is  --> ');
-    console.log(message);
-    console.log(friend);
     const receiver = this.serverService.userList.find(
-      (element) => element.name === friend.nickname,
+      (element) => element.name === friendNickname,
     );
-    console.log('receiver --> ');
-    console.log(receiver);
-
     this.server.to(receiver.socket.id).emit('Message to the client', {
-      message: 'This is sent by server to the client',
+      message: messageToDeliver,
     });
   }
 }
