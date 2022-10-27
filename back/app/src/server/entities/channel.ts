@@ -13,10 +13,11 @@ export enum ChannelRole {
 
 export class Channel {
   name: string;
+  room: string;
   type: ChannelType;
   password: string;
   owner: UserEntity;
-  mutedUsers: number[];
+  mutedUsers: number[]; // time to add
   bannedUsers: number[];
   members: ChannelMember[];
   messages: ChannelMessage[];

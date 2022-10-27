@@ -691,7 +691,4 @@ export class ServerService {
       this.goal(game);
     }
   }
-
-  // Channel chat stuff
-  createChannel();
 }

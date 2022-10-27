@@ -29,6 +29,7 @@
       </div>
     </div>
   </div>
+  <button @click="createNewChannel()">Create new channel</button>
   <friend-alert :requester-name="props.incomingFriendRequest" />
 </template>
 
@@ -46,7 +47,7 @@ import FriendAlert from "../components/FriendAlert.vue";
 
 const socket = config.socket;
 // const messages = ref([]);
-const props = defineProps(['incomingFriendRequest']);
+const props = defineProps(["incomingFriendRequest"]);
 const emit = defineEmits(["notification"]);
 const messageText = ref("");
 const joined = ref(false);
@@ -70,6 +71,31 @@ onMounted(() => {
   // 	}, 2000);
   // }
 });
+
+function createNewChannel() {
+  fetch(
+    "http://" + window.location.hostname + ":3000/api/chat/create-channel",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+      body: JSON.stringify({
+        name: "SecondChannel",
+        type: "protected",
+        password: "yesSir",
+      }),
+    }
+  )
+    .then((res) => {
+      return res.json();
+    })
+    .then((data) => {
+      console.log(data);
+    })
+    .catch((err) => console.log(err));
+}
 
 const joinRoom = () => {
   socket.emit("join", { name: name.value, room: room.value }, () => {

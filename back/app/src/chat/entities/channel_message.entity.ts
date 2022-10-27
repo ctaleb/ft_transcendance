@@ -5,8 +5,17 @@ import {
   JoinColumn,
   JoinTable,
   ManyToMany,
+  ManyToOne,
   OneToOne,
 } from 'typeorm';
+import { ChannelMemberEntity } from './channel_member.entity';
 
 @Entity({ name: 'channel_message' })
-export class ChannelMessageEntity extends AbstractEntity {}
+export class ChannelMessageEntity extends AbstractEntity {
+  @ManyToOne(() => ChannelMemberEntity, { eager: true, onDelete: 'CASCADE' })
+  @JoinColumn()
+  public sender: ChannelMemberEntity;
+
+  @Column()
+  public content: string;
+}

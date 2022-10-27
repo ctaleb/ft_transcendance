@@ -1,3 +1,4 @@
+import { Exclude } from 'class-transformer';
 import { AbstractEntity } from 'src/database/abstract.entity';
 import { UserEntity } from 'src/user/user.entity';
 import {
@@ -6,8 +7,11 @@ import {
   JoinColumn,
   JoinTable,
   ManyToMany,
+  OneToMany,
   OneToOne,
 } from 'typeorm';
+import { ChannelMemberEntity } from './channel_member.entity';
+import { ChannelRestrictionsEntity } from './channel_restrictions.entity';
 
 export enum ChannelType {
   PUBLIC = 'public',
@@ -24,17 +28,18 @@ export class ChannelEntity extends AbstractEntity {
   public type: ChannelType;
 
   @Column({ nullable: true })
+  @Exclude()
   public password: string;
 
-  @OneToOne((type) => UserEntity, { eager: true, onDelete: 'CASCADE' })
-  @JoinColumn({ referencedColumnName: 'nickname' })
-  public owner: UserEntity;
+  @OneToMany(() => ChannelMemberEntity, (members) => members.channel, {
+    cascade: ['insert', 'update', 'remove'],
+  })
+  @JoinColumn()
+  public members: ChannelMemberEntity[];
 
-  @ManyToMany(() => UserEntity)
-  @JoinTable()
-  public mutedUsers: UserEntity[];
-
-  @ManyToMany(() => UserEntity)
-  @JoinTable()
-  public bannedUsers: UserEntity[];
+  @OneToMany(() => ChannelRestrictionsEntity, (members) => members.channel, {
+    cascade: ['insert', 'update', 'remove'],
+  })
+  @JoinColumn()
+  public restrictedMembers: ChannelRestrictionsEntity[];
 }
