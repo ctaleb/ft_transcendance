@@ -1,0 +1,24 @@
+@import "css.gg/icons/all.scss";
+
+.chatWindow {
+  background-color: white;
+  width: 250px;
+  float: right;
+  border: 1px solid #836529;
+  input {
+    width: 100%;
+    padding: 5px;
+  }
+  .sendButton {
+    background: #c1a36b;
+  }
+}
+
+.crossIconButton {
+  width: 25px;
+  float: right;
+  background: white;
+}
+.crossIconImg {
+  margin: 0;
+}

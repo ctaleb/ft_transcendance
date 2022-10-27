@@ -43,11 +43,22 @@
           </button>
         </div>
         <p>{{ friend.nickname }}</p>
-        <button style="color: white" @click="privateConv(friend)">Chat</button>
+        <button style="color: white" @click="displayPrivateConv(friend)">
+          Chat
+        </button>
       </span>
     </div>
   </div>
   <p v-else>User = null</p>
+  <div v-for="friend in conversations">
+    <div v-if="friend.displayChatWindow == true">
+      <chat-window
+        :dest-nickname="friend.nickname"
+        @close-window="closePrivateConv"
+      />
+    </div>
+  </div>
+
   <friend-alert
     :requester-name="this.incomingFriendRequest"
     @update-invitations="this.getRelations()"
@@ -62,6 +73,7 @@
 import { ref, defineComponent } from "vue";
 let funcs = require("../functions/funcs");
 import FriendAlert from "../components/FriendAlert.vue";
+import chatWindow from "../components/chatWindow.vue";
 import config from "../config/config";
 const socket = config.socket;
 
@@ -80,9 +92,16 @@ export default defineComponent({
       invitations: Array<User>(),
       friends: Array<User>(),
       searchFriend: "",
+      privateMessage: "",
+      conversations: Array<{ nickname: string; displayChatWindow: Boolean }>(),
     };
   },
-  emits: ["notification", "updateInvitations", "createPrivateConv"],
+  emits: [
+    "notification",
+    "updateInvitations",
+    "createPrivateConv",
+    "closeWindow",
+  ],
   methods: {
     getRelations() {
       fetch("http://" + window.location.hostname + ":3000/api/friendship", {
@@ -97,6 +116,8 @@ export default defineComponent({
         .then((data) => {
           this.invitations = data.invitations;
           this.friends = data.friends;
+          this.fillConversations();
+          console.log(this.friends);
           for (let invitation of this.invitations) {
             funcs.getUserAvatar(invitation.path).then((data: any) => {
               invitation.image = URL.createObjectURL(data);
@@ -246,11 +267,26 @@ export default defineComponent({
         })
         .catch((err) => console.log(err));
     },
-    privateConv(friend: User) {
-      console.log("Need to launch the conv");
-      socket.emit("createPrivateConv", {
-        message: "Hey the serv, can you crete a conv please ?",
-        friend: friend,
+    displayPrivateConv(friend: User) {
+      this.conversations.forEach((conv) => {
+        if (conv.nickname === friend.nickname) conv.displayChatWindow = true;
+      });
+    },
+    closePrivateConv(nickname: string) {
+      console.log("emit received by " + nickname);
+      this.conversations.forEach((conv) => {
+        if (conv.nickname === nickname) conv.displayChatWindow = false;
+      });
+    },
+
+    fillConversations() {
+      this.friends.forEach((friend) => {
+        console.log("Foreach");
+        let initConv = {
+          nickname: friend.nickname,
+          displayChatWindow: false,
+        };
+        this.conversations.push(initConv);
       });
     },
   },
@@ -266,6 +302,6 @@ export default defineComponent({
     });
     this.getRelations();
   },
-  components: { FriendAlert },
+  components: { FriendAlert, chatWindow },
 });
 </script>

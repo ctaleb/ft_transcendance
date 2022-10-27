@@ -1,0 +1,49 @@
+<template>
+  <div class="chatWindow">
+    <button class="crossIconButton" @click="closePrivateConv(nickname)">
+      <img
+        width="20"
+        height="20"
+        src="https://findicons.com/files/icons/744/juicy_fruit/256/cross.png"
+        alt=""
+        class="crossIconImg"
+      />
+    </button>
+    <h4>{{ nickname }}</h4>
+    <div class="messages">
+      <p>Loop over messages</p>
+    </div>
+    <input type="text" placeholder="Enter a message" v-model="privateMessage" />
+    <button
+      type="submit"
+      class="sendButton"
+      @click="sendPrivateMessage(nickname)"
+    >
+      Send
+    </button>
+  </div>
+</template>
+<script lang="ts" setup>
+import { onMounted, Ref, ref, watch } from "vue";
+
+const props = defineProps(["destNickname"]);
+const emit = defineEmits(["closeWindow"]);
+let privateMessage = ref("");
+let nickname = props["destNickname"];
+
+function sendPrivateMessage(nickname: string): void {
+  console.log(nickname);
+}
+function closePrivateConv(nickname: string): void {
+  emit("closeWindow", nickname);
+  console.log("Emit done");
+}
+
+onMounted(() => {
+  return;
+});
+</script>
+
+<style>
+@import "../styles/chatWindow.scss";
+</style>
