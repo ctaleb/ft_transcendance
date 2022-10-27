@@ -1,17 +1,22 @@
 <template>
   <div class="chatWindow">
-    <button class="crossIconButton" @click="closePrivateConv(nickname)">
-      <img
-        width="20"
-        height="20"
-        src="https://findicons.com/files/icons/744/juicy_fruit/256/cross.png"
-        alt=""
-        class="crossIconImg"
-      />
-    </button>
-    <h4>{{ nickname }}</h4>
+    <div class="header">
+      <button class="crossIconButton" @click="closePrivateConv(nickname)">
+        <img
+          width="20"
+          height="20"
+          src="https://findicons.com/files/icons/744/juicy_fruit/256/cross.png"
+          alt=""
+          class="crossIconImg"
+        />
+      </button>
+      <h4>{{ nickname }}</h4>
+    </div>
     <div class="messages">
-      <p>Loop over messages</p>
+      <div v-for="messageSent in MessagesSent">
+        <h6>Lolo</h6>
+        <p>{{ messageSent }}</p>
+      </div>
     </div>
     <input type="text" placeholder="Enter a message" v-model="privateMessage" />
     <button
@@ -32,6 +37,7 @@ const props = defineProps(["destNickname"]);
 const emit = defineEmits(["closeWindow"]);
 let privateMessage = ref("");
 let nickname = props["destNickname"];
+let MessagesSent = Array<string>();
 
 function sendPrivateMessage(nickname: string): void {
   console.log(nickname);
@@ -39,14 +45,18 @@ function sendPrivateMessage(nickname: string): void {
     message: privateMessage.value,
     friendNickname: nickname,
   });
+  MessagesSent.push(privateMessage.value);
   privateMessage.value = "";
 }
 function closePrivateConv(nickname: string): void {
   emit("closeWindow", nickname);
   console.log("Emit done");
 }
-
 onMounted(() => {
+  window.addEventListener("keydown", (e) => {
+    console.log(nickname);
+    if (e.key === "Enter") sendPrivateMessage(nickname);
+  });
   return;
 });
 </script>

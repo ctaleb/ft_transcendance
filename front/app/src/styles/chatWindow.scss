@@ -9,16 +9,44 @@
     width: 100%;
     padding: 5px;
   }
-  .sendButton {
-    background: #c1a36b;
-  }
+}
+.chatWindow input {
+  width: 100%;
+  padding: 5px;
+}
+.chatWindow .sendButton {
+  background: #c1a36b;
 }
 
 .crossIconButton {
   width: 25px;
+  height: 25px;
   float: right;
-  background: white;
+  background: #c1a36b;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 .crossIconImg {
+  margin-top: 0;
+}
+.messages {
+  height: 150px;
+  overflow-y: scroll;
+}
+.messages h6 {
   margin: 0;
+}
+.messages p {
+  margin-top: 3px;
+}
+
+.header {
+  background-color: #c1a36b;
+  height: 25px;
+}
+.header h4 {
+  margin: 0;
+  display: inline;
+  padding: 5px;
 }
