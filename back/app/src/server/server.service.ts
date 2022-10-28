@@ -308,7 +308,7 @@ export class ServerService {
         opponentBar,
         user.gameData.power.name,
       );
-    else if (user.gameData.power.name == 'invisible')
+    else if (user.gameData.power.name == 'invisibility')
       user.gameData.power = new PowerInvisibility(user.gameData.power.name);
   }
 
@@ -603,7 +603,10 @@ export class ServerService {
     const inverseState: GameState = {
       ball: {
         size: gameState.ball.size,
-        pos: { x: 500 - gameState.ball.pos.x, y: 500 - gameState.ball.pos.y },
+        pos: {
+          x: 500 - JSON.parse(JSON.stringify(gameState.ball.pos.x)),
+          y: 500 - JSON.parse(JSON.stringify(gameState.ball.pos.y)),
+        },
         speed: gameState.ball.speed,
       },
       hostPower: {
@@ -639,19 +642,66 @@ export class ServerService {
       score: { host: gameState.score.client, client: gameState.score.host },
     };
     if (
-      game.client.gameData.power.name == 'invisibility' &&
-      game.client.gameData.power.isActive
-    ) {
-      gameState.ball.pos.x = -500;
-      gameState.ball.pos.y = -500;
-    } else if (
       game.host.gameData.power.name == 'invisibility' &&
-      game.host.gameData.power.isActive
+      game.host.gameData.power.trigger == true
     ) {
-      inverseState.ball.pos.x = -500;
-      inverseState.ball.pos.y = -500;
+      inverseState.ball.pos.x = -50;
+      inverseState.ball.pos.y = -50;
     }
     return inverseState;
+  }
+
+  sendState(gameState: GameState, game: Game) {
+    const State: GameState = {
+      ball: {
+        size: gameState.ball.size,
+        pos: {
+          x: JSON.parse(JSON.stringify(gameState.ball.pos.x)),
+          y: JSON.parse(JSON.stringify(gameState.ball.pos.y)),
+        },
+        speed: gameState.ball.speed,
+      },
+      hostPower: {
+        maxCharge: gameState.clientPower.maxCharge,
+        currentCharge: gameState.clientPower.currentCharge,
+        isActive: gameState.clientPower.isActive,
+      },
+      clientPower: {
+        maxCharge: gameState.hostPower.maxCharge,
+        currentCharge: gameState.hostPower.currentCharge,
+        isActive: gameState.hostPower.isActive,
+      },
+      hostBar: {
+        size: gameState.hostBar.size,
+        pos: {
+          x: gameState.hostBar.pos.x,
+          y: gameState.hostBar.pos.y,
+        },
+        speed: gameState.hostBar.speed,
+        smashing: gameState.hostBar.smashing,
+        maxSpeed: gameState.hostBar.maxSpeed,
+      },
+      clientBar: {
+        size: gameState.clientBar.size,
+        pos: {
+          x: gameState.clientBar.pos.x,
+          y: gameState.clientBar.pos.y,
+        },
+        speed: gameState.clientBar.speed,
+        smashing: gameState.clientBar.smashing,
+        maxSpeed: gameState.clientBar.maxSpeed,
+      },
+      score: { host: gameState.score.client, client: gameState.score.host },
+    };
+    if (
+      game.client.gameData.power.name == 'invisibility' &&
+      game.client.gameData.power.trigger == true
+    ) {
+      console.log('invis client');
+      State.ball.pos.x = -5000;
+      State.ball.pos.y = 250;
+    }
+    return State;
   }
 
   //need optional parameter speed
@@ -722,7 +772,7 @@ export class ServerService {
       room.sideCollide = false;
       if (
         game.client.gameData.power.name == 'invisibility' &&
-        game.client.gameData.power.isActive
+        game.client.gameData.power.trigger
       )
         game.client.gameData.power.reset();
     } else if (room.barCollide && ball.speed.y < 0 && ball.pos.y < 250) {
@@ -730,7 +780,7 @@ export class ServerService {
       room.sideCollide = false;
       if (
         game.host.gameData.power.name == 'invisibility' &&
-        game.host.gameData.power.isActive
+        game.host.gameData.power.trigger
       )
         game.host.gameData.power.reset();
     }
