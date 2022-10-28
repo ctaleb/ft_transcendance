@@ -158,6 +158,7 @@
 <script setup lang="ts">
 import ballUrl from "../assets/ball.png";
 import paddleUrl from "../assets/paddle_grec.png";
+import powerChargeUrl from "../assets/powerCharge.png";
 import energyUrl from "../assets/energy.png";
 import paddleEnergyUrl from "../assets/energy_paddle_grec.png";
 import plateauUrl from "../assets/plateauV2.png";
@@ -172,7 +173,6 @@ import { io } from "socket.io-client";
 import {
   GameState,
   GameRoom,
-  GameSummary,
   IBall,
   IBar,
   IPoint,
@@ -189,6 +189,8 @@ const socket = config.socket;
 console.log(socket);
 const ballImg = new Image();
 ballImg.src = ballUrl;
+const powerChargeImg = new Image();
+powerChargeImg.src = powerChargeUrl;
 const paddleImg = new Image();
 paddleImg.src = paddleUrl;
 const energyPaddleImg = new Image();
@@ -419,6 +421,27 @@ function drawScore(ctx: CanvasRenderingContext2D, gameState: GameState) {
   }
 }
 
+function drawPowerCharge(ctx: CanvasRenderingContext2D, gameState: GameState) {
+  for (let i = 0; i < gameState.clientPower.currentCharge; i++) {
+    ctx.drawImage(
+      powerChargeImg,
+      cWidth * 0.265 + ((cWidth * 0.47) / gameState.clientPower.maxCharge) * i,
+      cHeight * 0.055,
+      (cWidth * 0.45) / gameState.clientPower.maxCharge,
+      9 * scale
+    );
+  }
+  for (let i = 0; i < gameState.hostPower.currentCharge; i++) {
+    ctx.drawImage(
+      powerChargeImg,
+      cWidth * 0.2656 + ((cWidth * 0.47) / gameState.hostPower.maxCharge) * i,
+      cHeight * 0.931,
+      (cWidth * 0.45) / gameState.hostPower.maxCharge,
+      9 * scale
+    );
+  }
+}
+
 function updateSummary(summary: GameSummary) {
   // gameSummary.hostElo = summary.hostElo;
   // gameSummary.hostName = summary.hostName;
@@ -524,6 +547,7 @@ onMounted(() => {
     clientName.value = theRoom.clientName;
     lobbyStatus.value = "Play !";
     startButton.value = false;
+    powers.value = false;
     document.querySelector(".canvas")?.classList.remove("hidden");
   });
 
@@ -552,6 +576,7 @@ onMounted(() => {
       if (ctx) {
         drawPlayground(ctx);
         drawScore(ctx, gameState);
+        drawPowerCharge(ctx, gameState);
         kickoffLoading(ctx);
         ctx.drawImage(
           ballImg,

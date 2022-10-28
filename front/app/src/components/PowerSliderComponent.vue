@@ -6,26 +6,26 @@
       />
       <div class="info">
         <h4>Elastico</h4>
-        <p>Every 10 rounds, a bigger bar during 3 rounds</p>
+        <p>Every 10 rounds, a bigger bar during 3 hit</p>
       </div>
     </div>
 
-    <div class="item next" id="minimo">
+    <div class="item next" id="exhaust">
       <img
         src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT8UbSnEJjZLWg0Td-_RZa63KTQFXpeF0ZYFg&usqp=CAU"
       />
       <div class="info">
-        <h4>Minimo</h4>
-        <p>Every 12 rounds, a smaller bar for your opponent during 3 rounds</p>
+        <h4>Exhaust</h4>
+        <p>Every 10 rounds, slow your opponent's bar during 3 hit</p>
       </div>
     </div>
-    <div class="item" id="sticky">
+    <div class="item" id="minimo">
       <img
         src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTcckV2PYYCqKqaYipL1_sAw_7Ed-Mns67VZA&usqp=CAU"
       />
       <div class="info">
-        <h4>Sticky Fingers</h4>
-        <p>Every 6 rounds, the ball sticks to your paddle for 3 seconds</p>
+        <h4>Minimo</h4>
+        <p>Every 9 rounds, minimize your opponent bar for 3 hit</p>
       </div>
     </div>
     <div class="item" id="invisibility">
