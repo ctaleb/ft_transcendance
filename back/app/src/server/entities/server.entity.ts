@@ -11,6 +11,7 @@ export class IBar {
   pos: IPoint;
   speed: number;
   smashing: boolean;
+  maxSpeed: number;
 }
 
 export class IBall {
@@ -26,6 +27,8 @@ export class Score {
 
 export class GameState {
   ball: IBall;
+  hostPower: IPowerInfo;
+  clientPower: IPowerInfo;
   hostBar: IBar;
   clientBar: IBar;
   score: Score;
@@ -98,12 +101,17 @@ export class User {
   chatData: ChatData;
 }
 
+export class IPowerInfo {
+  maxCharge: number;
+  currentCharge: number;
+  isActive: boolean;
+}
+
 export class IPower {
   name: string;
   maxCharge: number;
   currentCharge: number;
   isActive: boolean;
-  timeLeft: number;
 
   constructor(name: string) {
     this.name = name;
@@ -112,15 +120,55 @@ export class IPower {
   }
 
   active() {
-    this.isActive = true;
-    this.currentCharge = 0;
+    // Empty
   }
-  handle() {}
-
-  chargeUp() {}
+  handle() {
+    // Empty
+  }
+  reset() {
+    // Empty
+  }
+  chargeUp() {
+    if (this.currentCharge < this.maxCharge) this.currentCharge++;
+  }
 }
 
 export class PowerElastico extends IPower {
+  timeLeft: number;
+  initialBarSize: number;
+  bar: IBar;
+
+  constructor(bar: IBar, name: string) {
+    super(name);
+    this.maxCharge = 7;
+    this.timeLeft = 0;
+    this.initialBarSize = bar.size.x;
+    this.bar = bar;
+  }
+
+  active() {
+    if (this.currentCharge == this.maxCharge) {
+      this.isActive = true;
+      this.currentCharge = 0;
+      this.timeLeft = 3;
+      this.bar.size.x *= 1.5;
+    }
+  }
+  handle() {
+    if (this.timeLeft) this.timeLeft--;
+    else {
+      this.reset();
+    }
+  }
+  reset() {
+    this.isActive = false;
+    this.timeLeft = 0;
+    this.bar.size.x = this.initialBarSize;
+  }
+}
+
+export class PowerMinimo extends IPower {
+  timeLeft: number;
   initialBarSize: number;
   bar: IBar;
 
@@ -133,30 +181,80 @@ export class PowerElastico extends IPower {
   }
 
   active() {
-    console.log('-- in active() --');
-    console.log('current charge: ' + this.currentCharge);
-    console.log('isActive: ' + this.isActive);
-    console.log('timeLeft: ' + this.timeLeft);
-    if (this.isActive === false && this.currentCharge >= 2) {
+    if (this.currentCharge == this.maxCharge) {
       this.isActive = true;
       this.currentCharge = 0;
       this.timeLeft = 3;
-      this.bar.size.x *= 1.5;
+      this.bar.size.x *= 0.5;
     }
   }
   handle() {
-    console.log('-- in handle() --');
-    console.log('current charge: ' + this.currentCharge);
-    console.log('isActive: ' + this.isActive);
-    console.log('timeLeft: ' + this.timeLeft);
-    if (this.isActive) {
-      this.timeLeft--;
-      if (this.timeLeft == 0) {
-        this.isActive = false;
-        this.bar.size.x = this.initialBarSize;
-      }
-    } else {
-      this.currentCharge++;
+    if (this.timeLeft) this.timeLeft--;
+    else {
+      this.reset();
     }
+  }
+  reset() {
+    this.isActive = false;
+    this.timeLeft = 0;
+    this.bar.size.x = this.initialBarSize;
+  }
+}
+
+export class PowerExhaust extends IPower {
+  timeLeft: number;
+  initialBarSpeed: number;
+  bar: IBar;
+
+  constructor(bar: IBar, name: string) {
+    super(name);
+    this.maxCharge = 10;
+    this.timeLeft = 0;
+    this.initialBarSpeed = JSON.parse(JSON.stringify(bar.maxSpeed));
+    this.bar = bar;
+  }
+
+  active() {
+    if (this.currentCharge == this.maxCharge) {
+      this.isActive = true;
+      this.currentCharge = 0;
+      this.timeLeft = 3;
+      this.bar.maxSpeed *= 0.5;
+    }
+  }
+  handle() {
+    if (this.timeLeft) this.timeLeft--;
+    else {
+      this.reset();
+    }
+  }
+  reset() {
+    this.isActive = false;
+    this.timeLeft = 0;
+    this.bar.maxSpeed = this.initialBarSpeed;
+  }
+}
+
+export class PowerInvisibility extends IPower {
+  trigger: boolean;
+
+  constructor(name: string) {
+    super(name);
+    this.maxCharge = 12;
+    this.trigger = false;
+  }
+
+  active() {
+    if (this.currentCharge == this.maxCharge) {
+      this.trigger = true;
+    }
+  }
+  handle() {
+    this.currentCharge = 0;
+    this.isActive = true;
+    this.trigger = false;
+  }
+  reset() {
+    this.isActive = false;
   }
 }
