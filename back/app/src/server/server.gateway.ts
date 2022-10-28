@@ -9,10 +9,12 @@ import {
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { ServerService } from './server.service';
+import { PrivateConvService } from '../private_conv/private_conv.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { Server, Socket } from 'socket.io';
 import { Game } from './entities/server.entity';
 import { UserEntity } from 'src/user/user.entity';
+import { UserService } from 'src/user/user.service';
 
 @WebSocketGateway(3500, {
   cors: {
@@ -25,7 +27,11 @@ export class ServerGateway
   @WebSocketServer()
   server: Server;
 
-  constructor(private readonly serverService: ServerService) {}
+  constructor(
+    private readonly serverService: ServerService,
+    private readonly privateMessageService: PrivateConvService,
+    private readonly userService: UserService,
+  ) {}
 
   afterInit(server: Server) {
     this.serverService.server = server;
@@ -258,16 +264,37 @@ export class ServerGateway
 
   //Private conv version Lolo
   @SubscribeMessage('deliverMessage')
-  handleMessage(
-    client: Socket,
+  async handleMessage(
+    @ConnectedSocket() client: Socket,
     @MessageBody('message') messageToDeliver: string,
     @MessageBody('friendNickname') friendNickname: string,
-  ): void {
+  ): Promise<void> {
     const receiver = this.serverService.userList.find(
       (element) => element.name === friendNickname,
     );
-    this.server.to(receiver.socket.id).emit('Message to the client', {
-      message: messageToDeliver,
+    if (receiver) {
+      this.server.to(receiver.socket.id).emit('Message to the client', {
+        message: messageToDeliver,
+      });
+    }
+    //Si non, creer la conv, si oui, passer sous les comms
+    //entrer les deux users en bdd pour creer la conv
+    const getAuthor = this.serverService.SocketToPlayer(client);
+    const author: UserEntity = await this.userService.getUserByNickname(
+      getAuthor.name,
+    );
+    const requester: UserEntity = await this.userService.getUserByNickname(
+      receiver.name,
+    );
+    const conv = await this.privateMessageService
+      .getConv(author, requester)
+      .catch(async () => {
+        return await this.privateMessageService.createConv(author, requester);
+      });
+    //console.log(conv);
+    this.privateMessageService.createMessage({
+      author: author,
+      text: messageToDeliver,
     });
   }
 }

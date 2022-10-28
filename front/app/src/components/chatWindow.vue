@@ -40,13 +40,14 @@ let nickname = props["destNickname"];
 let MessagesSent = Array<string>();
 
 function sendPrivateMessage(nickname: string): void {
-  console.log(nickname);
-  socket.emit("deliverMessage", {
-    message: privateMessage.value,
-    friendNickname: nickname,
-  });
-  MessagesSent.push(privateMessage.value);
-  privateMessage.value = "";
+  if (privateMessage.value != "") {
+    socket.emit("deliverMessage", {
+      message: privateMessage.value,
+      friendNickname: nickname,
+    });
+    MessagesSent.push(privateMessage.value);
+    privateMessage.value = "";
+  }
 }
 function closePrivateConv(nickname: string): void {
   emit("closeWindow", nickname);
@@ -54,7 +55,6 @@ function closePrivateConv(nickname: string): void {
 }
 onMounted(() => {
   window.addEventListener("keydown", (e) => {
-    console.log(nickname);
     if (e.key === "Enter") sendPrivateMessage(nickname);
   });
   return;

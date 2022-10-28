@@ -1,16 +1,27 @@
-import { Column, Entity, PrimaryColumn, PrimaryGeneratedColumn } from 'typeorm';
+import { AbstractEntity } from 'src/database/abstract.entity';
+import { User } from 'src/server/entities/server.entity';
+import { UserEntity } from 'src/user/user.entity';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { PrivateMessageEntity } from './privateMessage.entity';
 
 @Entity({ name: 'PrivateConvEntity' })
-export class PrivateConvEntity {
-  @PrimaryGeneratedColumn()
-  public id: number;
+export class PrivateConvEntity extends AbstractEntity {
+  @ManyToOne(() => UserEntity, { eager: true })
+  @JoinColumn()
+  user1: UserEntity;
 
-  @Column()
-  firstId: number;
+  @ManyToOne(() => UserEntity, { eager: true })
+  @JoinColumn()
+  user2: UserEntity;
 
-  @Column()
-  secondId: number;
-
-  @Column()
-  message: string;
+  @OneToMany(() => PrivateMessageEntity, (message) => message.conv)
+  @JoinColumn()
+  messages: PrivateMessageEntity[];
 }
