@@ -167,7 +167,10 @@ export class ServerGateway
       'ServerUpdate',
       this.serverService.inverseState(game.gameState, game),
     );
-    game.host.socket.emit('ServerUpdate', game.gameState);
+    game.host.socket.emit(
+      'ServerUpdate',
+      this.serverService.sendState(game.gameState, game),
+    );
 
     const loopTimer = setTimeout(() => {
       if (

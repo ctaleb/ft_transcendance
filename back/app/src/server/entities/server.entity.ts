@@ -112,11 +112,13 @@ export class IPower {
   maxCharge: number;
   currentCharge: number;
   isActive: boolean;
+  trigger: boolean;
 
   constructor(name: string) {
     this.name = name;
     this.currentCharge = 0;
     this.isActive = false;
+    this.trigger = false;
   }
 
   active() {
@@ -185,7 +187,7 @@ export class PowerMinimo extends IPower {
       this.isActive = true;
       this.currentCharge = 0;
       this.timeLeft = 3;
-      this.bar.size.x *= 0.5;
+      this.bar.size.x *= 0.6;
     }
   }
   handle() {
@@ -219,7 +221,7 @@ export class PowerExhaust extends IPower {
       this.isActive = true;
       this.currentCharge = 0;
       this.timeLeft = 3;
-      this.bar.maxSpeed *= 0.5;
+      this.bar.maxSpeed *= 0.4;
     }
   }
   handle() {
@@ -236,25 +238,25 @@ export class PowerExhaust extends IPower {
 }
 
 export class PowerInvisibility extends IPower {
-  trigger: boolean;
-
   constructor(name: string) {
     super(name);
-    this.maxCharge = 12;
-    this.trigger = false;
+    this.maxCharge = 1;
   }
 
   active() {
     if (this.currentCharge == this.maxCharge) {
-      this.trigger = true;
+      this.isActive = true;
+      this.currentCharge = 0;
+      console.log('TRIGGER');
     }
   }
   handle() {
-    this.currentCharge = 0;
-    this.isActive = true;
-    this.trigger = false;
+    this.isActive = false;
+    this.trigger = true;
+    console.log('ACTIF');
   }
   reset() {
+    this.trigger = false;
     this.isActive = false;
   }
 }
