@@ -20,7 +20,9 @@ export enum ChannelRole {
 
 @Entity({ name: 'channel_member' })
 export class ChannelMemberEntity extends AbstractEntity {
-  @ManyToOne((type) => ChannelEntity, (channel) => channel.members)
+  @ManyToOne((type) => ChannelEntity, (channel) => channel.members, {
+    eager: true,
+  })
   @JoinColumn()
   public channel: ChannelEntity;
 

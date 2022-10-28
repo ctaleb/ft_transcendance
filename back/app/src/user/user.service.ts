@@ -36,7 +36,7 @@ export class UserService {
     const user = await this._usersRepository.findOneBy({ id });
     if (user) {
       const avatar = await this._imageService.getImageById(user.avatarId);
-      return { ...user, ...avatar };
+      return { ...avatar, ...user };
     }
     throw new HttpException('User not found', HttpStatus.NOT_FOUND);
   }

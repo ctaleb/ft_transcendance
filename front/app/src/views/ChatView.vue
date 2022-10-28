@@ -30,6 +30,8 @@
     </div>
   </div>
   <button @click="createNewChannel()">Create new channel</button>
+  <button @click="joinChannel()">Join Channel</button>
+  <button @click="inviteToChannel()">Invite to channel</button>
   <friend-alert :requester-name="props.incomingFriendRequest" />
 </template>
 
@@ -58,6 +60,18 @@ const room = ref("");
 let users: String[] = reactive<String[]>([]);
 let messages: Message[] = reactive<Message[]>([]);
 
+enum ChannelType {
+  PUBLIC = "public",
+  PRIVATE = "private",
+  PROTECTED = "protected",
+}
+
+enum ChannelRole {
+  OWNER = "owner",
+  ADMIN = "administrator",
+  MEMBER = "member",
+}
+
 onBeforeMount(() => {
   // socket.on("newUser", (name) => {
   // 	users.value.push(name);
@@ -70,6 +84,7 @@ onMounted(() => {
   // 		refreshUsers();
   // 	}, 2000);
   // }
+  // updateChannel();
 });
 
 function createNewChannel() {
@@ -82,9 +97,79 @@ function createNewChannel() {
         Authorization: "Bearer " + localStorage.getItem("token"),
       },
       body: JSON.stringify({
-        name: "SecondChannel",
+        name: "Private",
+        type: ChannelType.PRIVATE,
+        password: "",
+      }),
+    }
+  )
+    .then((res) => {
+      return res.json();
+    })
+    .then((data) => {
+      console.log(data);
+    })
+    .catch((err) => console.log(err));
+}
+
+function updateChannel() {
+  fetch(
+    "http://" + window.location.hostname + ":3000/api/chat/update-channel",
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+      body: JSON.stringify({
+        id: 22,
         type: "protected",
-        password: "yesSir",
+        password: "password",
+      }),
+    }
+  )
+    .then((res) => {
+      return res.json();
+    })
+    .then((data) => {
+      console.log(data);
+    })
+    .catch((err) => console.log(err));
+}
+
+function joinChannel() {
+  fetch("http://" + window.location.hostname + ":3000/api/chat/join-channel", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + localStorage.getItem("token"),
+    },
+    body: JSON.stringify({
+      id: 24,
+      password: "password",
+    }),
+  })
+    .then((res) => {
+      return res.json();
+    })
+    .then((data) => {
+      console.log(data);
+    })
+    .catch((err) => console.log(err));
+}
+
+function inviteToChannel() {
+  fetch(
+    "http://" + window.location.hostname + ":3000/api/chat/invite-to-channel",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+      body: JSON.stringify({
+        channelId: 24,
+        username: "Boss",
       }),
     }
   )
