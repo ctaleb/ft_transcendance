@@ -524,6 +524,7 @@ onMounted(() => {
     clientName.value = theRoom.clientName;
     lobbyStatus.value = "Play !";
     startButton.value = false;
+    powers.value = false;
     document.querySelector(".canvas")?.classList.remove("hidden");
   });
 
