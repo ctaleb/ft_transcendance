@@ -1,4 +1,5 @@
 <template @update-invitations="getRelations()">
+  <div @notif-chat="openChatNotif" class="hidden"></div>
   <div v-if="user != null" class="profileView">
     <p>Hello {{ user.nickname }} !</p>
     <p>Created at {{ user.createdAt }}</p>
@@ -75,6 +76,7 @@ let funcs = require("../functions/funcs");
 import FriendAlert from "../components/FriendAlert.vue";
 import chatWindow from "../components/chatWindow.vue";
 import config from "../config/config";
+
 const socket = config.socket;
 
 interface User {
@@ -288,11 +290,21 @@ export default defineComponent({
         this.conversations.push(initConv);
       });
     },
+    openChatNotif(payload: string) {
+      console.log("PAYLAOD---");
+      console.log(payload);
+      this.conversations.forEach((conv) => {
+        if (conv.nickname === payload) conv.displayChatWindow = true;
+      });
+    },
   },
 
   mounted() {
-    socket.on("Message to the client", (requester: string) => {
-      console.log(requester);
+    socket.on("openChatWindow", (payload: { author: string }) => {
+      console.log(payload.author);
+      this.conversations.forEach((conv) => {
+        if (conv.nickname === payload.author) conv.displayChatWindow = true;
+      });
     });
     funcs.getUserById(this.user.id).then((data: any) => {
       funcs.getUserAvatar(data.path).then((data: any) => {

@@ -13,9 +13,9 @@
       <h4>{{ nickname }}</h4>
     </div>
     <div class="messages">
-      <div v-for="messageSent in MessagesSent">
-        <h6>Lolo</h6>
-        <p>{{ messageSent }}</p>
+      <div v-for="message in allMessages">
+        <h6>{{ message.author }}</h6>
+        <p>{{ message.text }}</p>
       </div>
     </div>
     <input type="text" placeholder="Enter a message" v-model="privateMessage" />
@@ -32,12 +32,14 @@
 import { onMounted, Ref, ref, watch } from "vue";
 import config from "../config/config";
 const socket = config.socket;
-
+const clientNickname: string = JSON.parse(
+  localStorage.getItem("user") || "{}"
+).nickname;
 const props = defineProps(["destNickname"]);
-const emit = defineEmits(["closeWindow"]);
+const emit = defineEmits(["closeWindow", "notifChat"]);
 let privateMessage = ref("");
 let nickname = props["destNickname"];
-let MessagesSent = Array<string>();
+let allMessages = ref(Array<{ author: string; text: string }>());
 
 function sendPrivateMessage(nickname: string): void {
   if (privateMessage.value != "") {
@@ -45,7 +47,10 @@ function sendPrivateMessage(nickname: string): void {
       message: privateMessage.value,
       friendNickname: nickname,
     });
-    MessagesSent.push(privateMessage.value);
+    allMessages.value.push({
+      author: clientNickname,
+      text: privateMessage.value,
+    });
     privateMessage.value = "";
   }
 }
@@ -53,10 +58,26 @@ function closePrivateConv(nickname: string): void {
   emit("closeWindow", nickname);
   console.log("Emit done");
 }
+function requestConvMessages() {
+  socket.emit("getMessages", {
+    friendNickname: nickname,
+  });
+}
+
 onMounted(() => {
   window.addEventListener("keydown", (e) => {
     if (e.key === "Enter") sendPrivateMessage(nickname);
   });
+  requestConvMessages();
+  socket.on("Deliver all messages", (messages) => {
+    allMessages.value = messages.messages;
+  });
+  socket.on(
+    "Message to the client",
+    (privateMessage: { author: string; text: string }) => {
+      allMessages.value.push(privateMessage);
+    }
+  );
   return;
 });
 </script>

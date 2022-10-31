@@ -11,10 +11,10 @@ import { PrivateConvEntity } from './private_conv.entity';
 
 @Entity({ name: 'PrivateMessage' })
 export class PrivateMessageEntity extends AbstractEntity {
-  @ManyToOne(() => PrivateConvEntity, (conv) => conv.messages)
+  @ManyToOne(() => PrivateConvEntity, (conv) => conv.messages, { eager: true })
   conv: PrivateConvEntity;
 
-  @ManyToOne(() => UserEntity, (user) => user.id)
+  @ManyToOne(() => UserEntity, (user) => user.id, { eager: true })
   author: UserEntity;
 
   @Column()

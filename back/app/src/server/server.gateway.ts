@@ -15,6 +15,7 @@ import { Server, Socket } from 'socket.io';
 import { Game } from './entities/server.entity';
 import { UserEntity } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
+import { NamingStrategyNotFoundError } from 'typeorm';
 
 @WebSocketGateway(3500, {
   cors: {
@@ -269,17 +270,21 @@ export class ServerGateway
     @MessageBody('message') messageToDeliver: string,
     @MessageBody('friendNickname') friendNickname: string,
   ): Promise<void> {
+    const getAuthor = this.serverService.SocketToPlayer(client);
     const receiver = this.serverService.userList.find(
       (element) => element.name === friendNickname,
     );
     if (receiver) {
       this.server.to(receiver.socket.id).emit('Message to the client', {
-        message: messageToDeliver,
+        author: getAuthor.name,
+        text: messageToDeliver,
+      });
+      this.server.to(receiver.socket.id).emit('openChatWindow', {
+        author: getAuthor.name,
       });
     }
     //Si non, creer la conv, si oui, passer sous les comms
     //entrer les deux users en bdd pour creer la conv
-    const getAuthor = this.serverService.SocketToPlayer(client);
     const author: UserEntity = await this.userService.getUserByNickname(
       getAuthor.name,
     );
@@ -293,8 +298,32 @@ export class ServerGateway
       });
     //console.log(conv);
     this.privateMessageService.createMessage({
+      conv: conv,
       author: author,
       text: messageToDeliver,
     });
+  }
+  @SubscribeMessage('getMessages')
+  async getMessages(
+    @ConnectedSocket() client: Socket,
+    @MessageBody('friendNickname') friendNickname: string,
+  ): Promise<void> {
+    const receiver = this.serverService.userList.find(
+      (element) => element.name === friendNickname,
+    );
+    const getAuthor = this.serverService.SocketToPlayer(client);
+    const author: UserEntity = await this.userService.getUserByNickname(
+      getAuthor.name,
+    );
+    const requester: UserEntity = await this.userService.getUserByNickname(
+      receiver.name,
+    );
+    const messages = await this.privateMessageService.getMessages(
+      author,
+      requester,
+    );
+    this.server
+      .to(client.id)
+      .emit('Deliver all messages', { messages: messages });
   }
 }
