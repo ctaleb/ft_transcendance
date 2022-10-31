@@ -10,7 +10,16 @@
           class="crossIconImg"
         />
       </button>
-      <h4>{{ nickname }}</h4>
+      <div class="friendInfo">
+        <img
+          :src="friendImageUrl"
+          alt=""
+          width="50"
+          height="50"
+          class="miniature"
+        />
+        <h4>{{ nickname }}</h4>
+      </div>
     </div>
     <div class="messages">
       <div v-for="message in allMessages">
@@ -29,8 +38,10 @@
   </div>
 </template>
 <script lang="ts" setup>
+import { functionExpression } from "@babel/types";
 import { onMounted, Ref, ref, watch } from "vue";
 import config from "../config/config";
+let funcs = require("../functions/funcs");
 const socket = config.socket;
 const clientNickname: string = JSON.parse(
   localStorage.getItem("user") || "{}"
@@ -39,6 +50,7 @@ const props = defineProps(["destNickname"]);
 const emit = defineEmits(["closeWindow", "notifChat"]);
 let privateMessage = ref("");
 let nickname = props["destNickname"];
+let friendImageUrl = ref("");
 let allMessages = ref(Array<{ author: string; text: string }>());
 
 function sendPrivateMessage(nickname: string): void {
@@ -78,6 +90,25 @@ onMounted(() => {
       allMessages.value.push(privateMessage);
     }
   );
+
+  fetch(
+    "http://" +
+      window.location.hostname +
+      ":3000/api/user/bynickname/" +
+      nickname,
+    {
+      headers: {
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+    }
+  )
+    .then((result) => result.json())
+    .then((data) => {
+      console.log(data);
+      funcs.getUserAvatar(data.avatar.path).then((data: any) => {
+        friendImageUrl.value = URL.createObjectURL(data);
+      });
+    });
   return;
 });
 </script>

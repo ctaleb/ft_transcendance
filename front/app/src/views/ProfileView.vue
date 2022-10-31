@@ -307,6 +307,7 @@ export default defineComponent({
       });
     });
     funcs.getUserById(this.user.id).then((data: any) => {
+      console.log(data.path);
       funcs.getUserAvatar(data.path).then((data: any) => {
         this.image = URL.createObjectURL(data);
       });

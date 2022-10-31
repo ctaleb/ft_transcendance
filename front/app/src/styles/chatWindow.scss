@@ -31,7 +31,7 @@
   margin-top: 0;
 }
 .messages {
-  height: 150px;
+  height: 250px;
   overflow-y: scroll;
 }
 .messages h6 {
@@ -43,10 +43,20 @@
 
 .header {
   background-color: #c1a36b;
-  height: 25px;
+  height: 50px;
 }
 .header h4 {
   margin: 0;
   display: inline;
   padding: 5px;
+}
+
+.friendInfo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.miniature {
+  border-radius: 100%;
+  margin-top: 0;
 }
