@@ -14,7 +14,9 @@ import { ChannelMemberEntity } from './channel_member.entity';
 
 @Entity({ name: 'channel_restrictions' })
 export class ChannelRestrictionsEntity extends AbstractEntity {
-  @ManyToOne((type) => ChannelEntity, (channel) => channel.restrictedMembers)
+  @ManyToOne((type) => ChannelEntity, (channel) => channel.restrictedMembers, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn()
   public channel: ChannelEntity;
 

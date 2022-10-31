@@ -12,7 +12,7 @@ import { ChannelMemberEntity } from './channel_member.entity';
 
 @Entity({ name: 'channel_message' })
 export class ChannelMessageEntity extends AbstractEntity {
-  @ManyToOne(() => ChannelMemberEntity, { eager: true, onDelete: 'CASCADE' })
+  @ManyToOne(() => ChannelMemberEntity, { eager: true, onDelete: 'SET NULL' })
   @JoinColumn()
   public sender: ChannelMemberEntity;
 

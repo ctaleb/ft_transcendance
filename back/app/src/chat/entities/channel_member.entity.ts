@@ -22,6 +22,7 @@ export enum ChannelRole {
 export class ChannelMemberEntity extends AbstractEntity {
   @ManyToOne((type) => ChannelEntity, (channel) => channel.members, {
     eager: true,
+    onDelete: 'CASCADE',
   })
   @JoinColumn()
   public channel: ChannelEntity;

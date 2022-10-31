@@ -32,6 +32,8 @@
   <button @click="createNewChannel()">Create new channel</button>
   <button @click="joinChannel()">Join Channel</button>
   <button @click="inviteToChannel()">Invite to channel</button>
+  <button @click="leaveChannel()">Leave channel</button>
+  <button @click="deleteChannel()">Delete channel</button>
   <friend-alert :requester-name="props.incomingFriendRequest" />
 </template>
 
@@ -85,7 +87,27 @@ onMounted(() => {
   // 	}, 2000);
   // }
   // updateChannel();
+  // takeAdmin();
+  // getChannels();
+  ban();
 });
+
+function getChannels() {
+  fetch("http://" + window.location.hostname + ":3000/api/chat", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + localStorage.getItem("token"),
+    },
+  })
+    .then((res) => {
+      return res.json();
+    })
+    .then((data) => {
+      console.log(data);
+    })
+    .catch((err) => console.log(err));
+}
 
 function createNewChannel() {
   fetch(
@@ -145,10 +167,53 @@ function joinChannel() {
       Authorization: "Bearer " + localStorage.getItem("token"),
     },
     body: JSON.stringify({
-      id: 24,
+      id: 23,
       password: "password",
     }),
   })
+    .then((res) => {
+      return res.json();
+    })
+    .then((data) => {
+      console.log(data);
+    })
+    .catch((err) => console.log(err));
+}
+
+function leaveChannel() {
+  fetch("http://" + window.location.hostname + ":3000/api/chat/leave-channel", {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + localStorage.getItem("token"),
+    },
+    body: JSON.stringify({
+      id: 22,
+    }),
+  })
+    .then((res) => {
+      return res.json();
+    })
+    .then((data) => {
+      console.log(data);
+    })
+    .catch((err) => console.log(err));
+}
+
+function deleteChannel() {
+  fetch(
+    "http://" + window.location.hostname + ":3000/api/chat/delete-channel",
+    {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+      body: JSON.stringify({
+        id: 24,
+      }),
+    }
+  )
     .then((res) => {
       return res.json();
     })
@@ -173,6 +238,70 @@ function inviteToChannel() {
       }),
     }
   )
+    .then((res) => {
+      return res.json();
+    })
+    .then((data) => {
+      console.log(data);
+    })
+    .catch((err) => console.log(err));
+}
+
+function giveAdmin() {
+  fetch("http://" + window.location.hostname + ":3000/api/chat/give-admin", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + localStorage.getItem("token"),
+    },
+    body: JSON.stringify({
+      id: 22,
+      username: "Ah Sahm",
+    }),
+  })
+    .then((res) => {
+      return res.json();
+    })
+    .then((data) => {
+      console.log(data);
+    })
+    .catch((err) => console.log(err));
+}
+
+function takeAdmin() {
+  fetch("http://" + window.location.hostname + ":3000/api/chat/take-admin", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + localStorage.getItem("token"),
+    },
+    body: JSON.stringify({
+      id: 22,
+      username: "Ah Sahm",
+    }),
+  })
+    .then((res) => {
+      return res.json();
+    })
+    .then((data) => {
+      console.log(data);
+    })
+    .catch((err) => console.log(err));
+}
+
+function ban() {
+  fetch("http://" + window.location.hostname + ":3000/api/chat/ban", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + localStorage.getItem("token"),
+    },
+    body: JSON.stringify({
+      id: 23,
+      username: "Ah Sahm",
+      minutes: 1500,
+    }),
+  })
     .then((res) => {
       return res.json();
     })
