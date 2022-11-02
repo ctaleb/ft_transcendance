@@ -9,10 +9,13 @@ import {
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { ServerService } from './server.service';
+import { PrivateConvService } from '../private_conv/private_conv.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { Server, Socket } from 'socket.io';
 import { Game } from './entities/server.entity';
 import { UserEntity } from 'src/user/user.entity';
+import { UserService } from 'src/user/user.service';
+import { NamingStrategyNotFoundError } from 'typeorm';
 
 @WebSocketGateway(3500, {
   cors: {
@@ -25,7 +28,11 @@ export class ServerGateway
   @WebSocketServer()
   server: Server;
 
-  constructor(private readonly serverService: ServerService) {}
+  constructor(
+    private readonly serverService: ServerService,
+    private readonly privateMessageService: PrivateConvService,
+    private readonly userService: UserService,
+  ) {}
 
   afterInit(server: Server) {
     this.serverService.server = server;
@@ -254,5 +261,67 @@ export class ServerGateway
       (element) => element.socket === client,
     );
     if (player) player.status = 'idle';
+  }
+
+  //Private conv version Lolo
+  @SubscribeMessage('deliverMessage')
+  async handleMessage(
+    @ConnectedSocket() client: Socket,
+    @MessageBody('message') messageToDeliver: string,
+    @MessageBody('friendNickname') friendNickname: string,
+  ): Promise<void> {
+    const getAuthor = this.serverService.SocketToPlayer(client);
+    const receiver = this.serverService.userList.find(
+      (element) => element.name === friendNickname,
+    );
+    if (receiver) {
+      this.server.to(receiver.socket.id).emit('openChatWindow', {
+        author: getAuthor.name,
+      });
+      this.server.to(receiver.socket.id).emit('Message to the client', {
+        author: getAuthor.name,
+        text: messageToDeliver,
+      });
+    }
+
+    const author: UserEntity = await this.userService.getUserByNickname(
+      getAuthor.name,
+    );
+    const requester: UserEntity = await this.userService.getUserByNickname(
+      receiver.name,
+    );
+    const conv = await this.privateMessageService
+      .getConv(author, requester)
+      .catch(async () => {
+        return await this.privateMessageService.createConv(author, requester);
+      });
+    this.privateMessageService.createMessage({
+      conv: conv,
+      author: author,
+      text: messageToDeliver,
+    });
+  }
+  @SubscribeMessage('getMessages')
+  async getMessages(
+    @ConnectedSocket() client: Socket,
+    @MessageBody('friendNickname') friendNickname: string,
+  ): Promise<void> {
+    const receiver = this.serverService.userList.find(
+      (element) => element.name === friendNickname,
+    );
+    const getAuthor = this.serverService.SocketToPlayer(client);
+    const author: UserEntity = await this.userService.getUserByNickname(
+      getAuthor.name,
+    );
+    const requester: UserEntity = await this.userService.getUserByNickname(
+      receiver.name,
+    );
+    const messages = await this.privateMessageService.getMessages(
+      author,
+      requester,
+    );
+    this.server
+      .to(client.id)
+      .emit('Deliver all messages', { messages: messages });
   }
 }
