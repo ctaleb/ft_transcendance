@@ -114,6 +114,6 @@ onMounted(() => {
 });
 </script>
 
-<style>
+<style scoped>
 @import "../styles/chatWindow.scss";
 </style>
