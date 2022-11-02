@@ -11,6 +11,7 @@ import {
   OneToOne,
 } from 'typeorm';
 import { ChannelMemberEntity } from './channel_member.entity';
+import { ChannelMessageEntity } from './channel_message.entity';
 import { ChannelRestrictionsEntity } from './channel_restrictions.entity';
 
 export enum ChannelType {
@@ -36,6 +37,12 @@ export class ChannelEntity extends AbstractEntity {
   })
   @JoinColumn()
   public members: ChannelMemberEntity[];
+
+  @OneToMany(() => ChannelMessageEntity, (message) => message.channel, {
+    cascade: ['insert', 'update', 'remove'],
+  })
+  @JoinColumn()
+  public messages: ChannelMessageEntity[];
 
   @OneToMany(() => ChannelRestrictionsEntity, (members) => members.channel, {
     cascade: ['insert', 'update', 'remove'],

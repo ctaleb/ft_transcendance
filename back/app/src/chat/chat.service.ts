@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from 'src/user/user.entity';
-import { Repository } from 'typeorm';
+import { Not, Repository } from 'typeorm';
 import { CreateChannelDto } from './dtos/create-channel.dto';
 import { ChannelEntity } from './entities/channel.entity';
 import { ChannelInvitationEntity } from './entities/channel_invitation.entity';
@@ -25,6 +25,9 @@ import { ChangeRoleDto } from './dtos/change-role.dto';
 import { LeaveChannelDto } from './dtos/leave-channel.dto';
 import { DeclineInvitationDto } from './dtos/decline-invitation.dto';
 import { RestrictionDto } from './dtos/restriction.dto';
+import { GetChannelsListDto } from './dtos/get-channels-list.dto';
+import { GetChannelMessagesDto } from './dtos/get-channel-messages.dto';
+import { SaveMessageDto } from './dtos/save-message.dto';
 
 @Injectable()
 export class ChatService {
@@ -64,7 +67,6 @@ export class ChatService {
       owner = await this._channelMemberRepository.save(owner);
       return { id: channel.id, name: channel.name, type: channel.type };
     } catch (err) {
-      console.log(err);
       return err;
     }
   }
@@ -83,7 +85,6 @@ export class ChatService {
       owner.channel.type = updateChannelDto.type;
       return await this._channelRepository.save(owner.channel);
     } catch (err) {
-      console.log(err);
       return err;
     }
   }
@@ -130,7 +131,6 @@ export class ChatService {
         type: member.channel.type,
       };
     } catch (err) {
-      console.log(err);
       return err;
     }
   }
@@ -182,7 +182,6 @@ export class ChatService {
       });
       return await this._channelInvitationRepository.save(invitation);
     } catch (err) {
-      console.log(err);
       return err;
     }
   }
@@ -202,7 +201,6 @@ export class ChatService {
         );
       return await this._channelInvitationRepository.remove(invitation);
     } catch (err) {
-      console.log(err);
       return err;
     }
   }
@@ -228,7 +226,6 @@ export class ChatService {
       user.role = ChannelRole.ADMIN;
       return await this._channelMemberRepository.save(user);
     } catch (err) {
-      console.log(err);
       return err;
     }
   }
@@ -254,7 +251,6 @@ export class ChatService {
       user.role = ChannelRole.MEMBER;
       return await this._channelMemberRepository.save(user);
     } catch (err) {
-      console.log(err);
       return err;
     }
   }
@@ -290,7 +286,6 @@ export class ChatService {
       }
       return await this._channelMemberRepository.remove(member);
     } catch (err) {
-      console.log(err);
       return err;
     }
   }
@@ -308,7 +303,6 @@ export class ChatService {
         );
       return await this._channelRepository.remove(owner.channel);
     } catch (err) {
-      console.log(err);
       return err;
     }
   }
@@ -323,7 +317,6 @@ export class ChatService {
         .where('user.id = :id', { id: userId })
         .execute();
     } catch (err) {
-      console.log(err);
       return err;
     }
   }
@@ -369,5 +362,104 @@ export class ChatService {
     }
   }
 
-  async mute() {}
+  async mute(restrictionDto: RestrictionDto, userId: number) {
+    try {
+      const restriction = await this._channelRestrictionsRepository.findOneBy({
+        channel: { id: restrictionDto.id },
+        user: { nickname: restrictionDto.username },
+      });
+      const admin = await this._channelMemberRepository.findOneBy({
+        channel: { id: restrictionDto.id },
+        user: { id: userId },
+      });
+      if (admin === null || admin.role === ChannelRole.MEMBER)
+        throw new BadRequestException(
+          'You have no rights to mute someone on this channel',
+        );
+      const target = await this._channelMemberRepository.findOneBy({
+        channel: { id: restrictionDto.id },
+        user: { nickname: restrictionDto.username },
+        role: ChannelRole.MEMBER,
+      });
+      if (target === null)
+        throw new BadRequestException(
+          `${restrictionDto.username} is not part of this channel or has admin rights`,
+        );
+      const date = new Date();
+      date.setMinutes(date.getMinutes() + restrictionDto.minutes);
+      if (restriction && restriction.ban)
+        throw new BadRequestException(
+          'The user is already banned on this channel',
+        );
+      else if (restriction) {
+        restriction.mute = date;
+        return await this._channelRestrictionsRepository.save(restriction);
+      }
+      const mute = this._channelRestrictionsRepository.create({
+        channel: admin.channel,
+        user: target.user,
+        mute: date,
+      });
+      return await this._channelRestrictionsRepository.save(mute);
+    } catch (err) {
+      return err;
+    }
+  }
+
+  async getChannelsList(
+    getChannelsListDto: GetChannelsListDto,
+    userId: number,
+  ) {
+    try {
+      return await this._channelRepository.find({
+        where: {
+          members: { user: { id: Not(userId) } },
+          type: Not(ChannelType.PRIVATE),
+        },
+        order: { id: 'ASC' },
+        take: 5 + getChannelsListDto.skip,
+        skip: getChannelsListDto.skip,
+      });
+    } catch (err) {
+      return err;
+    }
+  }
+
+  async getChannelMessages(getChannelMessagesDto: GetChannelMessagesDto) {
+    try {
+      return await this._channelMessageRepository.find({
+        where: {
+          channel: { id: getChannelMessagesDto.id },
+        },
+        order: { createdAt: 'DESC' },
+        take: 20 + getChannelMessagesDto.skip,
+        skip: getChannelMessagesDto.skip,
+      });
+    } catch (err) {
+      return err;
+    }
+  }
+
+  async saveMessage(saveMessageDto: SaveMessageDto, userId: number) {
+    try {
+      const channel = await this._channelRepository.findOneBy({
+        id: saveMessageDto.id,
+      });
+      if (channel === null) throw new BadRequestException('Channel not found');
+      const member = await this._channelMemberRepository.findOneBy({
+        channel,
+        user: { id: userId },
+      });
+      if (member === null)
+        throw new BadRequestException('Channel member not found');
+      const message = this._channelMessageRepository.create({
+        channel: channel,
+        sender: member,
+        content: saveMessageDto.content,
+      });
+      return await this._channelMessageRepository.save(message);
+    } catch (err) {
+      return err;
+    }
+  }
 }

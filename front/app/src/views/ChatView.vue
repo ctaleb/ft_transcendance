@@ -34,6 +34,7 @@
   <button @click="inviteToChannel()">Invite to channel</button>
   <button @click="leaveChannel()">Leave channel</button>
   <button @click="deleteChannel()">Delete channel</button>
+  <button @click="getChannelsList()">Load channels</button>
   <friend-alert :requester-name="props.incomingFriendRequest" />
 </template>
 
@@ -89,7 +90,7 @@ onMounted(() => {
   // updateChannel();
   // takeAdmin();
   // getChannels();
-  ban();
+  // ban();
 });
 
 function getChannels() {
@@ -119,7 +120,7 @@ function createNewChannel() {
         Authorization: "Bearer " + localStorage.getItem("token"),
       },
       body: JSON.stringify({
-        name: "Private",
+        name: "Nine",
         type: ChannelType.PRIVATE,
         password: "",
       }),
@@ -307,6 +308,29 @@ function ban() {
     })
     .then((data) => {
       console.log(data);
+    })
+    .catch((err) => console.log(err));
+}
+
+const channelsNum = ref(0);
+
+function getChannelsList() {
+  fetch("http://" + window.location.hostname + ":3000/api/chat/list", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + localStorage.getItem("token"),
+    },
+    body: JSON.stringify({
+      number: channelsNum.value,
+    }),
+  })
+    .then((res) => {
+      return res.json();
+    })
+    .then((data) => {
+      console.log(data);
+      channelsNum.value += data.length;
     })
     .catch((err) => console.log(err));
 }

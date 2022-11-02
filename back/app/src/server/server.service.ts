@@ -17,6 +17,7 @@ import { MatchHistoryEntity } from './entities/match_history.entity';
 import { Repository } from 'typeorm';
 import { UserService } from 'src/user/user.service';
 import { Channel } from './entities/channel';
+import { ChatService } from 'src/chat/chat.service';
 
 @Injectable()
 export class ServerService {
@@ -35,6 +36,7 @@ export class ServerService {
     private _matchHistoryRepository: Repository<MatchHistoryEntity>,
     @Inject(forwardRef(() => UserService))
     private _userService: UserService,
+    private _chatService: ChatService,
   ) {}
 
   //generic stuff
@@ -60,6 +62,13 @@ export class ServerService {
     };
     if (sock) newUser.socket = sock;
     this.userList.push(newUser);
+  }
+
+  async joinAllChannels(socket: Socket, userId: number) {
+    const channels = await this._chatService.getUserChannels(userId);
+    channels.forEach((ell) => {
+      socket.join(ell.id);
+    });
   }
 
   //   reloadUser(token: string, user: string, sock: Socket) {

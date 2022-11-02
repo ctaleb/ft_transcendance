@@ -8,11 +8,18 @@ import {
   ManyToOne,
   OneToOne,
 } from 'typeorm';
+import { ChannelEntity } from './channel.entity';
 import { ChannelMemberEntity } from './channel_member.entity';
 
 @Entity({ name: 'channel_message' })
 export class ChannelMessageEntity extends AbstractEntity {
-  @ManyToOne(() => ChannelMemberEntity, { eager: true, onDelete: 'SET NULL' })
+  @ManyToOne((type) => ChannelEntity, (channel) => channel.messages, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn()
+  public channel: ChannelEntity;
+
+  @ManyToOne((type) => ChannelMessageEntity, { onDelete: 'SET NULL' })
   @JoinColumn()
   public sender: ChannelMemberEntity;
 

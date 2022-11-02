@@ -14,6 +14,7 @@ import { ChatService } from './chat.service';
 import { ChangeRoleDto } from './dtos/change-role.dto';
 import { CreateChannelDto } from './dtos/create-channel.dto';
 import { DeclineInvitationDto } from './dtos/decline-invitation.dto';
+import { GetChannelsListDto } from './dtos/get-channels-list.dto';
 import { InviteToChannelDto } from './dtos/invite-to-channel.dto';
 import { JoinChannelDto } from './dtos/join-channel.dto';
 import { LeaveChannelDto } from './dtos/leave-channel.dto';
@@ -28,6 +29,17 @@ export class ChatController {
   @Get()
   getChannels(@Request() req) {
     return this.chatService.getUserChannels(req.user.payload.id);
+  }
+
+  @Post('list')
+  getChannelsList(
+    @Request() req,
+    @Body() getChannelsListDto: GetChannelsListDto,
+  ) {
+    return this.chatService.getChannelsList(
+      getChannelsListDto,
+      req.user.payload.id,
+    );
   }
 
   @Post('create-channel')
@@ -96,5 +108,10 @@ export class ChatController {
   @Post('ban')
   banUser(@Request() req, @Body() restrictionDto: RestrictionDto) {
     return this.chatService.ban(restrictionDto, req.user.payload.id);
+  }
+
+  @Post('mute')
+  muteUser(@Request() req, @Body() restrictionDto: RestrictionDto) {
+    return this.chatService.mute(restrictionDto, req.user.payload.id);
   }
 }

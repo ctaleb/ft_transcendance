@@ -12,15 +12,18 @@ import { PassportModule } from '@nestjs/passport';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([ChannelEntity]),
-    TypeOrmModule.forFeature([ChannelMemberEntity]),
-    TypeOrmModule.forFeature([ChannelMessageEntity]),
-    TypeOrmModule.forFeature([ChannelRestrictionsEntity]),
-    TypeOrmModule.forFeature([ChannelInvitationEntity]),
+    TypeOrmModule.forFeature([
+      ChannelEntity,
+      ChannelMemberEntity,
+      ChannelMessageEntity,
+      ChannelRestrictionsEntity,
+      ChannelInvitationEntity,
+    ]),
     UserModule,
     PassportModule,
   ],
   controllers: [ChatController],
   providers: [ChatService],
+  exports: [ChatService],
 })
 export class ChatModule {}
