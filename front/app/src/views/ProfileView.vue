@@ -282,7 +282,6 @@ export default defineComponent({
 
     fillConversations() {
       this.friends.forEach((friend) => {
-        console.log("Foreach");
         let initConv = {
           nickname: friend.nickname,
           displayChatWindow: false,
@@ -291,8 +290,6 @@ export default defineComponent({
       });
     },
     openChatNotif(payload: string) {
-      console.log("PAYLAOD---");
-      console.log(payload);
       this.conversations.forEach((conv) => {
         if (conv.nickname === payload) conv.displayChatWindow = true;
       });
@@ -301,13 +298,11 @@ export default defineComponent({
 
   mounted() {
     socket.on("openChatWindow", (payload: { author: string }) => {
-      console.log(payload.author);
       this.conversations.forEach((conv) => {
         if (conv.nickname === payload.author) conv.displayChatWindow = true;
       });
     });
     funcs.getUserById(this.user.id).then((data: any) => {
-      console.log(data.path);
       funcs.getUserAvatar(data.path).then((data: any) => {
         this.image = URL.createObjectURL(data);
       });

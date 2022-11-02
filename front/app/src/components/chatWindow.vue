@@ -52,6 +52,7 @@ let privateMessage = ref("");
 let nickname = props["destNickname"];
 let friendImageUrl = ref("");
 let allMessages = ref(Array<{ author: string; text: string }>());
+let tmpFirstMessage: { author: string; text: string };
 
 function sendPrivateMessage(nickname: string): void {
   if (privateMessage.value != "") {
@@ -68,7 +69,6 @@ function sendPrivateMessage(nickname: string): void {
 }
 function closePrivateConv(nickname: string): void {
   emit("closeWindow", nickname);
-  console.log("Emit done");
 }
 function requestConvMessages() {
   socket.emit("getMessages", {
@@ -77,17 +77,19 @@ function requestConvMessages() {
 }
 
 onMounted(() => {
+  requestConvMessages();
+  socket.once("Deliver all messages", (messages) => {
+    allMessages.value = messages.messages;
+    if (tmpFirstMessage) allMessages.value.push(tmpFirstMessage);
+  });
   window.addEventListener("keydown", (e) => {
     if (e.key === "Enter") sendPrivateMessage(nickname);
-  });
-  requestConvMessages();
-  socket.on("Deliver all messages", (messages) => {
-    allMessages.value = messages.messages;
   });
   socket.on(
     "Message to the client",
     (privateMessage: { author: string; text: string }) => {
-      allMessages.value.push(privateMessage);
+      if (allMessages.value.length == 0) tmpFirstMessage = privateMessage;
+      else allMessages.value.push(privateMessage);
     }
   );
 
@@ -104,7 +106,6 @@ onMounted(() => {
   )
     .then((result) => result.json())
     .then((data) => {
-      console.log(data);
       funcs.getUserAvatar(data.avatar.path).then((data: any) => {
         friendImageUrl.value = URL.createObjectURL(data);
       });

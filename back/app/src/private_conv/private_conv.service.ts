@@ -31,9 +31,6 @@ export class PrivateConvService {
       { user1: { id: sender.id }, user2: { id: requester.id } },
       { user1: { id: requester.id }, user2: { id: sender.id } },
     ]);
-    this.privateConvRepository.find().then(console.log);
-    console.log('CONV:');
-    console.log(conv);
     if (conv) return conv;
     throw new HttpException('User not found', HttpStatus.NOT_FOUND);
   }

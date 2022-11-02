@@ -275,16 +275,15 @@ export class ServerGateway
       (element) => element.name === friendNickname,
     );
     if (receiver) {
+      this.server.to(receiver.socket.id).emit('openChatWindow', {
+        author: getAuthor.name,
+      });
       this.server.to(receiver.socket.id).emit('Message to the client', {
         author: getAuthor.name,
         text: messageToDeliver,
       });
-      this.server.to(receiver.socket.id).emit('openChatWindow', {
-        author: getAuthor.name,
-      });
     }
-    //Si non, creer la conv, si oui, passer sous les comms
-    //entrer les deux users en bdd pour creer la conv
+
     const author: UserEntity = await this.userService.getUserByNickname(
       getAuthor.name,
     );
@@ -296,7 +295,6 @@ export class ServerGateway
       .catch(async () => {
         return await this.privateMessageService.createConv(author, requester);
       });
-    //console.log(conv);
     this.privateMessageService.createMessage({
       conv: conv,
       author: author,
