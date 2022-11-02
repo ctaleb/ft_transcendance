@@ -23,6 +23,8 @@
         v-else-if="summary"
         :title="sumTitle"
         :data="gameSummary"
+        :start="start"
+        :end="end"
         @close="showSummary(false)"
       ></Modal>
     </div>
@@ -227,8 +229,6 @@ const hostName = ref("Host");
 const clientName = ref("Client");
 const color = ref("white");
 const sumTitle = ref("Placeholder");
-const sumDate = ref("");
-const sumTime = ref(0);
 const modal = ref(false);
 const summary = ref(false);
 const toggleLadder = ref(true);
@@ -254,6 +254,9 @@ let kickOff = false;
 let cSmashingPercent = 0;
 let hSmashingPercent = 0;
 
+let start: Date;
+let end: Date;
+
 let theRoom: GameRoom;
 const gameSummary = reactive<GameSummaryData>({
   host: {
@@ -261,18 +264,16 @@ const gameSummary = reactive<GameSummaryData>({
     name: "Host",
     power: "",
     score: 0,
-    eloChange: 25,
+    eloChange: 0,
   },
   client: {
-    elo: 42,
+    elo: 1000,
     name: "Client",
     power: "",
     score: 0,
-    eloChange: -12,
+    eloChange: 0,
   },
-  gamemode: "",
-  start: new Date(),
-  end: new Date(),
+  gameMode: "",
 });
 
 function showModal(show: boolean) {
@@ -442,25 +443,10 @@ function drawPowerCharge(ctx: CanvasRenderingContext2D, gameState: GameState) {
   }
 }
 
-function updateSummary(summary: GameSummary) {
-  // gameSummary.hostElo = summary.hostElo;
-  // gameSummary.hostName = summary.hostName;
-  // gameSummary.hostPower = summary.hostPower;
-  // gameSummary.hostScore = summary.hostScore;
-  // gameSummary.clientElo = summary.clientElo;
-  // gameSummary.clientName = summary.clientName;
-  // gameSummary.clientPower = summary.clientPower;
-  // gameSummary.clientScore = summary.clientScore;
-  // gameSummary.eloChange = summary.eloChange;
-  // gameSummary.gameMode = summary.gameMode;
-  // gameSummary.gameTime = summary.gameTime;
-  // gameSummary.gameDate = summary.gameDate;
-  // setDateTime(gameSummary);
-}
-
-function setDateTime(summary: GameSummary) {
-  sumTime.value = new Date().getDate() - new Date(summary.gameDate).getDate();
-  sumDate.value = summary.gameDate.toString();
+function updateSummary(summary: GameSummaryData) {
+  gameSummary.host = summary.host;
+  gameSummary.client = summary.client;
+  gameSummary.gameMode = summary.gameMode;
 }
 
 let gState: GameState;
@@ -594,31 +580,33 @@ onMounted(() => {
 
   socket.on(
     "Win",
-    (gameRoom: GameRoom, elo_diff: number, summary: GameSummary) => {
+    (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) => {
       theRoom = gameRoom;
       lobbyStatus.value =
         "Victory ! You gained +" + elo_diff + " elo ! Return to lobby ?";
       startButton.value = false;
+      end = new Date();
       updateSummary(summary);
       color.value = "green";
       sumTitle.value = "Victory";
-      document.querySelector(".canvas")?.classList.add("hidden");
       showSummary(true);
+      document.querySelector(".canvas")?.classList.add("hidden");
     }
   );
 
   socket.on(
     "Lose",
-    (gameRoom: GameRoom, elo_diff: number, summary: GameSummary) => {
+    (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) => {
       theRoom = gameRoom;
       lobbyStatus.value =
         "Defeat... You lost -" + elo_diff + " elo ! Return to lobby ?";
       startButton.value = false;
+      end = new Date();
       updateSummary(summary);
       color.value = "red";
       sumTitle.value = "Defeat";
-      document.querySelector(".canvas")?.classList.add("hidden");
       showSummary(true);
+      document.querySelector(".canvas")?.classList.add("hidden");
     }
   );
 
@@ -626,6 +614,7 @@ onMounted(() => {
     theRoom = gameRoom;
     hostName.value = theRoom.hostName;
     clientName.value = theRoom.clientName;
+    start = new Date();
     lobbyStatus.value = "Play !";
     document.querySelector(".canvas")?.classList.remove("hidden");
   });
