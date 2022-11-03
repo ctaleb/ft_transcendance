@@ -64,12 +64,12 @@ export class ServerService {
     this.userList.push(newUser);
   }
 
-  // async joinAllChannels(socket: Socket, userId: number) {
-  //   const channels = await this._chatService.getUserChannels(userId);
-  //   channels.forEach((ell) => {
-  //     socket.join(ell.id);
-  //   });
-  // }
+  async joinAllChannels(socket: Socket, userId: number) {
+    const channels = await this._chatService.getUserChannels(userId);
+    channels.forEach((ell) => {
+      socket.join(ell.id);
+    });
+  }
 
   //   reloadUser(token: string, user: string, sock: Socket) {
   //     const player: Player = {

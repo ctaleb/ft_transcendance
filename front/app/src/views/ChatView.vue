@@ -29,12 +29,6 @@
       </div>
     </div>
   </div>
-  <button @click="createNewChannel()">Create new channel</button>
-  <button @click="joinChannel()">Join Channel</button>
-  <button @click="inviteToChannel()">Invite to channel</button>
-  <button @click="leaveChannel()">Leave channel</button>
-  <button @click="deleteChannel()">Delete channel</button>
-  <button @click="getChannelsList()">Load channels</button>
   <friend-alert :requester-name="props.incomingFriendRequest" />
 </template>
 
