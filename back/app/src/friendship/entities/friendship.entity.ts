@@ -12,11 +12,11 @@ import {
 @Entity({ name: 'friendship' })
 export class FriendshipEntity extends AbstractEntity {
   @JoinColumn({ name: 'requesterId' })
-  @ManyToOne((type) => UserEntity)
+  @ManyToOne((type) => UserEntity, { onDelete: 'CASCADE' })
   public requester: UserEntity;
 
   @JoinColumn({ name: 'addresseeId' })
-  @ManyToOne((type) => UserEntity)
+  @ManyToOne((type) => UserEntity, { onDelete: 'CASCADE' })
   public addressee: UserEntity;
 
   @Column({ nullable: true })
