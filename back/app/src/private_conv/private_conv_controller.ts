@@ -24,4 +24,11 @@ export class PrivateConvController {
   async getAllConvs(@Request() req): Promise<PrivateConvEntity[]> {
     return await this.privateConvService.getAllConvs(req.user.payload.id);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('getMessages/:convUuid')
+  async getMessages(@Param('convUuid') convUuiD) {
+    console.log('uuid --> ' + convUuiD);
+    return await this.privateConvService.getMessages(convUuiD);
+  }
 }

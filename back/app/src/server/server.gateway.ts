@@ -270,14 +270,12 @@ export class ServerGateway
     @MessageBody('message') messageToDeliver: string,
     @MessageBody('friendNickname') friendNickname: string,
   ): Promise<void> {
+    let requester: UserEntity;
     const getAuthor = this.serverService.SocketToPlayer(client);
     const receiver = this.serverService.userList.find(
       (element) => element.name === friendNickname,
     );
     if (receiver) {
-      this.server.to(receiver.socket.id).emit('openChatWindow', {
-        author: getAuthor.name,
-      });
       this.server.to(receiver.socket.id).emit('Message to the client', {
         author: getAuthor.name,
         text: messageToDeliver,
@@ -287,9 +285,10 @@ export class ServerGateway
     const author: UserEntity = await this.userService.getUserByNickname(
       getAuthor.name,
     );
-    const requester: UserEntity = await this.userService.getUserByNickname(
-      receiver.name,
-    );
+    receiver
+      ? (requester = await this.userService.getUserByNickname(receiver.name))
+      : (requester = await this.userService.getUserByNickname(friendNickname));
+
     const conv = await this.privateMessageService
       .getConv(author, requester)
       .catch(async () => {
@@ -300,28 +299,5 @@ export class ServerGateway
       author: author,
       text: messageToDeliver,
     });
-  }
-  @SubscribeMessage('getMessages')
-  async getMessages(
-    @ConnectedSocket() client: Socket,
-    @MessageBody('friendNickname') friendNickname: string,
-  ): Promise<void> {
-    const receiver = this.serverService.userList.find(
-      (element) => element.name === friendNickname,
-    );
-    const getAuthor = this.serverService.SocketToPlayer(client);
-    const author: UserEntity = await this.userService.getUserByNickname(
-      getAuthor.name,
-    );
-    const requester: UserEntity = await this.userService.getUserByNickname(
-      receiver.name,
-    );
-    const messages = await this.privateMessageService.getMessages(
-      author,
-      requester,
-    );
-    this.server
-      .to(client.id)
-      .emit('Deliver all messages', { messages: messages });
   }
 }

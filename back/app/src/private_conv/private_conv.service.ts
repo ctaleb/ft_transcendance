@@ -44,9 +44,9 @@ export class PrivateConvService {
 
     return this.privateConvRepository.save(ToSave);
   }
-  async getMessages(sender: UserEntity, requester: UserEntity) {
+  async getMessages(convUuid: string) {
     const allMessages: { author: string; text: string }[] = [];
-    const conv = await this.getConv(sender, requester);
+    const conv = await this.privateConvRepository.findOneBy({ uuid: convUuid });
     await this.privateMessagesRepository
       .find({
         where: {
@@ -65,10 +65,10 @@ export class PrivateConvService {
   }
 
   async getAllConvs(id: number) {
-    console.log(id);
     const convs = await this.privateConvRepository.find({
       where: [{ user1: { id: id } }, { user2: { id: id } }],
     });
+    console.log(convs);
     if (convs) return convs;
     throw new HttpException('User not found', HttpStatus.NOT_FOUND);
   }

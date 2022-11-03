@@ -159,7 +159,7 @@ nav {
 }
 
 .hidden {
-  display: none;
+  display: none !important;
 }
 
 .overlay {
