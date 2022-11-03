@@ -5,7 +5,7 @@
       <button
         v-for="conv in privateConvs"
         class="privateConvButton"
-        @click="displayMessages(conv)"
+        @click="displayMessages(conv, $event)"
       >
         <img :src="conv.avatarToDisplay" alt="" width="45" height="45" />
         <p v-if="conv.user1.nickname != clientNickname">
@@ -15,9 +15,9 @@
       </button>
     </div>
     <div class="lobbyChat">
-      <h3>Welcome on the chat</h3>
+      <h2>Welcome on the chat</h2>
       <br />
-      <h5>Chat with your friends with the conatct list to the left</h5>
+      <h4>Chat with your friends with the contact list to the left</h4>
     </div>
     <div class="conversation hidden">
       <div class="messages">
@@ -80,6 +80,7 @@ export interface message {
 import { UserInfo } from "os";
 import config from "../config/config";
 import { onMounted, onUpdated, ref, watch } from "vue";
+import { classPrivateMethod } from "@babel/types";
 const socket = config.socket;
 let funcs = require("../functions/funcs");
 const clientNickname = JSON.parse(
@@ -156,7 +157,13 @@ async function getAvatar(privateConv: privateConv) {
   return url_return;
 }
 
-function displayMessages(conv: privateConv) {
+function displayMessages(conv: privateConv, event: any) {
+  const conversations = document.querySelectorAll(".privateConvButton");
+  conversations.forEach((conversation) => {
+    conversation.classList.add("inactiveConv");
+  });
+  console.log(event.target);
+  event.target.classList.remove("inactiveConv");
   document.getElementsByClassName("conversation")[0].classList.remove("hidden");
   document.getElementsByClassName("lobbyChat")[0].classList.add("hidden");
   conv.user1.nickname == clientNickname
@@ -205,13 +212,16 @@ function sendPrivateMessage(nickname: string): void {
   height: 90vh;
   width: 15%;
   float: left;
-  background-color: antiquewhite;
+  background-color: #5b5a56;
   overflow-y: scroll;
   overflow: hidden;
 }
+.convList h4 {
+  color: white;
+}
 .conversation {
   float: right;
-  background-color: chocolate;
+  background-color: #3b3c44;
   height: 85vh;
   width: 85%;
 }
@@ -245,33 +255,46 @@ function sendPrivateMessage(nickname: string): void {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  background: #aa9e7d;
-  border: 3px solid;
-  border-image-slice: 1;
-  border-image-source: linear-gradient(to bottom, #c1a36b, #635e4f);
+  background: #1e2328;
   height: 4.5%;
   font-size: 25px;
 }
 .privateConvButton img {
   margin-right: 20px;
+  pointer-events: none;
+}
+.privateConvButton p {
+  pointer-events: none;
 }
 
 .clientMessage {
   text-align: left;
+  color: #c1a36b;
 }
 .friendMessage {
   text-align: right;
+  color: #c1a36b;
 }
 .lobbyChat {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background-color: grey;
+  background-color: #1e2328;
+  color: white;
   height: 90vh;
 }
-.lobbyChat h5 {
+.lobbyChat h4 {
   margin-top: 0;
+}
+.messageBody {
+  background-color: #785a28;
+  color: white;
+  width: 15%;
+  height: 50px;
+}
+.inactiveConv {
+  opacity: 0.5;
 }
 </style>
 
