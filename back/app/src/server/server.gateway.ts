@@ -52,7 +52,7 @@ export class ServerGateway
     console.log('Socket ' + client.id + ' successfully connected');
 
     // New stuff
-    this.serverService.joinAllChannels(client, client.handshake.auth.user.id);
+    // this.serverService.joinAllChannels(client, client.handshake.auth.user.id);
   }
 
   @SubscribeMessage('debugging')
