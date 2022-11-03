@@ -16,6 +16,7 @@
       </nav>
     </div>
     <router-view
+      :key="$route.fullPath"
       @notification="changeNotificationValue"
       :incoming-friend-request="incomingFriendRequest"
     />
