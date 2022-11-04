@@ -20,16 +20,29 @@
       @notification="changeNotificationValue"
       :incoming-friend-request="incomingFriendRequest"
     />
+    <div v-if="gameConfirmation" class="overlay">
+      <modal @confirmGame="confirmGame()" @denyGame="denyGame()"></modal>
+    </div>
   </div>
 </template>
 
-<script lang="ts">
-import { store } from "./store";
-import { defineComponent, watch } from "vue";
-import { io, Socket } from "socket.io-client";
+<script setup lang="ts">
+import { onMounted, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { io } from "socket.io-client";
 import config from "./config/config";
+import Modal from "./components/GameConfirmation/Modal.vue";
+
+// let socket = config.socket;
+
+const route = useRoute();
+const router = useRouter();
+const incomingFriendRequest = ref("");
+const profileNotificationBadge = ref(false);
+const gameConfirmation = ref(false);
+
 if (!config.socket.id && localStorage.getItem("user")) {
-  console.log(config.socket);
+  console.log("socketing");
   config.socket = io("http://" + window.location.hostname + ":3500", {
     auth: {
       token: localStorage.getItem("token"),
@@ -40,90 +53,153 @@ if (!config.socket.id && localStorage.getItem("user")) {
     autoConnect: false,
   });
   config.socket.connect();
-  console.log(config.socket.id);
+  //   socket = config.socket;
+  //   console.log("?" + socket.id);
 }
-export default defineComponent({
-  created() {
-    window.addEventListener("beforeunload", this.handler);
-  },
-  data() {
-    return {
-      isConnected: store.isConnected,
-      socket: config.socket,
-      incomingFriendRequest: "",
-      profileNotificationBadge: false,
-    };
-  },
-  methods: {
-    logout() {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      config.socket.emit("disco", {});
-      config.socket = io("http://" + window.location.hostname + ":3500", {
-        transports: ["websocket"],
-        // path: "/api/socket.io/",
-        autoConnect: false,
-      });
-    },
-    openModal() {
-      document.querySelector(".modal")?.classList.remove("hidden");
-      document.querySelector(".overlay")?.classList.remove("hidden");
-    },
-    closeModal() {
-      document.querySelector(".modal")?.classList.add("hidden");
-      document.querySelector(".overlay")?.classList.add("hidden");
-    },
-    changeNotificationValue(value: boolean) {
-      this.profileNotificationBadge = value;
-    },
-    handler: function handler() {
-      // console.log("event recieved");
-      // config.socket.emit("disco", {});
-      config.socket.disconnect;
-      config.socket = io("http://" + window.location.hostname + ":3500", {
-        transports: ["websocket"],
-        // path: "/api/socket.io/",
-        autoConnect: false,
-      });
-    },
-    mounted() {
-      this.socket.on("friendshipInvite", (requester: string) => {
-        this.incomingFriendRequest = requester;
-        this.profileNotificationBadge = true;
-      });
-      watch(
-        () => this.$route.path,
-        () => {
-          if (
-            localStorage.getItem("token") &&
-            this.profileNotificationBadge === false
-          ) {
-            fetch(
-              "http://" +
-                window.location.hostname +
-                ":3000/api/friendship/has-invitations",
-              {
-                method: "GET",
-                headers: {
-                  Authorization: "Bearer " + localStorage.getItem("token"),
-                },
-              }
-            )
-              .then((res) => {
-                return res.json();
-              })
-              .then((data) => {
-                this.profileNotificationBadge = data;
-              })
-              .catch((err) => {
-                console.log(err);
-                this.profileNotificationBadge = false;
-              });
+
+window.addEventListener("beforeunload", () => {
+  // console.log("event recieved");
+  // config.socket.emit("disco", {});
+  config.socket.disconnect;
+  config.socket = io("http://" + window.location.hostname + ":3500", {
+    transports: ["websocket"],
+    // path: "/api/socket.io/",
+    autoConnect: false,
+  });
+});
+
+window.addEventListener("keydown", (e) => {
+  console.log("keydown " + config.socket.id);
+  if (e.key === "ArrowLeft")
+    config.socket.emit("key", {
+      key: "downLeft",
+    });
+  else if (e.key === "ArrowRight")
+    config.socket.emit("key", {
+      key: "downRight",
+    });
+  if (e.key === "a")
+    config.socket.emit("key", {
+      key: "downA",
+    });
+  else if (e.key === "d")
+    config.socket.emit("key", {
+      key: "downD",
+    });
+  else if (e.key === " ") {
+    config.socket.emit("key", {
+      key: "downSpace",
+    });
+  }
+  if (e.key === "o") config.socket.emit("debugging");
+  if (e.key === "i") config.socket.emit("chatting");
+});
+
+window.addEventListener("keyup", (e) => {
+  if (e.key === "ArrowLeft")
+    config.socket.emit("key", {
+      key: "upLeft",
+    });
+  else if (e.key === "ArrowRight")
+    config.socket.emit("key", {
+      key: "upRight",
+    });
+  if (e.key === "a")
+    config.socket.emit("key", {
+      key: "upA",
+    });
+  else if (e.key === "d")
+    config.socket.emit("key", {
+      key: "upD",
+    });
+});
+
+const confirmGame = () => {
+  config.socket.emit("playerReady", {}, () => {});
+  showConfirmation(false);
+  router.push("/game");
+};
+
+const denyGame = () => {
+  showConfirmation(false);
+};
+
+const logout = () => {
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  config.socket.emit("disco", {});
+  config.socket = io("http://" + window.location.hostname + ":3500", {
+    transports: ["websocket"],
+    // path: "/api/socket.io/",
+    autoConnect: false,
+  });
+};
+
+const changeNotificationValue = (value: boolean) => {
+  profileNotificationBadge.value = value;
+};
+
+function showConfirmation(show: boolean) {
+  gameConfirmation.value = show;
+}
+
+onMounted(() => {
+  watch(
+    () => route.path,
+    (currentValue, oldValue) => {
+      if (!config.socket.hasListeners("gameConfirmation")) {
+        config.socket.on("gameConfirmation", (gameRoom: any) => {
+          console.log("???");
+          // theRoom = gameRoom;
+          showConfirmation(true);
+        });
+      }
+      if (!config.socket.hasListeners("gameConfirmationTimeout")) {
+        config.socket.on("gameConfirmationTimeout", () => {
+          console.log("$$$");
+          showConfirmation(false);
+          // startButton.value = true;
+          // lobbyStatus.value = "Find Match";
+        });
+      }
+      if (!config.socket.hasListeners("friendshipInvite")) {
+        config.socket.on("friendshipInvite", (requester: string) => {
+          incomingFriendRequest.value = requester;
+          profileNotificationBadge.value = true;
+        });
+      }
+      console.log(currentValue);
+      console.log(oldValue);
+      if (currentValue != "/game") config.socket.emit("watchPath");
+
+      if (
+        localStorage.getItem("token") &&
+        profileNotificationBadge.value === false
+      ) {
+        fetch(
+          "http://" +
+            window.location.hostname +
+            ":3000/api/friendship/has-invitations",
+          {
+            method: "GET",
+            headers: {
+              Authorization: "Bearer " + localStorage.getItem("token"),
+            },
           }
-        }
-      );
-    },
-  },
+        )
+          .then((res) => {
+            return res.json();
+          })
+          .then((data) => {
+            profileNotificationBadge.value = data;
+          })
+          .catch((err) => {
+            console.log(err);
+            profileNotificationBadge.value = false;
+          });
+      }
+    }
+  );
 });
 </script>
 

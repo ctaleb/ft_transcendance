@@ -3,11 +3,9 @@
     <PlayerInfo :player="props.data.host" />
     <div>
       <h2>{{ props.title }}</h2>
-      <p>{{ dayjs(props.data.start).format("DD/MM/YY") }}</p>
+      <p>{{ dayjs(props.start).format("DD/MM/YY") }}</p>
       <p>
-        {{
-          dayjs(dayjs(props.data.end).diff(props.data.start)).format("mm:ss")
-        }}
+        {{ dayjs(dayjs(props.end).diff(props.start)).format("hh:mm:ss") }}
       </p>
       <div class="versus">VS</div>
       <button @click="$emit('close')">Close</button>
@@ -24,6 +22,8 @@ import dayjs from "dayjs";
 const props = defineProps<{
   title: String;
   data: GameSummaryData;
+  start: Date;
+  end: Date;
 }>();
 
 const emit = defineEmits<{
@@ -35,6 +35,7 @@ const emit = defineEmits<{
 .modal {
   display: flex;
   justify-content: space-between;
+  background-color: #2a2a2a;
   color: #bcaf7b;
 
   &:deep(p),
