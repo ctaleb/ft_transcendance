@@ -1,0 +1,62 @@
+@import "css.gg/icons/all.scss";
+
+.chatWindow {
+  background-color: white;
+  width: 250px;
+  float: right;
+  border: 1px solid #836529;
+  input {
+    width: 100%;
+    padding: 5px;
+  }
+}
+.chatWindow input {
+  width: 100%;
+  padding: 5px;
+}
+.chatWindow .sendButton {
+  background: #c1a36b;
+}
+
+.crossIconButton {
+  width: 25px;
+  height: 25px;
+  float: right;
+  background: #c1a36b;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.crossIconImg {
+  margin-top: 0;
+}
+.messages {
+  height: 250px;
+  overflow-y: scroll;
+}
+.messages h6 {
+  margin: 0;
+}
+.messages p {
+  margin-top: 3px;
+}
+
+.header {
+  background-color: #c1a36b;
+  height: 50px;
+}
+.header h4 {
+  margin: 0;
+  display: inline;
+  padding: 5px;
+}
+
+.friendInfo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.miniature {
+  border-radius: 100%;
+  margin-top: 0;
+}

@@ -29,6 +29,22 @@ export function getUserById(id: number): Promise<any> {
     .catch((err) => console.log(err.message));
 }
 
+export function getUserByNickname(name: string): Promise<any> {
+  return fetch(
+    "http://" + window.location.hostname + ":3000/api/user/bynickname/" + name,
+    {
+      method: "GET",
+      headers: {
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+    }
+  )
+    .then((res) => {
+      return res.json();
+    })
+    .catch((err) => console.log(err.message));
+}
+
 export function getUserAvatar(avatar: String): Promise<void | Blob> {
   return fetch(
     "http://" +
