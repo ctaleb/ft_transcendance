@@ -32,7 +32,7 @@ const routes: Array<RouteRecordRaw> = [
     component: RegisterView,
   },
   {
-    path: "/profile",
+    path: "/profile/:nickname?",
     name: "profile",
     component: ProfileView,
   },

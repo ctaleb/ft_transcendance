@@ -47,6 +47,11 @@
         <button style="color: white" @click="displayPrivateConv(friend)">
           Chat
         </button>
+        <button style="color: white" @click="watchProfile(friend)">
+          Profile
+        </button>
+        <button style="color: white" @click="">Spectate</button>
+        <button style="color: white" @click="">Invite</button>
       </span>
     </div>
   </div>
@@ -61,8 +66,8 @@
   </div>
 
   <friend-alert
-    :requester-name="this.incomingFriendRequest"
-    @update-invitations="this.getRelations()"
+    :requester-name="incomingFriendRequest"
+    @update-invitations="getRelations()"
   />
 </template>
 
@@ -85,6 +90,19 @@ interface User {
   image: string;
 }
 
+interface History {
+  host: User;
+  hostScore: number;
+  hostPower: string;
+  hostElo: number;
+  client: User;
+  clientScore: number;
+  clientPower: string;
+  clientElo: number;
+  eloChange: number;
+  gameMode: string;
+}
+
 export default defineComponent({
   props: ["incomingFriendRequest"],
   data() {
@@ -93,6 +111,7 @@ export default defineComponent({
       image: "",
       invitations: Array<User>(),
       friends: Array<User>(),
+      matchHistory: Array<History>(),
       searchFriend: "",
       privateMessage: "",
       conversations: Array<{ nickname: string; displayChatWindow: Boolean }>(),
@@ -130,6 +149,27 @@ export default defineComponent({
               friend.image = URL.createObjectURL(data);
             });
           }
+        })
+        .catch((err) => console.log(err.message));
+    },
+    getMatchHistory(name: string) {
+      fetch(
+        "http://" +
+          window.location.hostname +
+          ":3000/api/profile/match-history/" +
+          name,
+        {
+          method: "GET",
+          headers: {
+            Authorization: "Bearer " + localStorage.getItem("token"),
+          },
+        }
+      )
+        .then((res) => {
+          return res.json();
+        })
+        .then((data) => {
+          this.matchHistory = data;
         })
         .catch((err) => console.log(err.message));
     },
@@ -274,6 +314,9 @@ export default defineComponent({
         if (conv.nickname === friend.nickname) conv.displayChatWindow = true;
       });
     },
+    watchProfile(friend: User) {
+      this.$router.push("profile/" + friend.nickname);
+    },
     closePrivateConv(nickname: string) {
       this.conversations.forEach((conv) => {
         if (conv.nickname === nickname) conv.displayChatWindow = false;
@@ -297,17 +340,30 @@ export default defineComponent({
   },
 
   mounted() {
-    socket.on("openChatWindow", (payload: { author: string }) => {
-      this.conversations.forEach((conv) => {
-        if (conv.nickname === payload.author) conv.displayChatWindow = true;
+    let nick: string = <string>this.$route.params.nickname;
+    if (!nick) {
+      socket.on("openChatWindow", (payload: { author: string }) => {
+        this.conversations.forEach((conv) => {
+          if (conv.nickname === payload.author) conv.displayChatWindow = true;
+        });
       });
-    });
-    funcs.getUserById(this.user.id).then((data: any) => {
-      funcs.getUserAvatar(data.path).then((data: any) => {
-        this.image = URL.createObjectURL(data);
+      funcs.getUserByNickname(this.user.nickname).then((data: any) => {
+        nick = data.nickname;
+        this.user = data;
+        funcs.getUserAvatar(data.avatar.path).then((data: any) => {
+          this.image = URL.createObjectURL(data);
+        });
       });
-    });
-    this.getRelations();
+      this.getRelations();
+    } else {
+      funcs.getUserByNickname(nick).then((data: any) => {
+        this.user = data;
+        funcs.getUserAvatar(data.avatar.path).then((data: any) => {
+          this.image = URL.createObjectURL(data);
+        });
+      });
+    }
+    this.getMatchHistory(nick);
   },
   components: { FriendAlert, chatWindow },
 });

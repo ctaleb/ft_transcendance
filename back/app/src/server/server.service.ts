@@ -294,6 +294,19 @@ export class ServerService {
     }
   }
 
+  getMatchHistory(name: string) {
+    return this._matchHistoryRepository.find({
+      where: [
+        {
+          host: { nickname: name },
+        },
+        {
+          client: { nickname: name },
+        },
+      ],
+    });
+  }
+
   joinQueue(socket: Socket) {
     const player = this.userList.find((element) => element.socket === socket);
     if (!player) return;
