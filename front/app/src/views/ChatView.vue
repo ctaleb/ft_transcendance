@@ -1,7 +1,9 @@
 <template>
   <div class="mainContainer">
     <div class="convList">
-      <h4>Private messages</h4>
+      <button class="privateMessagesHeader" @click="changeConvListStatus">
+        Private messages <i :class="iconConvList"></i>
+      </button>
       <button
         v-for="conv in privateConvs"
         class="privateConvButton"
@@ -13,6 +15,17 @@
         </p>
         <p v-else>{{ conv.user2.nickname }}</p>
       </button>
+      <button class="friendsHeader" @click="changeFriendListStatus">
+        Friends <i :class="iconFriendList"></i>
+      </button>
+      <button
+        v-for="friend in friends"
+        class="friendButton"
+        @click="createConv(friend, $event)"
+      >
+        <img :src="friend.avatarToDisplay" alt="" width="45" height="45" />
+        <p>{{ friend.nickname }}</p>
+      </button>
     </div>
     <div class="lobbyChat">
       <h2>Welcome on the chat</h2>
@@ -21,24 +34,20 @@
     </div>
     <div class="conversation hidden">
       <div class="messages">
-        <div v-for="message in messagesToDisplay">
-          <div v-if="message.author == clientNickname">
-            <div class="clientMessage">
-              <p style="font-weight: bold; color: white">
-                {{ message.author }}
-              </p>
-              <p>{{ message.text }}</p>
-            </div>
+        <template v-for="message in messagesToDisplay">
+          <div v-if="message.author == clientNickname" class="clientMessage">
+            <h4 class="clientName">
+              {{ message.author }}
+            </h4>
+            <p>{{ message.text }}</p>
           </div>
-          <div v-else>
-            <div class="friendMessage">
-              <p style="font-weight: bold; color: white">
-                {{ message.author }}
-              </p>
-              <p>{{ message.text }}</p>
-            </div>
+          <div v-else class="friendMessage">
+            <h4 class="friendName">
+              {{ message.author }}
+            </h4>
+            <p>{{ message.text }}</p>
           </div>
-        </div>
+        </template>
         <div ref="messagesBoxRef"></div>
       </div>
       <div class="input">
@@ -63,10 +72,6 @@
 </template>
 
 <script setup lang="ts">
-export interface user {
-  id: number;
-  nickname: string;
-}
 export interface privateConv {
   user1: user;
   user2: user;
@@ -77,10 +82,14 @@ export interface message {
   text: string;
   author: string;
 }
-import { UserInfo } from "os";
+export interface user {
+  nickname: string;
+  path: string;
+  image: string;
+  avatarToDisplay: string;
+}
 import config from "../config/config";
 import { onMounted, onUpdated, ref, watch } from "vue";
-import { classPrivateMethod } from "@babel/types";
 const socket = config.socket;
 let funcs = require("../functions/funcs");
 const clientNickname = JSON.parse(
@@ -92,15 +101,24 @@ let messageInput = ref("");
 let privateConvs = ref(Array<privateConv>());
 let messagesToDisplay = ref(Array<message>());
 const messagesBoxRef = ref(<HTMLDivElement | null>null);
+let convListFlag = ref(true);
+let friendListFlag = ref(true);
+let iconConvList = ref("gg-remove");
+let iconFriendList = ref("gg-remove");
+let friends = ref(Array<user>());
 
 onUpdated(() => {
   scrollDownMessages();
 });
 onMounted(() => {
+  var audio = new Audio(require("../assets/messageReceived.mp3"));
   socket.on(
     "Message to the client",
     (privateMessage: { author: string; text: string }) => {
-      messagesToDisplay.value.push(privateMessage);
+      if (privateMessage.author == friendNickname.value)
+        messagesToDisplay.value.push(privateMessage);
+      //don't push in the current array if the message is sent frome an other friend
+      audio.play();
     }
   );
   window.addEventListener("keydown", (e) => {
@@ -124,11 +142,45 @@ onMounted(() => {
       });
     })
     .catch((err) => console.log(err));
+  fetch("http://" + window.location.hostname + ":3000/api/friendship", {
+    method: "GET",
+    headers: {
+      Authorization: "Bearer " + localStorage.getItem("token"),
+    },
+  })
+    .then((res) => {
+      return res.json();
+    })
+    .then((data) => {
+      console.log(data.friends);
+      friends.value = data.friends;
+      friends.value.forEach(async (friend) => {
+        friend.avatarToDisplay = await funcs
+          .getUserAvatar(friend.path)
+          .then((data: any) => {
+            organizeFriends();
+            return URL.createObjectURL(data);
+          });
+      });
+    });
 });
+
+function organizeFriends() {
+  for (let i = 0; i < privateConvs.value.length; i++) {
+    for (let j = 0; j < friends.value.length; j++) {
+      if (
+        privateConvs.value[i].user1.nickname == friends.value[j].nickname ||
+        privateConvs.value[i].user2.nickname == friends.value[j].nickname
+      )
+        friends.value.splice(j, 1);
+    }
+  }
+}
 
 function scrollDownMessages() {
   messagesBoxRef.value?.scrollIntoView({ behavior: "smooth", block: "end" });
 }
+
 async function getAvatar(privateConv: privateConv) {
   let userToFetch: user;
   let url_return: string;
@@ -204,7 +256,65 @@ function sendPrivateMessage(nickname: string): void {
   }
 }
 
-//reception message
+function changeConvListStatus() {
+  if (convListFlag.value == true) {
+    const el = document.querySelectorAll(".privateConvButton");
+    el.forEach((element) => {
+      element.classList.add("hidden");
+    });
+    iconConvList.value = "gg-add";
+    convListFlag.value = false;
+  } else {
+    const el = document.querySelectorAll(".privateConvButton");
+    el.forEach((element) => {
+      element.classList.remove("hidden");
+    });
+    convListFlag.value = true;
+    iconConvList.value = "gg-remove";
+  }
+}
+function changeFriendListStatus() {
+  if (friendListFlag.value == true) {
+    const el = document.querySelectorAll(".friendButton");
+    el.forEach((element) => {
+      element.classList.add("hidden");
+    });
+    iconFriendList.value = "gg-add";
+    friendListFlag.value = false;
+  } else {
+    const el = document.querySelectorAll(".friendButton");
+    el.forEach((element) => {
+      element.classList.remove("hidden");
+    });
+    friendListFlag.value = true;
+    iconFriendList.value = "gg-remove";
+  }
+}
+function createConv(friend: user, event: any) {
+  fetch(
+    "http://" +
+      window.location.hostname +
+      ":3000/api/privateConv/createConv/" +
+      friend.nickname,
+    {
+      headers: {
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+    }
+  )
+    .then((data) => data.json())
+    .then(async (data) => {
+      data.conv.avatarToDisplay = await funcs
+        .getUserAvatar(friend.path)
+        .then((data: any) => {
+          return URL.createObjectURL(data);
+        });
+      if (data.created == true) {
+        privateConvs.value.push(data);
+      }
+      displayMessages(data, event);
+    });
+}
 </script>
 
 <style lang="scss" scoped>
@@ -214,7 +324,6 @@ function sendPrivateMessage(nickname: string): void {
   float: left;
   background-color: #5b5a56;
   overflow-y: scroll;
-  overflow: hidden;
 }
 .convList h4 {
   color: white;
@@ -228,7 +337,51 @@ function sendPrivateMessage(nickname: string): void {
 .messages {
   overflow-y: scroll;
   height: 100%;
-  padding-inline: 20%;
+  padding: 0 20%;
+
+  .friendName {
+    color: #fadba2;
+    margin-bottom: 0;
+    margin-top: 0;
+  }
+  .clientName {
+    color: #85724e;
+    margin-bottom: 0;
+    margin-top: 0;
+  }
+  p {
+    margin-bottom: 0;
+  }
+
+  & > .clientMessage {
+    //border: #c1a36b;
+    //border-style: solid;
+    background-color: #ede4d3;
+    margin: 25px 0 25px auto;
+    text-align: left;
+    color: #453c2c;
+    border-radius: 1.125rem 1.125rem 0 1.125rem;
+    width: fit-content;
+    max-width: 66%;
+    overflow-wrap: break-word;
+    padding: 10px;
+    min-width: 30%;
+  }
+
+  & > .friendMessage {
+    background-color: #9c8356;
+    //border: #c1a36b;
+    //border-style: solid;
+    color: white;
+    margin: 25px auto 25px 0;
+    text-align: left;
+    border-radius: 1.125rem 1.125rem 1.125rem 0;
+    width: fit-content;
+    max-width: 66%;
+    overflow-wrap: break-word;
+    padding: 10px;
+    min-width: 30%;
+  }
 }
 .input {
   height: 5vh;
@@ -255,7 +408,7 @@ function sendPrivateMessage(nickname: string): void {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  background: #1e2328;
+  background: #3b3c44;
   height: 4.5%;
   font-size: 25px;
 }
@@ -265,16 +418,11 @@ function sendPrivateMessage(nickname: string): void {
 }
 .privateConvButton p {
   pointer-events: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
-.clientMessage {
-  text-align: left;
-  color: #c1a36b;
-}
-.friendMessage {
-  text-align: right;
-  color: #c1a36b;
-}
 .lobbyChat {
   display: flex;
   flex-direction: column;
@@ -287,15 +435,31 @@ function sendPrivateMessage(nickname: string): void {
 .lobbyChat h4 {
   margin-top: 0;
 }
-.messageBody {
-  background-color: #785a28;
-  color: white;
-  width: 15%;
-  height: 50px;
-}
+
 .inactiveConv {
-  opacity: 0.5;
+  opacity: 0.3;
+}
+.privateMessagesHeader {
+  padding: 5px;
+  border: 3px solid;
+  border-image-slice: 1;
+  border-image-source: linear-gradient(to bottom, #c1a36b, #635e4f);
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+}
+.friendsHeader {
+  padding: 5px;
+  border: 3px solid;
+  border-image-slice: 1;
+  border-image-source: linear-gradient(to bottom, #c1a36b, #635e4f);
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+}
+.friendButton {
+  @extend .privateConvButton;
 }
 </style>
-
-<script setup lang="ts"></script>
