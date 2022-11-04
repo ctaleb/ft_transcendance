@@ -1,12 +1,12 @@
 import { Socket } from 'socket.io';
 import { MatchHistoryEntity } from './match_history.entity';
 
-export class IPoint {
+export interface IPoint {
   x: number;
   y: number;
 }
 
-export class IBar {
+export interface IBar {
   size: IPoint;
   pos: IPoint;
   speed: number;
@@ -14,18 +14,18 @@ export class IBar {
   maxSpeed: number;
 }
 
-export class IBall {
+export interface IBall {
   size: number;
   pos: IPoint;
   speed: IPoint;
 }
 
-export class Score {
+export interface Score {
   client: number;
   host: number;
 }
 
-export class GameState {
+export interface GameState {
   ball: IBall;
   hostPower: IPowerInfo;
   clientPower: IPowerInfo;

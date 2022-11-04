@@ -20,7 +20,11 @@ import {
 import { Server, Socket } from 'socket.io';
 import { UserEntity } from 'src/user/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { MatchHistoryEntity } from './entities/match_history.entity';
+import {
+  MatchHistoryEntity,
+  GameSummaryData,
+  PlayerInfoData,
+} from './entities/match_history.entity';
 import { DeepPartial, Repository } from 'typeorm';
 import { UserService } from 'src/user/user.service';
 
@@ -28,7 +32,7 @@ const chargeMax = 1;
 const ballSize = 16;
 const barSize: IPoint = { x: 50, y: 10 };
 const defaultGameOptions: GameOptions = {
-  scoreMax: 5,
+  scoreMax: 1,
   ballSpeed: 2,
   ballSize: 1,
   barSpeed: 1,
@@ -140,18 +144,32 @@ export class ServerService {
     return elo;
   }
 
-  async inverseSummary(summary: MatchHistoryEntity) {
-    const inversedSummary: MatchHistoryEntity = JSON.parse(
-      JSON.stringify(summary),
-    ); // deep copy
-    inversedSummary.client = summary.host;
-    inversedSummary.clientElo = summary.hostElo;
-    inversedSummary.clientPower = summary.hostPower;
-    inversedSummary.clientScore = summary.hostScore;
-    inversedSummary.host = summary.client;
-    inversedSummary.hostElo = summary.clientElo;
-    inversedSummary.hostPower = summary.clientPower;
-    inversedSummary.hostScore = summary.clientScore;
+  inverseSummary(summary: GameSummaryData) {
+    //   const inversedSummary: GameSummaryData = JSON.parse(
+    //     JSON.stringify(summary),
+    //   );
+    //   // const player: PlayerInfoData = inversedSummary.host;
+    //   inversedSummary.host = inversedSummary.client;
+    //   inversedSummary.client = player;
+    //   inversedSummary.gameMode = summary.gameMode;
+    //   inversedSummary.eloChange = summary.eloChange;
+    const inversedSummary: GameSummaryData = {
+      client: {
+        name: summary.host.name,
+        elo: summary.host.elo,
+        power: summary.host.power,
+        score: summary.host.score,
+        eloChange: summary.host.eloChange,
+      },
+      host: {
+        name: summary.client.name,
+        elo: summary.client.elo,
+        power: summary.client.power,
+        score: summary.client.score,
+        eloChange: summary.client.eloChange,
+      },
+      gameMode: summary.gameMode,
+    };
     return inversedSummary;
   }
 
@@ -161,22 +179,24 @@ export class ServerService {
     if (game.gameState.score.client >= game.room.options.scoreMax) {
       elo = this.elo_calc(game.client, game.host);
       await this.summarize(game, elo);
-      game.host.socket.emit('Lose', game.room, elo, game.gameSummary);
-      game.client.socket.emit(
-        'Win',
-        game.room,
-        elo,
-        this.inverseSummary(game.gameSummary),
+      const data: GameSummaryData = this.summarizeEntityToData(
+        game.gameSummary,
       );
+      const revdata: GameSummaryData = this.inverseSummary(data);
+      game.host.socket.emit('Lose', game.room, elo, data);
+      game.client.socket.emit('Win', game.room, elo, revdata);
     } else if (game.gameState.score.host >= game.room.options.scoreMax) {
       elo = this.elo_calc(game.host, game.client);
       await this.summarize(game, elo);
-      game.host.socket.emit('Win', game.room, elo, game.gameSummary);
+      const data: GameSummaryData = this.summarizeEntityToData(
+        game.gameSummary,
+      );
+      game.host.socket.emit('Win', game.room, elo, data);
       game.client.socket.emit(
         'Lose',
         game.room,
         elo,
-        this.inverseSummary(game.gameSummary),
+        this.inverseSummary(data),
       );
     }
     game.host.status = 'idle';
@@ -347,6 +367,27 @@ export class ServerService {
     } catch (error) {
       console.log(error);
     }
+  }
+
+  summarizeEntityToData(sum: MatchHistoryEntity) {
+    const data: GameSummaryData = {
+      host: {
+        elo: sum.hostElo,
+        name: sum.host.nickname,
+        power: sum.hostPower,
+        score: sum.hostScore,
+        eloChange: sum.eloChange,
+      },
+      client: {
+        elo: sum.clientElo,
+        name: sum.client.nickname,
+        power: sum.clientPower,
+        score: sum.clientScore,
+        eloChange: sum.eloChange,
+      },
+      gameMode: sum.gameMode,
+    };
+    return data;
   }
 
   joinQueue(socket: Socket, powerName: string) {
@@ -662,12 +703,12 @@ export class ServerService {
         },
         speed: gameState.ball.speed,
       },
-      hostPower: {
+      clientPower: {
         maxCharge: gameState.clientPower.maxCharge,
         currentCharge: gameState.clientPower.currentCharge,
         isActive: gameState.clientPower.isActive,
       },
-      clientPower: {
+      hostPower: {
         maxCharge: gameState.hostPower.maxCharge,
         currentCharge: gameState.hostPower.currentCharge,
         isActive: gameState.hostPower.isActive,
