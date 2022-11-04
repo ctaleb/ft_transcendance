@@ -53,8 +53,9 @@
         <button style="color: white" @click="spectateGame(friend)">
           Spectate
         </button>
-        <button style="color: white" @click="">Spectate</button>
-        <button style="color: white" @click="">Invite</button>
+        <button style="color: white" @click="inviteCustom(friend)">
+          Invite
+        </button>
       </span>
     </div>
   </div>
@@ -321,7 +322,10 @@ export default defineComponent({
       this.$router.push("profile/" + friend.nickname);
     },
     spectateGame(friend: User) {
-      this.$router.push("profile/" + friend.nickname);
+      this.$router.push("game");
+    },
+    inviteCustom(friend: User) {
+      this.$router.push("game");
     },
     closePrivateConv(nickname: string) {
       this.conversations.forEach((conv) => {
