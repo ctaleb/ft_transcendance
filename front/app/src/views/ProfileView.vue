@@ -50,6 +50,9 @@
         <button style="color: white" @click="watchProfile(friend)">
           Profile
         </button>
+        <button style="color: white" @click="spectateGame(friend)">
+          Spectate
+        </button>
         <button style="color: white" @click="">Spectate</button>
         <button style="color: white" @click="">Invite</button>
       </span>
@@ -315,6 +318,9 @@ export default defineComponent({
       });
     },
     watchProfile(friend: User) {
+      this.$router.push("profile/" + friend.nickname);
+    },
+    spectateGame(friend: User) {
       this.$router.push("profile/" + friend.nickname);
     },
     closePrivateConv(nickname: string) {
