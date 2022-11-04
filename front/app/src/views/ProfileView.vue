@@ -47,6 +47,11 @@
         <button style="color: white" @click="displayPrivateConv(friend)">
           Chat
         </button>
+        <button style="color: white" @click="watchProfile(friend)">
+          Profile
+        </button>
+        <button style="color: white" @click="">Spectate</button>
+        <button style="color: white" @click="">Invite</button>
       </span>
     </div>
   </div>
@@ -61,8 +66,8 @@
   </div>
 
   <friend-alert
-    :requester-name="this.incomingFriendRequest"
-    @update-invitations="this.getRelations()"
+    :requester-name="incomingFriendRequest"
+    @update-invitations="getRelations()"
   />
 </template>
 
@@ -151,7 +156,7 @@ export default defineComponent({
       fetch(
         "http://" +
           window.location.hostname +
-          ":3000/api/profile/match-history/:" +
+          ":3000/api/profile/match-history/" +
           name,
         {
           method: "GET",
@@ -309,6 +314,9 @@ export default defineComponent({
         if (conv.nickname === friend.nickname) conv.displayChatWindow = true;
       });
     },
+    watchProfile(friend: User) {
+      this.$router.push("profile/" + friend.nickname);
+    },
     closePrivateConv(nickname: string) {
       this.conversations.forEach((conv) => {
         if (conv.nickname === nickname) conv.displayChatWindow = false;
@@ -332,27 +340,30 @@ export default defineComponent({
   },
 
   mounted() {
-    let nick = this.$route.params.nickname;
+    let nick: string = <string>this.$route.params.nickname;
     if (!nick) {
       socket.on("openChatWindow", (payload: { author: string }) => {
         this.conversations.forEach((conv) => {
           if (conv.nickname === payload.author) conv.displayChatWindow = true;
         });
       });
-      funcs.getUserByNickname(this.user.id).then((data: any) => {
-        funcs.getUserAvatar(data.path).then((data: any) => {
+      funcs.getUserByNickname(this.user.nickname).then((data: any) => {
+        nick = data.nickname;
+        this.user = data;
+        funcs.getUserAvatar(data.avatar.path).then((data: any) => {
           this.image = URL.createObjectURL(data);
         });
       });
-      // this.getRelations();
+      this.getRelations();
     } else {
       funcs.getUserByNickname(nick).then((data: any) => {
-        funcs.getUserAvatar(data.path).then((data: any) => {
+        this.user = data;
+        funcs.getUserAvatar(data.avatar.path).then((data: any) => {
           this.image = URL.createObjectURL(data);
         });
       });
     }
-    // this.getMatchHistory(nick);
+    this.getMatchHistory(nick);
   },
   components: { FriendAlert, chatWindow },
 });
