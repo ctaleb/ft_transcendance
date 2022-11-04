@@ -192,7 +192,7 @@ export class ServerService {
     game.host.status = 'idle';
     game.client.status = 'idle';
     this.games.splice(this.games.indexOf(game), 1);
-    this.userList.splice(this.userList.indexOf(loser), 1);
+    // this.userList.splice(this.userList.indexOf(loser), 1);
   }
 
   reconnect(player: User) {
@@ -366,6 +366,7 @@ export class ServerService {
       game.host.socket.join(game.room.name);
       game.client.status = 'inLobby';
       game.client.socket.join(game.room.name);
+      console.log(game.client.socket.id + ' ' + game.host.socket.id);
       return game;
     }
     return null;

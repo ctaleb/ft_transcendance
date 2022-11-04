@@ -13,14 +13,13 @@
       <canvas class="canvas hidden" ref="canvas"></canvas>
     </div>
 
-    <div v-if="modal || summary" class="overlay">
-      <div v-if="modal" class="modal">
+    <div v-if="summary" class="overlay">
+      <!-- <div v-if="modal" class="modal">
         <h1>Ready to play ?</h1>
         <button @click="confirmGame()">Yes</button>
         <button @click="denyGame()">No</button>
-      </div>
+      </div> -->
       <Modal
-        v-else-if="summary"
         :title="sumTitle"
         :data="gameSummary"
         @close="showSummary(false)"
@@ -186,7 +185,7 @@ import { GameSummaryData } from "@/types/GameSummary";
 import Modal from "./Summary/Modal.vue";
 
 const socket = config.socket;
-console.log(socket);
+console.log("config " + socket.id);
 const ballImg = new Image();
 ballImg.src = ballUrl;
 const powerChargeImg = new Image();
@@ -229,7 +228,7 @@ const color = ref("white");
 const sumTitle = ref("Placeholder");
 const sumDate = ref("");
 const sumTime = ref(0);
-const modal = ref(false);
+// const modal = ref(false);
 const summary = ref(false);
 const toggleLadder = ref(true);
 
@@ -275,9 +274,9 @@ const gameSummary = reactive<GameSummaryData>({
   end: new Date(),
 });
 
-function showModal(show: boolean) {
-  modal.value = show;
-}
+// function Confirmation(show: boolean) {
+//   confirmation.value = show;
+// }
 
 function showSummary(show: boolean) {
   summary.value = show;
@@ -286,6 +285,7 @@ function showSummary(show: boolean) {
 function findMatch() {
   startButton.value = true;
   lobbyStatus.value = "Looking for an opponent...";
+  powers.value = false;
   socket.emit("joinQueue", {
     power: power.value,
   });
@@ -319,16 +319,16 @@ function toggleGameQueue() {
   toggleLadder.value = toggleLadder.value ? false : true;
 }
 
-function confirmGame() {
-  socket.emit("playerReady", {}, () => {});
-  document.getElementById("powerSlider")?.classList.add("hidden");
-  showModal(false);
-}
+// function confirmGame() {
+//   socket.emit("playerReady", {}, () => {});
+//   document.getElementById("powerSlider")?.classList.add("hidden");
+//   showModal(false);
+// }
 
-function denyGame() {
-  socket.emit("playerNotReady", {}, () => {});
-  showModal(false);
-}
+// function denyGame() {
+//   socket.emit("playerNotReady", {}, () => {});
+//   showModal(false);
+// }
 
 function kickoffLoading(ctx: any) {
   if (kickOff) {
@@ -526,19 +526,24 @@ function scalePosition(gameState: GameState) {
   gameState.clientBar.pos.y += offset;
 }
 
+function resizeCanvas() {
+  scaling(ctx);
+  test(ctx, gState);
+}
+
 onMounted(() => {
   let ctx = canvas.value?.getContext("2d");
   scaling(ctx);
-  socket.on("gameConfirmation", (gameRoom: GameRoom) => {
-    theRoom = gameRoom;
-    showModal(true);
-  });
+  //   socket.on("gameConfirmation", (gameRoom: GameRoom) => {
+  //     theRoom = gameRoom;
+  //     showModal(true);
+  //   });
 
-  socket.on("gameConfirmationTimeout", () => {
-    showModal(false);
-    startButton.value = true;
-    lobbyStatus.value = "Find Match";
-  });
+  //   socket.on("gameConfirmationTimeout", () => {
+  //     showModal(false);
+  //     startButton.value = true;
+  //     lobbyStatus.value = "Find Match";
+  //   });
 
   socket.on("reconnect", (gameRoom: GameRoom) => {
     console.log("reconnecting");
@@ -623,6 +628,7 @@ onMounted(() => {
   );
 
   socket.on("startGame", (gameRoom: GameRoom) => {
+    powers.value = false;
     theRoom = gameRoom;
     hostName.value = theRoom.hostName;
     clientName.value = theRoom.clientName;
@@ -630,61 +636,12 @@ onMounted(() => {
     document.querySelector(".canvas")?.classList.remove("hidden");
   });
 
+  //todo / tochange
   socket.on("customInvitation", () => {});
 
-  window.addEventListener("keydown", (e) => {
-    if (theRoom && theRoom.status === "playing") {
-      if (e.key === "ArrowLeft")
-        socket.emit("key", {
-          key: "downLeft",
-        });
-      else if (e.key === "ArrowRight")
-        socket.emit("key", {
-          key: "downRight",
-        });
-      if (e.key === "a")
-        socket.emit("key", {
-          key: "downA",
-        });
-      else if (e.key === "d")
-        socket.emit("key", {
-          key: "downD",
-        });
-      else if (e.key === " ") {
-        socket.emit("key", {
-          key: "downSpace",
-        });
-      }
-    }
-    if (e.key === "o") socket.emit("debugging");
-    if (e.key === "i") socket.emit("chatting");
-  });
-
-  window.addEventListener("keyup", (e) => {
-    if (theRoom && theRoom.status === "playing") {
-      if (e.key === "ArrowLeft")
-        socket.emit("key", {
-          key: "upLeft",
-        });
-      else if (e.key === "ArrowRight")
-        socket.emit("key", {
-          key: "upRight",
-        });
-      if (e.key === "a")
-        socket.emit("key", {
-          key: "upA",
-        });
-      else if (e.key === "d")
-        socket.emit("key", {
-          key: "upD",
-        });
-    }
-  });
-
-  window.addEventListener("resize", (e) => {
-    scaling(ctx);
-    test(ctx, gState);
-  });
+  //needs to be moved
+  //window.removeEventListener("resize", resizeCanvas);
+  window.addEventListener("resize", resizeCanvas);
 });
 </script>
 
