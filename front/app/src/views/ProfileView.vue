@@ -322,7 +322,18 @@ export default defineComponent({
       this.$router.push("profile/" + friend.nickname);
     },
     spectateGame(friend: User) {
-      this.$router.push("game");
+      config.socket.emit(
+        "spectate",
+        { friend: friend.nickname },
+        (response: string) => {
+          if (response != "ingame") {
+            console.log(response);
+          } else {
+            this.$router.push("game");
+            config.socket.emit("readySpectate", { friend: friend.nickname });
+          }
+        }
+      );
     },
     inviteCustom(friend: User) {
       this.$router.push("game");

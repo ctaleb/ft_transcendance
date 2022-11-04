@@ -34,7 +34,7 @@ const chargeMax = 1;
 const ballSize = 16;
 const barSize: IPoint = { x: 50, y: 10 };
 const defaultGameOptions: GameOptions = {
-  scoreMax: 1,
+  scoreMax: 100,
   ballSpeed: 2,
   ballSize: 1,
   barSpeed: 1,

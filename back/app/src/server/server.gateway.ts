@@ -333,6 +333,31 @@ export class ServerGateway
     if (player) player.status = 'idle';
   }
 
+  //spectate
+  @SubscribeMessage('spectate')
+  spectate(
+    @MessageBody('friend') friend: string,
+    @ConnectedSocket() client: Socket,
+  ) {
+    let response = 'na';
+    this.serverService.games.forEach((element) => {
+      console.log(element.host.name);
+      console.log(element.client.name);
+      console.log(friend);
+      if (element.client.name == friend || element.host.name == friend)
+        response = 'ingame';
+    });
+    return response;
+  }
+
+  @SubscribeMessage('readySpectate')
+  readySpectate(
+    @MessageBody('friend') friend: string,
+    @ConnectedSocket() client: Socket,
+  ) {
+    console.log('test');
+  }
+
   //Private conv version Lolo
   @SubscribeMessage('deliverMessage')
   async handleMessage(
