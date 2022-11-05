@@ -1,12 +1,14 @@
 import { reactive } from "vue";
+import { User, History } from "@/types/GameSummary";
 
-export const store = reactive({
-  token: {},
-  user: {
-    createdAt: null,
-    id: null,
-    nickname: null,
-    updatedAt: null,
-    uuid: null,
-  },
+interface UserStore {
+  friends: User[];
+  invitations: User[];
+  matchHistory: History[];
+}
+
+export const store = reactive<UserStore>({
+  friends: [],
+  invitations: [],
+  matchHistory: [],
 });

@@ -57,17 +57,6 @@ if (!config.socket.id && localStorage.getItem("user")) {
   //   console.log("?" + socket.id);
 }
 
-window.addEventListener("beforeunload", () => {
-  // console.log("event recieved");
-  // config.socket.emit("disco", {});
-  config.socket.disconnect;
-  config.socket = io("http://" + window.location.hostname + ":3500", {
-    transports: ["websocket"],
-    // path: "/api/socket.io/",
-    autoConnect: false,
-  });
-});
-
 window.addEventListener("keydown", (e) => {
   console.log("keydown " + config.socket.id);
   if (e.key === "ArrowLeft")
@@ -128,11 +117,7 @@ const logout = () => {
   localStorage.removeItem("token");
   localStorage.removeItem("user");
   config.socket.emit("disco", {});
-  config.socket = io("http://" + window.location.hostname + ":3500", {
-    transports: ["websocket"],
-    // path: "/api/socket.io/",
-    autoConnect: false,
-  });
+  config.socket.close();
 };
 
 const changeNotificationValue = (value: boolean) => {
@@ -204,6 +189,8 @@ onMounted(() => {
 </script>
 
 <style lang="scss">
+@import "styles/custom.scss";
+
 body {
   background-color: #010b12;
   color: #aa9e7d;
@@ -213,7 +200,6 @@ body {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
   color: #2c3e50;
 }
 

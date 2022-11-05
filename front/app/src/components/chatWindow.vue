@@ -106,9 +106,7 @@ onMounted(() => {
   )
     .then((result) => result.json())
     .then((data) => {
-      funcs.getUserAvatar(data.avatar.path).then((data: any) => {
-        friendImageUrl.value = URL.createObjectURL(data);
-      });
+      friendImageUrl.value = funcs.getUserAvatar(data.avatar.path);
     });
   return;
 });

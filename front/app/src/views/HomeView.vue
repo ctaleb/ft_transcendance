@@ -207,9 +207,6 @@ export default defineComponent({
   z-index: -1;
 }
 
-img {
-  margin-top: 3rem;
-}
 .main_title {
   //  font-family: "Press Start 2P", cursive;
   font-family: "Orbitron", sans-serif;

@@ -1,0 +1,45 @@
+@import "mixins/sizes.scss";
+
+h2 {
+  font-size: 2.5rem;
+}
+
+h3 {
+  font-size: 2rem;
+}
+
+.border-gold {
+  border: 2px solid #c1a36b;
+}
+
+.user-image {
+  border-radius: 10000px;
+  object-fit: cover;
+  object-position: center;
+}
+
+.container {
+  margin: 0 auto;
+  width: 1320px;
+  padding: 0 20px;
+
+  @include screen-xl {
+    width: 1140px;
+  }
+
+  @include screen-lg {
+    width: 960px;
+  }
+
+  @include screen-md {
+    width: 720px;
+  }
+
+  @include screen-sm {
+    width: 540px;
+  }
+
+  @include screen-xs {
+    width: 100%;
+  }
+}

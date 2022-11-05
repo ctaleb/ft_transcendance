@@ -15,8 +15,12 @@ const videoPlayer: Ref<HTMLVideoElement | null> = ref(null);
 const show = ref(false);
 const route = useRoute();
 
-const props = defineProps(["requesterName"]);
-const emit = defineEmits(["updateInvitations"]);
+const props = defineProps<{
+  requesterName: string;
+}>();
+const emit = defineEmits<{
+  (e: "updateInvitations"): void;
+}>();
 
 onMounted(() => {
   let play = () => {

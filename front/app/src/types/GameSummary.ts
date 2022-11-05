@@ -11,3 +11,22 @@ export interface PlayerInfoData {
   score: number;
   eloChange: number;
 }
+
+export interface User {
+  nickname: string;
+  path: string;
+  image: string;
+}
+
+export interface History {
+  host: User;
+  hostScore: number;
+  hostPower: string;
+  hostElo: number;
+  client: User;
+  clientScore: number;
+  clientPower: string;
+  clientElo: number;
+  eloChange: number;
+  gameMode: string;
+}

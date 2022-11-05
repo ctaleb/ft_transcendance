@@ -40,7 +40,6 @@ export class UserController {
   async getProfile(@Request() req) {
     return req.user;
   }
-  @UseGuards(JwtAuthGuard)
   @Get('profile-picture/assets/:imagename')
   getPicture(@Param('imagename') imagename, @Res() res): Observable<Object> {
     return of(res.sendFile(join(process.cwd(), '/assets/' + imagename)));
