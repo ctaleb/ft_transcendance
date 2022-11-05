@@ -11,7 +11,7 @@ import {
   Res,
   UploadedFile,
   UseGuards,
-  UseInterceptors,
+  UseInterceptors
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -31,7 +31,9 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @Get('profile')
   async getProfile(@Request() req): Promise<UserEntity> {
-    return await this._userService.getUserById(req.user.id);
+    let user: UserEntity = await this._userService.getUserById(req.user.id);
+    user.friends = await user.getFriends();
+    return user;
   }
 
   @Get('profile-picture/assets/:imagename')

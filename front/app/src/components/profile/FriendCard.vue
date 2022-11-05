@@ -1,6 +1,6 @@
 <template>
   <li class="friend debug-border">
-    <img class="user-image border-gold" :src="friend.avatar" alt="" />
+    <img width="300" height="300" class="user-image border-gold" :src="getUserAvatar(friend)" alt="" />
     <h3>{{ friend.nickname }}</h3>
     <button @click="unfriend()">Remove</button>
     <button @click="watchProfile()">Profile</button>
@@ -10,6 +10,7 @@
 </template>
 
 <script lang="ts" setup>
+import { getUserAvatar } from "@/functions/funcs";
 import { User } from "@/types/GameSummary";
 import { useRouter } from "vue-router";
 
@@ -46,7 +47,7 @@ const unfriend = () => {
 };
 
 const watchProfile = () => {
-  router.push("profile/" + props.friend.nickname);
+  router.push("/profile/" + props.friend.nickname);
 };
 
 const spectateGame = () => {

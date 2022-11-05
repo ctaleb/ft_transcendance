@@ -5,13 +5,13 @@
         class="user-image border-gold"
         :src="getUserAvatar(currentUser)"
         alt=""
-        style="max-width: 300px; max-height: 300px"
+        width="300" height="300"
       />
       <div>
         <h2 class="playerName">{{ currentUser?.nickname }}</h2>
-        <pre style="background-color: white; color: black">{{
+        <!-- <pre style="background-color: white; color: black">{{
           currentUser || "undefined"
-        }}</pre>
+        }}</pre> -->
       </div>
     </div>
     <!-- <div class="menu">

@@ -1,14 +1,7 @@
 import { Exclude, Expose, Transform } from 'class-transformer';
 import { FriendshipEntity } from 'src/friendship/entities/friendship.entity';
 import { ImageEntity } from 'src/image/image.entity';
-import {
-  Column,
-  Entity,
-  JoinColumn,
-  JoinTable,
-  ManyToMany,
-  ManyToOne,
-} from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { AbstractEntity } from '../database/abstract.entity';
 
 @Exclude()
@@ -31,31 +24,18 @@ export class UserEntity extends AbstractEntity {
   })
   public avatar?: ImageEntity;
 
-  // @Expose()
-  // @ManyToMany(() => UserEntity, {
-  //   eager: true,
-  // })
-  // @JoinTable({
-  //   name: 'friendship',
-  //   joinColumn: {
-  //     name: 'requesterId',
-  //   },
-  //   inverseJoinColumn: {
-  //     name: 'addresseeId',
-  //   },
-  // })
-  // public friendship?: UserEntity[];
-
   @Expose({ name: 'friends' })
+  public friends?: UserEntity[];
+
   async getFriends(): Promise<UserEntity[]> {
     const friends = await FriendshipEntity.find({
       where: [
         {
-          addresseeId: this.id,
+          addressee: { id: this.id },
           status: 'friend',
         },
         {
-          requesterId: this.id,
+          requester: { id: this.id },
           status: 'friend',
         },
       ],
@@ -63,9 +43,9 @@ export class UserEntity extends AbstractEntity {
       const result: UserEntity[] = [];
       for (const entity of data) {
         if (entity.requesterId === this.id)
-          result.push(await UserEntity.findOneBy({ id: entity.addresseeId }));
+          result.push(entity.addressee);
         else
-          result.push(await UserEntity.findOneBy({ id: entity.requesterId }));
+          result.push(entity.requester);
       }
       return result;
     });

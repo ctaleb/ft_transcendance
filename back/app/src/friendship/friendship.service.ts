@@ -315,14 +315,14 @@ export class FriendshipService {
   }
 
   async hasPendingInvitations(username: string) {
-    try {
-      const user: UserEntity = await this._userService.getUserByNickname(
-        username,
-      );
-      return (await this.findInvitationsOf(user)).length === 0 ? false : true;
-    } catch (error) {
-      console.log(error);
-    }
+    // try {
+    //   const user: UserEntity = await this._userService.getUserByNickname(
+    //     username,
+    //   );
+    //   return (await this.findInvitationsOf(user)).length === 0 ? false : true;
+    // } catch (error) {
+    //   console.log(error);
+    // }
     return false;
   }
 }
