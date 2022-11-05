@@ -28,9 +28,9 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { io } from "socket.io-client";
 import config from "./config/config";
 import Modal from "./components/GameConfirmation/Modal.vue";
+import { trySetupUser } from "@/functions/funcs";
 
 const route = useRoute();
 const router = useRouter();
@@ -38,21 +38,7 @@ const incomingFriendRequest = ref("");
 const profileNotificationBadge = ref(false);
 const gameConfirmation = ref(false);
 
-if (localStorage.getItem("user")) {
-  console.log("socketing");
-  config.socket = io("http://" + window.location.hostname + ":3500", {
-    auth: {
-      token: localStorage.getItem("token"),
-      user: JSON.parse(localStorage.getItem("user") || "{}"),
-    },
-    // path: "/api/socket.io/",
-    transports: ["websocket"],
-    autoConnect: false,
-  });
-  config.socket.connect();
-  //   socket = config.socket;
-  //   console.log("?" + socket.id);
-}
+trySetupUser();
 
 window.addEventListener("keydown", (e) => {
   console.log("keydown " + config.socket.id);

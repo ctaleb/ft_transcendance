@@ -1,22 +1,15 @@
 import { AbstractEntity } from 'src/database/abstract.entity';
 import { UserEntity } from 'src/user/user.entity';
-import {
-  Column,
-  Entity,
-  JoinColumn,
-  ManyToMany,
-  ManyToOne,
-  OneToMany,
-} from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 
 @Entity({ name: 'friendship' })
 export class FriendshipEntity extends AbstractEntity {
   @JoinColumn({ name: 'requesterId' })
-  @ManyToOne((type) => UserEntity, { onDelete: 'CASCADE' })
+  @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
   public requester: UserEntity;
 
   @JoinColumn({ name: 'addresseeId' })
-  @ManyToOne((type) => UserEntity, { onDelete: 'CASCADE' })
+  @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
   public addressee: UserEntity;
 
   @Column({ nullable: true })

@@ -1,5 +1,6 @@
 import { Exclude } from 'class-transformer';
 import {
+  BaseEntity,
   Column,
   CreateDateColumn,
   Generated,
@@ -7,20 +8,20 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-export abstract class AbstractEntity {
-  @PrimaryGeneratedColumn()
+export abstract class AbstractEntity extends BaseEntity {
   @Exclude()
+  @PrimaryGeneratedColumn()
   public id: number;
 
   @Column()
   @Generated('uuid')
   public uuid: string;
 
-  @CreateDateColumn()
   @Exclude()
+  @CreateDateColumn()
   public createdAt: Date;
 
-  @UpdateDateColumn()
   @Exclude()
+  @UpdateDateColumn()
   public updatedAt: Date;
 }

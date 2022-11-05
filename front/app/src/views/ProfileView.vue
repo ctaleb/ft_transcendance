@@ -3,11 +3,16 @@
     <div class="current-user debug-border">
       <img
         class="user-image border-gold"
-        :src="store.user.avatar"
+        :src="getUserAvatar(currentUser)"
         alt=""
         style="max-width: 300px; max-height: 300px"
       />
-      <p class="playerName">{{ store.user.nickname }}</p>
+      <div>
+        <h2 class="playerName">{{ currentUser?.nickname }}</h2>
+        <pre style="background-color: white; color: black">{{
+          currentUser || "undefined"
+        }}</pre>
+      </div>
     </div>
     <!-- <div class="menu">
       <button @click="">Friend</button>
@@ -59,7 +64,7 @@
 import FriendAlert from "@/components/FriendAlert.vue";
 import FriendCard from "@/components/profile/FriendCard.vue";
 import config from "@/config/config";
-import * as funcs from "@/functions/funcs";
+import { getUserAvatar, getUserByNickname } from "@/functions/funcs";
 import { useStore } from "@/store";
 import { User } from "@/types/GameSummary";
 import { onMounted, ref } from "vue";
@@ -87,10 +92,14 @@ onMounted(async () => {
   let nick = <string | undefined>route.params.nickname;
 
   if (nick) {
-    currentUser.value = await funcs.getUserByNickname(nick);
-  }
+    currentUser.value = await getUserByNickname(nick);
+  } else {
+    currentUser.value = store.user;
 
-  currentUser.value ??= store.user;
+    store.$subscribe((mutation, state) => {
+      currentUser.value = state.user;
+    });
+  }
 });
 
 // const checkNotificationBadge = () => {

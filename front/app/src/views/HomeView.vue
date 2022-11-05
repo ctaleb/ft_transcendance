@@ -61,13 +61,9 @@
 </template>
 
 <script lang="ts">
-import { processExpression } from "@vue/compiler-core";
-import { defineComponent, Ref } from "vue";
-import { ref } from "vue";
-import { io, Socket } from "socket.io-client";
-import config from "../config/config";
+import * as funcs from "@/functions/funcs";
+import { defineComponent, ref } from "vue";
 
-let funcs = require("../functions/funcs");
 export default defineComponent({
   computed: {
     videoElement() {
@@ -98,8 +94,8 @@ export default defineComponent({
     };
   },
   emits: ["notification"],
-  mounted() {
-    let isConnected = funcs.isConnected(localStorage.getItem("token"));
+  async mounted() {
+    let isConnected = funcs.isConnected(localStorage.getItem("token") || "");
     if (isConnected) this.$router.push("/portal");
     else console.log("not connected");
 
@@ -108,51 +104,41 @@ export default defineComponent({
     var url = new URL(current_url);
     let code = url.searchParams.get("code");
     if (code != null) {
-      fetch("http://" + window.location.hostname + ":3000/api/oauth/" + code, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        method: "POST",
-      })
-        .then((res) => {
-          return res.json();
+      let response = await fetch(
+        "http://" + window.location.hostname + ":3000/api/oauth/" + code,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          method: "POST",
+        }
+      );
+      let data = await response.json();
+      fetch(
+        "http://" +
+          window.location.hostname +
+          ":3000/api/oauth/login/" +
+          data.access_token,
+        {
+          method: "POST",
+        }
+      )
+        .then((response) => {
+          return response.json();
         })
-        .then((token) => {
-          fetch(
-            "http://" +
-              window.location.hostname +
-              ":3000/api/oauth/login/" +
-              token.access_token,
-            {
-              method: "POST",
-            }
-          )
-            .then((response) => {
-              return response.json();
-            })
-            .then((value: any) => {
-              localStorage.setItem("token", value.token);
-              localStorage.setItem("user", JSON.stringify(value.user));
-              config.socket = io(
-                "http://" + window.location.hostname + ":3500",
-                {
-                  auth: { token: value.token, user: value.user },
-                  // path: "/api/socket.io/",
-                  transports: ["websocket"],
-                  autoConnect: false,
-                }
-              );
-              config.socket.connect();
-              this.$router.push("/portal");
-            })
-            .catch((err) => console.log(err));
+        .then((value: any) => {
+          localStorage.setItem("token", value.token);
+          localStorage.setItem("user", JSON.stringify(value.user));
+          funcs.trySetupUser().then(() => {
+            this.$router.push("/portal");
+          });
         })
         .catch((err) => console.log(err));
     }
   },
   methods: {
     async login() {
-      fetch(
+      let response = await fetch(
         "http://" + window.location.hostname + ":3000/api/Authentication/login",
         {
           method: "POST",
@@ -164,31 +150,18 @@ export default defineComponent({
             password: this.password,
           }),
         }
-      )
-        .then((response) => {
-          if (response.status != 201) {
-            this.login_failed_msg = true;
-            throw response.status;
-          }
-          return response.json();
-        })
-        .then((value: any) => {
-          localStorage.setItem("token", value.token);
-          localStorage.setItem("user", JSON.stringify(value.user));
-          setTimeout(() => {}, 2000);
+      );
+      if (response.status != 201) {
+        this.login_failed_msg = true;
+        throw response.status;
+      }
 
-          config.socket = io("http://" + window.location.hostname + ":3500", {
-            auth: { token: value.token, user: value.user },
-            // path: "/api/socket.io/",
-            transports: ["websocket"],
-            autoConnect: false,
-          });
-          config.socket.connect();
-          this.$router.push("/portal");
-        })
-        .catch((error) => {
-          console.log(error);
-        });
+      let data = await response.json();
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      funcs.trySetupUser().then(() => {
+        this.$router.push("/portal");
+      });
     },
   },
 });
