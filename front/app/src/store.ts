@@ -1,14 +1,16 @@
-import { reactive } from "vue";
-import { User, History } from "@/types/GameSummary";
+import { User } from "@/types/GameSummary";
+import { defineStore } from "pinia";
 
-interface UserStore {
-  friends: User[];
+interface State {
+  user: User | undefined;
   invitations: User[];
-  matchHistory: History[];
 }
 
-export const store = reactive<UserStore>({
-  friends: [],
-  invitations: [],
-  matchHistory: [],
+export const useStore = defineStore("default", {
+  state: (): State => {
+    return {
+      user: undefined,
+      invitations: [],
+    };
+  },
 });

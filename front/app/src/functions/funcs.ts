@@ -1,3 +1,5 @@
+import { User } from "@/types/GameSummary";
+
 export function isConnected(token: string): boolean {
   if (token == null) return false;
 
@@ -16,7 +18,7 @@ export function isConnected(token: string): boolean {
   return ret;
 }
 
-export function getUserById(id: number): Promise<any> {
+export function getUserById(id: number): Promise<User | undefined> {
   return fetch("http://" + window.location.hostname + ":3000/api/user/" + id, {
     method: "GET",
     headers: {
@@ -29,7 +31,7 @@ export function getUserById(id: number): Promise<any> {
     .catch((err) => console.log(err.message));
 }
 
-export function getUserByNickname(name: string): Promise<any> {
+export function getUserByNickname(name: string): Promise<User | undefined> {
   return fetch(
     "http://" + window.location.hostname + ":3000/api/user/bynickname/" + name,
     {

@@ -8,7 +8,6 @@
           >Profile
           <div :class="'dot' + (profileNotificationBadge ? ' show' : '')"></div
         ></router-link>
-
         | <router-link to="/chat">Chat</router-link> |
         <router-link to="/users">All users</router-link> |
         <router-link to="/edit">Profile Editing</router-link> |
@@ -33,15 +32,13 @@ import { io } from "socket.io-client";
 import config from "./config/config";
 import Modal from "./components/GameConfirmation/Modal.vue";
 
-// let socket = config.socket;
-
 const route = useRoute();
 const router = useRouter();
 const incomingFriendRequest = ref("");
 const profileNotificationBadge = ref(false);
 const gameConfirmation = ref(false);
 
-if (!config.socket.id && localStorage.getItem("user")) {
+if (localStorage.getItem("user")) {
   console.log("socketing");
   config.socket = io("http://" + window.location.hostname + ":3500", {
     auth: {

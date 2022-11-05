@@ -1,6 +1,6 @@
 <template>
   <li class="friend debug-border">
-    <img class="user-image border-gold" :src="friend.image" alt="" />
+    <img class="user-image border-gold" :src="friend.avatar" alt="" />
     <h3>{{ friend.nickname }}</h3>
     <button @click="unfriend()">Remove</button>
     <button @click="watchProfile()">Profile</button>

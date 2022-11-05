@@ -14,8 +14,9 @@ export interface PlayerInfoData {
 
 export interface User {
   nickname: string;
-  path: string;
-  image: string;
+  avatar: string;
+  friends?: User[];
+  history?: History[];
 }
 
 export interface History {
