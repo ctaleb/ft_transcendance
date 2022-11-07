@@ -295,7 +295,8 @@ export class ServerGateway
         return await this.privateMessageService.createConv(author, requester);
       });
     await this.privateMessageService.updateLastMessageDate(conv);
-    this.server.emit('Update conv list'); //need to emit to both users, to signal them than the conv must be push to top of the list
+    if (receiver) this.server.to(receiver.socket.id).emit('Update conv list'); //need to emit to both users, to signal them than the conv must be push to top of the list
+    this.server.to(client.id).emit('Update conv list');
     this.privateMessageService.createMessage({
       conv: conv,
       author: author,

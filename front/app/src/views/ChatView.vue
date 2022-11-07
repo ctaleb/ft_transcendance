@@ -24,9 +24,6 @@
           {{ conv.user1.nickname }}
         </p>
         <p v-else>{{ conv.user2.nickname }}</p>
-        <button class="deleteConv" @click="deleteConv(conv)">
-          <i class="gg-close"></i>
-        </button>
       </button>
 
       <button class="friendsHeader" @click="changeFriendListStatus">
@@ -135,14 +132,14 @@ onMounted(() => {
     "Message to the client",
     (privateMessage: { author: string; text: string }) => {
       if (privateMessage.author == friendNickname.value)
-        messagesToDisplay.value.push(privateMessage);
-      //don't push in the current array if the message is sent from an other friend
+        messagesToDisplay.value.push(privateMessage); //don't push in the current array if the message is sent from an other friend
       audio.play();
-      organizeFriends();
     }
   );
   socket.on("Update conv list", () => {
-    getAllConvs(); //If this signal is received, we fetch again convs to order them from latest to oldest
+    getAllConvs().then(() => {
+      organizeFriends();
+    }); //If this signal is received, we fetch again convs to order them from latest to oldest
   });
   window.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
@@ -173,7 +170,7 @@ onMounted(() => {
 });
 
 function getAllConvs() {
-  fetch(
+  return fetch(
     "http://" + window.location.hostname + ":3000/api/privateConv/getAllConvs",
     {
       headers: {
@@ -183,13 +180,7 @@ function getAllConvs() {
   )
     .then((data) => data.json())
     .then(async (data) => {
-      // console.log("before update-->");
-      // console.log(privateConvs.value);
       privateConvs.value = data;
-      // console.log("After update-->");
-      // console.log(privateConvs.value);
-      console.log("Data update-->");
-      console.log(data);
       privateConvs.value.forEach(async (conv) => {
         conv.avatarToDisplay = await getAvatar(conv);
       });
@@ -498,16 +489,6 @@ function deleteConv(conv: privateConv) {
 }
 .friendButton {
   @extend .privateConvButton;
-}
-.deleteConv {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-right: auto;
-  max-width: 15%;
-  margin-left: auto;
-  margin-right: 0;
-  background: #3b3c44;
 }
 
 //searchbar ,need to move it in a component
