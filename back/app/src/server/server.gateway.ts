@@ -300,5 +300,6 @@ export class ServerGateway
       author: author,
       text: messageToDeliver,
     });
+    await this.privateMessageService.updateLastMessageDate(conv);
   }
 }

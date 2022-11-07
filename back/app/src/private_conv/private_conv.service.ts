@@ -72,4 +72,13 @@ export class PrivateConvService {
     if (convs) return convs;
     throw new HttpException('User not found', HttpStatus.NOT_FOUND);
   }
+
+  async updateLastMessageDate(conv: PrivateConvEntity) {
+    const convToUpdate = await this.privateConvRepository.findOneBy({
+      uuid: conv.uuid,
+    });
+    convToUpdate.lastMessage = new Date();
+    console.log('called');
+    await this.privateConvRepository.save(convToUpdate);
+  }
 }
