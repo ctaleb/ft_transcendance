@@ -17,6 +17,7 @@
         v-for="conv in privateConvs"
         class="privateConvButton"
         @click="displayMessages(conv, $event)"
+        v-bind:key="conv.uuid"
       >
         <img :src="conv.avatarToDisplay" alt="" width="45" height="45" />
         <p v-if="conv.user1.nickname != clientNickname">
@@ -35,6 +36,7 @@
         v-for="friend in friends"
         class="friendButton"
         @click="createConv(friend, $event)"
+        v-bind:key="friend.nickname"
       >
         <img :src="friend.avatarToDisplay" alt="" width="45" height="45" />
         <p>{{ friend.nickname }}</p>
@@ -48,13 +50,17 @@
     <div class="conversation hidden">
       <div class="messages">
         <template v-for="message in messagesToDisplay">
-          <div v-if="message.author == clientNickname" class="clientMessage">
+          <div
+            v-if="message.author == clientNickname"
+            class="clientMessage"
+            v-bind:key="message.text"
+          >
             <h4 class="clientName">
               {{ message.author }}
             </h4>
             <p>{{ message.text }}</p>
           </div>
-          <div v-else class="friendMessage">
+          <div v-else class="friendMessage" v-bind:key="message.text">
             <h4 class="friendName">
               {{ message.author }}
             </h4>
@@ -132,29 +138,18 @@ onMounted(() => {
         messagesToDisplay.value.push(privateMessage);
       //don't push in the current array if the message is sent from an other friend
       audio.play();
+      organizeFriends();
     }
   );
+  socket.on("Update conv list", () => {
+    getAllConvs(); //If this signal is received, we fetch again convs to order them from latest to oldest
+  });
   window.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       sendPrivateMessage(friendNickname.value);
     }
   });
-  fetch(
-    "http://" + window.location.hostname + ":3000/api/privateConv/getAllConvs",
-    {
-      headers: {
-        Authorization: "Bearer " + localStorage.getItem("token"),
-      },
-    }
-  )
-    .then((data) => data.json())
-    .then(async (data) => {
-      privateConvs.value = data;
-      privateConvs.value.forEach(async (conv) => {
-        conv.avatarToDisplay = await getAvatar(conv);
-      });
-    })
-    .catch((err) => console.log(err));
+  getAllConvs();
   fetch("http://" + window.location.hostname + ":3000/api/friendship", {
     method: "GET",
     headers: {
@@ -165,7 +160,6 @@ onMounted(() => {
       return res.json();
     })
     .then((data) => {
-      console.log(data.friends);
       friends.value = data.friends;
       friends.value.forEach(async (friend) => {
         friend.avatarToDisplay = await funcs
@@ -177,6 +171,31 @@ onMounted(() => {
       });
     });
 });
+
+function getAllConvs() {
+  fetch(
+    "http://" + window.location.hostname + ":3000/api/privateConv/getAllConvs",
+    {
+      headers: {
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+    }
+  )
+    .then((data) => data.json())
+    .then(async (data) => {
+      // console.log("before update-->");
+      // console.log(privateConvs.value);
+      privateConvs.value = data;
+      // console.log("After update-->");
+      // console.log(privateConvs.value);
+      console.log("Data update-->");
+      console.log(data);
+      privateConvs.value.forEach(async (conv) => {
+        conv.avatarToDisplay = await getAvatar(conv);
+      });
+    })
+    .catch((err) => console.log(err));
+}
 
 function organizeFriends() {
   for (let i = 0; i < privateConvs.value.length; i++) {

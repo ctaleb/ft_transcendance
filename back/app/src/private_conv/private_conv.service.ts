@@ -67,7 +67,11 @@ export class PrivateConvService {
   async getAllConvs(id: number) {
     const convs = await this.privateConvRepository.find({
       where: [{ user1: { id: id } }, { user2: { id: id } }],
+      order: {
+        lastMessage: 'DESC',
+      },
     });
+    console.log('CONVS');
     console.log(convs);
     if (convs) return convs;
     throw new HttpException('User not found', HttpStatus.NOT_FOUND);
@@ -78,7 +82,6 @@ export class PrivateConvService {
       uuid: conv.uuid,
     });
     convToUpdate.lastMessage = new Date();
-    console.log('called');
-    await this.privateConvRepository.save(convToUpdate);
+    return await this.privateConvRepository.save(convToUpdate);
   }
 }
