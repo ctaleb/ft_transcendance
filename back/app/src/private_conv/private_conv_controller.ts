@@ -44,7 +44,7 @@ export class PrivateConvController {
       req.user.payload.nickname,
     );
     const user2 = await this.userService.getUserByNickname(friendNickname);
-    const conv = this.privateConvService
+    const conv = await this.privateConvService
       .getConv(user1, user2)
       .catch(async () => {
         convCreated = true;

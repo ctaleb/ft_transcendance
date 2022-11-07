@@ -280,14 +280,15 @@ export class ServerGateway
         author: getAuthor.name,
         text: messageToDeliver,
       });
+      requester = await this.userService.getUserByNickname(receiver.name);
+    } else {
+      console.log('friend is ' + friendNickname);
+      requester = await this.userService.getUserByNickname(friendNickname);
     }
 
     const author: UserEntity = await this.userService.getUserByNickname(
       getAuthor.name,
     );
-    receiver
-      ? (requester = await this.userService.getUserByNickname(receiver.name))
-      : (requester = await this.userService.getUserByNickname(friendNickname));
 
     const conv = await this.privateMessageService
       .getConv(author, requester)

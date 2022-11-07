@@ -1,6 +1,15 @@
 <template>
   <div class="mainContainer">
     <div class="convList">
+      <div class="searchBar">
+        <div class="searchIcon"><i class="gg-search"></i></div>
+        <input
+          type="text"
+          class="searchField"
+          name="searchFriend"
+          placeholder="Player name"
+        />
+      </div>
       <button class="privateMessagesHeader" @click="changeConvListStatus">
         Private messages <i :class="iconConvList"></i>
       </button>
@@ -14,7 +23,11 @@
           {{ conv.user1.nickname }}
         </p>
         <p v-else>{{ conv.user2.nickname }}</p>
+        <button class="deleteConv" @click="deleteConv(conv)">
+          <i class="gg-close"></i>
+        </button>
       </button>
+
       <button class="friendsHeader" @click="changeFriendListStatus">
         Friends <i :class="iconFriendList"></i>
       </button>
@@ -117,7 +130,7 @@ onMounted(() => {
     (privateMessage: { author: string; text: string }) => {
       if (privateMessage.author == friendNickname.value)
         messagesToDisplay.value.push(privateMessage);
-      //don't push in the current array if the message is sent frome an other friend
+      //don't push in the current array if the message is sent from an other friend
       audio.play();
     }
   );
@@ -291,6 +304,7 @@ function changeFriendListStatus() {
   }
 }
 function createConv(friend: user, event: any) {
+  friendNickname.value = friend.nickname;
   fetch(
     "http://" +
       window.location.hostname +
@@ -310,10 +324,14 @@ function createConv(friend: user, event: any) {
           return URL.createObjectURL(data);
         });
       if (data.created == true) {
-        privateConvs.value.push(data);
+        privateConvs.value.push(data.conv);
+        organizeFriends();
       }
-      displayMessages(data, event);
+      displayMessages(data.conv, event);
     });
+}
+function deleteConv(conv: privateConv) {
+  console.log("Oye brav gens");
 }
 </script>
 
@@ -461,5 +479,46 @@ function createConv(friend: user, event: any) {
 }
 .friendButton {
   @extend .privateConvButton;
+}
+.deleteConv {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: auto;
+  max-width: 15%;
+  margin-left: auto;
+  margin-right: 0;
+  background: #3b3c44;
+}
+
+//searchbar ,need to move it in a component
+
+.searchBar {
+  position: relative;
+  display: flex;
+  justify-content: flex-start;
+  border: 3px solid;
+  border-image-slice: 1;
+  border-image-source: linear-gradient(to bottom, #242218, #c1a36b);
+  background: linear-gradient(to bottom, #071018, #151d23);
+  font-size: 10px;
+  align-items: center;
+  .searchField {
+    width: 100%;
+    border: unset;
+    background: inherit;
+    font-size: 2em;
+    height: auto;
+    color: grey;
+  }
+  .searchField:focus {
+    outline: none;
+    caret-color: grey;
+  }
+  .searchIcon {
+    position: relative;
+    color: grey;
+    margin: 1em;
+  }
 }
 </style>
