@@ -8,7 +8,6 @@
           >Profile
           <div :class="'dot' + (profileNotificationBadge ? ' show' : '')"></div
         ></router-link>
-
         | <router-link to="/chat">Chat</router-link> |
         <router-link to="/users">All users</router-link> |
         <router-link to="/edit">Profile Editing</router-link> |
@@ -28,18 +27,15 @@ import { defineComponent, watch } from "vue";
 import { io, Socket } from "socket.io-client";
 import config from "./config/config";
 if (!config.socket.id && localStorage.getItem("user")) {
-  console.log(config.socket);
   config.socket = io("http://" + window.location.hostname + ":3500", {
     auth: {
       token: localStorage.getItem("token"),
       user: JSON.parse(localStorage.getItem("user") || "{}"),
     },
-    // path: "/api/socket.io/",
     transports: ["websocket"],
     autoConnect: false,
   });
   config.socket.connect();
-  console.log(config.socket.id);
 }
 export default defineComponent({
   created() {
@@ -60,7 +56,6 @@ export default defineComponent({
       config.socket.emit("disco", {});
       config.socket = io("http://" + window.location.hostname + ":3500", {
         transports: ["websocket"],
-        // path: "/api/socket.io/",
         autoConnect: false,
       });
     },
@@ -76,12 +71,9 @@ export default defineComponent({
       this.profileNotificationBadge = value;
     },
     handler: function handler() {
-      // console.log("event recieved");
-      // config.socket.emit("disco", {});
       config.socket.disconnect;
       config.socket = io("http://" + window.location.hostname + ":3500", {
         transports: ["websocket"],
-        // path: "/api/socket.io/",
         autoConnect: false,
       });
     },
@@ -115,7 +107,6 @@ export default defineComponent({
                 this.profileNotificationBadge = data;
               })
               .catch((err) => {
-                console.log(err);
                 this.profileNotificationBadge = false;
               });
           }

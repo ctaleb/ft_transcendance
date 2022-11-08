@@ -1,34 +1,5 @@
 <template>
-  <div class="chat">
-    <div v-if="!joined">
-      <form @submit.prevent="joinRoom">
-        <label>Enter your name</label>
-        <input v-model="name" />
-        <br /><br />
-        <label>Enter the room name</label>
-        <input v-model="room" /><br /><br />
-        <button type="submit">Join</button>
-      </form>
-    </div>
-    <div class="chat-container" v-else>
-      <div class="messages-container">
-        <div v-for="message in messages">
-          [{{ message.name }}] : {{ message.message }}
-        </div>
-      </div>
-      <hr />
-      <div class="message-input">
-        <form @submit.prevent="sendMessage">
-          <label>Message:</label>
-          <input v-model="messageText" />
-          <button type="submit">Send</button>
-        </form>
-      </div>
-      <div class="left-panel">
-        <div v-for="user in users">[{{ user }}]</div>
-      </div>
-    </div>
-  </div>
+  <div class="chat"></div>
   <friend-alert :requester-name="props.incomingFriendRequest" />
 </template>
 
@@ -36,55 +7,20 @@
 
 <script setup lang="ts">
 import { io } from "socket.io-client";
-import { Message } from "../../../../back/app/src/server/entities/server.entity";
 import { onBeforeMount, onMounted, reactive, ref } from "vue";
 import config from "../config/config";
 import FriendAlert from "../components/FriendAlert.vue";
-
-// const socket = io("http://" + window.location.hostname + ":3000");
-// console.log(window.location.hostname);
+import Channel from "../types/Channel.ts";
 
 const socket = config.socket;
-// const messages = ref([]);
 const props = defineProps(["incomingFriendRequest"]);
 const emit = defineEmits(["notification"]);
-const messageText = ref("");
-const joined = ref(false);
-const name = ref("");
-const room = ref("");
-// let room = "";
 
-let users: String[] = reactive<String[]>([]);
-let messages: Message[] = reactive<Message[]>([]);
-
-enum ChannelType {
-  PUBLIC = "public",
-  PRIVATE = "private",
-  PROTECTED = "protected",
-}
-
-enum ChannelRole {
-  OWNER = "owner",
-  ADMIN = "administrator",
-  MEMBER = "member",
-}
-
-onBeforeMount(() => {
-  // socket.on("newUser", (name) => {
-  // 	users.value.push(name);
-  // });
-});
+const myChannels: Channel[] = ref<Channel>([]);
+const channelsNum = ref(0);
 
 onMounted(() => {
-  // if (joined.value === true) {
-  // 	let time = setInterval(function () {
-  // 		refreshUsers();
-  // 	}, 2000);
-  // }
-  // updateChannel();
-  // takeAdmin();
-  // getChannels();
-  // ban();
+  getChannels();
 });
 
 function getChannels() {
@@ -98,8 +34,8 @@ function getChannels() {
     .then((res) => {
       return res.json();
     })
-    .then((data) => {
-      console.log(data);
+    .then((data: Channel[]) => {
+      myChannels.value = data;
     })
     .catch((err) => console.log(err));
 }
@@ -306,8 +242,6 @@ function ban() {
     .catch((err) => console.log(err));
 }
 
-const channelsNum = ref(0);
-
 function getChannelsList() {
   fetch("http://" + window.location.hostname + ":3000/api/chat/list", {
     method: "POST",
@@ -329,45 +263,45 @@ function getChannelsList() {
     .catch((err) => console.log(err));
 }
 
-const joinRoom = () => {
-  socket.emit("join", { name: name.value, room: room.value }, () => {
-    joined.value = true;
-  });
+// const joinRoom = () => {
+//   socket.emit("join", { name: name.value, room: room.value }, () => {
+//     joined.value = true;
+//   });
 
-  socket.emit(
-    "findAllMessages",
-    { room: room.value },
-    (response: Message[]) => {
-      messages = response;
-    }
-  );
+//   socket.emit(
+//     "findAllMessages",
+//     { room: room.value },
+//     (response: Message[]) => {
+//       messages = response;
+//     }
+//   );
 
-  socket.emit("findAllUsers", { room: room.value }, (response: String[]) => {
-    users = response;
-  });
+//   socket.emit("findAllUsers", { room: room.value }, (response: String[]) => {
+//     users = response;
+//   });
 
-  socket.on("message", (message: Message) => {
-    messages.push(message);
-  });
-};
+//   socket.on("message", (message: Message) => {
+//     messages.push(message);
+//   });
+// };
 
-const sendMessage = () => {
-  socket.emit(
-    "createMessage",
-    { message: messageText.value, room: room.value },
-    () => {
-      messageText.value = "";
-    }
-  );
-};
+// function sendMessage() {
+//   socket.emit(
+//     "createMessage",
+//     { message: messageText.value, room: room.value },
+//     () => {
+//       messageText.value = "";
+//     }
+//   );
+// }
 
-// let timer;
-const refreshUsers = () => {
-  // timer = setTimeout(() => {
-  socket.emit("findAllUsers", { room: room.value }, (response: String[]) => {
-    users = response;
-    console.log(users);
-  });
-  // }, 1000);
-};
+// // let timer;
+// const refreshUsers = () => {
+//   // timer = setTimeout(() => {
+//   socket.emit("findAllUsers", { room: room.value }, (response: String[]) => {
+//     users = response;
+//     console.log(users);
+//   });
+//   // }, 1000);
+// };
 </script>
