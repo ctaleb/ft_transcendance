@@ -5,7 +5,7 @@ import { messageParamsFactory } from '@vuelidate/validators';
 import { authorize } from 'passport';
 import { User } from 'src/server/entities/server.entity';
 import { UserEntity } from 'src/user/user.entity';
-import { Repository } from 'typeorm';
+import { OffsetWithoutLimitNotSupportedError, Repository } from 'typeorm';
 import { CreatePrivateConvDto } from './dto/create-private_conv.dto';
 import { MessageDto } from './dto/MessageDto';
 import { UpdatePrivateConvDto } from './dto/update-private_conv.dto';
@@ -44,18 +44,25 @@ export class PrivateConvService {
 
     return this.privateConvRepository.save(ToSave);
   }
-  async getMessages(convUuid: string) {
+  async getMessages(convUuid: string, offset: number) {
     const allMessages: { author: string; text: string }[] = [];
     const conv = await this.privateConvRepository.findOneBy({ uuid: convUuid });
+    console.log('UUID ----> ' + convUuid);
+    console.log('OFFSET ----> ' + offset);
     await this.privateMessagesRepository
       .find({
+        order: {
+          createdAt: 'DESC',
+        },
         where: {
           conv: { id: conv.id },
         },
+        take: 10,
+        skip: offset,
       })
       .then((data) => {
         data.forEach((message) => {
-          allMessages.push({
+          allMessages.unshift({
             author: message.author.nickname,
             text: message.text,
           });

@@ -13,18 +13,31 @@
       <button class="privateMessagesHeader" @click="changeConvListStatus">
         Private messages <i :class="iconConvList"></i>
       </button>
-      <button
-        v-for="conv in privateConvs"
-        class="privateConvButton"
-        @click="displayMessages(conv, $event)"
-        v-bind:key="conv.uuid"
-      >
-        <img :src="conv.avatarToDisplay" alt="" width="45" height="45" />
-        <p v-if="conv.user1.nickname != clientNickname">
-          {{ conv.user1.nickname }}
-        </p>
-        <p v-else>{{ conv.user2.nickname }}</p>
-      </button>
+      <template v-for="conv in privateConvs" v-bind:key="conv.uuid">
+        <div class="fullPrivateConvButton">
+          <button
+            @click="displayMessages(conv, $event)"
+            :class="
+              conv.notif === true
+                ? 'notifPrivateConvButton'
+                : 'privateConvButton'
+            "
+          >
+            <img :src="conv.avatarToDisplay" alt="" width="45" height="45" />
+            <p v-if="conv.user1.nickname != clientNickname">
+              {{ conv.user1.nickname }}
+            </p>
+            <p v-else>{{ conv.user2.nickname }}</p>
+          </button>
+          <div
+            v-if="currentConv && currentConv.uuid == conv.uuid"
+            class="socialOptions"
+          >
+            <button @click="spectateGame()"><i class="gg-eye"></i></button>
+            <button @click="goToProfile()"><i class="gg-profile"></i></button>
+          </div>
+        </div>
+      </template>
 
       <button class="friendsHeader" @click="changeFriendListStatus">
         Friends <i :class="iconFriendList"></i>
@@ -46,6 +59,9 @@
     </div>
     <div class="conversation hidden">
       <div class="messages">
+        <button class="loadMoreButton" @click="loadMoreMessages($event)">
+          Load more
+        </button>
         <template v-for="message in messagesToDisplay">
           <div
             v-if="message.author == clientNickname"
@@ -93,6 +109,8 @@ export interface privateConv {
   user2: user;
   avatarToDisplay: string;
   uuid: string;
+  offset: number;
+  notif: boolean;
 }
 export interface message {
   text: string;
@@ -122,24 +140,32 @@ let friendListFlag = ref(true);
 let iconConvList = ref("gg-remove");
 let iconFriendList = ref("gg-remove");
 let friends = ref(Array<user>());
+let currentConv = ref<privateConv>();
+let isLoadMore = false;
 
 onUpdated(() => {
-  scrollDownMessages();
+  if (isLoadMore == false) scrollDownMessages();
+  isLoadMore = false;
 });
 onMounted(() => {
-  var audio = new Audio(require("../assets/messageReceived.mp3"));
+  var audio = new Audio(require("../assets/adelsol.mp3"));
   socket.on(
     "Message to the client",
     (privateMessage: { author: string; text: string }) => {
       if (privateMessage.author == friendNickname.value)
-        messagesToDisplay.value.push(privateMessage); //don't push in the current array if the message is sent from an other friend
-      audio.play();
+        messagesToDisplay.value.push(privateMessage);
+      else {
+        notifConv(privateMessage.author);
+        audio.play();
+      }
     }
   );
-  socket.on("Update conv list", () => {
-    getAllConvs().then(() => {
-      organizeFriends();
-    }); //If this signal is received, we fetch again convs to order them from latest to oldest
+  socket.on("Update conv list", (convData: { conv: privateConv }) => {
+    let convIndex = privateConvs.value.findIndex(
+      (conv) => conv.uuid === convData.conv.uuid
+    );
+    const convToTop = privateConvs.value.splice(convIndex, 1)[0];
+    privateConvs.value.splice(0, 0, convToTop);
   });
   window.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
@@ -169,6 +195,13 @@ onMounted(() => {
     });
 });
 
+function initConv(convs: Array<privateConv>) {
+  convs.forEach((conv) => {
+    conv.offset = 0;
+    conv.notif = false;
+  });
+}
+
 function getAllConvs() {
   return fetch(
     "http://" + window.location.hostname + ":3000/api/privateConv/getAllConvs",
@@ -184,6 +217,7 @@ function getAllConvs() {
       privateConvs.value.forEach(async (conv) => {
         conv.avatarToDisplay = await getAvatar(conv);
       });
+      initConv(privateConvs.value);
     })
     .catch((err) => console.log(err));
 }
@@ -233,22 +267,30 @@ async function getAvatar(privateConv: privateConv) {
 }
 
 function displayMessages(conv: privateConv, event: any) {
-  const conversations = document.querySelectorAll(".privateConvButton");
-  conversations.forEach((conversation) => {
-    conversation.classList.add("inactiveConv");
-  });
-  console.log(event.target);
-  event.target.classList.remove("inactiveConv");
+  conv.notif = false;
+  if (isLoadMore == false) {
+    const conversations = document.querySelectorAll(".privateConvButton");
+    conversations.forEach((conversation) => {
+      conversation.classList.add("inactiveConv");
+    });
+    console.log(event.target);
+    event.target.classList.remove("inactiveConv");
+  }
   document.getElementsByClassName("conversation")[0].classList.remove("hidden");
   document.getElementsByClassName("lobbyChat")[0].classList.add("hidden");
   conv.user1.nickname == clientNickname
     ? (friendNickname.value = conv.user2.nickname)
     : (friendNickname.value = conv.user1.nickname);
+  console.log(
+    conv.user1.nickname + " -- " + conv.user2.nickname + "----" + conv.offset
+  );
   fetch(
     "http://" +
       window.location.hostname +
       ":3000/api/privateConv/getMessages/" +
-      conv.uuid,
+      conv.uuid +
+      "/" +
+      conv.offset,
     {
       headers: {
         Authorization: "Bearer " + localStorage.getItem("token"),
@@ -257,7 +299,15 @@ function displayMessages(conv: privateConv, event: any) {
   )
     .then((data) => data.json())
     .then((data) => {
-      messagesToDisplay.value = data;
+      //if currentConv == conv, the user clicked on load more, so we just need to append older messages at the beginning of the array
+      if (conv == currentConv.value && isLoadMore)
+        messagesToDisplay.value.splice(0, 0, ...data);
+      else {
+        //Otherwise, the user is changing conversation so we need to replace our array of messages with the new array, and finally set the offset of the previous conv to 0
+        messagesToDisplay.value = data;
+        if (currentConv.value) currentConv.value.offset = 0;
+        currentConv.value = conv;
+      }
     })
     .catch((err) => {
       console.log(err);
@@ -340,15 +390,65 @@ function createConv(friend: user, event: any) {
       displayMessages(data.conv, event);
     });
 }
-function deleteConv(conv: privateConv) {
-  console.log("Oye brav gens");
+
+function loadMoreMessages(event: any) {
+  if (currentConv.value) {
+    currentConv.value.offset += 10;
+    isLoadMore = true;
+    displayMessages(currentConv.value, event);
+  }
+}
+
+function notifConv(author: string) {
+  let conv = privateConvs.value.find(
+    (conv) => conv.user1.nickname == author || conv.user2.nickname == author
+  );
+  if (conv) conv.notif = true;
+}
+
+function spectateGame() {
+  console.log("spectate");
+}
+function goToProfile() {
+  console.log("profile");
 }
 </script>
 
 <style lang="scss" scoped>
+button {
+  border: none;
+  outline: 0;
+  display: inline-block;
+  color: white;
+  background-color: #000;
+  text-align: center;
+  cursor: pointer;
+  width: 100%;
+  font-size: 18px;
+}
+.socialOptions {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  height: 100%;
+  width: 20%;
+  button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+  }
+}
+
+.fullPrivateConvButton {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 5%;
+}
 .convList {
   height: 90vh;
-  width: 15%;
+  width: 25%;
   float: left;
   background-color: #5b5a56;
   overflow-y: scroll;
@@ -360,13 +460,19 @@ function deleteConv(conv: privateConv) {
   float: right;
   background-color: #3b3c44;
   height: 85vh;
-  width: 85%;
+  width: 75%;
 }
 .messages {
   overflow-y: scroll;
   height: 100%;
   padding: 0 20%;
 
+  .loadMoreButton {
+    width: 20%;
+    border-radius: 50px;
+    margin-top: 10px;
+    color: #616371;
+  }
   .friendName {
     color: #fadba2;
     margin-bottom: 0;
@@ -437,8 +543,9 @@ function deleteConv(conv: privateConv) {
   align-items: center;
   justify-content: flex-start;
   background: #3b3c44;
-  height: 4.5%;
+  height: 100%;
   font-size: 25px;
+  padding: 0;
 }
 .privateConvButton img {
   margin-right: 20px;
@@ -449,6 +556,10 @@ function deleteConv(conv: privateConv) {
   text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;
+}
+.notifPrivateConvButton {
+  @extend .privateConvButton;
+  background-color: #c1a36b;
 }
 
 .lobbyChat {
