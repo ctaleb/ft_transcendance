@@ -133,6 +133,7 @@ body {
 
 nav {
   padding: 30px;
+  height: 10vh;
 
   a {
     font-weight: bold;
@@ -149,7 +150,7 @@ nav {
 }
 
 .hidden {
-  display: none;
+  display: none !important;
 }
 
 .overlay {

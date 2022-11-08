@@ -3,6 +3,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { messageParamsFactory } from '@vuelidate/validators';
 import { authorize } from 'passport';
+import { User } from 'src/server/entities/server.entity';
 import { UserEntity } from 'src/user/user.entity';
 import { Repository } from 'typeorm';
 import { CreatePrivateConvDto } from './dto/create-private_conv.dto';
@@ -43,9 +44,9 @@ export class PrivateConvService {
 
     return this.privateConvRepository.save(ToSave);
   }
-  async getMessages(sender: UserEntity, requester: UserEntity) {
+  async getMessages(convUuid: string) {
     const allMessages: { author: string; text: string }[] = [];
-    const conv = await this.getConv(sender, requester);
+    const conv = await this.privateConvRepository.findOneBy({ uuid: convUuid });
     await this.privateMessagesRepository
       .find({
         where: {
@@ -61,5 +62,26 @@ export class PrivateConvService {
         });
       });
     return allMessages;
+  }
+
+  async getAllConvs(id: number) {
+    const convs = await this.privateConvRepository.find({
+      where: [{ user1: { id: id } }, { user2: { id: id } }],
+      order: {
+        lastMessage: 'DESC',
+      },
+    });
+    console.log('CONVS');
+    console.log(convs);
+    if (convs) return convs;
+    throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+  }
+
+  async updateLastMessageDate(conv: PrivateConvEntity) {
+    const convToUpdate = await this.privateConvRepository.findOneBy({
+      uuid: conv.uuid,
+    });
+    convToUpdate.lastMessage = new Date();
+    return await this.privateConvRepository.save(convToUpdate);
   }
 }
