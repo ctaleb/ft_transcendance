@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from 'src/user/user.entity';
-import { Not, Repository } from 'typeorm';
+import { LessThan, Not, Repository } from 'typeorm';
 import { CreateChannelDto } from './dtos/create-channel.dto';
 import { ChannelEntity } from './entities/channel.entity';
 import { ChannelInvitationEntity } from './entities/channel_invitation.entity';
@@ -313,7 +313,11 @@ export class ChatService {
         .createQueryBuilder('member')
         .leftJoinAndSelect('member.channel', 'channel')
         .leftJoinAndSelect('member.user', 'user')
-        .select(['channel.id', 'channel.name', 'channel.type'])
+        .select([
+          'channel.id AS id',
+          'channel.name AS name',
+          'channel.type AS type',
+        ])
         .where('user.id = :id', { id: userId })
         .execute();
     } catch (err) {
@@ -427,14 +431,58 @@ export class ChatService {
 
   async getChannelMessages(getChannelMessagesDto: GetChannelMessagesDto) {
     try {
-      return await this._channelMessageRepository.find({
-        where: {
-          channel: { id: getChannelMessagesDto.id },
-        },
-        order: { createdAt: 'DESC' },
-        take: 20 + getChannelMessagesDto.skip,
-        skip: getChannelMessagesDto.skip,
+      return await this._channelMessageRepository
+        .createQueryBuilder('message')
+        .leftJoinAndSelect('message.channel', 'channel')
+        .leftJoinAndSelect('member.sender', 'sender')
+        .leftJoinAndSelect('sender.user', 'user')
+        .select([
+          'user.nickname AS author',
+          'content AS text',
+          'createdAt AS date',
+        ])
+        .where('channel.id = :id', { id: getChannelMessagesDto.id })
+        .orderBy('createdAt', 'DESC')
+        .take(20)
+        .skip(getChannelMessagesDto.skip)
+        .execute();
+    } catch (err) {
+      return err;
+    }
+  }
+
+  async loadChannel(loadChannelDto: LeaveChannelDto, userId: number) {
+    try {
+      const channel = await this.getChannelById(loadChannelDto.id);
+      if (
+        (await this._channelMemberRepository.findOneBy({
+          channel: { id: channel.id },
+          user: { id: userId },
+        })) === null
+      )
+        throw new BadRequestException('You are not a channel member');
+      const ban = await this._channelRestrictionsRepository.findOneBy({
+        channel: { id: channel.id },
+        user: { id: userId },
+        ban: LessThan(new Date()),
       });
+      if (ban) throw new BadRequestException(`You are banned till ${ban.ban}`);
+      const members = await this._channelMemberRepository
+        .createQueryBuilder('member')
+        .leftJoinAndSelect('member.channel', 'channel')
+        .leftJoinAndSelect('member.user', 'user')
+        .leftJoinAndSelect('user.avatar', 'avatar')
+        .select(['user.nickname AS nickname', 'avatar.path AS path'])
+        .where('channel.id = :id AND user.id != :user', {
+          id: channel.id,
+          user: userId,
+        })
+        .orderBy('member.role', 'ASC')
+        .execute();
+      return {
+        members: members,
+        messages: await this.getChannelMessages({ id: channel.id, skip: 0 }),
+      };
     } catch (err) {
       return err;
     }
@@ -446,18 +494,30 @@ export class ChatService {
         id: saveMessageDto.id,
       });
       if (channel === null) throw new BadRequestException('Channel not found');
+      const mute = await this._channelRestrictionsRepository.findOneBy({
+        channel: { id: channel.id },
+        user: { id: userId },
+        mute: LessThan(new Date()),
+      });
+      if (mute)
+        throw new BadRequestException(`You are muted till ${mute.mute}`);
       const member = await this._channelMemberRepository.findOneBy({
         channel,
         user: { id: userId },
       });
       if (member === null)
         throw new BadRequestException('Channel member not found');
-      const message = this._channelMessageRepository.create({
+      let message = this._channelMessageRepository.create({
         channel: channel,
         sender: member,
         content: saveMessageDto.content,
       });
-      return await this._channelMessageRepository.save(message);
+      message = await this._channelMessageRepository.save(message);
+      return {
+        author: message.sender.user.nickname,
+        text: message.content,
+        date: message.createdAt,
+      };
     } catch (err) {
       return err;
     }

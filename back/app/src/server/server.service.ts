@@ -700,4 +700,9 @@ export class ServerService {
       this.goal(game);
     }
   }
+
+  // GOAT
+  async sendChannelMessage(channelId: number, content: string, userId: number) {
+    return await this._chatService.saveMessage({ id: channelId, content: content }, userId);
+  }
 }

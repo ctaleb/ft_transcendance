@@ -306,4 +306,18 @@ export class ServerGateway
       text: messageToDeliver,
     });
   }
+
+  // Channel messages by the GOAT
+  @SubscribeMessage('sendChannelMessage')
+  async sendChannelMessage(
+    @ConnectedSocket() client: Socket,
+    @MessageBody('channelId') channelId: number,
+    @MessageBody('content') content: string,
+  ) {
+    return this.serverService.sendChannelMessage(
+      channelId,
+      content,
+      client.handshake.auth.user.id,
+    );
+  }
 }

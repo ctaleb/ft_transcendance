@@ -14,6 +14,7 @@ import { ChatService } from './chat.service';
 import { ChangeRoleDto } from './dtos/change-role.dto';
 import { CreateChannelDto } from './dtos/create-channel.dto';
 import { DeclineInvitationDto } from './dtos/decline-invitation.dto';
+import { GetChannelMessagesDto } from './dtos/get-channel-messages.dto';
 import { GetChannelsListDto } from './dtos/get-channels-list.dto';
 import { InviteToChannelDto } from './dtos/invite-to-channel.dto';
 import { JoinChannelDto } from './dtos/join-channel.dto';
@@ -40,6 +41,19 @@ export class ChatController {
       getChannelsListDto,
       req.user.payload.id,
     );
+  }
+
+  @Post('load-channel')
+  loadChannel(@Request() req, @Body() loadChannelDto: LeaveChannelDto) {
+    return this.chatService.loadChannel(loadChannelDto, req.user.payload.id);
+  }
+
+  @Post('messages')
+  getChannelMessages(
+    @Request() req,
+    @Body() getChannelMessagesDto: GetChannelMessagesDto,
+  ) {
+    return this.chatService.getChannelMessages(getChannelMessagesDto);
   }
 
   @Post('create-channel')

@@ -71,8 +71,6 @@ export class PrivateConvService {
         lastMessage: 'DESC',
       },
     });
-    console.log('CONVS');
-    console.log(convs);
     if (convs) return convs;
     throw new HttpException('User not found', HttpStatus.NOT_FOUND);
   }
