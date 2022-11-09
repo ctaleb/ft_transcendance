@@ -47,8 +47,6 @@ export class PrivateConvService {
   async getMessages(convUuid: string, offset: number) {
     const allMessages: { author: string; text: string }[] = [];
     const conv = await this.privateConvRepository.findOneBy({ uuid: convUuid });
-    console.log('UUID ----> ' + convUuid);
-    console.log('OFFSET ----> ' + offset);
     await this.privateMessagesRepository
       .find({
         order: {
@@ -78,8 +76,6 @@ export class PrivateConvService {
         lastMessage: 'DESC',
       },
     });
-    console.log('CONVS');
-    console.log(convs);
     if (convs) return convs;
     throw new HttpException('User not found', HttpStatus.NOT_FOUND);
   }
