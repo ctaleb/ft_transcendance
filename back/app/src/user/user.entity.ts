@@ -2,6 +2,7 @@ import { AbstractEntity } from '../database/abstract.entity';
 import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { ImageEntity } from 'src/image/image.entity';
+import { ChannelMemberEntity } from 'src/chat/entities/channel_member.entity';
 
 @Entity({ name: 'user' })
 export class UserEntity extends AbstractEntity {

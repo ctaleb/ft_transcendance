@@ -36,3 +36,17 @@ export class MatchHistoryEntity extends AbstractEntity {
   @Column()
   public gameMode: string;
 }
+
+export interface GameSummaryData {
+  host: PlayerInfoData;
+  client: PlayerInfoData;
+  gameMode: string;
+}
+
+export interface PlayerInfoData {
+  elo: number;
+  eloChange: number;
+  name: string;
+  power: string;
+  score: number;
+}

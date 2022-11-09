@@ -1,9 +1,7 @@
 export interface GameSummaryData {
   host: PlayerInfoData;
   client: PlayerInfoData;
-  gamemode: String;
-  start: Date;
-  end: Date;
+  gameMode: string;
 }
 
 export interface PlayerInfoData {

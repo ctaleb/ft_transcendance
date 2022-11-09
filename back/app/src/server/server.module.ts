@@ -9,6 +9,7 @@ import { PrivateConvService } from 'src/private_conv/private_conv.service';
 import { PrivateConvModule } from 'src/private_conv/private_conv.module';
 import { PrivateMessageEntity } from 'src/private_conv/entities/privateMessage.entity';
 import { PrivateConvEntity } from 'src/private_conv/entities/private_conv.entity';
+import { ChatModule } from 'src/chat/chat.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { PrivateConvEntity } from 'src/private_conv/entities/private_conv.entity
       PrivateConvEntity,
     ]),
     UserModule,
+    ChatModule,
     PrivateConvModule,
   ],
   providers: [ServerGateway, ServerService, PrivateConvService],
