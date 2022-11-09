@@ -1,15 +1,6 @@
 <template>
   <div class="mainContainer">
     <div class="convList">
-      <div class="searchBar">
-        <div class="searchIcon"><i class="gg-search"></i></div>
-        <input
-          type="text"
-          class="searchField"
-          name="searchFriend"
-          placeholder="Player name"
-        />
-      </div>
       <button class="privateMessagesHeader" @click="changeConvListStatus">
         Private messages <i :class="iconConvList"></i>
       </button>
@@ -23,7 +14,13 @@
                 : 'privateConvButton'
             "
           >
-            <img :src="conv.avatarToDisplay" alt="" width="45" height="45" />
+            <img
+              :src="conv.avatarToDisplay"
+              alt=""
+              width="45"
+              height="45"
+              class="avatar"
+            />
             <p v-if="conv.user1.nickname != clientNickname">
               {{ conv.user1.nickname }}
             </p>
@@ -48,7 +45,13 @@
         @click="createConv(friend, $event)"
         v-bind:key="friend.nickname"
       >
-        <img :src="friend.avatarToDisplay" alt="" width="45" height="45" />
+        <img
+          :src="friend.avatarToDisplay"
+          alt=""
+          width="45"
+          height="45"
+          class="avatar"
+        />
         <p>{{ friend.nickname }}</p>
       </button>
     </div>
@@ -90,13 +93,7 @@
           v-model="messageInput"
         />
         <button class="sendButton" @click="sendPrivateMessage(friendNickname)">
-          <img
-            src="https://uploads-ssl.webflow.com/61cccee6cefd62ba567150d5/61cccee6cefd6280d37151c9_AIRPLANE%20ICON%20256px.png"
-            alt=""
-            width="50"
-            height="50"
-            class="sendIcon"
-          />
+          <i class="gg-slack"></i>
         </button>
       </div>
     </div>
@@ -280,7 +277,7 @@ function displayMessages(conv: privateConv, event: any) {
   conv.user1.nickname == clientNickname
     ? (friendNickname.value = conv.user2.nickname)
     : (friendNickname.value = conv.user1.nickname);
- 
+
   fetch(
     "http://" +
       window.location.hostname +
@@ -411,6 +408,190 @@ function goToProfile() {
 </script>
 
 <style lang="scss" scoped>
+.convList {
+  height: 90vh;
+  width: 25%;
+  float: left;
+  background-color: #5b5a56;
+  overflow-y: scroll;
+
+  h4 {
+    color: white;
+  }
+  .privateMessagesHeader {
+    padding: 5px;
+    border: 3px solid;
+    border-image-slice: 1;
+    border-image-source: linear-gradient(to bottom, #c1a36b, #635e4f);
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+  }
+  .fullPrivateConvButton {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 5%;
+
+    .privateConvButton {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      background: #3b3c44;
+      height: 100%;
+      font-size: 25px;
+      padding: 0;
+      img {
+        margin-right: 20px;
+        pointer-events: none;
+      }
+      p {
+        pointer-events: none;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+    }
+
+    .notifPrivateConvButton {
+      @extend .privateConvButton;
+      background-color: #c1a36b;
+    }
+    .socialOptions {
+      display: flex;
+      align-items: center;
+      margin-left: auto;
+      height: 100%;
+      width: 20%;
+      button {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+      }
+    }
+  }
+
+  .friendsHeader {
+    padding: 5px;
+    border: 3px solid;
+    border-image-slice: 1;
+    border-image-source: linear-gradient(to bottom, #c1a36b, #635e4f);
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+  }
+  .friendButton {
+    @extend .privateConvButton;
+  }
+}
+
+.lobbyChat {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #1e2328;
+  color: white;
+  height: 90vh;
+  h4 {
+    margin-top: 0;
+  }
+}
+
+.conversation {
+  float: right;
+  background-color: #3b3c44;
+  height: 85vh;
+  width: 75%;
+  .messages {
+    overflow-y: scroll;
+    height: 100%;
+    padding: 0 20%;
+
+    .loadMoreButton {
+      width: 20%;
+      border-radius: 50px;
+      margin-top: 10px;
+      color: #616371;
+    }
+    .friendName {
+      color: #fadba2;
+      margin-bottom: 0;
+      margin-top: 0;
+    }
+    .clientName {
+      color: #85724e;
+      margin-bottom: 0;
+      margin-top: 0;
+    }
+    p {
+      margin-bottom: 0;
+    }
+
+    & > .clientMessage {
+      //border: #c1a36b;
+      //border-style: solid;
+      background-color: #ede4d3;
+      margin: 25px 0 25px auto;
+      text-align: left;
+      color: #453c2c;
+      border-radius: 1.125rem 1.125rem 0 1.125rem;
+      width: fit-content;
+      max-width: 66%;
+      overflow-wrap: break-word;
+      padding: 10px;
+      min-width: 30%;
+    }
+
+    & > .friendMessage {
+      background-color: #9c8356;
+      //border: #c1a36b;
+      //border-style: solid;
+      color: white;
+      margin: 25px auto 25px 0;
+      text-align: left;
+      border-radius: 1.125rem 1.125rem 1.125rem 0;
+      width: fit-content;
+      max-width: 66%;
+      overflow-wrap: break-word;
+      padding: 10px;
+      min-width: 30%;
+    }
+  }
+  .input {
+    height: 5vh;
+    display: flex;
+    justify-content: start;
+    align-items: center;
+    border: 3px solid;
+    border-image-slice: 1;
+    border-image-source: linear-gradient(to bottom, #c1a36b, #635e4f);
+  }
+  .textInput {
+    width: 95%;
+    height: 100%;
+    border: 0px solid;
+    font-size: 21px;
+    padding-left: 20px;
+  }
+  .sendButton {
+    height: 100%;
+    background: #aa9e7d;
+    width: 5%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    .gg-slack {
+      --ggs: 1.5;
+    }
+  }
+}
+.avatar {
+  border-radius: 100%;
+}
 button {
   border: none;
   outline: 0;
@@ -422,210 +603,7 @@ button {
   width: 100%;
   font-size: 18px;
 }
-.socialOptions {
-  display: flex;
-  align-items: center;
-  margin-left: auto;
-  height: 100%;
-  width: 20%;
-  button {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100%;
-  }
-}
-
-.fullPrivateConvButton {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 5%;
-}
-.convList {
-  height: 90vh;
-  width: 25%;
-  float: left;
-  background-color: #5b5a56;
-  overflow-y: scroll;
-}
-.convList h4 {
-  color: white;
-}
-.conversation {
-  float: right;
-  background-color: #3b3c44;
-  height: 85vh;
-  width: 75%;
-}
-.messages {
-  overflow-y: scroll;
-  height: 100%;
-  padding: 0 20%;
-
-  .loadMoreButton {
-    width: 20%;
-    border-radius: 50px;
-    margin-top: 10px;
-    color: #616371;
-  }
-  .friendName {
-    color: #fadba2;
-    margin-bottom: 0;
-    margin-top: 0;
-  }
-  .clientName {
-    color: #85724e;
-    margin-bottom: 0;
-    margin-top: 0;
-  }
-  p {
-    margin-bottom: 0;
-  }
-
-  & > .clientMessage {
-    //border: #c1a36b;
-    //border-style: solid;
-    background-color: #ede4d3;
-    margin: 25px 0 25px auto;
-    text-align: left;
-    color: #453c2c;
-    border-radius: 1.125rem 1.125rem 0 1.125rem;
-    width: fit-content;
-    max-width: 66%;
-    overflow-wrap: break-word;
-    padding: 10px;
-    min-width: 30%;
-  }
-
-  & > .friendMessage {
-    background-color: #9c8356;
-    //border: #c1a36b;
-    //border-style: solid;
-    color: white;
-    margin: 25px auto 25px 0;
-    text-align: left;
-    border-radius: 1.125rem 1.125rem 1.125rem 0;
-    width: fit-content;
-    max-width: 66%;
-    overflow-wrap: break-word;
-    padding: 10px;
-    min-width: 30%;
-  }
-}
-.input {
-  height: 5vh;
-  display: flex;
-  justify-content: start;
-  align-items: center;
-  border: 3px solid;
-  border-image-slice: 1;
-  border-image-source: linear-gradient(to bottom, #c1a36b, #635e4f);
-}
-.textInput {
-  width: 95%;
-  height: 100%;
-  border: 0px solid;
-  font-size: 21px;
-  padding-left: 20px;
-}
-.sendButton {
-  height: 100%;
-  background: #aa9e7d;
-  width: 5%;
-}
-.privateConvButton {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  background: #3b3c44;
-  height: 100%;
-  font-size: 25px;
-  padding: 0;
-}
-.privateConvButton img {
-  margin-right: 20px;
-  pointer-events: none;
-}
-.privateConvButton p {
-  pointer-events: none;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  overflow: hidden;
-}
-.notifPrivateConvButton {
-  @extend .privateConvButton;
-  background-color: #c1a36b;
-}
-
-.lobbyChat {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  background-color: #1e2328;
-  color: white;
-  height: 90vh;
-}
-.lobbyChat h4 {
-  margin-top: 0;
-}
-
 .inactiveConv {
   opacity: 0.3;
-}
-.privateMessagesHeader {
-  padding: 5px;
-  border: 3px solid;
-  border-image-slice: 1;
-  border-image-source: linear-gradient(to bottom, #c1a36b, #635e4f);
-  display: flex;
-  flex-direction: row;
-  justify-content: space-around;
-  align-items: center;
-}
-.friendsHeader {
-  padding: 5px;
-  border: 3px solid;
-  border-image-slice: 1;
-  border-image-source: linear-gradient(to bottom, #c1a36b, #635e4f);
-  display: flex;
-  flex-direction: row;
-  justify-content: space-around;
-  align-items: center;
-}
-.friendButton {
-  @extend .privateConvButton;
-}
-
-//searchbar ,need to move it in a component
-
-.searchBar {
-  position: relative;
-  display: flex;
-  justify-content: flex-start;
-  border: 3px solid;
-  border-image-slice: 1;
-  border-image-source: linear-gradient(to bottom, #242218, #c1a36b);
-  background: linear-gradient(to bottom, #071018, #151d23);
-  font-size: 10px;
-  align-items: center;
-  .searchField {
-    width: 100%;
-    border: unset;
-    background: inherit;
-    font-size: 2em;
-    height: auto;
-    color: grey;
-  }
-  .searchField:focus {
-    outline: none;
-    caret-color: grey;
-  }
-  .searchIcon {
-    position: relative;
-    color: grey;
-    margin: 1em;
-  }
 }
 </style>
