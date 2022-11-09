@@ -64,13 +64,6 @@ export class ServerService {
     this.userList.push(newUser);
   }
 
-  async joinAllChannels(socket: Socket, userId: number) {
-    const channels = await this._chatService.getUserChannels(userId);
-    channels.forEach((ell) => {
-      socket.join(ell.id);
-    });
-  }
-
   //   reloadUser(token: string, user: string, sock: Socket) {
   //     const player: Player = {
   //       token: token,
@@ -702,7 +695,23 @@ export class ServerService {
   }
 
   // GOAT
+  async joinAllChannels(socket: Socket, userId: number) {
+    const channels = await this._chatService.getUserChannels(userId);
+    channels.forEach((ell) => {
+      socket.join(`${ell.id}`);
+    });
+  }
+
   async sendChannelMessage(channelId: number, content: string, userId: number) {
-    return await this._chatService.saveMessage({ id: channelId, content: content }, userId);
+    const message = await this._chatService.saveMessage(
+      { id: channelId, content: content },
+      userId,
+    );
+    if (message.author) {
+      this.server
+        .to(`${channelId}`)
+        .emit('messageReceived', channelId, message);
+    }
+    return message;
   }
 }

@@ -50,13 +50,26 @@
       >
         <p>{{ channel.name }}</p>
       </button>
+      <button class="buttonAllChannels" @click="loadAllChannels()">
+        Display all channels
+      </button>
     </div>
-    <div class="lobbyChat">
+    <div v-if="show == 0" class="lobbyChat">
       <h2>Welcome on the chat</h2>
       <br />
       <h4>Chat with your friends with the contact list to the left</h4>
     </div>
-    <div class="conversation hidden">
+    <div v-if="show == 1" class="lobbyChat allChannels">
+      <div class="channel">
+        <h3>Channel</h3>
+        <h5>Public</h5>
+      </div>
+      <div class="channel">
+        <h3>Channel</h3>
+        <h5>Public</h5>
+      </div>
+    </div>
+    <div v-if="show == 2" class="conversation">
       <div class="messages">
         <template v-for="message in messagesToDisplay">
           <div
@@ -68,12 +81,14 @@
               {{ message.author }}
             </h4>
             <p>{{ message.text }}</p>
+            <p>{{ message.date }}</p>
           </div>
           <div v-else class="friendMessage" v-bind:key="message.text">
             <h4 class="friendName">
               {{ message.author }}
             </h4>
             <p>{{ message.text }}</p>
+            <p>{{ message.date }}</p>
           </div>
         </template>
         <div ref="messagesBoxRef"></div>
@@ -140,6 +155,7 @@ export interface message {
 export interface user {
   nickname: string;
   path: string;
+  role: ChannelRole;
   avatarToDisplay: string;
 }
 
@@ -169,10 +185,12 @@ const iconChannelList = ref("gg-remove");
 const friends = ref(Array<user>());
 
 const myChannels = ref(Array<Channel>());
+const allChannels: Ref<Array<Channel>> = ref([]);
 const thisChannel = ref<Channel | null>(null);
 const channelMembers = ref(Array<user>());
 const channelMessageSkip = ref(0);
 const channelsNum = ref(0);
+const show = ref(0);
 
 onUpdated(() => {
   scrollDownMessages();
@@ -188,6 +206,14 @@ onMounted(() => {
       audio.play();
     }
   );
+  socket.on("messageReceived", (channelId: number, msg: message) => {
+    if (thisChannel.value && channelId === thisChannel.value.id) {
+      messagesToDisplay.value.push(msg);
+      channelMessageSkip.value++;
+    } else {
+      console.log("incoming message");
+    }
+  });
   socket.on("Update conv list", () => {
     getAllConvs().then(() => {
       organizeFriends();
@@ -307,6 +333,41 @@ function joinChannel() {
     .then((data) => {
       console.log(data);
     });
+}
+
+function loadAllChannels() {
+  show.value = 1;
+  thisChannel.value = null;
+  channelsNum.value = 0;
+  const conversations = document.querySelectorAll(".channelButton");
+  conversations.forEach((conversation) => {
+    conversation.classList.remove("inactiveConv");
+  });
+  getAllChannels();
+}
+
+function getAllChannels() {
+  fetch("http://" + window.location.hostname + ":3000/api/chat/list", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + localStorage.getItem("token"),
+    },
+    body: JSON.stringify({
+      number: channelsNum.value,
+    }),
+  })
+    .then((res) => {
+      return res.json();
+    })
+    .then((data) => {
+      if (data.length) {
+        console.log(data);
+        allChannels.value.push(data);
+        channelsNum.value += data.length;
+      }
+    })
+    .catch((err) => console.log(err));
 }
 
 function getAllConvs() {
@@ -459,27 +520,6 @@ function ban() {
     .catch((err) => console.log(err));
 }
 
-function getChannelsList() {
-  fetch("http://" + window.location.hostname + ":3000/api/chat/list", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + localStorage.getItem("token"),
-    },
-    body: JSON.stringify({
-      number: channelsNum.value,
-    }),
-  })
-    .then((res) => {
-      return res.json();
-    })
-    .then((data) => {
-      console.log(data);
-      channelsNum.value += data.length;
-    })
-    .catch((err) => console.log(err));
-}
-
 function organizeFriends() {
   for (let i = 0; i < privateConvs.value.length; i++) {
     for (let j = 0; j < friends.value.length; j++) {
@@ -525,15 +565,13 @@ async function getAvatar(privateConv: privateConv) {
 }
 
 function displayMessages(conv: privateConv, event: any) {
+  show.value = 2;
   thisChannel.value = null;
   const conversations = document.querySelectorAll(".privateConvButton");
   conversations.forEach((conversation) => {
     conversation.classList.add("inactiveConv");
   });
-  console.log(event.target);
   event.target.classList.remove("inactiveConv");
-  document.getElementsByClassName("conversation")[0].classList.remove("hidden");
-  document.getElementsByClassName("lobbyChat")[0].classList.add("hidden");
   conv.user1.nickname == clientNickname
     ? (friendNickname.value = conv.user2.nickname)
     : (friendNickname.value = conv.user1.nickname);
@@ -558,13 +596,12 @@ function displayMessages(conv: privateConv, event: any) {
 }
 
 function loadChannel(channel: Channel, event: any) {
+  show.value = 2;
   const conversations = document.querySelectorAll(".channelButton");
   conversations.forEach((conversation) => {
     conversation.classList.add("inactiveConv");
   });
   event.target.classList.remove("inactiveConv");
-  document.getElementsByClassName("conversation")[0].classList.remove("hidden");
-  document.getElementsByClassName("lobbyChat")[0].classList.add("hidden");
   channelMessageSkip.value = 0;
   fetch("http://" + window.location.hostname + ":3000/api/chat/load-channel", {
     method: "POST",
@@ -636,16 +673,10 @@ function sendChannelMessage(channel: Channel) {
         content: messageInput.value,
       },
       (response) => {
-        if (response.message) {
+        if (!response.author) {
           messagesToDisplay.value.push({
             author: "ERROR",
             text: response.message,
-            date: new Date(),
-          });
-        } else {
-          messagesToDisplay.value.push({
-            author: response.author,
-            text: response.text,
             date: new Date(),
           });
         }
@@ -760,6 +791,15 @@ function deleteConv(conv: privateConv) {
   background-color: #5b5a56;
   overflow-y: scroll;
 }
+.buttonAllChannels {
+  @extend .privateMessagesHeader;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  position: absolute;
+  bottom: 0;
+  width: inherit;
+}
 .convList h4 {
   color: white;
 }
@@ -869,6 +909,22 @@ function deleteConv(conv: privateConv) {
 }
 .lobbyChat h4 {
   margin-top: 0;
+}
+.allChannels {
+  overflow-y: scroll;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: flex-start;
+  padding: 1%;
+  gap: 1%;
+}
+.channel {
+  padding: 5px;
+  border: 3px solid;
+  border-image-slice: 1;
+  border-image-source: linear-gradient(to bottom, #c1a36b, #635e4f);
+  width: 20%;
 }
 
 .inactiveConv {

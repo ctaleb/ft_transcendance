@@ -431,21 +431,28 @@ export class ChatService {
 
   async getChannelMessages(getChannelMessagesDto: GetChannelMessagesDto) {
     try {
-      return await this._channelMessageRepository
-        .createQueryBuilder('message')
-        .leftJoinAndSelect('message.channel', 'channel')
-        .leftJoinAndSelect('member.sender', 'sender')
-        .leftJoinAndSelect('sender.user', 'user')
-        .select([
-          'user.nickname AS author',
-          'content AS text',
-          'createdAt AS date',
-        ])
-        .where('channel.id = :id', { id: getChannelMessagesDto.id })
-        .orderBy('createdAt', 'DESC')
-        .take(20)
-        .skip(getChannelMessagesDto.skip)
-        .execute();
+      const result: { author: string; text: string; date: Date }[] = [];
+      await this._channelMessageRepository
+        .find({
+          relations: {
+            channel: true,
+            sender: true,
+          },
+          where: { channel: { id: getChannelMessagesDto.id } },
+          order: { createdAt: 'DESC' },
+          skip: getChannelMessagesDto.skip,
+          take: 20,
+        })
+        .then((data) => {
+          data.forEach((entry) => {
+            result.unshift({
+              author: entry.sender.user.nickname,
+              text: entry.content,
+              date: entry.createdAt,
+            });
+          });
+        });
+      return result;
     } catch (err) {
       return err;
     }
@@ -467,21 +474,29 @@ export class ChatService {
         ban: LessThan(new Date()),
       });
       if (ban) throw new BadRequestException(`You are banned till ${ban.ban}`);
-      const members = await this._channelMemberRepository
-        .createQueryBuilder('member')
-        .leftJoinAndSelect('member.channel', 'channel')
-        .leftJoinAndSelect('member.user', 'user')
-        .leftJoinAndSelect('user.avatar', 'avatar')
-        .select(['user.nickname AS nickname', 'avatar.path AS path'])
-        .where('channel.id = :id AND user.id != :user', {
-          id: channel.id,
-          user: userId,
+      const members: { nickname: string; path: string; role: ChannelRole }[] =
+        [];
+      await this._channelMemberRepository
+        .find({
+          where: { channel: { id: channel.id }, user: { id: userId } },
+          order: { role: 'ASC' },
         })
-        .orderBy('member.role', 'ASC')
-        .execute();
+        .then((data) => {
+          data.forEach((entry) => {
+            members.push({
+              nickname: entry.user.nickname,
+              path: entry.user.avatar.path,
+              role: entry.role,
+            });
+          });
+        });
+      const messages = await this.getChannelMessages({
+        id: channel.id,
+        skip: 0,
+      });
       return {
         members: members,
-        messages: await this.getChannelMessages({ id: channel.id, skip: 0 }),
+        messages: messages,
       };
     } catch (err) {
       return err;
@@ -502,19 +517,19 @@ export class ChatService {
       if (mute)
         throw new BadRequestException(`You are muted till ${mute.mute}`);
       const member = await this._channelMemberRepository.findOneBy({
-        channel,
+        channel: { id: saveMessageDto.id },
         user: { id: userId },
       });
       if (member === null)
         throw new BadRequestException('Channel member not found');
       let message = this._channelMessageRepository.create({
-        channel: channel,
-        sender: member,
+        channel: { id: channel.id },
+        sender: { id: member.id },
         content: saveMessageDto.content,
       });
       message = await this._channelMessageRepository.save(message);
       return {
-        author: message.sender.user.nickname,
+        author: member.user.nickname,
         text: message.content,
         date: message.createdAt,
       };

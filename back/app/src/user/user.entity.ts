@@ -19,6 +19,7 @@ export class UserEntity extends AbstractEntity {
   @JoinColumn({ name: 'avatarId' })
   @ManyToOne(() => ImageEntity, {
     nullable: true,
+    eager: true,
   })
   public avatar?: ImageEntity;
 
