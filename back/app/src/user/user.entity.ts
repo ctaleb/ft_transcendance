@@ -42,14 +42,30 @@ export class UserEntity extends AbstractEntity {
     }).then(async (data) => {
       const result: UserEntity[] = [];
       for (const entity of data) {
-        if (entity.requesterId === this.id)
-          result.push(entity.addressee);
-        else
-          result.push(entity.requester);
+        if (entity.requesterId === this.id) result.push(entity.addressee);
+        else result.push(entity.requester);
       }
       return result;
     });
     return friends;
+  }
+
+  async getInvitations(): Promise<UserEntity[]> {
+    const invitations = await FriendshipEntity.find({
+      where: [
+        {
+          addressee: { id: this.id },
+          status: 'invitation',
+        },
+      ],
+    }).then(async (data) => {
+      const result: UserEntity[] = [];
+      for (const entity of data) {
+        result.push(entity.requester);
+      }
+      return result;
+    });
+    return invitations;
   }
 
   @Expose({ name: 'avatar' })

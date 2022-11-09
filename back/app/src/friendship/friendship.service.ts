@@ -60,7 +60,7 @@ export class FriendshipService {
       const invited = this._serverService.userList.find(
         (element) => element.name === addressee,
       );
-      invited?.socket.emit('friendshipInvite', requester);
+      invited?.socket.emit('friendshipInvite', req);
     } catch (error) {
       console.log(error);
     }
@@ -155,6 +155,9 @@ export class FriendshipService {
       ) {
         friendship.status = 'friend';
         result = this._friendshipRepository.save(friendship);
+        this._serverService
+          .PlayerToSocket(adr.nickname)
+          .emit('acceptInvite', req);
       } else throw new CannotAcceptFriendshipRequestException();
     } catch (error) {
       console.log(error);
@@ -214,6 +217,9 @@ export class FriendshipService {
       const friendship = await this.findFriendship(req, adr);
       if (friendship && friendship.status === 'friend') {
         result = this._friendshipRepository.remove(friendship);
+        this._serverService
+          .PlayerToSocket(adr.nickname)
+          .emit('removeFriend', req);
       } else
         throw new BadRequestException('Friendship not found or wrong status');
     } catch (error) {

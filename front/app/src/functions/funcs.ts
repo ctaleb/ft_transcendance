@@ -93,6 +93,22 @@ async function fetchUser(token: string): Promise<void> {
 
   let data = await response.json();
   store.user = data;
+
+  let res = await fetch(
+    `http://${window.location.hostname}:3000/api/friendship`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: "Bearer " + token,
+      },
+    }
+  );
+  if (!res.ok) {
+    return Promise.reject();
+  }
+  const resTyped: { friends: User[]; invitations: User[] } =
+    (await res.json()) as { friends: User[]; invitations: User[] };
+  store.invitations = resTyped.invitations;
 }
 
 function connectSocket(token: string, user: any): void {

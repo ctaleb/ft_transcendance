@@ -63,7 +63,13 @@
       background: linear-gradient(to bottom, #071018, #151d23);
       font-size: 10px;
       align-items: center;
-
+      // input:-webkit-autofill,
+      // input:-webkit-autofill:hover,
+      // input:-webkit-autofill:focus,
+      // input:-webkit-autofill:active {
+      //   transition: background-color 5000s ease-in-out 0s;
+      //   -webkit-text-fill-color: rgb(239, 206, 206);
+      // }
       .searchField {
         width: 100%;
         border: unset;
@@ -71,6 +77,10 @@
         font-size: 2em;
         height: auto;
         color: grey;
+        &:-webkit-autofill {
+          transition: background-color 5000s ease-in-out 0s;
+          -webkit-text-fill-color: rgb(239, 206, 206);
+        }
       }
 
       .searchField:focus {

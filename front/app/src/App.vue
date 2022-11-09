@@ -1,17 +1,16 @@
 <template>
   <div>
-    <div v-if="$route.path != '/' && $route.path != '/signup'">
+    <div
+      style="text-align: center"
+      v-if="$route.path != '/' && $route.path != '/signup'"
+    >
       <nav>
-        <router-link to="/portal">Portal</router-link> |
-        <router-link to="/game">Game</router-link> |
         <router-link to="/profile"
           >Profile
           <div :class="'dot' + (profileNotificationBadge ? ' show' : '')"></div
         ></router-link>
-        | <router-link to="/chat">Chat</router-link> |
-        <router-link to="/users">All users</router-link> |
-        <router-link to="/edit">Profile Editing</router-link> |
-        <router-link to="/" v-on:click.prevent="logout()">Logout</router-link>
+        | <router-link to="/game">Game</router-link> |
+        <router-link to="/chat">Chat</router-link>
       </nav>
     </div>
     <router-view
@@ -27,11 +26,14 @@
 
 <script setup lang="ts">
 import { onMounted, ref, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { RouterLink, RouterView, useRoute, useRouter } from "vue-router";
 import config from "./config/config";
 import Modal from "./components/GameConfirmation/Modal.vue";
-import { trySetupUser } from "@/functions/funcs";
+import { getUserByNickname, trySetupUser } from "@/functions/funcs";
+import { User } from "@/types/GameSummary";
+import { useStore } from "@/store";
 
+const store = useStore();
 const route = useRoute();
 const router = useRouter();
 const incomingFriendRequest = ref("");
@@ -96,13 +98,6 @@ const denyGame = () => {
   showConfirmation(false);
 };
 
-const logout = () => {
-  localStorage.removeItem("token");
-  localStorage.removeItem("user");
-  config.socket.emit("disco", {});
-  config.socket.close();
-};
-
 const changeNotificationValue = (value: boolean) => {
   profileNotificationBadge.value = value;
 };
@@ -131,13 +126,28 @@ onMounted(() => {
         });
       }
       if (!config.socket.hasListeners("friendshipInvite")) {
-        config.socket.on("friendshipInvite", (requester: string) => {
-          incomingFriendRequest.value = requester;
+        config.socket.on("friendshipInvite", (requester: User) => {
+          incomingFriendRequest.value = requester.nickname;
           profileNotificationBadge.value = true;
+          getUserByNickname(requester.nickname).then((data) => {
+            store.invitations?.push(data!);
+          });
         });
       }
-      console.log(currentValue);
-      console.log(oldValue);
+      if (!config.socket.hasListeners("acceptInvite")) {
+        config.socket.on("acceptInvite", (requester: User) => {
+          getUserByNickname(requester.nickname).then((data) => {
+            store.user?.friends?.push(data!);
+          });
+        });
+      }
+      if (!config.socket.hasListeners("removeFriend")) {
+        config.socket.on("removeFriend", (requester: User) => {
+          getUserByNickname(requester.nickname).then((data) => {
+            store.user?.friends?.splice(store.user?.friends?.indexOf(data!), 1);
+          });
+        });
+      }
       if (currentValue != "/game") config.socket.emit("watchPath");
 
       if (

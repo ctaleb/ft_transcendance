@@ -1,16 +1,17 @@
 import { User } from "@/types/GameSummary";
 import { defineStore } from "pinia";
+import { Socket } from "socket.io-client";
 
 interface State {
   user: User | undefined;
-  invitations: User[];
+  invitations: User[] | undefined;
 }
 
 export const useStore = defineStore("default", {
   state: (): State => {
     return {
       user: undefined,
-      invitations: [],
+      invitations: undefined,
     };
   },
 });

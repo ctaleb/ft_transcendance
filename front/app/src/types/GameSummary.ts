@@ -16,6 +16,7 @@ export interface User {
   nickname: string;
   avatar: string;
   friends?: User[];
+  invitations?: User[];
   history?: History[];
 }
 

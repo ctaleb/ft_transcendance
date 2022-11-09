@@ -1,16 +1,19 @@
 <template>
   <li class="friend debug-border">
-    <img width="300" height="300" class="user-image border-gold" :src="getUserAvatar(friend)" alt="" />
+    <div>
+      <img class="user-image border-gold" :src="getUserAvatar(friend)" alt="" />
+      <button @click="unfriend()">Remove</button>
+      <button @click="watchProfile()">Profile</button>
+      <button @click="spectateGame()">Spectate</button>
+      <button @click="inviteCustom()">Invite</button>
+    </div>
     <h3>{{ friend.nickname }}</h3>
-    <button @click="unfriend()">Remove</button>
-    <button @click="watchProfile()">Profile</button>
-    <button @click="spectateGame()">Spectate</button>
-    <button @click="inviteCustom()">Invite</button>
   </li>
 </template>
 
 <script lang="ts" setup>
 import { getUserAvatar } from "@/functions/funcs";
+import { useStore } from "@/store";
 import { User } from "@/types/GameSummary";
 import { useRouter } from "vue-router";
 
@@ -19,6 +22,7 @@ const props = defineProps<{
 }>();
 
 const router = useRouter();
+const store = useStore();
 
 const unfriend = () => {
   fetch(
@@ -41,9 +45,13 @@ const unfriend = () => {
       return res.json();
     })
     .then((data) => {
-      // friends.splice(friends.indexOf(friend), 1);
+      store.user?.friends!.splice(
+        store.user?.friends!.indexOf(props.friend),
+        1
+      );
     })
     .catch((err) => console.log(err));
+  console.log(props.friend.nickname);
 };
 
 const watchProfile = () => {

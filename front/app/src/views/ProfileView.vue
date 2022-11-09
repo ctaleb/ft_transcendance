@@ -1,25 +1,22 @@
 <template @update-invitations="getRelations()">
-  <section v-if="store.user != null" id="profile" class="container">
+  <section v-if="currentUser !== undefined" id="profile" class="container">
     <div class="current-user debug-border">
       <img
         class="user-image border-gold"
         :src="getUserAvatar(currentUser)"
         alt=""
-        width="300" height="300"
+        width="300"
+        height="300"
       />
       <div>
         <h2 class="playerName">{{ currentUser?.nickname }}</h2>
-        <!-- <pre style="background-color: white; color: black">{{
-          currentUser || "undefined"
-        }}</pre> -->
+        <div v-if="currentUser === store.user">
+          <router-link to="/edit">Profile Editing</router-link>
+          |
+          <router-link to="/" v-on:click.prevent="logout()">Logout</router-link>
+        </div>
       </div>
     </div>
-    <!-- <div class="menu">
-      <button @click="">Friend</button>
-      <button @click="">Match History</button>
-      <button @click="">Invitations</button>
-      <button @click="">Ranking</button>
-    </div> -->
     <div class="search debug-border">
       <div class="searchBar">
         <div class="searchIcon"><i class="gg-search"></i></div>
@@ -31,24 +28,17 @@
           placeholder="Player name"
         />
       </div>
-      <!-- <button @click="invite()">Add Friend</button> -->
+      <button @click="invite()">Add Friend</button>
     </div>
-    <!-- <div class="invitations debug-border">
-      <h1 v-if="store.invitations.length">Invitations:</h1>
-      <span class="invitation" v-for="invitation in store.invitations">
-        <img :src="invitation.avatar" alt="" />
-        <div class="invitationInfo">
-          <h2>{{ invitation.nickname }}</h2>
-        </div>
-        <div class="invitationAction">
-          <button @click="befriend(invitation)">
-            <i class="gg-check"></i>
-          </button>
-          <button @click="decline(invitation)"><i class="gg-close"></i></button>
-          <button @click="block(invitation)"><i class="gg-block"></i></button>
-        </div>
-      </span>
-    </div> -->
+    <div v-if="currentUser === store.user" class="friends debug-border">
+      <h2 v-if="store.invitations?.length">Invitations</h2>
+      <ul>
+        <InvitationCard
+          v-for="invitation of store.invitations"
+          :invitation="invitation"
+        />
+      </ul>
+    </div>
     <div class="friends debug-border">
       <h2>Friends</h2>
       <ul>
@@ -56,152 +46,95 @@
       </ul>
     </div>
   </section>
-  <p v-else>User = null</p>
-  <friend-alert :requester-name="incomingFriendRequest" />
+  <h4 v-else>User not found T_T</h4>
+  <!-- <friend-alert :requester-name="incomingFriendRequest" /> -->
 </template>
 
 <script lang="ts" setup>
 import FriendAlert from "@/components/FriendAlert.vue";
 import FriendCard from "@/components/profile/FriendCard.vue";
-import config from "@/config/config";
+import InvitationCard from "@/components/profile/InvitationCard.vue";
 import { getUserAvatar, getUserByNickname } from "@/functions/funcs";
 import { useStore } from "@/store";
 import { User } from "@/types/GameSummary";
 import { onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
+import config from "@/config/config";
 
-const socket = config.socket;
 const route = useRoute();
 
 const store = useStore();
 
-const props = defineProps<{
-  incomingFriendRequest: string;
-}>();
-
-const emit = defineEmits<{
-  (e: "notification", enable: boolean): void;
-  (e: "updateInvitations"): void;
-}>();
+// const prop = defineProps<{
+//   incomingFriendRequest: string;
+// }>();
+// const emit = defineEmits<{
+//   (e: "notification", enable: boolean): void;
+//   (e: "updateInvitations"): void;
+// }>();
+// const checkNotificationBadge = () => {
+//   if (store.invitations?.length === 0) emit("notification", false);
+// };
 
 const searchFriend = ref("");
 
 const currentUser = ref<User>();
+const currentFriend = ref<User[]>();
 
 onMounted(async () => {
   let nick = <string | undefined>route.params.nickname;
 
   if (nick) {
     currentUser.value = await getUserByNickname(nick);
+    console.log(currentUser.value);
+
+    if (!currentUser.value) return;
+    await fetch("http://" + window.location.hostname + ":3000/api/friendship", {
+      headers: {
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+    })
+      .then((data) => data.json())
+      .then((data) => {
+        currentFriend.value = data.friends;
+      });
   } else {
     currentUser.value = store.user;
-
+    currentFriend.value = store.user?.friends;
     store.$subscribe((mutation, state) => {
       currentUser.value = state.user;
     });
   }
 });
 
-// const checkNotificationBadge = () => {
-//   if (this.invitations.length === 0) this.$emit("notification", false);
-// };
+const logout = () => {
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  config.socket.emit("disco", {});
+  config.socket.close();
+};
 
-// const invite = () => {
-//   if (this.searchFriend.length <= 0) return;
-//   fetch("http://" + window.location.hostname + ":3000/api/friendship/invite", {
-//     method: "POST",
-//     headers: {
-//       "Content-Type": "application/json",
-//       Authorization: "Bearer " + localStorage.getItem("token"),
-//     },
-//     body: JSON.stringify({
-//       addressee: this.searchFriend,
-//     }),
-//   })
-//     .then((res) => {
-//       if (res.status !== 200) {
-//         throw res.statusText;
-//       }
-//     })
-//     .catch((err) => console.log(err));
-//   this.searchFriend = "";
-// };
+const invite = () => {
+  if (searchFriend.value.length <= 0) return;
 
-// const befriend = (invitation: User) => {
-//   fetch(
-//     "http://" + window.location.hostname + ":3000/api/friendship/befriend",
-//     {
-//       method: "PUT",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: "Bearer " + localStorage.getItem("token"),
-//       },
-//       body: JSON.stringify({
-//         addressee: invitation.nickname,
-//       }),
-//     }
-//   )
-//     .then((res) => {
-//       if (res.status !== 200) {
-//         throw res.statusText;
-//       }
-//       return res.json();
-//     })
-//     .then((data) => {
-//       this.invitations.splice(this.invitations.indexOf(invitation), 1);
-//       this.friends.push(invitation);
-//       this.checkNotificationBadge();
-//     })
-//     .catch((err) => console.log(err));
-// };
-
-// const decline = (invitation: User) => {
-//   fetch("http://" + window.location.hostname + ":3000/api/friendship/decline", {
-//     method: "DELETE",
-//     headers: {
-//       "Content-Type": "application/json",
-//       Authorization: "Bearer " + localStorage.getItem("token"),
-//     },
-//     body: JSON.stringify({
-//       addressee: invitation.nickname,
-//     }),
-//   })
-//     .then((res) => {
-//       if (res.status !== 200) {
-//         throw res.statusText;
-//       }
-//       return res.json();
-//     })
-//     .then((data) => {
-//       store.invitations.splice(store.invitations.indexOf(invitation), 1);
-//       checkNotificationBadge();
-//     })
-//     .catch((err) => console.log(err));
-// };
-
-// const block = (invitation: User) => {
-//   fetch("http://" + window.location.hostname + ":3000/api/friendship/block", {
-//     method: "PUT",
-//     headers: {
-//       "Content-Type": "application/json",
-//       Authorization: "Bearer " + localStorage.getItem("token"),
-//     },
-//     body: JSON.stringify({
-//       addressee: invitation.nickname,
-//     }),
-//   })
-//     .then((res) => {
-//       if (res.status !== 200) {
-//         throw res.statusText;
-//       }
-//       return res.json();
-//     })
-//     .then((data) => {
-//       store.invitations.splice(store.invitations.indexOf(invitation), 1);
-//       checkNotificationBadge();
-//     })
-//     .catch((err) => console.log(err));
-// };
+  fetch("http://" + window.location.hostname + ":3000/api/friendship/invite", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + localStorage.getItem("token"),
+    },
+    body: JSON.stringify({
+      addressee: searchFriend.value,
+    }),
+  })
+    .then((res) => {
+      if (res.status !== 200) {
+        throw res.statusText;
+      }
+    })
+    .catch((err) => console.log(err));
+  searchFriend.value = "";
+};
 </script>
 
 <style lang="scss">

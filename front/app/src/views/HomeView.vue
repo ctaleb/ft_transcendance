@@ -63,6 +63,7 @@
 <script lang="ts">
 import * as funcs from "@/functions/funcs";
 import { defineComponent, ref } from "vue";
+import router from "@/router";
 
 export default defineComponent({
   computed: {
@@ -96,9 +97,9 @@ export default defineComponent({
   emits: ["notification"],
   async mounted() {
     let isConnected = funcs.isConnected(localStorage.getItem("token") || "");
-    if (isConnected) this.$router.push("/portal");
-    else console.log("not connected");
-
+    if (isConnected) {
+      this.$router.push("/game");
+    } else console.log("not connected");
     //get back intra code, if exists
     let current_url = window.location.href;
     var url = new URL(current_url);
@@ -130,7 +131,7 @@ export default defineComponent({
           localStorage.setItem("token", value.token);
           localStorage.setItem("user", JSON.stringify(value.user));
           funcs.trySetupUser().then(() => {
-            this.$router.push("/portal");
+            this.$router.push("/game");
           });
         })
         .catch((err) => console.log(err));
@@ -160,7 +161,7 @@ export default defineComponent({
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
       funcs.trySetupUser().then(() => {
-        this.$router.push("/portal");
+        this.$router.push("/game");
       });
     },
   },

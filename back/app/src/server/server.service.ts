@@ -354,6 +354,12 @@ export class ServerService {
     return;
   }
 
+  PlayerToSocket(username: string) {
+    const player = this.userList.find((element) => element.name === username);
+    if (player) return player.socket;
+    return;
+  }
+
   async summarize(game: Game, elo: number) {
     try {
       const host: UserEntity = await this._userService.getUserByNickname(
