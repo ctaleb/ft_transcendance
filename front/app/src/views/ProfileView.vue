@@ -1,5 +1,4 @@
 <template @update-invitations="getRelations()">
-  <div @notif-chat="openChatNotif" class="hidden"></div>
   <div v-if="user != null" class="profileView">
     <p>Hello {{ user.nickname }} !</p>
     <p>Created at {{ user.createdAt }}</p>
@@ -56,14 +55,6 @@
     </div>
   </div>
   <p v-else>User = null</p>
-  <div v-for="friend in conversations">
-    <div v-if="friend.displayChatWindow == true">
-      <chat-window
-        :dest-nickname="friend.nickname"
-        @close-window="closePrivateConv"
-      />
-    </div>
-  </div>
 
   <friend-alert
     :requester-name="incomingFriendRequest"
@@ -79,7 +70,6 @@
 import { ref, defineComponent } from "vue";
 let funcs = require("../functions/funcs");
 import FriendAlert from "../components/FriendAlert.vue";
-import chatWindow from "../components/chatWindow.vue";
 import config from "../config/config";
 
 const socket = config.socket;
@@ -113,16 +103,9 @@ export default defineComponent({
       friends: Array<User>(),
       matchHistory: Array<History>(),
       searchFriend: "",
-      privateMessage: "",
-      conversations: Array<{ nickname: string; displayChatWindow: Boolean }>(),
     };
   },
-  emits: [
-    "notification",
-    "updateInvitations",
-    "createPrivateConv",
-    "closeWindow",
-  ],
+  emits: ["notification", "updateInvitations"],
   methods: {
     getRelations() {
       fetch("http://" + window.location.hostname + ":3000/api/friendship", {
@@ -137,7 +120,6 @@ export default defineComponent({
         .then((data) => {
           this.invitations = data.invitations;
           this.friends = data.friends;
-          this.fillConversations();
           console.log(this.friends);
           for (let invitation of this.invitations) {
             funcs.getUserAvatar(invitation.path).then((data: any) => {
@@ -309,44 +291,14 @@ export default defineComponent({
         })
         .catch((err) => console.log(err));
     },
-    displayPrivateConv(friend: User) {
-      this.conversations.forEach((conv) => {
-        if (conv.nickname === friend.nickname) conv.displayChatWindow = true;
-      });
-    },
     watchProfile(friend: User) {
       this.$router.push("profile/" + friend.nickname);
-    },
-    closePrivateConv(nickname: string) {
-      this.conversations.forEach((conv) => {
-        if (conv.nickname === nickname) conv.displayChatWindow = false;
-      });
-    },
-
-    fillConversations() {
-      this.friends.forEach((friend) => {
-        let initConv = {
-          nickname: friend.nickname,
-          displayChatWindow: false,
-        };
-        this.conversations.push(initConv);
-      });
-    },
-    openChatNotif(payload: string) {
-      this.conversations.forEach((conv) => {
-        if (conv.nickname === payload) conv.displayChatWindow = true;
-      });
     },
   },
 
   mounted() {
     let nick: string = <string>this.$route.params.nickname;
     if (!nick) {
-      socket.on("openChatWindow", (payload: { author: string }) => {
-        this.conversations.forEach((conv) => {
-          if (conv.nickname === payload.author) conv.displayChatWindow = true;
-        });
-      });
       funcs.getUserByNickname(this.user.nickname).then((data: any) => {
         nick = data.nickname;
         this.user = data;
@@ -365,6 +317,6 @@ export default defineComponent({
     }
     this.getMatchHistory(nick);
   },
-  components: { FriendAlert, chatWindow },
+  components: { FriendAlert },
 });
 </script>
