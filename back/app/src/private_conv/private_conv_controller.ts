@@ -35,7 +35,6 @@ export class PrivateConvController {
     @Param('convUuid') convUuiD,
     @Param('offset') offset: number,
   ) {
-    console.log('uuid --> ' + convUuiD);
     return await this.privateConvService.getMessages(convUuiD, offset);
   }
 
