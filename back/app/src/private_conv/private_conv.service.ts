@@ -5,7 +5,7 @@ import { messageParamsFactory } from '@vuelidate/validators';
 import { authorize } from 'passport';
 import { User } from 'src/server/entities/server.entity';
 import { UserEntity } from 'src/user/user.entity';
-import { OffsetWithoutLimitNotSupportedError, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { CreatePrivateConvDto } from './dto/create-private_conv.dto';
 import { MessageDto } from './dto/MessageDto';
 import { UpdatePrivateConvDto } from './dto/update-private_conv.dto';
