@@ -12,7 +12,7 @@ import { ServerService } from './server.service';
 import { PrivateConvService } from '../private_conv/private_conv.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { Server, Socket } from 'socket.io';
-import { Game, GameOptions } from './entities/server.entity';
+import { Game, GameOptions, IPower } from './entities/server.entity';
 import { UserEntity } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
 import { NamingStrategyNotFoundError } from 'typeorm';
@@ -214,6 +214,10 @@ export class ServerGateway
       'ServerUpdate',
       this.serverService.sendState(game.gameState, game),
     );
+    this.server
+      .to(game.theatre.name)
+      .emit('ServerUpdate', this.serverService.sendState(game.gameState, game));
+    // this.server.to(game.room.name).emit('gameConfirmation', game.room);
 
     const loopTimer = setTimeout(() => {
       if (
@@ -296,27 +300,6 @@ export class ServerGateway
     }
   }
 
-  @SubscribeMessage('customInvite')
-  customInvite(
-    @ConnectedSocket() socket: Socket,
-    @MessageBody() gameOpts: GameOptions,
-    power: string,
-    invitee: string,
-  ) {
-    const host = this.serverService.SocketToPlayer(socket);
-    if (!host || !(host.status === 'idle')) return;
-    host.status = 'inviting';
-    const client = this.serverService.userList.find(
-      (element) => element.name === invitee,
-    );
-    if (!client || !(client.status === 'idle')) {
-      host.status = 'idle';
-      return;
-    }
-    client.status = 'inviting';
-    client.socket.emit('customInvitation');
-  }
-
   @SubscribeMessage('playerReady')
   playerReady(@ConnectedSocket() client: Socket) {
     const player = this.serverService.userList.find(
@@ -355,7 +338,142 @@ export class ServerGateway
     @MessageBody('friend') friend: string,
     @ConnectedSocket() client: Socket,
   ) {
-    console.log('test');
+    const game = this.serverService.games.find(
+      (element) =>
+        element.client.name === friend || element.host.name === friend,
+    );
+    if (game) {
+      client.emit('spectating', game.room);
+      client.join(game.theatre.name);
+      game.theatre.viewers.push(client);
+    }
+  }
+
+  //customInvite
+  @SubscribeMessage('customInvite')
+  customInvite(
+    @MessageBody('friend') friend: string,
+    @ConnectedSocket() client: Socket,
+  ) {
+    let game: Game;
+    const inviter = this.serverService.userList.find(
+      (element) => element.socket === client,
+    );
+    const usr = this.serverService.userList.find(
+      (element) => element.name === friend,
+    );
+    if (usr) {
+      if (usr.status === 'idle') {
+        game = this.serverService.newGame(usr, inviter);
+        game.room.name = 'game-' + game.host.name + '-' + game.client.name;
+        game.theatre.name = 'spec-' + game.host.name + '-' + game.client.name;
+        usr.status = 'inLobby';
+        inviter.status = 'inLobby';
+        game.host.socket.join(game.room.name);
+        usr.socket.emit('invitation', inviter.name);
+        this.serverService.games.push(game);
+      }
+    }
+  }
+
+  //inviter logic
+  @SubscribeMessage('settingsInviter')
+  settingsInviter(
+    @MessageBody('friend') friend: string,
+    @ConnectedSocket() client: Socket,
+  ) {
+    client.emit('customInviter', friend);
+  }
+  @SubscribeMessage('readyInviter')
+  readyInviter(
+    @MessageBody('gameOpts') gameOpts: GameOptions,
+    @MessageBody('power') power: string,
+    @ConnectedSocket() client: Socket,
+  ) {
+    console.log('inviter is ready');
+    const usr = this.serverService.SocketToPlayer(client);
+    if (!usr) return;
+    const game = this.serverService.games.find(
+      (element) => element.host === usr,
+    );
+    if (!game) return;
+    if (game.room.options.powers) usr.gameData.power = new IPower(power);
+    usr.status = 'ready';
+    game.room.options = gameOpts;
+    if (game.client.status === 'ready') {
+      this.launchCustomGame(game);
+    }
+  }
+
+  //invitee logic
+  @SubscribeMessage('declineCustom')
+  declineCustom(@ConnectedSocket() client: Socket) {
+    const usr = this.serverService.SocketToPlayer(client);
+    const game = this.serverService.games.find(
+      (element) => element.client === usr,
+    );
+    if (game) {
+      game.host.status = 'idle';
+      game.host.socket.leave(game.room.name);
+      game.client.status = 'idle';
+      this.serverService.games.splice(
+        this.serverService.games.indexOf(game),
+        1,
+      );
+    }
+  }
+  @SubscribeMessage('settingsInvitee')
+  settingsInvitee(@ConnectedSocket() client: Socket) {
+    const usr = this.serverService.SocketToPlayer(client);
+    const game = this.serverService.games.find(
+      (element) => element.client === usr,
+    );
+    if (game) {
+      game.client.socket.join(game.room.name);
+      client.emit('customInvitee', game.host.name);
+    } else usr.status = 'idle';
+  }
+  @SubscribeMessage('readyInvitee')
+  readyInvitee(
+    @MessageBody('power') power: string,
+    @ConnectedSocket() client: Socket,
+  ) {
+    console.log('invitee is ready');
+    const usr = this.serverService.SocketToPlayer(client);
+    if (!usr) return;
+    const game = this.serverService.games.find(
+      (element) => element.client === usr,
+    );
+    if (!game) return;
+    if (game.room.options.powers) usr.gameData.power = new IPower(power);
+    usr.status = 'ready';
+    if (game.host.status === 'ready') {
+      this.launchCustomGame(game);
+    }
+  }
+
+  launchCustomGame(game: Game) {
+    this.serverService.initGameValues(game);
+    if (game.room.options.powers) {
+      this.serverService.initPower(
+        game.client,
+        game.gameState,
+        game.gameState.clientBar,
+        game.gameState.hostBar,
+      );
+      this.serverService.initPower(
+        game.host,
+        game.gameState,
+        game.gameState.hostBar,
+        game.gameState.clientBar,
+      );
+    }
+    game.room.status = 'playing';
+    game.room.hostName = game.host.name;
+    game.room.clientName = game.client.name;
+    this.server.to(game.room.name).emit('startGame', game.room);
+    this.serverService.startRound(game.room);
+    this.gameLoop(game);
   }
 
   //Private conv version Lolo

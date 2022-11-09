@@ -326,9 +326,7 @@ export default defineComponent({
         "spectate",
         { friend: friend.nickname },
         (response: string) => {
-          if (response != "ingame") {
-            console.log(response);
-          } else {
+          if (response == "ingame") {
             this.$router.push("game");
             config.socket.emit("readySpectate", { friend: friend.nickname });
           }
@@ -336,7 +334,9 @@ export default defineComponent({
       );
     },
     inviteCustom(friend: User) {
+      config.socket.emit("customInvite", { friend: friend.nickname });
       this.$router.push("game");
+      config.socket.emit("settingsInviter", { friend: friend.nickname });
     },
     closePrivateConv(nickname: string) {
       this.conversations.forEach((conv) => {

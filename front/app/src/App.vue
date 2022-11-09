@@ -21,7 +21,17 @@
       :incoming-friend-request="incomingFriendRequest"
     />
     <div v-if="gameConfirmation" class="overlay">
-      <modal @confirmGame="confirmGame()" @denyGame="denyGame()"></modal>
+      <GameConfirmation
+        @confirmGame="confirmGame()"
+        @denyGame="denyGame()"
+      ></GameConfirmation>
+    </div>
+    <div v-if="customInvitation" class="overlay">
+      <CustomInvitation
+        :inviter="invSender"
+        @acceptCustom="acceptCustom()"
+        @denyCustom="denyCustom()"
+      ></CustomInvitation>
     </div>
   </div>
 </template>
@@ -31,7 +41,9 @@ import { onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { io } from "socket.io-client";
 import config from "./config/config";
-import Modal from "./components/GameConfirmation/Modal.vue";
+import GameConfirmation from "./components/GameConfirmation/Modal.vue";
+import CustomInvitation from "./components/CustomInvitation/Modal.vue";
+import { request } from "http";
 
 // let socket = config.socket;
 
@@ -40,6 +52,8 @@ const router = useRouter();
 const incomingFriendRequest = ref("");
 const profileNotificationBadge = ref(false);
 const gameConfirmation = ref(false);
+const customInvitation = ref(false);
+const invSender = ref("Placeholder");
 
 if (!config.socket.id && localStorage.getItem("user")) {
   console.log("socketing");
@@ -122,6 +136,18 @@ const confirmGame = () => {
 
 const denyGame = () => {
   showConfirmation(false);
+  config.socket.emit("declineCustom");
+};
+
+const acceptCustom = () => {
+  showInvite(false);
+  router.push("/game");
+  config.socket.emit("settingsInvitee");
+};
+
+const denyCustom = () => {
+  showInvite(false);
+  console.log("deny");
 };
 
 const logout = () => {
@@ -143,20 +169,34 @@ function showConfirmation(show: boolean) {
   gameConfirmation.value = show;
 }
 
+function showInvite(show: boolean) {
+  customInvitation.value = show;
+}
+
 onMounted(() => {
   watch(
     () => route.path,
     (currentValue, oldValue) => {
+      if (!config.socket.hasListeners("customInvite")) {
+        config.socket.on("customInvite", (inviter: string) => {
+          // theRoom = gameRoom;
+          showInvite(true);
+        });
+      }
       if (!config.socket.hasListeners("gameConfirmation")) {
         config.socket.on("gameConfirmation", (gameRoom: any) => {
-          console.log("???");
           // theRoom = gameRoom;
           showConfirmation(true);
         });
       }
+      if (!config.socket.hasListeners("invitation")) {
+        config.socket.on("invitation", (requester: string) => {
+          invSender.value = requester;
+          showInvite(true);
+        });
+      }
       if (!config.socket.hasListeners("gameConfirmationTimeout")) {
         config.socket.on("gameConfirmationTimeout", () => {
-          console.log("$$$");
           showConfirmation(false);
           // startButton.value = true;
           // lobbyStatus.value = "Find Match";
@@ -168,8 +208,6 @@ onMounted(() => {
           profileNotificationBadge.value = true;
         });
       }
-      console.log(currentValue);
-      console.log(oldValue);
       if (currentValue != "/game") config.socket.emit("watchPath");
 
       if (
