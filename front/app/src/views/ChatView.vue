@@ -273,7 +273,6 @@ function displayMessages(conv: privateConv, event: any) {
     conversations.forEach((conversation) => {
       conversation.classList.add("inactiveConv");
     });
-    console.log(event.target);
     event.target.classList.remove("inactiveConv");
   }
   document.getElementsByClassName("conversation")[0].classList.remove("hidden");
@@ -281,9 +280,7 @@ function displayMessages(conv: privateConv, event: any) {
   conv.user1.nickname == clientNickname
     ? (friendNickname.value = conv.user2.nickname)
     : (friendNickname.value = conv.user1.nickname);
-  console.log(
-    conv.user1.nickname + " -- " + conv.user2.nickname + "----" + conv.offset
-  );
+ 
   fetch(
     "http://" +
       window.location.hostname +
@@ -315,7 +312,6 @@ function displayMessages(conv: privateConv, event: any) {
 }
 
 function sendPrivateMessage(nickname: string): void {
-  console.log(nickname);
   if (messageInput.value != "") {
     socket.emit("deliverMessage", {
       message: messageInput.value,
@@ -331,14 +327,14 @@ function sendPrivateMessage(nickname: string): void {
 
 function changeConvListStatus() {
   if (convListFlag.value == true) {
-    const el = document.querySelectorAll(".privateConvButton");
+    const el = document.querySelectorAll(".fullPrivateConvButton");
     el.forEach((element) => {
       element.classList.add("hidden");
     });
     iconConvList.value = "gg-add";
     convListFlag.value = false;
   } else {
-    const el = document.querySelectorAll(".privateConvButton");
+    const el = document.querySelectorAll(".fullPrivateConvButton");
     el.forEach((element) => {
       element.classList.remove("hidden");
     });
