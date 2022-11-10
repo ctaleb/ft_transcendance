@@ -72,6 +72,7 @@ export async function trySetupUser(): Promise<void> {
 
   await fetchUser(token);
   connectSocket(token, JSON.parse(user));
+
   return Promise.resolve();
 }
 
@@ -112,8 +113,18 @@ async function fetchUser(token: string): Promise<void> {
 }
 
 function connectSocket(token: string, user: any): void {
-  config.socket = io("http://" + window.location.hostname + ":3500", {
+  const store = useStore();
+
+  console.log(store.user);
+  store.socket = io("http://" + window.location.hostname + ":3500", {
     auth: { token: token, user: user },
     transports: ["websocket"],
   });
+  //  config.socket = io("http://" + window.location.hostname + ":3500", {
+  //    auth: { token: token, user: user },
+  //    transports: ["websocket"],
+  //  });
+  console.log(store.socket);
+  debugger;
+  console.log("store socket: " + store.socket.id);
 }

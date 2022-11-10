@@ -39,57 +39,62 @@ const router = useRouter();
 const incomingFriendRequest = ref("");
 const profileNotificationBadge = ref(false);
 const gameConfirmation = ref(false);
+const socket = store.socket;
 
 trySetupUser();
 
+//window.addEventListener("beforeunload", () => {
+//  socket?.disconnect;
+//});
+
 window.addEventListener("keydown", (e) => {
-  console.log("keydown " + config.socket.id);
+  console.log("keydown " + socket?.id);
   if (e.key === "ArrowLeft")
-    config.socket.emit("key", {
+    socket?.emit("key", {
       key: "downLeft",
     });
   else if (e.key === "ArrowRight")
-    config.socket.emit("key", {
+    socket?.emit("key", {
       key: "downRight",
     });
   if (e.key === "a")
-    config.socket.emit("key", {
+    socket?.emit("key", {
       key: "downA",
     });
   else if (e.key === "d")
-    config.socket.emit("key", {
+    socket?.emit("key", {
       key: "downD",
     });
   else if (e.key === " ") {
-    config.socket.emit("key", {
+    socket?.emit("key", {
       key: "downSpace",
     });
   }
-  if (e.key === "o") config.socket.emit("debugging");
-  if (e.key === "i") config.socket.emit("chatting");
+  if (e.key === "o") socket?.emit("debugging");
+  if (e.key === "i") socket?.emit("chatting");
 });
 
 window.addEventListener("keyup", (e) => {
   if (e.key === "ArrowLeft")
-    config.socket.emit("key", {
+    socket?.emit("key", {
       key: "upLeft",
     });
   else if (e.key === "ArrowRight")
-    config.socket.emit("key", {
+    socket?.emit("key", {
       key: "upRight",
     });
   if (e.key === "a")
-    config.socket.emit("key", {
+    socket?.emit("key", {
       key: "upA",
     });
   else if (e.key === "d")
-    config.socket.emit("key", {
+    socket?.emit("key", {
       key: "upD",
     });
 });
 
 const confirmGame = () => {
-  config.socket.emit("playerReady", {}, () => {});
+  socket?.emit("playerReady", {}, () => {});
   showConfirmation(false);
   router.push("/game");
 };
@@ -110,23 +115,24 @@ onMounted(() => {
   watch(
     () => route.path,
     (currentValue, oldValue) => {
-      if (!config.socket.hasListeners("gameConfirmation")) {
-        config.socket.on("gameConfirmation", (gameRoom: any) => {
+      console.log("changing pah sock: " + socket?.id);
+      if (!socket?.hasListeners("gameConfirmation")) {
+        socket?.on("gameConfirmation", (gameRoom: any) => {
           console.log("???");
           // theRoom = gameRoom;
           showConfirmation(true);
         });
       }
-      if (!config.socket.hasListeners("gameConfirmationTimeout")) {
-        config.socket.on("gameConfirmationTimeout", () => {
+      if (!socket?.hasListeners("gameConfirmationTimeout")) {
+        socket?.on("gameConfirmationTimeout", () => {
           console.log("$$$");
           showConfirmation(false);
           // startButton.value = true;
           // lobbyStatus.value = "Find Match";
         });
       }
-      if (!config.socket.hasListeners("friendshipInvite")) {
-        config.socket.on("friendshipInvite", (requester: User) => {
+      if (!socket?.hasListeners("friendshipInvite")) {
+        socket?.on("friendshipInvite", (requester: User) => {
           incomingFriendRequest.value = requester.nickname;
           profileNotificationBadge.value = true;
           getUserByNickname(requester.nickname).then((data) => {
@@ -134,21 +140,21 @@ onMounted(() => {
           });
         });
       }
-      if (!config.socket.hasListeners("acceptInvite")) {
-        config.socket.on("acceptInvite", (requester: User) => {
+      if (!socket?.hasListeners("acceptInvite")) {
+        socket?.on("acceptInvite", (requester: User) => {
           getUserByNickname(requester.nickname).then((data) => {
             store.user?.friends?.push(data!);
           });
         });
       }
-      if (!config.socket.hasListeners("removeFriend")) {
-        config.socket.on("removeFriend", (requester: User) => {
+      if (!socket?.hasListeners("removeFriend")) {
+        socket?.on("removeFriend", (requester: User) => {
           getUserByNickname(requester.nickname).then((data) => {
             store.user?.friends?.splice(store.user?.friends?.indexOf(data!), 1);
           });
         });
       }
-      if (currentValue != "/game") config.socket.emit("watchPath");
+      if (currentValue != "/game") socket?.emit("watchPath");
 
       if (
         localStorage.getItem("token") &&

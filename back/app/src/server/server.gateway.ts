@@ -340,6 +340,7 @@ export class ServerGateway
     @MessageBody('message') messageToDeliver: string,
     @MessageBody('friendNickname') friendNickname: string,
   ): Promise<void> {
+    console.log('messageInput.value');
     let requester: UserEntity;
     const getAuthor = this.serverService.SocketToPlayer(client);
     const receiver = this.serverService.userList.find(

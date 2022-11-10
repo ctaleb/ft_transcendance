@@ -179,15 +179,17 @@ import {
   IPoint,
   GameOptions,
 } from "../../../../back/app/src/server/entities/server.entity";
-import config from "../config/config";
+//import config from "../config/config";
 import { title } from "process";
 import PowerSliderComponent from "./PowerSliderComponent.vue";
 import Summary from "./Summary.vue";
 import { GameSummaryData } from "@/types/GameSummary";
 import Modal from "./Summary/Modal.vue";
+import { useStore } from "@/store";
 
-const socket = config.socket;
-console.log("config " + socket.id);
+const store = useStore();
+const socket = store.socket;
+console.log("config " + socket?.id);
 const ballImg = new Image();
 ballImg.src = ballUrl;
 const powerChargeImg = new Image();
@@ -289,7 +291,7 @@ function findMatch() {
   startButton.value = true;
   lobbyStatus.value = "Looking for an opponent...";
   powers.value = false;
-  socket.emit("joinQueue", {
+  socket?.emit("joinQueue", {
     power: power.value,
   });
 }
@@ -297,7 +299,7 @@ function sendInvite() {
   startButton.value = false;
   lobbyStatus.value = "Sending invite...";
   updateOpts();
-  socket.emit("customInvite", {
+  socket?.emit("customInvite", {
     gameOpts,
     power: power.value,
     invitee: invitee.value,
@@ -533,7 +535,7 @@ onMounted(() => {
   //     lobbyStatus.value = "Find Match";
   //   });
 
-  socket.on("reconnect", (gameRoom: GameRoom) => {
+  socket?.on("reconnect", (gameRoom: GameRoom) => {
     console.log("reconnecting");
     theRoom = gameRoom;
     hostName.value = theRoom.hostName;
@@ -544,16 +546,16 @@ onMounted(() => {
     document.querySelector(".canvas")?.classList.remove("hidden");
   });
 
-  socket.on("kickOff", () => {
+  socket?.on("kickOff", () => {
     kickOff = true;
   });
 
-  socket.on("play", () => {
+  socket?.on("play", () => {
     kickOff = false;
     loadPercent = 120;
   });
 
-  socket.on("ServerUpdate", (gameState: GameState) => {
+  socket?.on("ServerUpdate", (gameState: GameState) => {
     gState = gameState;
     scalePosition(gameState);
     if (theRoom) {
@@ -585,7 +587,7 @@ onMounted(() => {
     }
   });
 
-  socket.on(
+  socket?.on(
     "Win",
     (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) => {
       theRoom = gameRoom;
@@ -601,7 +603,7 @@ onMounted(() => {
     }
   );
 
-  socket.on(
+  socket?.on(
     "Lose",
     (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) => {
       theRoom = gameRoom;
@@ -617,7 +619,7 @@ onMounted(() => {
     }
   );
 
-  socket.on("startGame", (gameRoom: GameRoom) => {
+  socket?.on("startGame", (gameRoom: GameRoom) => {
     powers.value = false;
     theRoom = gameRoom;
     hostName.value = theRoom.hostName;
@@ -628,7 +630,7 @@ onMounted(() => {
   });
 
   //todo / tochange
-  socket.on("customInvitation", () => {});
+  socket?.on("customInvitation", () => {});
 
   //needs to be moved
   //window.removeEventListener("resize", resizeCanvas);

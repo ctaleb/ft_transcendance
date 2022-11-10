@@ -59,11 +59,12 @@ import { useStore } from "@/store";
 import { User } from "@/types/GameSummary";
 import { onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
-import config from "@/config/config";
+//import config from "@/config/config";
 
 const route = useRoute();
 
 const store = useStore();
+const socket = store.socket;
 
 // const prop = defineProps<{
 //   incomingFriendRequest: string;
@@ -110,8 +111,8 @@ onMounted(async () => {
 const logout = () => {
   localStorage.removeItem("token");
   localStorage.removeItem("user");
-  config.socket.emit("disco", {});
-  config.socket.close();
+  socket?.emit("disco", {});
+  socket?.close();
 };
 
 const invite = () => {

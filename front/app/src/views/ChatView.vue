@@ -121,7 +121,9 @@ import { onMounted, onUpdated, ref, watch } from "vue";
 import { useStore } from "@/store";
 import { User } from "@/types/GameSummary";
 import { Private } from "@babel/types";
-const socket = config.socket;
+
+const store = useStore();
+const socket = store.socket;
 let funcs = require("../functions/funcs");
 const clientNickname = JSON.parse(
   localStorage.getItem("user") || "{}"
@@ -139,7 +141,6 @@ let iconFriendList = ref("gg-remove");
 let friends = ref(Array<User>());
 let currentConv = ref<privateConv>();
 let isLoadMore = false;
-const store = useStore();
 
 const props = defineProps(["incomingFriendRequest"]);
 const emit = defineEmits(["notification"]);
@@ -164,7 +165,7 @@ onUpdated(() => {
 });
 onMounted(async () => {
   var audio = new Audio(require("../assets/adelsol.mp3"));
-  socket.on(
+  socket?.on(
     "Message to the client",
     async (privateMessage: { author: string; text: string }) => {
       if (privateMessage.author == friendNickname.value)
@@ -177,7 +178,9 @@ onMounted(async () => {
       }
     }
   );
-  socket.on("Update conv list", (convData: { conv: privateConv }) => {
+  socket?.on("Update conv list", (convData: { conv: privateConv }) => {
+    console.log("UPDATE");
+
     let convIndex = privateConvs.value.findIndex(
       (conv) => conv.uuid === convData.conv.uuid
     );
@@ -190,7 +193,8 @@ onMounted(async () => {
     }
   });
   await getAllConvs();
-  if (store.user?.friends) friends.value = store.user?.friends;
+  if (store.user?.friends)
+    friends.value = JSON.parse(JSON.stringify(store.user?.friends));
   organizeFriends();
 });
 
@@ -535,7 +539,9 @@ function displayMessages(conv: privateConv, event: any) {
 
 function sendPrivateMessage(nickname: string): void {
   if (messageInput.value != "") {
-    socket.emit("deliverMessage", {
+    console.log(socket?.id);
+
+    socket?.emit("deliverMessage", {
       message: messageInput.value,
       friendNickname: nickname,
     });
