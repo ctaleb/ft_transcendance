@@ -43,14 +43,16 @@
           </button>
         </div>
         <p>{{ friend.nickname }}</p>
-        <button style="color: white" @click="displayPrivateConv(friend)">
-          Chat
-        </button>
+        <button style="color: white" @click="displayPrivateConv()">Chat</button>
         <button style="color: white" @click="watchProfile(friend)">
           Profile
         </button>
-        <button style="color: white" @click="">Spectate</button>
-        <button style="color: white" @click="">Invite</button>
+        <button style="color: white" @click="spectateGame(friend)">
+          Spectate
+        </button>
+        <button style="color: white" @click="inviteCustom(friend)">
+          Invite
+        </button>
       </span>
     </div>
   </div>
@@ -293,6 +295,36 @@ export default defineComponent({
     },
     watchProfile(friend: User) {
       this.$router.push("profile/" + friend.nickname);
+    },
+    spectateGame(friend: User) {
+      config.socket.emit(
+        "spectate",
+        { friend: friend.nickname },
+        (response: string) => {
+          if (response == "ingame") {
+            this.$router.push("game");
+            config.socket.emit("readySpectate", { friend: friend.nickname });
+          }
+        }
+      );
+    },
+    inviteCustom(friend: User) {
+      let accepted = "yes";
+      config.socket.emit(
+        "customInvite",
+        { friend: friend.nickname },
+        (response: string) => {
+          if (response != "accepted") {
+            accepted = "no";
+          }
+        }
+      );
+      if (accepted === "no") return;
+      this.$router.push("game");
+      config.socket.emit("settingsInviter", { friend: friend.nickname });
+    },
+    displayPrivateConv() {
+      this.$router.push("chat");
     },
   },
 
