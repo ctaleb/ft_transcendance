@@ -35,7 +35,7 @@ const ballSize = 16;
 const barSize: IPoint = { x: 50, y: 10 };
 const defaultGameOptions: GameOptions = {
   scoreMax: 100,
-  ballSpeed: 2,
+  ballSpeed: 1,
   ballSize: 1,
   barSpeed: 1,
   barSize: 1,
@@ -564,7 +564,7 @@ export class ServerService {
         ) {
           if (client.gameData.power.isActive) {
             client.gameData.power.handle();
-          } else client.gameData.power.chargeUp();
+          } else if (room.options.smashes) client.gameData.power.chargeUp();
           if (client.gameData.smashLeft > 0) {
             ball.speed.x = 1 * M + client.gameData.smashLeft;
             ball.speed.y = 1 * M + client.gameData.smashLeft;
@@ -591,7 +591,7 @@ export class ServerService {
         ) {
           if (host.gameData.power.isActive) {
             host.gameData.power.handle();
-          } else host.gameData.power.chargeUp();
+          } else if (room.options.smashes) client.gameData.power.chargeUp();
           if (host.gameData.smashLeft > 0) {
             ball.speed.x = -1 * M - host.gameData.smashLeft;
             ball.speed.y = 1 * M + host.gameData.smashLeft;

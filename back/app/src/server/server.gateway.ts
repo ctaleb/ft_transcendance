@@ -141,7 +141,6 @@ export class ServerGateway
 
   @SubscribeMessage('watchPath')
   switchPath(@ConnectedSocket() client: Socket) {
-    console.log(client.id + ' changing tab');
     let ingame = false;
     const player = this.serverService.userList.find(
       (element) => element.socket === client,
@@ -355,6 +354,7 @@ export class ServerGateway
     @MessageBody('friend') friend: string,
     @ConnectedSocket() client: Socket,
   ) {
+    let response = 'failure';
     let game: Game;
     const inviter = this.serverService.userList.find(
       (element) => element.socket === client,
@@ -362,18 +362,20 @@ export class ServerGateway
     const usr = this.serverService.userList.find(
       (element) => element.name === friend,
     );
-    if (usr) {
-      if (usr.status === 'idle') {
-        game = this.serverService.newGame(usr, inviter);
-        game.room.name = 'game-' + game.host.name + '-' + game.client.name;
-        game.theatre.name = 'spec-' + game.host.name + '-' + game.client.name;
-        usr.status = 'inLobby';
-        inviter.status = 'inLobby';
-        game.host.socket.join(game.room.name);
-        usr.socket.emit('invitation', inviter.name);
-        this.serverService.games.push(game);
-      }
+    if (usr && usr.status === 'idle') {
+      response = 'accepted';
+      game = this.serverService.newGame(usr, inviter);
+      game.room.name = 'game-' + game.host.name + '-' + game.client.name;
+      game.theatre.name = 'spec-' + game.host.name + '-' + game.client.name;
+      usr.status = 'inLobby';
+      inviter.status = 'inLobby';
+      game.host.socket.join(game.room.name);
+      usr.socket.emit('invitation', inviter.name);
+      this.serverService.games.push(game);
+    } else {
+      client.emit('inviteFailure');
     }
+    return response;
   }
 
   //inviter logic
@@ -416,11 +418,13 @@ export class ServerGateway
       game.host.status = 'idle';
       game.host.socket.leave(game.room.name);
       game.client.status = 'idle';
+      game.host.socket.emit('foreverAlone');
       this.serverService.games.splice(
         this.serverService.games.indexOf(game),
         1,
       );
     }
+    //emit to host
   }
   @SubscribeMessage('settingsInvitee')
   settingsInvitee(@ConnectedSocket() client: Socket) {

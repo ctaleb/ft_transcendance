@@ -81,7 +81,6 @@ export class Game {
   host: User;
   client: User;
   gameSummary: MatchHistoryEntity;
-  //   spectators: User[];
 }
 
 export class GameData {

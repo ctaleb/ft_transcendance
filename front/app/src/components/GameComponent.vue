@@ -27,6 +27,9 @@
         @close="showSummary(false)"
       ></Modal>
     </div>
+    <div v-if="noFriends" class="overlay">
+      <Denial :inviter="friendName" @sadStory="showDenial(false)"></Denial>
+    </div>
     <div class="power">Selected power: {{ power }}</div>
   </div>
   <div :class="'custom' + (toggleLadder ? ' hidden' : '')">
@@ -198,6 +201,8 @@ import PowerSliderComponent from "./PowerSliderComponent.vue";
 import Summary from "./Summary.vue";
 import { GameSummaryData } from "@/types/GameSummary";
 import Modal from "./Summary/Modal.vue";
+import Denial from "./InviteDenied/Modal.vue";
+import { SCOPABLE_TYPES } from "@babel/types";
 
 const socket = config.socket;
 console.log("config " + socket.id);
@@ -243,7 +248,8 @@ const color = ref("white");
 const sumTitle = ref("Placeholder");
 // const sumDate = ref("");
 // const sumTime = ref(0);
-const modal = ref(false);
+
+const noFriends = ref(false);
 const summary = ref(false);
 const toggleLadder = ref(true);
 const toggleInvited = ref(false);
@@ -301,6 +307,10 @@ function showSummary(show: boolean) {
   summary.value = show;
 }
 
+function showDenial(show: boolean) {
+  noFriends.value = show;
+}
+
 function findMatch() {
   startButton.value = true;
   lobbyStatus.value = "Looking for an opponent...";
@@ -312,7 +322,6 @@ function findMatch() {
 function readyUp() {
   readyButton.value = true;
   customReady.value = "Waiting for " + friendName.value;
-  console.log(toggleInvited.value);
   if (toggleInvited.value) {
     socket.emit("readyInvitee", {
       power: power.value,
@@ -567,6 +576,10 @@ onMounted(() => {
     friendName.value = friend;
     toggleInvitedMode();
     toggleGameQueue();
+  });
+  socket.on("foreverAlone", () => {
+    toggleGameQueue();
+    noFriends.value = true;
   });
 
   socket.on("spectating", (gameRoom: GameRoom) => {

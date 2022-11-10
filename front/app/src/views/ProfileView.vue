@@ -334,7 +334,17 @@ export default defineComponent({
       );
     },
     inviteCustom(friend: User) {
-      config.socket.emit("customInvite", { friend: friend.nickname });
+      let accepted = "yes";
+      config.socket.emit(
+        "customInvite",
+        { friend: friend.nickname },
+        (response: string) => {
+          if (response != "accepted") {
+            accepted = "no";
+          }
+        }
+      );
+      if (accepted === "no") return;
       this.$router.push("game");
       config.socket.emit("settingsInviter", { friend: friend.nickname });
     },

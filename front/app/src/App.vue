@@ -33,6 +33,9 @@
         @denyCustom="denyCustom()"
       ></CustomInvitation>
     </div>
+    <div v-if="failedInvitation" class="overlay">
+      <FailedInvitation @invFailure="invFailure()"></FailedInvitation>
+    </div>
   </div>
 </template>
 
@@ -43,6 +46,7 @@ import { io } from "socket.io-client";
 import config from "./config/config";
 import GameConfirmation from "./components/GameConfirmation/Modal.vue";
 import CustomInvitation from "./components/CustomInvitation/Modal.vue";
+import FailedInvitation from "./components/FailedInvitation/Modal.vue";
 import { request } from "http";
 
 // let socket = config.socket;
@@ -53,6 +57,7 @@ const incomingFriendRequest = ref("");
 const profileNotificationBadge = ref(false);
 const gameConfirmation = ref(false);
 const customInvitation = ref(false);
+const failedInvitation = ref(false);
 const invSender = ref("Placeholder");
 
 if (!config.socket.id && localStorage.getItem("user")) {
@@ -92,11 +97,11 @@ window.addEventListener("keydown", (e) => {
     config.socket.emit("key", {
       key: "downRight",
     });
-  if (e.key === "a")
+  if (e.key === "a" || e.key === "A")
     config.socket.emit("key", {
       key: "downA",
     });
-  else if (e.key === "d")
+  else if (e.key === "d" || e.key === "D")
     config.socket.emit("key", {
       key: "downD",
     });
@@ -135,8 +140,8 @@ const confirmGame = () => {
 };
 
 const denyGame = () => {
+  config.socket.emit("playerNotReady");
   showConfirmation(false);
-  config.socket.emit("declineCustom");
 };
 
 const acceptCustom = () => {
@@ -146,8 +151,12 @@ const acceptCustom = () => {
 };
 
 const denyCustom = () => {
+  config.socket.emit("declineCustom");
   showInvite(false);
-  console.log("deny");
+};
+
+const invFailure = () => {
+  showFailure(false);
 };
 
 const logout = () => {
@@ -171,6 +180,10 @@ function showConfirmation(show: boolean) {
 
 function showInvite(show: boolean) {
   customInvitation.value = show;
+}
+
+function showFailure(show: boolean) {
+  failedInvitation.value = show;
 }
 
 onMounted(() => {
@@ -206,6 +219,11 @@ onMounted(() => {
         config.socket.on("friendshipInvite", (requester: string) => {
           incomingFriendRequest.value = requester;
           profileNotificationBadge.value = true;
+        });
+      }
+      if (!config.socket.hasListeners("inviteFailure")) {
+        config.socket.on("inviteFailure", () => {
+          showFailure(true);
         });
       }
       if (currentValue != "/game") config.socket.emit("watchPath");
