@@ -125,6 +125,6 @@ function connectSocket(token: string, user: any): void {
   //    transports: ["websocket"],
   //  });
   console.log(store.socket);
-  debugger;
+  //  debugger;
   console.log("store socket: " + store.socket.id);
 }

@@ -114,7 +114,6 @@ export interface message {
   text: string;
   author: string;
 }
-import config from "../config/config";
 import FriendAlert from "../components/FriendAlert.vue";
 
 import { onMounted, onUpdated, ref, watch } from "vue";

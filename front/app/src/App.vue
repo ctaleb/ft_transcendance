@@ -19,7 +19,20 @@
       :incoming-friend-request="incomingFriendRequest"
     />
     <div v-if="gameConfirmation" class="overlay">
-      <modal @confirmGame="confirmGame()" @denyGame="denyGame()"></modal>
+      <GameConfirmation
+        @confirmGame="confirmGame()"
+        @denyGame="denyGame()"
+      ></GameConfirmation>
+    </div>
+    <div v-if="customInvitation" class="overlay">
+      <CustomInvitation
+        :inviter="invSender"
+        @acceptCustom="acceptCustom()"
+        @denyCustom="denyCustom()"
+      ></CustomInvitation>
+    </div>
+    <div v-if="failedInvitation" class="overlay">
+      <FailedInvitation @invFailure="invFailure()"></FailedInvitation>
     </div>
   </div>
 </template>
@@ -27,11 +40,12 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from "vue";
 import { RouterLink, RouterView, useRoute, useRouter } from "vue-router";
-import config from "./config/config";
-import Modal from "./components/GameConfirmation/Modal.vue";
 import { getUserByNickname, trySetupUser } from "@/functions/funcs";
 import { User } from "@/types/GameSummary";
 import { useStore } from "@/store";
+import GameConfirmation from "./components/GameConfirmation/Modal.vue";
+import CustomInvitation from "./components/CustomInvitation/Modal.vue";
+import FailedInvitation from "./components/FailedInvitation/Modal.vue";
 
 const store = useStore();
 const route = useRoute();
@@ -40,6 +54,9 @@ const incomingFriendRequest = ref("");
 const profileNotificationBadge = ref(false);
 const gameConfirmation = ref(false);
 const socket = store.socket;
+const customInvitation = ref(false);
+const failedInvitation = ref(false);
+const invSender = ref("Placeholder");
 
 trySetupUser();
 
@@ -57,11 +74,11 @@ window.addEventListener("keydown", (e) => {
     socket?.emit("key", {
       key: "downRight",
     });
-  if (e.key === "a")
+  if (e.key === "a" || e.key === "A")
     socket?.emit("key", {
       key: "downA",
     });
-  else if (e.key === "d")
+  else if (e.key === "d" || e.key === "D")
     socket?.emit("key", {
       key: "downD",
     });
@@ -100,7 +117,34 @@ const confirmGame = () => {
 };
 
 const denyGame = () => {
+  socket?.emit("playerNotReady");
   showConfirmation(false);
+};
+
+const acceptCustom = () => {
+  showInvite(false);
+  router.push("/game");
+  socket?.emit("settingsInvitee");
+};
+
+const denyCustom = () => {
+  socket?.emit("declineCustom");
+  showInvite(false);
+};
+
+const invFailure = () => {
+  showFailure(false);
+};
+
+const logout = () => {
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  socket?.emit("disco", {});
+  //  socket? = io("http://" + window.location.hostname + ":3500", {
+  //    transports: ["websocket"],
+  //    // path: "/api/socket.io/",
+  //    autoConnect: false,
+  //  });
 };
 
 const changeNotificationValue = (value: boolean) => {
@@ -111,21 +155,38 @@ function showConfirmation(show: boolean) {
   gameConfirmation.value = show;
 }
 
+function showInvite(show: boolean) {
+  customInvitation.value = show;
+}
+
+function showFailure(show: boolean) {
+  failedInvitation.value = show;
+}
+
 onMounted(() => {
   watch(
     () => route.path,
     (currentValue, oldValue) => {
-      console.log("changing pah sock: " + socket?.id);
+      if (!socket?.hasListeners("customInvite")) {
+        socket?.on("customInvite", (inviter: string) => {
+          // theRoom = gameRoom;
+          showInvite(true);
+        });
+      }
       if (!socket?.hasListeners("gameConfirmation")) {
         socket?.on("gameConfirmation", (gameRoom: any) => {
-          console.log("???");
           // theRoom = gameRoom;
           showConfirmation(true);
         });
       }
+      if (!socket?.hasListeners("invitation")) {
+        socket?.on("invitation", (requester: string) => {
+          invSender.value = requester;
+          showInvite(true);
+        });
+      }
       if (!socket?.hasListeners("gameConfirmationTimeout")) {
         socket?.on("gameConfirmationTimeout", () => {
-          console.log("$$$");
           showConfirmation(false);
           // startButton.value = true;
           // lobbyStatus.value = "Find Match";
@@ -152,6 +213,11 @@ onMounted(() => {
           getUserByNickname(requester.nickname).then((data) => {
             store.user?.friends?.splice(store.user?.friends?.indexOf(data!), 1);
           });
+        });
+      }
+      if (!socket?.hasListeners("inviteFailure")) {
+        socket?.on("inviteFailure", () => {
+          showFailure(true);
         });
       }
       if (currentValue != "/game") socket?.emit("watchPath");
