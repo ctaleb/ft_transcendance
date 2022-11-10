@@ -340,58 +340,42 @@ export class ServerGateway
     @MessageBody('message') messageToDeliver: string,
     @MessageBody('friendNickname') friendNickname: string,
   ): Promise<void> {
+    let requester: UserEntity;
     const getAuthor = this.serverService.SocketToPlayer(client);
     const receiver = this.serverService.userList.find(
       (element) => element.name === friendNickname,
     );
     if (receiver) {
-      this.server.to(receiver.socket.id).emit('openChatWindow', {
-        author: getAuthor.name,
-      });
       this.server.to(receiver.socket.id).emit('Message to the client', {
         author: getAuthor.name,
         text: messageToDeliver,
       });
+      requester = await this.userService.getUserByNickname(receiver.name);
+    } else {
+      requester = await this.userService.getUserByNickname(friendNickname);
     }
 
     const author: UserEntity = await this.userService.getUserByNickname(
       getAuthor.name,
     );
-    const requester: UserEntity = await this.userService.getUserByNickname(
-      receiver.name,
-    );
+
     const conv = await this.privateMessageService
       .getConv(author, requester)
       .catch(async () => {
         return await this.privateMessageService.createConv(author, requester);
       });
+    await this.privateMessageService.updateLastMessageDate(conv);
+    if (receiver)
+      this.server.to(receiver.socket.id).emit('Update conv list', {
+        conv: conv,
+      }); //need to emit to both users, to signal them than the conv must be push to top of the list
+    this.server.to(client.id).emit('Update conv list', {
+      conv: conv,
+    });
     this.privateMessageService.createMessage({
       conv: conv,
       author: author,
       text: messageToDeliver,
     });
-  }
-  @SubscribeMessage('getMessages')
-  async getMessages(
-    @ConnectedSocket() client: Socket,
-    @MessageBody('friendNickname') friendNickname: string,
-  ): Promise<void> {
-    const receiver = this.serverService.userList.find(
-      (element) => element.name === friendNickname,
-    );
-    const getAuthor = this.serverService.SocketToPlayer(client);
-    const author: UserEntity = await this.userService.getUserByNickname(
-      getAuthor.name,
-    );
-    const requester: UserEntity = await this.userService.getUserByNickname(
-      receiver.name,
-    );
-    const messages = await this.privateMessageService.getMessages(
-      author,
-      requester,
-    );
-    this.server
-      .to(client.id)
-      .emit('Deliver all messages', { messages: messages });
   }
 }
