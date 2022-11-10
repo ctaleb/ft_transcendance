@@ -3,6 +3,7 @@ import { User } from 'src/server/entities/server.entity';
 import { UserEntity } from 'src/user/user.entity';
 import {
   Column,
+  CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
@@ -24,4 +25,7 @@ export class PrivateConvEntity extends AbstractEntity {
   @OneToMany(() => PrivateMessageEntity, (message) => message.conv)
   @JoinColumn()
   messages: PrivateMessageEntity[];
+
+  @CreateDateColumn()
+  lastMessage: Date;
 }
