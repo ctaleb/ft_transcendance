@@ -714,4 +714,13 @@ export class ServerService {
     }
     return message;
   }
+
+  async joinChannelRoom(client: Socket, channelId: number) {
+    const channels = await this._chatService.getUserChannels(
+      client.handshake.auth.user.id,
+    );
+    if (channels.find((ell) => ell.id === channelId)) {
+      client.join(`${channelId}`);
+    }
+  }
 }

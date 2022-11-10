@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from 'src/user/user.entity';
-import { LessThan, Not, Repository } from 'typeorm';
+import { ArrayContains, LessThan, Not, Repository } from 'typeorm';
 import { CreateChannelDto } from './dtos/create-channel.dto';
 import { ChannelEntity } from './entities/channel.entity';
 import { ChannelInvitationEntity } from './entities/channel_invitation.entity';
@@ -92,7 +92,6 @@ export class ChatService {
   async joinChannel(joinChannelDto: JoinChannelDto, userId: number) {
     try {
       const channel = await this.getChannelById(joinChannelDto.id);
-      const user: UserEntity = await this._userService.getUserById(userId);
       let member: ChannelMemberEntity;
       if (
         await this._channelMemberRepository.findOne({
@@ -103,13 +102,13 @@ export class ChatService {
       if (channel.type === ChannelType.PUBLIC) {
         member = this._channelMemberRepository.create({
           channel,
-          user,
+          user: { id: userId },
         });
       } else if (channel.type === ChannelType.PROTECTED) {
         if (bcrypt.compareSync(joinChannelDto.password, channel.password)) {
           member = this._channelMemberRepository.create({
             channel,
-            user,
+            user: { id: userId },
           });
         } else throw new BadRequestException('Wrong password');
       } else if (channel.type === ChannelType.PRIVATE) {
@@ -121,7 +120,7 @@ export class ChatService {
         await this._channelInvitationRepository.remove(invitation);
         member = this._channelMemberRepository.create({
           channel,
-          user,
+          user: { id: userId },
         });
       }
       member = await this._channelMemberRepository.save(member);
@@ -415,15 +414,27 @@ export class ChatService {
     userId: number,
   ) {
     try {
-      return await this._channelRepository.find({
-        where: {
-          members: { user: { id: Not(userId) } },
-          type: Not(ChannelType.PRIVATE),
-        },
-        order: { id: 'ASC' },
-        take: 5 + getChannelsListDto.skip,
-        skip: getChannelsListDto.skip,
-      });
+      const userChannels: { id: number; name: string; type: string }[] =
+        await this.getUserChannels(userId);
+      const result: { id: number; name: string; type: string }[] = [];
+      await this._channelRepository
+        .find({
+          where: {
+            type: Not(ChannelType.PRIVATE),
+          },
+          order: { id: 'ASC' },
+          take: 30,
+          skip: getChannelsListDto.skip,
+        })
+        .then((data) => {
+          data = data.filter(
+            (elem) => !userChannels.find((userChan) => userChan.id === elem.id),
+          );
+          data.forEach((elem) => {
+            result.push({ id: elem.id, name: elem.name, type: elem.type });
+          });
+        });
+      return result;
     } catch (err) {
       return err;
     }
@@ -446,7 +457,7 @@ export class ChatService {
         .then((data) => {
           data.forEach((entry) => {
             result.unshift({
-              author: entry.sender.user.nickname,
+              author: entry.sender ? entry.sender.user.nickname : 'UNKNOWN',
               text: entry.content,
               date: entry.createdAt,
             });

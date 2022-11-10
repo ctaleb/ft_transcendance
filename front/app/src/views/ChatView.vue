@@ -60,38 +60,59 @@
       <h4>Chat with your friends with the contact list to the left</h4>
     </div>
     <div v-if="show == 1" class="lobbyChat allChannels">
-      <div class="channel">
-        <h3>Channel</h3>
-        <h5>Public</h5>
-      </div>
-      <div class="channel">
-        <h3>Channel</h3>
-        <h5>Public</h5>
-      </div>
+      <template v-for="channel in allChannels">
+        <div class="channel">
+          <h3>{{ channel.name }}</h3>
+          <h5 class="textGrey">{{ channel.type }}</h5>
+          <div class="channelControl">
+            <div v-if="channel.type == ChannelType.PROTECTED" class="searchBar">
+              <input
+                type="password"
+                placeholder="password"
+                class="searchField"
+                v-model="channel.passwordField"
+              />
+            </div>
+            <button class="joinChannel" @click="joinChannel(channel)">
+              Join
+            </button>
+          </div>
+        </div>
+      </template>
     </div>
     <div v-if="show == 2" class="conversation">
-      <div class="messages">
-        <template v-for="message in messagesToDisplay">
-          <div
-            v-if="message.author == clientNickname"
-            class="clientMessage"
-            v-bind:key="message.text"
-          >
-            <h4 class="clientName">
-              {{ message.author }}
-            </h4>
-            <p>{{ message.text }}</p>
-            <p>{{ message.date }}</p>
+      <div class="upperChat">
+        <div class="messages">
+          <template v-for="message in messagesToDisplay">
+            <div
+              v-if="message.author == clientNickname"
+              class="clientMessage"
+              v-bind:key="message.text"
+            >
+              <h4 class="clientName">
+                {{ message.author }}
+              </h4>
+              <p>{{ message.text }}</p>
+              <p>{{ message.date }}</p>
+            </div>
+            <div v-else class="friendMessage" v-bind:key="message.text">
+              <h4 class="friendName">
+                {{ message.author }}
+              </h4>
+              <p>{{ message.text }}</p>
+              <p>{{ message.date }}</p>
+            </div>
+          </template>
+          <div ref="messagesBoxRef"></div>
+        </div>
+        <div v-if="thisChannel != null" class="channelInfo">
+          <div class="channelHeader">
+            <h1>{{ thisChannel.name }}</h1>
+            <h3>{{ thisChannel.type }}</h3>
           </div>
-          <div v-else class="friendMessage" v-bind:key="message.text">
-            <h4 class="friendName">
-              {{ message.author }}
-            </h4>
-            <p>{{ message.text }}</p>
-            <p>{{ message.date }}</p>
-          </div>
-        </template>
-        <div ref="messagesBoxRef"></div>
+          <template v-for="member in channelMember" class="member"> </template>
+          <div class="actionBar"></div>
+        </div>
       </div>
       <div class="input">
         <input
@@ -113,11 +134,7 @@
             class="sendIcon"
           />
         </button>
-        <button
-          v-else
-          class="sendButton"
-          @click="sendChannelMessage(thisChannel)"
-        >
+        <button v-else class="sendButton" @click="sendChannelMessage()">
           <img
             src="https://uploads-ssl.webflow.com/61cccee6cefd62ba567150d5/61cccee6cefd6280d37151c9_AIRPLANE%20ICON%20256px.png"
             alt=""
@@ -207,6 +224,7 @@ onMounted(() => {
     }
   );
   socket.on("messageReceived", (channelId: number, msg: message) => {
+    console.log(thisChannel.value);
     if (thisChannel.value && channelId === thisChannel.value.id) {
       messagesToDisplay.value.push(msg);
       channelMessageSkip.value++;
@@ -315,7 +333,7 @@ function updateChannel() {
     .catch((err) => console.log(err));
 }
 
-function joinChannel() {
+function joinChannel(channel: Channel) {
   fetch("http://" + window.location.hostname + ":3000/api/chat/join-channel", {
     method: "POST",
     headers: {
@@ -323,27 +341,36 @@ function joinChannel() {
       Authorization: "Bearer " + localStorage.getItem("token"),
     },
     body: JSON.stringify({
-      id: 38,
-      password: "password",
+      id: channel.id,
+      password: channel.passwordField,
     }),
   })
     .then((res) => {
+      if (!res.ok) throw res;
       return res.json();
     })
     .then((data) => {
-      console.log(data);
+      myChannels.value.push(data);
+      allChannels.value.splice(this.allChannels.indexOf(channel), 1);
+      channelsNum.value--;
+      socket.emit("joinChannelRoom", { id: data.id });
+    })
+    .catch((err) => {
+      console.log(err);
     });
+  channel.passwordField = "";
 }
 
 function loadAllChannels() {
-  show.value = 1;
   thisChannel.value = null;
   channelsNum.value = 0;
+  allChannels.value = [];
   const conversations = document.querySelectorAll(".channelButton");
   conversations.forEach((conversation) => {
     conversation.classList.remove("inactiveConv");
   });
   getAllChannels();
+  show.value = 1;
 }
 
 function getAllChannels() {
@@ -354,7 +381,7 @@ function getAllChannels() {
       Authorization: "Bearer " + localStorage.getItem("token"),
     },
     body: JSON.stringify({
-      number: channelsNum.value,
+      skip: channelsNum.value,
     }),
   })
     .then((res) => {
@@ -362,8 +389,8 @@ function getAllChannels() {
     })
     .then((data) => {
       if (data.length) {
-        console.log(data);
-        allChannels.value.push(data);
+        if (channelsNum.value == 0) allChannels.value = data;
+        else allChannels.value.push(data);
         channelsNum.value += data.length;
       }
     })
@@ -565,7 +592,6 @@ async function getAvatar(privateConv: privateConv) {
 }
 
 function displayMessages(conv: privateConv, event: any) {
-  show.value = 2;
   thisChannel.value = null;
   const conversations = document.querySelectorAll(".privateConvButton");
   conversations.forEach((conversation) => {
@@ -593,10 +619,10 @@ function displayMessages(conv: privateConv, event: any) {
     .catch((err) => {
       console.log(err);
     });
+  show.value = 2;
 }
 
 function loadChannel(channel: Channel, event: any) {
-  show.value = 2;
   const conversations = document.querySelectorAll(".channelButton");
   conversations.forEach((conversation) => {
     conversation.classList.add("inactiveConv");
@@ -613,19 +639,23 @@ function loadChannel(channel: Channel, event: any) {
       id: channel.id,
     }),
   })
-    .then((data) => data.json())
     .then((data) => {
-      thisChannel.value = channel;
-      channelMembers.value = data.members;
-      messagesToDisplay.value = data.messages;
-      channelMessageSkip.value = data.messages.length;
-      channelMembers.value.forEach(async (member) => {
-        member.avatarToDisplay = await funcs
-          .getUserAvatar(member.path)
-          .then((image: any) => {
-            return URL.createObjectURL(image);
-          });
-      });
+      return data.json();
+    })
+    .then((data) => {
+      if (!data.message) {
+        thisChannel.value = channel;
+        channelMembers.value = data.members;
+        messagesToDisplay.value = data.messages;
+        channelMessageSkip.value = data.messages.length;
+        channelMembers.value.forEach(async (member) => {
+          member.avatarToDisplay = await funcs
+            .getUserAvatar(member.path)
+            .then((image: any) => {
+              return URL.createObjectURL(image);
+            });
+        });
+      }
     })
     .catch((err) => {
       messagesToDisplay.value = [
@@ -636,6 +666,7 @@ function loadChannel(channel: Channel, event: any) {
         },
       ];
     });
+  show.value = 2;
 }
 
 function loadChannelMessages(channel: Channel) {
@@ -664,12 +695,12 @@ function loadChannelMessages(channel: Channel) {
     });
 }
 
-function sendChannelMessage(channel: Channel) {
+function sendChannelMessage() {
   if (messageInput.value != "") {
     socket.emit(
       "sendChannelMessage",
       {
-        channelId: channel.id,
+        channelId: thisChannel.value.id,
         content: messageInput.value,
       },
       (response) => {
@@ -809,10 +840,33 @@ function deleteConv(conv: privateConv) {
   height: 85vh;
   width: 85%;
 }
+.upperChat {
+  width: 100%;
+  height: 100%;
+}
+.channelInfo {
+  position: relative;
+  float: right;
+  width: 20%;
+  .channelHeader {
+    position: relative;
+    text-align: left;
+    background-color: #5b5a56;
+    border-bottom: 3px solid black;
+    h1,
+    h3 {
+      margin-top: 0;
+      padding: 4% 0 0 4%;
+      color: white;
+    }
+  }
+}
 .messages {
   overflow-y: scroll;
+  float: left;
   height: 100%;
-  padding: 0 20%;
+  width: 80%;
+  padding: 0 5%;
 
   .friendName {
     color: #fadba2;
@@ -920,11 +974,29 @@ function deleteConv(conv: privateConv) {
   gap: 1%;
 }
 .channel {
+  position: relative;
   padding: 5px;
   border: 3px solid;
   border-image-slice: 1;
   border-image-source: linear-gradient(to bottom, #c1a36b, #635e4f);
   width: 20%;
+  text-align: left;
+  padding-left: 1em;
+  h3 {
+    margin-bottom: 0;
+  }
+}
+.channelControl {
+  display: flex;
+  margin-bottom: 1rem;
+  gap: 3%;
+}
+.joinChannel {
+  @extend .friendsHeader;
+  width: 20%;
+}
+.textGrey {
+  color: grey;
 }
 
 .inactiveConv {

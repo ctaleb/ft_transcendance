@@ -314,10 +314,18 @@ export class ServerGateway
     @MessageBody('channelId') channelId: number,
     @MessageBody('content') content: string,
   ) {
-    return this.serverService.sendChannelMessage(
+    return await this.serverService.sendChannelMessage(
       channelId,
       content,
       client.handshake.auth.user.id,
     );
+  }
+
+  @SubscribeMessage('joinChannelRoom')
+  async joinChannelRoom(
+    @ConnectedSocket() client: Socket,
+    @MessageBody('id') channelId: number,
+  ) {
+    await this.serverService.joinChannelRoom(client, channelId);
   }
 }
