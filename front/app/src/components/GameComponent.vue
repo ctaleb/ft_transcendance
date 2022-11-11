@@ -33,7 +33,6 @@
     <div class="power">Selected power: {{ power }}</div>
   </div>
   <div :class="'custom' + (toggleLadder ? ' hidden' : '')">
-    <!-- TODO add a hiding toggle for invitee -->
     <div>
       <h1>Custom Game with {{ friendName }}</h1>
       <div :class="'inviter' + (toggleInvited ? ' hidden' : '')">
@@ -206,7 +205,12 @@ import Denial from "./InviteDenied/Modal.vue";
 //import { SCOPABLE_TYPES } from "@babel/types";
 
 const store = useStore();
-const socket = store.socket;
+let socket = store.socket;
+
+store.$subscribe((mutation, state) => {
+  socket = state.socket;
+});
+
 console.log("config " + socket?.id);
 const ballImg = new Image();
 ballImg.src = ballUrl;

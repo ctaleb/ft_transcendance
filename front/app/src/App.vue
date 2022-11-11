@@ -48,15 +48,20 @@ import CustomInvitation from "./components/CustomInvitation/Modal.vue";
 import FailedInvitation from "./components/FailedInvitation/Modal.vue";
 
 const store = useStore();
+let socket = store.socket;
+
 const route = useRoute();
 const router = useRouter();
 const incomingFriendRequest = ref("");
 const profileNotificationBadge = ref(false);
 const gameConfirmation = ref(false);
-const socket = store.socket;
 const customInvitation = ref(false);
 const failedInvitation = ref(false);
 const invSender = ref("Placeholder");
+
+store.$subscribe((mutation, state) => {
+  socket = state.socket;
+});
 
 trySetupUser();
 

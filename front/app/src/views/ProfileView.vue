@@ -64,7 +64,10 @@ import { useRoute } from "vue-router";
 const route = useRoute();
 
 const store = useStore();
-const socket = store.socket;
+let socket = store.socket;
+store.$subscribe((mutation, state) => {
+  socket = state.socket;
+});
 
 // const prop = defineProps<{
 //   incomingFriendRequest: string;

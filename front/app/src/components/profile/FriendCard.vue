@@ -23,7 +23,11 @@ const props = defineProps<{
 
 const router = useRouter();
 const store = useStore();
-const socket = store.socket;
+let socket = store.socket;
+
+store.$subscribe((mutation, state) => {
+  socket = state.socket;
+});
 
 const unfriend = () => {
   fetch(

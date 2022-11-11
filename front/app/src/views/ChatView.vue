@@ -122,7 +122,12 @@ import { User } from "@/types/GameSummary";
 import { Private } from "@babel/types";
 
 const store = useStore();
-const socket = store.socket;
+let socket = store.socket;
+
+store.$subscribe((mutation, state) => {
+  socket = state.socket;
+});
+
 let funcs = require("../functions/funcs");
 const clientNickname = JSON.parse(
   localStorage.getItem("user") || "{}"
