@@ -263,6 +263,7 @@ export class ServerGateway
     if (!player || !(player.status === 'idle')) return;
     const game = this.serverService.joinQueue(client, power);
     if (game) {
+      console.log(game.host.socket.id + ' vs ' + game.client.socket.id);
       this.server.to(game.room.name).emit('gameConfirmation', game.room);
       //   console.log(game.client.socket.id);
       //   console.log(game.host.socket.id);

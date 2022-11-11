@@ -1,18 +1,16 @@
 <template>
   <div>
-    <div v-if="$route.path != '/' && $route.path != '/signup'">
+    <div
+      style="text-align: center"
+      v-if="$route.path != '/' && $route.path != '/signup'"
+    >
       <nav>
-        <router-link to="/portal">Portal</router-link> |
-        <router-link to="/game">Game</router-link> |
         <router-link to="/profile"
           >Profile
           <div :class="'dot' + (profileNotificationBadge ? ' show' : '')"></div
         ></router-link>
-
-        | <router-link to="/chat">Chat</router-link> |
-        <router-link to="/users">All users</router-link> |
-        <router-link to="/edit">Profile Editing</router-link> |
-        <router-link to="/" v-on:click.prevent="logout()">Logout</router-link>
+        | <router-link to="/game">Game</router-link> |
+        <router-link to="/chat">Chat</router-link>
       </nav>
     </div>
     <router-view
@@ -41,15 +39,16 @@
 
 <script setup lang="ts">
 import { onMounted, ref, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import { io } from "socket.io-client";
-import config from "./config/config";
+import { RouterLink, RouterView, useRoute, useRouter } from "vue-router";
+import { getUserByNickname, trySetupUser } from "@/functions/funcs";
+import { User } from "@/types/GameSummary";
+import { useStore } from "@/store";
 import GameConfirmation from "./components/GameConfirmation/Modal.vue";
 import CustomInvitation from "./components/CustomInvitation/Modal.vue";
 import FailedInvitation from "./components/FailedInvitation/Modal.vue";
-import { request } from "http";
 
-// let socket = config.socket;
+const store = useStore();
+let socket = store.socket;
 
 const route = useRoute();
 const router = useRouter();
@@ -60,98 +59,81 @@ const customInvitation = ref(false);
 const failedInvitation = ref(false);
 const invSender = ref("Placeholder");
 
-if (!config.socket.id && localStorage.getItem("user")) {
-  console.log("socketing");
-  config.socket = io("http://" + window.location.hostname + ":3500", {
-    auth: {
-      token: localStorage.getItem("token"),
-      user: JSON.parse(localStorage.getItem("user") || "{}"),
-    },
-    // path: "/api/socket.io/",
-    transports: ["websocket"],
-    autoConnect: false,
-  });
-  config.socket.connect();
-  //   socket = config.socket;
-  //   console.log("?" + socket.id);
-}
-
-window.addEventListener("beforeunload", () => {
-  // console.log("event recieved");
-  // config.socket.emit("disco", {});
-  config.socket.disconnect;
-  config.socket = io("http://" + window.location.hostname + ":3500", {
-    transports: ["websocket"],
-    // path: "/api/socket.io/",
-    autoConnect: false,
-  });
+store.$subscribe((mutation, state) => {
+  socket = state.socket;
 });
 
+trySetupUser();
+
+//window.addEventListener("beforeunload", () => {
+//  socket?.disconnect;
+//});
+
 window.addEventListener("keydown", (e) => {
-  console.log("keydown " + config.socket.id);
+  console.log("keydown " + socket?.id);
   if (e.key === "ArrowLeft")
-    config.socket.emit("key", {
+    socket?.emit("key", {
       key: "downLeft",
     });
   else if (e.key === "ArrowRight")
-    config.socket.emit("key", {
+    socket?.emit("key", {
       key: "downRight",
     });
   if (e.key === "a" || e.key === "A")
-    config.socket.emit("key", {
+    socket?.emit("key", {
       key: "downA",
     });
   else if (e.key === "d" || e.key === "D")
-    config.socket.emit("key", {
+    socket?.emit("key", {
       key: "downD",
     });
   else if (e.key === " ") {
-    config.socket.emit("key", {
+    socket?.emit("key", {
       key: "downSpace",
     });
   }
-  if (e.key === "o") config.socket.emit("debugging");
-  if (e.key === "i") config.socket.emit("chatting");
+  if (e.key === "o") socket?.emit("debugging");
+  if (e.key === "i") socket?.emit("chatting");
 });
 
 window.addEventListener("keyup", (e) => {
   if (e.key === "ArrowLeft")
-    config.socket.emit("key", {
+    socket?.emit("key", {
       key: "upLeft",
     });
   else if (e.key === "ArrowRight")
-    config.socket.emit("key", {
+    socket?.emit("key", {
       key: "upRight",
     });
   if (e.key === "a")
-    config.socket.emit("key", {
+    socket?.emit("key", {
       key: "upA",
     });
   else if (e.key === "d")
-    config.socket.emit("key", {
+    socket?.emit("key", {
       key: "upD",
     });
 });
 
 const confirmGame = () => {
-  config.socket.emit("playerReady", {}, () => {});
+  socket?.emit("playerReady", {}, () => {});
   showConfirmation(false);
   router.push("/game");
 };
 
 const denyGame = () => {
-  config.socket.emit("playerNotReady");
+  socket?.emit("playerNotReady");
   showConfirmation(false);
 };
 
 const acceptCustom = () => {
   showInvite(false);
   router.push("/game");
-  config.socket.emit("settingsInvitee");
+  socket?.emit("settingsInvitee");
 };
 
 const denyCustom = () => {
-  config.socket.emit("declineCustom");
+  socket?.emit("declineCustom");
   showInvite(false);
 };
 
@@ -162,12 +144,12 @@ const invFailure = () => {
 const logout = () => {
   localStorage.removeItem("token");
   localStorage.removeItem("user");
-  config.socket.emit("disco", {});
-  config.socket = io("http://" + window.location.hostname + ":3500", {
-    transports: ["websocket"],
-    // path: "/api/socket.io/",
-    autoConnect: false,
-  });
+  socket?.emit("disco", {});
+  //  socket? = io("http://" + window.location.hostname + ":3500", {
+  //    transports: ["websocket"],
+  //    // path: "/api/socket.io/",
+  //    autoConnect: false,
+  //  });
 };
 
 const changeNotificationValue = (value: boolean) => {
@@ -190,43 +172,60 @@ onMounted(() => {
   watch(
     () => route.path,
     (currentValue, oldValue) => {
-      if (!config.socket.hasListeners("customInvite")) {
-        config.socket.on("customInvite", (inviter: string) => {
+      if (!socket?.hasListeners("customInvite")) {
+        socket?.on("customInvite", (inviter: string) => {
           // theRoom = gameRoom;
           showInvite(true);
         });
       }
-      if (!config.socket.hasListeners("gameConfirmation")) {
-        config.socket.on("gameConfirmation", (gameRoom: any) => {
+      if (!socket?.hasListeners("gameConfirmation")) {
+        socket?.on("gameConfirmation", (gameRoom: any) => {
           // theRoom = gameRoom;
           showConfirmation(true);
         });
       }
-      if (!config.socket.hasListeners("invitation")) {
-        config.socket.on("invitation", (requester: string) => {
+      if (!socket?.hasListeners("invitation")) {
+        socket?.on("invitation", (requester: string) => {
           invSender.value = requester;
           showInvite(true);
         });
       }
-      if (!config.socket.hasListeners("gameConfirmationTimeout")) {
-        config.socket.on("gameConfirmationTimeout", () => {
+      if (!socket?.hasListeners("gameConfirmationTimeout")) {
+        socket?.on("gameConfirmationTimeout", () => {
           showConfirmation(false);
           // startButton.value = true;
           // lobbyStatus.value = "Find Match";
         });
       }
-      if (!config.socket.hasListeners("friendshipInvite")) {
-        config.socket.on("friendshipInvite", (requester: string) => {
-          incomingFriendRequest.value = requester;
+      if (!socket?.hasListeners("friendshipInvite")) {
+        socket?.on("friendshipInvite", (requester: User) => {
+          incomingFriendRequest.value = requester.nickname;
           profileNotificationBadge.value = true;
+          getUserByNickname(requester.nickname).then((data) => {
+            store.invitations?.push(data!);
+          });
         });
       }
-      if (!config.socket.hasListeners("inviteFailure")) {
-        config.socket.on("inviteFailure", () => {
+      if (!socket?.hasListeners("acceptInvite")) {
+        socket?.on("acceptInvite", (requester: User) => {
+          getUserByNickname(requester.nickname).then((data) => {
+            store.user?.friends?.push(data!);
+          });
+        });
+      }
+      if (!socket?.hasListeners("removeFriend")) {
+        socket?.on("removeFriend", (requester: User) => {
+          getUserByNickname(requester.nickname).then((data) => {
+            store.user?.friends?.splice(store.user?.friends?.indexOf(data!), 1);
+          });
+        });
+      }
+      if (!socket?.hasListeners("inviteFailure")) {
+        socket?.on("inviteFailure", () => {
           showFailure(true);
         });
       }
-      if (currentValue != "/game") config.socket.emit("watchPath");
+      if (currentValue != "/game") socket?.emit("watchPath");
 
       if (
         localStorage.getItem("token") &&
@@ -260,6 +259,8 @@ onMounted(() => {
 </script>
 
 <style lang="scss">
+@import "styles/custom.scss";
+
 body {
   background-color: #010b12;
   color: #aa9e7d;
@@ -269,7 +270,6 @@ body {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
   color: #2c3e50;
 }
 

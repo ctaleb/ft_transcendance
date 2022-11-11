@@ -37,16 +37,6 @@ const routes: Array<RouteRecordRaw> = [
     component: ProfileView,
   },
   {
-    path: "/portal",
-    name: "portal",
-    component: PortalView,
-  },
-  {
-    path: "/users",
-    name: "users",
-    component: AllUsersView,
-  },
-  {
     path: "/edit",
     name: "edit",
     component: EditView,

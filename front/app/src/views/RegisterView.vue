@@ -96,7 +96,7 @@ import {
 export default defineComponent({
   name: "RegisterView",
   emits: ["notification"],
-  props: ['incomingFriendRequest'],
+  props: ["incomingFriendRequest"],
   setup() {
     const hidePassword = ref(true);
     const passwordFieldType = computed(() =>

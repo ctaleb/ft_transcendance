@@ -1,12 +1,19 @@
-import { reactive } from "vue";
+import { User } from "@/types/GameSummary";
+import { defineStore } from "pinia";
+import { Socket } from "socket.io-client";
 
-export const store = reactive({
-  token: {},
-  user: {
-    createdAt: null,
-    id: null,
-    nickname: null,
-    updatedAt: null,
-    uuid: null,
+interface State {
+  user: User | undefined;
+  invitations: User[] | undefined;
+  socket: Socket | undefined;
+}
+
+export const useStore = defineStore("default", {
+  state: (): State => {
+    return {
+      user: undefined,
+      invitations: undefined,
+      socket: undefined,
+    };
   },
 });

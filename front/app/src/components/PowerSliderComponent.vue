@@ -52,17 +52,12 @@
       </div>
     </div>
     <div class="button-container">
-      <div class="button">
-        <font-awesome-icon icon="fa-solid fa-arrow-left" />
-      </div>
-      <div class="button">
-        <font-awesome-icon icon="fa-solid fa-arrow-right" />
-      </div>
+      <div class="button">&lt;-</div>
+      <div class="button">-></div>
     </div>
   </div>
 </template>
 <script setup lang="ts">
-import { config } from "@fortawesome/fontawesome-svg-core";
 import { onMounted } from "vue";
 import "./style.css";
 
@@ -114,7 +109,6 @@ onMounted(() => {
     }
 
     slides[current].classList.add("active");
-    //config.json: activePower = slides[current]
     slides[prev].classList.add("prev");
     slides[next].classList.add("next");
     emit("update:modelValue", slides[current].id);

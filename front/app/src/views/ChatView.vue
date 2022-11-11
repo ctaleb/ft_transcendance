@@ -46,7 +46,7 @@
         v-bind:key="friend.nickname"
       >
         <img
-          :src="friend.avatarToDisplay"
+          :src="getFriendAvatar(friend)"
           alt=""
           width="45"
           height="45"
@@ -103,8 +103,8 @@
 
 <script setup lang="ts">
 export interface privateConv {
-  user1: user;
-  user2: user;
+  user1: User;
+  user2: User;
   avatarToDisplay: string;
   uuid: string;
   offset: number;
@@ -114,15 +114,20 @@ export interface message {
   text: string;
   author: string;
 }
-export interface user {
-  nickname: string;
-  path: string;
-  image: string;
-  avatarToDisplay: string;
-}
-import config from "../config/config";
+import FriendAlert from "../components/FriendAlert.vue";
+
 import { onMounted, onUpdated, ref, watch } from "vue";
-const socket = config.socket;
+import { useStore } from "@/store";
+import { User } from "@/types/GameSummary";
+import { Private } from "@babel/types";
+
+const store = useStore();
+let socket = store.socket;
+
+store.$subscribe((mutation, state) => {
+  socket = state.socket;
+});
+
 let funcs = require("../functions/funcs");
 const clientNickname = JSON.parse(
   localStorage.getItem("user") || "{}"
@@ -137,7 +142,7 @@ let convListFlag = ref(true);
 let friendListFlag = ref(true);
 let iconConvList = ref("gg-remove");
 let iconFriendList = ref("gg-remove");
-let friends = ref(Array<user>());
+let friends = ref(Array<User>());
 let currentConv = ref<privateConv>();
 let isLoadMore = false;
 
@@ -162,20 +167,24 @@ onUpdated(() => {
   if (isLoadMore == false) scrollDownMessages();
   isLoadMore = false;
 });
-onMounted(() => {
+onMounted(async () => {
   var audio = new Audio(require("../assets/adelsol.mp3"));
-  socket.on(
+  socket?.on(
     "Message to the client",
-    (privateMessage: { author: string; text: string }) => {
+    async (privateMessage: { author: string; text: string }) => {
       if (privateMessage.author == friendNickname.value)
         messagesToDisplay.value.push(privateMessage);
       else {
+        await getAllConvs();
+        organizeFriends();
         notifConv(privateMessage.author);
         audio.play();
       }
     }
   );
-  socket.on("Update conv list", (convData: { conv: privateConv }) => {
+  socket?.on("Update conv list", (convData: { conv: privateConv }) => {
+    console.log("UPDATE");
+
     let convIndex = privateConvs.value.findIndex(
       (conv) => conv.uuid === convData.conv.uuid
     );
@@ -187,42 +196,25 @@ onMounted(() => {
       sendPrivateMessage(friendNickname.value);
     }
   });
-  getAllConvs();
-  fetch("http://" + window.location.hostname + ":3000/api/friendship", {
-    method: "GET",
-    headers: {
-      Authorization: "Bearer " + localStorage.getItem("token"),
-    },
-  })
-    .then((res) => {
-      return res.json();
-    })
-    .then((data) => {
-      friends.value = data.friends;
-      friends.value.forEach(async (friend) => {
-        friend.avatarToDisplay = await funcs
-          .getUserAvatar(friend.path)
-          .then((data: any) => {
-            organizeFriends();
-            return URL.createObjectURL(data);
-          });
-      });
-    });
+  await getAllConvs();
+  if (store.user?.friends)
+    friends.value = JSON.parse(JSON.stringify(store.user?.friends));
+  organizeFriends();
 });
+
+function getConvAvatar(conv: privateConv) {
+  if (clientNickname == conv.user1.nickname)
+    return `http://${window.location.hostname}:3000${conv.user2.avatar}`;
+  else return `http://${window.location.hostname}:3000${conv.user1.avatar}`;
+}
+function getFriendAvatar(friend: User) {
+  return `http://${window.location.hostname}:3000${friend.avatar}`;
+}
 
 function initConv(convs: Array<privateConv>) {
   convs.forEach((conv) => {
     conv.offset = 0;
     conv.notif = false;
-    // if (joined.value === true) {
-    // 	let time = setInterval(function () {
-    // 		refreshUsers();
-    // 	}, 2000);
-    // }
-    // updateChannel();
-    // takeAdmin();
-    // getChannels();
-    // ban();
   });
 }
 function getChannels() {
@@ -467,8 +459,8 @@ function getChannelsList() {
     .catch((err) => console.log(err));
 }
 
-function getAllConvs() {
-  return fetch(
+async function getAllConvs() {
+  await fetch(
     "http://" + window.location.hostname + ":3000/api/privateConv/getAllConvs",
     {
       headers: {
@@ -480,7 +472,7 @@ function getAllConvs() {
     .then(async (data) => {
       privateConvs.value = data;
       privateConvs.value.forEach(async (conv) => {
-        conv.avatarToDisplay = await getAvatar(conv);
+        conv.avatarToDisplay = getConvAvatar(conv);
       });
       initConv(privateConvs.value);
     })
@@ -488,6 +480,7 @@ function getAllConvs() {
 }
 
 function organizeFriends() {
+  console.log(privateConvs.value.length);
   for (let i = 0; i < privateConvs.value.length; i++) {
     for (let j = 0; j < friends.value.length; j++) {
       if (
@@ -501,34 +494,6 @@ function organizeFriends() {
 
 function scrollDownMessages() {
   messagesBoxRef.value?.scrollIntoView({ behavior: "smooth", block: "end" });
-}
-
-async function getAvatar(privateConv: privateConv) {
-  let userToFetch: user;
-  let url_return: string;
-  if (privateConv.user1.nickname == clientNickname)
-    userToFetch = privateConv.user2;
-  else userToFetch = privateConv.user1;
-
-  url_return = await fetch(
-    "http://" +
-      window.location.hostname +
-      ":3000/api/user/bynickname/" +
-      userToFetch.nickname,
-    {
-      headers: {
-        Authorization: "Bearer " + localStorage.getItem("token"),
-      },
-    }
-  )
-    .then((result) => result.json())
-    .then(async (data) => {
-      return await funcs.getUserAvatar(data.avatar.path).then((data: any) => {
-        return URL.createObjectURL(data);
-      });
-    })
-    .catch((err) => console.log(err));
-  return url_return;
 }
 
 function displayMessages(conv: privateConv, event: any) {
@@ -578,7 +543,9 @@ function displayMessages(conv: privateConv, event: any) {
 
 function sendPrivateMessage(nickname: string): void {
   if (messageInput.value != "") {
-    socket.emit("deliverMessage", {
+    console.log(socket?.id);
+
+    socket?.emit("deliverMessage", {
       message: messageInput.value,
       friendNickname: nickname,
     });
@@ -624,7 +591,7 @@ function changeFriendListStatus() {
     iconFriendList.value = "gg-remove";
   }
 }
-function createConv(friend: user, event: any) {
+function createConv(friend: User, event: any) {
   friendNickname.value = friend.nickname;
   fetch(
     "http://" +
@@ -639,13 +606,11 @@ function createConv(friend: user, event: any) {
   )
     .then((data) => data.json())
     .then(async (data) => {
-      data.conv.avatarToDisplay = await funcs
-        .getUserAvatar(friend.path)
-        .then((data: any) => {
-          return URL.createObjectURL(data);
-        });
+      data.conv.avatarToDisplay = getConvAvatar(data.conv);
+      data.conv.offset = 0;
+      data.conv.notif = false;
       if (data.created == true) {
-        privateConvs.value.push(data.conv);
+        privateConvs.value.unshift(data.conv);
         organizeFriends();
       }
       displayMessages(data.conv, event);

@@ -442,22 +442,26 @@ export class ChatService {
 
   async saveMessage(saveMessageDto: SaveMessageDto, userId: number) {
     try {
-      const channel = await this._channelRepository.findOneBy({
+      const channel = await ChannelEntity.findOneBy({
         id: saveMessageDto.id,
       });
+
       if (channel === null) throw new BadRequestException('Channel not found');
-      const member = await this._channelMemberRepository.findOneBy({
-        channel,
+
+      const member = await ChannelMemberEntity.findOneBy({
         user: { id: userId },
+        channel: {
+          id: channel.id,
+        },
       });
       if (member === null)
         throw new BadRequestException('Channel member not found');
-      const message = this._channelMessageRepository.create({
+      const message = ChannelMessageEntity.create({
         channel: channel,
         sender: member,
         content: saveMessageDto.content,
       });
-      return await this._channelMessageRepository.save(message);
+      return await ChannelMessageEntity.save(message);
     } catch (err) {
       return err;
     }

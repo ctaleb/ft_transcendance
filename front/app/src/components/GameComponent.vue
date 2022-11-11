@@ -195,17 +195,24 @@ import {
   IPoint,
   GameOptions,
 } from "../../../../back/app/src/server/entities/server.entity";
-import config from "../config/config";
+//import config from "../config/config";
 import { title } from "process";
 import PowerSliderComponent from "./PowerSliderComponent.vue";
 import Summary from "./Summary.vue";
 import { GameSummaryData } from "@/types/GameSummary";
 import Modal from "./Summary/Modal.vue";
+import { useStore } from "@/store";
 import Denial from "./InviteDenied/Modal.vue";
-import { SCOPABLE_TYPES } from "@babel/types";
+//import { SCOPABLE_TYPES } from "@babel/types";
 
-const socket = config.socket;
-console.log("config " + socket.id);
+const store = useStore();
+let socket = store.socket;
+
+store.$subscribe((mutation, state) => {
+  socket = state.socket;
+});
+
+console.log("config " + socket?.id);
 const ballImg = new Image();
 ballImg.src = ballUrl;
 const powerChargeImg = new Image();
@@ -315,7 +322,7 @@ function findMatch() {
   startButton.value = true;
   lobbyStatus.value = "Looking for an opponent...";
   powers.value = false;
-  socket.emit("joinQueue", {
+  socket?.emit("joinQueue", {
     power: power.value,
   });
 }
@@ -323,12 +330,12 @@ function readyUp() {
   readyButton.value = true;
   customReady.value = "Waiting for " + friendName.value;
   if (toggleInvited.value) {
-    socket.emit("readyInvitee", {
+    socket?.emit("readyInvitee", {
       power: power.value,
     });
   } else {
     updateOpts();
-    socket.emit("readyInviter", {
+    socket?.emit("readyInviter", {
       gameOpts,
       power: power.value,
     });
@@ -568,21 +575,21 @@ onMounted(() => {
   //     lobbyStatus.value = "Find Match";
   //   });
 
-  socket.on("customInviter", (friend: string) => {
+  socket?.on("customInviter", (friend: string) => {
     friendName.value = friend;
     toggleGameQueue();
   });
-  socket.on("customInvitee", (friend: string) => {
+  socket?.on("customInvitee", (friend: string) => {
     friendName.value = friend;
     toggleInvitedMode();
     toggleGameQueue();
   });
-  socket.on("foreverAlone", () => {
+  socket?.on("foreverAlone", () => {
     toggleGameQueue();
     noFriends.value = true;
   });
 
-  socket.on("spectating", (gameRoom: GameRoom) => {
+  socket?.on("spectating", (gameRoom: GameRoom) => {
     console.log("watching game");
     theRoom = gameRoom;
     hostName.value = theRoom.hostName;
@@ -593,7 +600,7 @@ onMounted(() => {
     document.querySelector(".canvas")?.classList.remove("hidden");
   });
 
-  socket.on("reconnect", (gameRoom: GameRoom) => {
+  socket?.on("reconnect", (gameRoom: GameRoom) => {
     console.log("reconnecting");
     theRoom = gameRoom;
     hostName.value = theRoom.hostName;
@@ -604,16 +611,16 @@ onMounted(() => {
     document.querySelector(".canvas")?.classList.remove("hidden");
   });
 
-  socket.on("kickOff", () => {
+  socket?.on("kickOff", () => {
     kickOff = true;
   });
 
-  socket.on("play", () => {
+  socket?.on("play", () => {
     kickOff = false;
     loadPercent = 120;
   });
 
-  socket.on("ServerUpdate", (gameState: GameState) => {
+  socket?.on("ServerUpdate", (gameState: GameState) => {
     gState = gameState;
     scalePosition(gameState);
     if (theRoom) {
@@ -645,7 +652,7 @@ onMounted(() => {
     }
   });
 
-  socket.on(
+  socket?.on(
     "Win",
     (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) => {
       theRoom = gameRoom;
@@ -664,7 +671,7 @@ onMounted(() => {
     }
   );
 
-  socket.on(
+  socket?.on(
     "Lose",
     (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) => {
       theRoom = gameRoom;
@@ -683,7 +690,7 @@ onMounted(() => {
     }
   );
 
-  socket.on("startGame", (gameRoom: GameRoom) => {
+  socket?.on("startGame", (gameRoom: GameRoom) => {
     lobbyStatus.value = "Play !";
     if (!toggleLadder.value) toggleLadder.value = true;
     if (toggleInvited.value) toggleInvited.value = false;
@@ -696,7 +703,7 @@ onMounted(() => {
   });
 
   //todo / tochange
-  socket.on("customInvitation", () => {});
+  socket?.on("customInvitation", () => {});
 
   //needs to be moved
   //window.removeEventListener("resize", resizeCanvas);
