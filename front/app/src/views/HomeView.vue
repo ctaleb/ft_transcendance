@@ -141,8 +141,8 @@ function extractIntraCode(): string | null {
   return url.searchParams.get("code");
 }
 
-async function studentLogin(code: string) {
-  let response = await fetch(
+async function getIntraToken(code: string) {
+  let getIntraToken = await fetch(
     "http://" + window.location.hostname + ":3000/api/oauth/" + code,
     {
       headers: {
@@ -151,27 +151,30 @@ async function studentLogin(code: string) {
       method: "POST",
     }
   );
-  let data = await response.json();
-  fetch(
+  return await getIntraToken.json();
+}
+
+async function getUserAndToken(intraToken: string) {
+  const userAndToken = await fetch(
     "http://" +
       window.location.hostname +
       ":3000/api/oauth/login/" +
-      data.access_token,
+      intraToken,
     {
       method: "POST",
     }
-  )
-    .then((response) => {
-      return response.json();
-    })
-    .then((value: any) => {
-      localStorage.setItem("token", value.token);
-      localStorage.setItem("user", JSON.stringify(value.user));
-      funcs.trySetupUser().then(() => {
-        router.push("/game");
-      });
-    })
-    .catch((err) => console.log(err));
+  );
+  return await userAndToken.json();
+}
+
+async function studentLogin(code: string) {
+  let intraToken = await getIntraToken(code);
+  const userAndToken = await getUserAndToken(intraToken.access_token);
+  localStorage.setItem("token", userAndToken.token);
+  localStorage.setItem("user", JSON.stringify(userAndToken.user));
+  funcs.trySetupUser().then(() => {
+    router.push("/game");
+  });
 }
 </script>
 
