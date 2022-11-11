@@ -1,13 +1,11 @@
 <template>
-  <li class="friend">
+  <li class="friend debug-border">
     <div>
       <img class="user-image border-gold" :src="getUserAvatar(friend)" alt="" />
-      <div v-if="!$route.params.nickname">
-        <button @click="unfriend()">Remove</button>
-        <button @click="inviteCustom()">Invite</button>
-      </div>
+      <button @click="unfriend()">Remove</button>
       <button @click="watchProfile()">Profile</button>
-      <button @click="spectateGame()">Spectate</button>
+      <button @click="spectateGame(friend.nickname)">Spectate</button>
+      <button @click="inviteCustom(friend.nickname)">Invite</button>
     </div>
     <h3>{{ friend.nickname }}</h3>
   </li>
@@ -25,6 +23,11 @@ const props = defineProps<{
 
 const router = useRouter();
 const store = useStore();
+let socket = store.socket;
+
+store.$subscribe((mutation, state) => {
+  socket = state.socket;
+});
 
 const unfriend = () => {
   fetch(
@@ -60,12 +63,25 @@ const watchProfile = () => {
   router.push("/profile/" + props.friend.nickname);
 };
 
-const spectateGame = () => {
-  router.push("/game");
+const spectateGame = (friendName: string) => {
+  socket?.emit("spectate", { friend: friendName }, (response: string) => {
+    if (response == "ingame") {
+      router.push("game");
+      socket?.emit("readySpectate", { friend: friendName });
+    }
+  });
 };
 
-const inviteCustom = () => {
-  router.push("/game");
+const inviteCustom = (friendName: string) => {
+  let accepted = "yes";
+  socket?.emit("customInvite", { friend: friendName }, (response: string) => {
+    if (response != "accepted") {
+      accepted = "no";
+    }
+  });
+  if (accepted === "no") return;
+  router.push("game");
+  socket?.emit("settingsInviter", { friend: friendName });
 };
 </script>
 

@@ -92,6 +92,7 @@ import config from "@/config/config";
 const route = useRoute();
 
 const store = useStore();
+const socket = store.socket;
 
 // const prop = defineProps<{
 //   incomingFriendRequest: string;
@@ -173,8 +174,8 @@ const watchHistory = () => {
 const logout = () => {
   localStorage.removeItem("token");
   localStorage.removeItem("user");
-  config.socket.emit("disco", {});
-  config.socket.close();
+  socket?.emit("disco", {});
+  socket?.close();
 };
 
 const invite = () => {

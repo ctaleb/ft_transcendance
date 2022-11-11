@@ -69,8 +69,14 @@ export class Message {
   message: string;
 }
 
+export class Theatre {
+  name: string;
+  viewers: Socket[];
+}
+
 export class Game {
   room: GameRoom;
+  theatre: Theatre;
   gameState: GameState;
   host: User;
   client: User;

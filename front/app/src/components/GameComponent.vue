@@ -1,7 +1,7 @@
 <template>
-  <div>
+  <!-- <div>
     <button @click="toggleGameQueue()">CHANGE MODE</button>
-  </div>
+  </div> -->
   <div :class="'ladder' + (toggleLadder ? '' : ' hidden')">
     <!-- <PowerSliderComponent v-model="power" id="powerSlider" /> -->
     <div>
@@ -27,122 +27,138 @@
         @close="showSummary(false)"
       ></Modal>
     </div>
+    <div v-if="noFriends" class="overlay">
+      <Denial :inviter="friendName" @sadStory="showDenial(false)"></Denial>
+    </div>
     <div class="power">Selected power: {{ power }}</div>
   </div>
   <div :class="'custom' + (toggleLadder ? ' hidden' : '')">
+    <!-- TODO add a hiding toggle for invitee -->
     <div>
-      <div>
-        <label for="score">Max Score: {{ score }}</label>
+      <h1>Custom Game with {{ friendName }}</h1>
+      <div :class="'inviter' + (toggleInvited ? ' hidden' : '')">
         <div>
-          1<input
-            v-model="score"
-            type="range"
-            id="score"
-            name="score"
-            min="1"
-            max="100"
-          />100
+          <label for="score">Max Score: {{ score }}</label>
+          <div>
+            1<input
+              v-model="score"
+              type="range"
+              id="score"
+              name="score"
+              min="1"
+              max="100"
+              :disabled="readyButton == true"
+            />100
+          </div>
+        </div>
+        <div>
+          <label for="ballSpeed"
+            >Initial Ball Speed (0 for half speed): {{ ballSpeed }}</label
+          >
+          <div>
+            0<input
+              v-model="ballSpeed"
+              type="range"
+              id="ballSpeed"
+              name="ballSpeed"
+              min="0"
+              max="5"
+              :disabled="readyButton == true"
+            />5
+          </div>
+        </div>
+        <div>
+          <label for="ballSize"
+            >Ball Size Factor (0 for half size): {{ ballSize }}</label
+          >
+          <div>
+            0<input
+              v-model="ballSize"
+              type="range"
+              id="ballSize"
+              name="ballSize"
+              min="0"
+              max="3"
+              :disabled="readyButton == true"
+            />3
+          </div>
+        </div>
+        <div>
+          <label for="barSpeed"
+            >Bar Speed Factor (0 for half speed): {{ barSpeed }}</label
+          >
+          <div>
+            0<input
+              v-model="barSpeed"
+              type="range"
+              id="barSpeed"
+              name="barSpeed"
+              min="0"
+              max="5"
+              :disabled="readyButton == true"
+            />5
+          </div>
+        </div>
+        <div>
+          <label for="barSize"
+            >Bar Size Factor (0 for half size): {{ barSize }}</label
+          >
+          <div>
+            0<input
+              v-model="barSize"
+              type="range"
+              id="barSize"
+              name="barSize"
+              min="0"
+              max="2"
+              :disabled="readyButton == true"
+            />2
+          </div>
+        </div>
+        <div>
+          <input
+            v-model="smashes"
+            type="checkbox"
+            id="switch"
+            :disabled="readyButton == true"
+          /><label for="smashes">Toggle smashes</label>
+        </div>
+        <div>
+          <label for="smashStrength"
+            >Smash Strength Factor: {{ smashStrength }}</label
+          >
+          <div>
+            1<input
+              v-model="smashStrength"
+              type="range"
+              id="smashStrength"
+              name="smashStrength"
+              min="1"
+              max="10"
+              :disabled="smashes == false || readyButton == true"
+            />10
+          </div>
+        </div>
+        <div>
+          <input
+            v-model="effects"
+            type="checkbox"
+            id="switch"
+            :disabled="readyButton == true"
+          /><label for="effects">Toggle effects</label>
+        </div>
+        <div>
+          <input
+            v-model="powers"
+            type="checkbox"
+            id="switch"
+            :disabled="readyButton == true"
+          /><label for="powers">Toggle powers</label>
         </div>
       </div>
       <div>
-        <label for="ballSpeed">Initial Ball Speed: {{ ballSpeed }}</label>
-        <div>
-          1<input
-            v-model="ballSpeed"
-            type="range"
-            id="ballSpeed"
-            name="ballSpeed"
-            min="1"
-            max="5"
-          />5
-        </div>
-      </div>
-      <div>
-        <label for="ballSize"
-          >Ball Size Factor (0 for half size): {{ ballSize }}</label
-        >
-        <div>
-          0<input
-            v-model="ballSize"
-            type="range"
-            id="ballSize"
-            name="ballSize"
-            min="0"
-            max="10"
-          />10
-        </div>
-      </div>
-      <div>
-        <label for="barSpeed"
-          >Bar Speed Factor (0 for half speed): {{ barSpeed }}</label
-        >
-        <div>
-          0<input
-            v-model="barSpeed"
-            type="range"
-            id="barSpeed"
-            name="barSpeed"
-            min="0"
-            max="10"
-          />10
-        </div>
-      </div>
-      <div>
-        <label for="barSize"
-          >Bar Size Factor (0 for half size): {{ barSize }}</label
-        >
-        <div>
-          0<input
-            v-model="barSize"
-            type="range"
-            id="barSize"
-            name="barSize"
-            min="0"
-            max="10"
-          />10
-        </div>
-      </div>
-      <div>
-        <input v-model="smashes" type="checkbox" id="switch" /><label
-          for="smashes"
-          >Toggle smashes</label
-        >
-      </div>
-      <div>
-        <label for="smashStrength"
-          >Smash Strength Factor: {{ smashStrength }}</label
-        >
-        <div>
-          1<input
-            v-model="smashStrength"
-            type="range"
-            id="smashStrength"
-            name="smashStrength"
-            min="1"
-            max="10"
-            :disabled="smashes == false"
-          />10
-        </div>
-      </div>
-      <div>
-        <input v-model="effects" type="checkbox" id="switch" /><label
-          for="effects"
-          >Toggle effects</label
-        >
-      </div>
-      <div>
-        <input v-model="powers" type="checkbox" id="switch" /><label
-          for="powers"
-          >Toggle powers</label
-        >
-      </div>
-      <div>
-        <label for="invitee">User to Invite: </label>
-        <input v-model="invitee" placeholder="User Name" />
-      </div>
-      <div>
-        <button @click="sendInvite()" :disabled="startButton">
-          Send Invite
+        <button @click="readyUp()" :disabled="readyButton">
+          {{ customReady }}
         </button>
       </div>
     </div>
@@ -179,15 +195,24 @@ import {
   IPoint,
   GameOptions,
 } from "../../../../back/app/src/server/entities/server.entity";
-import config from "../config/config";
+//import config from "../config/config";
 import { title } from "process";
 import PowerSliderComponent from "./PowerSliderComponent.vue";
 import Summary from "./Summary.vue";
 import { GameSummaryData } from "@/types/GameSummary";
 import Modal from "./Summary/Modal.vue";
+import { useStore } from "@/store";
+import Denial from "./InviteDenied/Modal.vue";
+//import { SCOPABLE_TYPES } from "@babel/types";
 
-const socket = config.socket;
-console.log("config " + socket.id);
+const store = useStore();
+let socket = store.socket;
+
+store.$subscribe((mutation, state) => {
+  socket = state.socket;
+});
+
+console.log("config " + socket?.id);
 const ballImg = new Image();
 ballImg.src = ballUrl;
 const powerChargeImg = new Image();
@@ -230,15 +255,19 @@ const color = ref("white");
 const sumTitle = ref("Placeholder");
 // const sumDate = ref("");
 // const sumTime = ref(0);
-const modal = ref(false);
+
+const noFriends = ref(false);
 const summary = ref(false);
 const toggleLadder = ref(true);
+const toggleInvited = ref(false);
 
-const invitee = ref("");
+const friendName = ref("Placeholder");
+const customReady = ref("Ready ?");
+const readyButton = ref(false);
 const score = ref(5);
-const ballSpeed = ref(3);
+const ballSpeed = ref(1);
 const ballSize = ref(1);
-const barSpeed = ref(7);
+const barSpeed = ref(1);
 const barSize = ref(1);
 const smashStrength = ref(1);
 const spinStrength = ref(1);
@@ -285,23 +314,32 @@ function showSummary(show: boolean) {
   summary.value = show;
 }
 
+function showDenial(show: boolean) {
+  noFriends.value = show;
+}
+
 function findMatch() {
   startButton.value = true;
   lobbyStatus.value = "Looking for an opponent...";
   powers.value = false;
-  socket.emit("joinQueue", {
+  socket?.emit("joinQueue", {
     power: power.value,
   });
 }
-function sendInvite() {
-  startButton.value = false;
-  lobbyStatus.value = "Sending invite...";
-  updateOpts();
-  socket.emit("customInvite", {
-    gameOpts,
-    power: power.value,
-    invitee: invitee.value,
-  });
+function readyUp() {
+  readyButton.value = true;
+  customReady.value = "Waiting for " + friendName.value;
+  if (toggleInvited.value) {
+    socket?.emit("readyInvitee", {
+      power: power.value,
+    });
+  } else {
+    updateOpts();
+    socket?.emit("readyInviter", {
+      gameOpts,
+      power: power.value,
+    });
+  }
 }
 
 function updateOpts() {
@@ -320,6 +358,10 @@ function updateOpts() {
 
 function toggleGameQueue() {
   toggleLadder.value = toggleLadder.value ? false : true;
+}
+
+function toggleInvitedMode() {
+  toggleInvited.value = toggleInvited.value ? false : true;
 }
 
 // function confirmGame() {
@@ -533,7 +575,32 @@ onMounted(() => {
   //     lobbyStatus.value = "Find Match";
   //   });
 
-  socket.on("reconnect", (gameRoom: GameRoom) => {
+  socket?.on("customInviter", (friend: string) => {
+    friendName.value = friend;
+    toggleGameQueue();
+  });
+  socket?.on("customInvitee", (friend: string) => {
+    friendName.value = friend;
+    toggleInvitedMode();
+    toggleGameQueue();
+  });
+  socket?.on("foreverAlone", () => {
+    toggleGameQueue();
+    noFriends.value = true;
+  });
+
+  socket?.on("spectating", (gameRoom: GameRoom) => {
+    console.log("watching game");
+    theRoom = gameRoom;
+    hostName.value = theRoom.hostName;
+    clientName.value = theRoom.clientName;
+    lobbyStatus.value = "Spectating";
+    startButton.value = false;
+    powers.value = false;
+    document.querySelector(".canvas")?.classList.remove("hidden");
+  });
+
+  socket?.on("reconnect", (gameRoom: GameRoom) => {
     console.log("reconnecting");
     theRoom = gameRoom;
     hostName.value = theRoom.hostName;
@@ -544,16 +611,16 @@ onMounted(() => {
     document.querySelector(".canvas")?.classList.remove("hidden");
   });
 
-  socket.on("kickOff", () => {
+  socket?.on("kickOff", () => {
     kickOff = true;
   });
 
-  socket.on("play", () => {
+  socket?.on("play", () => {
     kickOff = false;
     loadPercent = 120;
   });
 
-  socket.on("ServerUpdate", (gameState: GameState) => {
+  socket?.on("ServerUpdate", (gameState: GameState) => {
     gState = gameState;
     scalePosition(gameState);
     if (theRoom) {
@@ -585,13 +652,16 @@ onMounted(() => {
     }
   });
 
-  socket.on(
+  socket?.on(
     "Win",
     (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) => {
       theRoom = gameRoom;
       lobbyStatus.value =
         "Victory ! You gained +" + elo_diff + " elo ! Return to lobby ?";
       startButton.value = false;
+      readyButton.value = false;
+      customReady.value = "Ready ?";
+      powers.value = true;
       end = new Date();
       updateSummary(summary);
       color.value = "green";
@@ -601,13 +671,16 @@ onMounted(() => {
     }
   );
 
-  socket.on(
+  socket?.on(
     "Lose",
     (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) => {
       theRoom = gameRoom;
       lobbyStatus.value =
         "Defeat... You lost -" + elo_diff + " elo ! Return to lobby ?";
       startButton.value = false;
+      readyButton.value = false;
+      customReady.value = "Ready ?";
+      powers.value = true;
       end = new Date();
       updateSummary(summary);
       color.value = "red";
@@ -617,18 +690,20 @@ onMounted(() => {
     }
   );
 
-  socket.on("startGame", (gameRoom: GameRoom) => {
+  socket?.on("startGame", (gameRoom: GameRoom) => {
+    lobbyStatus.value = "Play !";
+    if (!toggleLadder.value) toggleLadder.value = true;
+    if (toggleInvited.value) toggleInvited.value = false;
     powers.value = false;
     theRoom = gameRoom;
     hostName.value = theRoom.hostName;
     clientName.value = theRoom.clientName;
     start = new Date();
-    lobbyStatus.value = "Play !";
     document.querySelector(".canvas")?.classList.remove("hidden");
   });
 
   //todo / tochange
-  socket.on("customInvitation", () => {});
+  socket?.on("customInvitation", () => {});
 
   //needs to be moved
   //window.removeEventListener("resize", resizeCanvas);

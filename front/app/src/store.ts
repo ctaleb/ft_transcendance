@@ -5,6 +5,7 @@ import { Socket } from "socket.io-client";
 interface State {
   user: User | undefined;
   invitations: User[] | undefined;
+  socket: Socket | undefined;
 }
 
 export const useStore = defineStore("default", {
@@ -12,6 +13,7 @@ export const useStore = defineStore("default", {
     return {
       user: undefined,
       invitations: undefined,
+      socket: undefined,
     };
   },
 });

@@ -19,7 +19,20 @@
       :incoming-friend-request="incomingFriendRequest"
     />
     <div v-if="gameConfirmation" class="overlay">
-      <modal @confirmGame="confirmGame()" @denyGame="denyGame()"></modal>
+      <GameConfirmation
+        @confirmGame="confirmGame()"
+        @denyGame="denyGame()"
+      ></GameConfirmation>
+    </div>
+    <div v-if="customInvitation" class="overlay">
+      <CustomInvitation
+        :inviter="invSender"
+        @acceptCustom="acceptCustom()"
+        @denyCustom="denyCustom()"
+      ></CustomInvitation>
+    </div>
+    <div v-if="failedInvitation" class="overlay">
+      <FailedInvitation @invFailure="invFailure()"></FailedInvitation>
     </div>
   </div>
 </template>
@@ -27,75 +40,116 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from "vue";
 import { RouterLink, RouterView, useRoute, useRouter } from "vue-router";
-import config from "./config/config";
-import Modal from "./components/GameConfirmation/Modal.vue";
 import { getUserByNickname, trySetupUser } from "@/functions/funcs";
 import { User } from "@/types/GameSummary";
 import { useStore } from "@/store";
+import GameConfirmation from "./components/GameConfirmation/Modal.vue";
+import CustomInvitation from "./components/CustomInvitation/Modal.vue";
+import FailedInvitation from "./components/FailedInvitation/Modal.vue";
 
 const store = useStore();
+let socket = store.socket;
+
 const route = useRoute();
 const router = useRouter();
 const incomingFriendRequest = ref("");
 const profileNotificationBadge = ref(false);
 const gameConfirmation = ref(false);
+const customInvitation = ref(false);
+const failedInvitation = ref(false);
+const invSender = ref("Placeholder");
+
+store.$subscribe((mutation, state) => {
+  socket = state.socket;
+});
 
 trySetupUser();
 
+//window.addEventListener("beforeunload", () => {
+//  socket?.disconnect;
+//});
+
 window.addEventListener("keydown", (e) => {
-  console.log("keydown " + config.socket.id);
+  console.log("keydown " + socket?.id);
   if (e.key === "ArrowLeft")
-    config.socket.emit("key", {
+    socket?.emit("key", {
       key: "downLeft",
     });
   else if (e.key === "ArrowRight")
-    config.socket.emit("key", {
+    socket?.emit("key", {
       key: "downRight",
     });
-  if (e.key === "a")
-    config.socket.emit("key", {
+  if (e.key === "a" || e.key === "A")
+    socket?.emit("key", {
       key: "downA",
     });
-  else if (e.key === "d")
-    config.socket.emit("key", {
+  else if (e.key === "d" || e.key === "D")
+    socket?.emit("key", {
       key: "downD",
     });
   else if (e.key === " ") {
-    config.socket.emit("key", {
+    socket?.emit("key", {
       key: "downSpace",
     });
   }
-  if (e.key === "o") config.socket.emit("debugging");
-  if (e.key === "i") config.socket.emit("chatting");
+  if (e.key === "o") socket?.emit("debugging");
+  if (e.key === "i") socket?.emit("chatting");
 });
 
 window.addEventListener("keyup", (e) => {
   if (e.key === "ArrowLeft")
-    config.socket.emit("key", {
+    socket?.emit("key", {
       key: "upLeft",
     });
   else if (e.key === "ArrowRight")
-    config.socket.emit("key", {
+    socket?.emit("key", {
       key: "upRight",
     });
   if (e.key === "a")
-    config.socket.emit("key", {
+    socket?.emit("key", {
       key: "upA",
     });
   else if (e.key === "d")
-    config.socket.emit("key", {
+    socket?.emit("key", {
       key: "upD",
     });
 });
 
 const confirmGame = () => {
-  config.socket.emit("playerReady", {}, () => {});
+  socket?.emit("playerReady", {}, () => {});
   showConfirmation(false);
   router.push("/game");
 };
 
 const denyGame = () => {
+  socket?.emit("playerNotReady");
   showConfirmation(false);
+};
+
+const acceptCustom = () => {
+  showInvite(false);
+  router.push("/game");
+  socket?.emit("settingsInvitee");
+};
+
+const denyCustom = () => {
+  socket?.emit("declineCustom");
+  showInvite(false);
+};
+
+const invFailure = () => {
+  showFailure(false);
+};
+
+const logout = () => {
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  socket?.emit("disco", {});
+  //  socket? = io("http://" + window.location.hostname + ":3500", {
+  //    transports: ["websocket"],
+  //    // path: "/api/socket.io/",
+  //    autoConnect: false,
+  //  });
 };
 
 const changeNotificationValue = (value: boolean) => {
@@ -106,27 +160,45 @@ function showConfirmation(show: boolean) {
   gameConfirmation.value = show;
 }
 
+function showInvite(show: boolean) {
+  customInvitation.value = show;
+}
+
+function showFailure(show: boolean) {
+  failedInvitation.value = show;
+}
+
 onMounted(() => {
   watch(
     () => route.path,
     (currentValue, oldValue) => {
-      if (!config.socket.hasListeners("gameConfirmation")) {
-        config.socket.on("gameConfirmation", (gameRoom: any) => {
-          console.log("???");
+      if (!socket?.hasListeners("customInvite")) {
+        socket?.on("customInvite", (inviter: string) => {
+          // theRoom = gameRoom;
+          showInvite(true);
+        });
+      }
+      if (!socket?.hasListeners("gameConfirmation")) {
+        socket?.on("gameConfirmation", (gameRoom: any) => {
           // theRoom = gameRoom;
           showConfirmation(true);
         });
       }
-      if (!config.socket.hasListeners("gameConfirmationTimeout")) {
-        config.socket.on("gameConfirmationTimeout", () => {
-          console.log("$$$");
+      if (!socket?.hasListeners("invitation")) {
+        socket?.on("invitation", (requester: string) => {
+          invSender.value = requester;
+          showInvite(true);
+        });
+      }
+      if (!socket?.hasListeners("gameConfirmationTimeout")) {
+        socket?.on("gameConfirmationTimeout", () => {
           showConfirmation(false);
           // startButton.value = true;
           // lobbyStatus.value = "Find Match";
         });
       }
-      if (!config.socket.hasListeners("friendshipInvite")) {
-        config.socket.on("friendshipInvite", (requester: User) => {
+      if (!socket?.hasListeners("friendshipInvite")) {
+        socket?.on("friendshipInvite", (requester: User) => {
           incomingFriendRequest.value = requester.nickname;
           profileNotificationBadge.value = true;
           getUserByNickname(requester.nickname).then((data) => {
@@ -134,21 +206,26 @@ onMounted(() => {
           });
         });
       }
-      if (!config.socket.hasListeners("acceptInvite")) {
-        config.socket.on("acceptInvite", (requester: User) => {
+      if (!socket?.hasListeners("acceptInvite")) {
+        socket?.on("acceptInvite", (requester: User) => {
           getUserByNickname(requester.nickname).then((data) => {
             store.user?.friends?.push(data!);
           });
         });
       }
-      if (!config.socket.hasListeners("removeFriend")) {
-        config.socket.on("removeFriend", (requester: User) => {
+      if (!socket?.hasListeners("removeFriend")) {
+        socket?.on("removeFriend", (requester: User) => {
           getUserByNickname(requester.nickname).then((data) => {
             store.user?.friends?.splice(store.user?.friends?.indexOf(data!), 1);
           });
         });
       }
-      if (currentValue != "/game") config.socket.emit("watchPath");
+      if (!socket?.hasListeners("inviteFailure")) {
+        socket?.on("inviteFailure", () => {
+          showFailure(true);
+        });
+      }
+      if (currentValue != "/game") socket?.emit("watchPath");
 
       if (
         localStorage.getItem("token") &&
@@ -198,6 +275,7 @@ body {
 
 nav {
   padding: 30px;
+  height: 10vh;
 
   a {
     font-weight: bold;
@@ -214,7 +292,7 @@ nav {
 }
 
 .hidden {
-  display: none;
+  display: none !important;
 }
 
 .overlay {

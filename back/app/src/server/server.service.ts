@@ -34,8 +34,8 @@ const chargeMax = 1;
 const ballSize = 16;
 const barSize: IPoint = { x: 50, y: 10 };
 const defaultGameOptions: GameOptions = {
-  scoreMax: 1,
-  ballSpeed: 2,
+  scoreMax: 100,
+  ballSpeed: 1,
   ballSize: 1,
   barSpeed: 1,
   barSize: 1,
@@ -211,17 +211,26 @@ export class ServerService {
       );
     }
     game.host.status = 'idle';
+    game.host.socket.leave(game.room.name);
     game.client.status = 'idle';
+    game.client.socket.leave(game.room.name);
+    game.theatre.viewers.forEach((element) => element.leave(game.theatre.name));
     this.games.splice(this.games.indexOf(game), 1);
   }
 
-  forfeit_game(winner: User, loser: User, game: Game) {
+  async forfeit_game(winner: User, loser: User, game: Game) {
     const elo = this.elo_calc(winner, loser);
-    this.summarize(game, elo);
-    winner.socket.emit('Win', game.room, elo, game.gameSummary);
-    loser.socket.emit('Lose', game.room, elo, game.gameSummary);
+    await this.summarize(game, elo);
+    const data: GameSummaryData = this.summarizeEntityToData(game.gameSummary);
+    const revdata: GameSummaryData = this.inverseSummary(data);
+    // this.summarize(game, elo);
+    winner.socket.emit('Win', game.room, elo, data);
+    loser.socket.emit('Lose', game.room, elo, revdata);
     game.host.status = 'idle';
+    game.host.socket.leave(game.room.name);
     game.client.status = 'idle';
+    game.client.socket.leave(game.room.name);
+    game.theatre.viewers.forEach((element) => element.leave(game.theatre.name));
     this.games.splice(this.games.indexOf(game), 1);
     // this.userList.splice(this.userList.indexOf(loser), 1);
   }
@@ -236,7 +245,7 @@ export class ServerService {
     }
   }
 
-  newGame(client: User, option: GameOptions) {
+  newGame(client: User, host?: User) {
     const newGame = {
       room: {
         name: '',
@@ -249,6 +258,10 @@ export class ServerService {
         effect: 'null',
         options: defaultGameOptions,
       },
+      theatre: {
+        name: '',
+        viewers: [],
+      },
       gameState: {
         ball: {
           size: ballSize,
@@ -258,28 +271,30 @@ export class ServerService {
         hostPower: new IPowerInfo(),
         clientPower: new IPowerInfo(),
         hostBar: {
-          size: { x: 50 * option.barSize, y: 10 },
+          size: { x: 50 * defaultGameOptions.barSize, y: 10 },
           pos: { x: 250, y: 460 },
           speed: 0,
           smashing: false,
-          maxSpeed: option.barSpeed,
+          maxSpeed: defaultGameOptions.barSpeed,
         },
         clientBar: {
-          size: { x: 50 * option.barSize, y: 10 },
+          size: { x: 50 * defaultGameOptions.barSize, y: 10 },
           pos: { x: 250, y: 40 },
           speed: 0,
           smashing: false,
-          maxSpeed: option.barSpeed,
+          maxSpeed: defaultGameOptions.barSpeed,
         },
         score: {
           client: 0,
           host: 0,
         },
       },
-      host: this.playerQueue.shift(),
+      host: undefined,
       client: client,
       gameSummary: null,
     };
+    if (host) newGame.host = host;
+    else newGame.host = this.playerQueue.shift();
     this.initPower(
       newGame.client,
       newGame.gameState,
@@ -296,17 +311,21 @@ export class ServerService {
   }
 
   initGameValues(game: Game) {
-    game.gameState.ball.speed.x *= game.room.options.ballSpeed;
-    game.gameState.ball.speed.y *= game.room.options.ballSpeed;
+    game.gameState.ball.speed.x *=
+      game.room.options.ballSpeed == 0 ? 0.5 : game.room.options.ballSpeed;
+    game.gameState.ball.speed.y *=
+      game.room.options.ballSpeed == 0 ? 0.5 : game.room.options.ballSpeed;
     game.gameState.ball.size *=
       game.room.options.ballSize == 0 ? 0.5 : game.room.options.ballSize;
-    game.gameState.clientBar.speed *=
+    game.gameState.clientBar.maxSpeed *=
       game.room.options.barSpeed == 0 ? 0.5 : game.room.options.barSpeed;
     game.gameState.clientBar.size.x *=
       game.room.options.barSize == 0 ? 0.5 : game.room.options.barSize;
     game.gameState.clientBar.size.y *=
       game.room.options.barSize == 0 ? 0.5 : game.room.options.barSize;
-    game.gameState.hostBar = game.gameState.clientBar;
+    game.gameState.hostBar.maxSpeed = game.gameState.clientBar.maxSpeed;
+    game.gameState.hostBar.size.x = game.gameState.clientBar.size.x;
+    game.gameState.hostBar.size.y = game.gameState.clientBar.size.y;
   }
 
   printList() {
@@ -430,9 +449,10 @@ export class ServerService {
       this.playerQueue.push(player);
       player.status = 'inQueue';
     } else {
-      const game = this.newGame(player, defaultGameOptions);
+      const game = this.newGame(player);
       this.games.push(game);
       game.room.name = 'game-' + game.host.name + '-' + game.client.name;
+      game.theatre.name = 'spec-' + game.host.name + '-' + game.client.name;
       game.host.status = 'inLobby';
       game.host.socket.join(game.room.name);
       game.client.status = 'inLobby';
@@ -491,7 +511,7 @@ export class ServerService {
     player.gameData.input = [];
   }
 
-  moveBar(bar: IBar, player: User) {
+  moveBar(bar: IBar, player: User, factor: number) {
     const speedLimit =
       player.gameData.smashLeft > 0 || player.gameData.smashRight > 0
         ? 2 * bar.maxSpeed
@@ -502,9 +522,9 @@ export class ServerService {
     )
       bar.speed = 0;
     else if (player.gameData.left && !player.gameData.right) {
-      if (bar.speed > -speedLimit) bar.speed -= 1;
+      if (bar.speed > -speedLimit) bar.speed -= factor == 0 ? 0.5 : 1 * factor;
     } else if (!player.gameData.left && player.gameData.right) {
-      if (bar.speed < speedLimit) bar.speed += 1;
+      if (bar.speed < speedLimit) bar.speed += factor == 0 ? 0.5 : 1 * factor;
     }
 
     if (
@@ -550,7 +570,7 @@ export class ServerService {
         ) {
           if (client.gameData.power.isActive) {
             client.gameData.power.handle();
-          } else client.gameData.power.chargeUp();
+          } else if (room.options.smashes) client.gameData.power.chargeUp();
           if (client.gameData.smashLeft > 0) {
             ball.speed.x = 1 * M + client.gameData.smashLeft;
             ball.speed.y = 1 * M + client.gameData.smashLeft;
@@ -577,7 +597,7 @@ export class ServerService {
         ) {
           if (host.gameData.power.isActive) {
             host.gameData.power.handle();
-          } else host.gameData.power.chargeUp();
+          } else if (room.options.smashes) client.gameData.power.chargeUp();
           if (host.gameData.smashLeft > 0) {
             ball.speed.x = -1 * M - host.gameData.smashLeft;
             ball.speed.y = 1 * M + host.gameData.smashLeft;
@@ -650,12 +670,12 @@ export class ServerService {
     if (ball.pos.x - 16 <= 0) {
       ball.speed.x *= -1;
       ball.pos.x = 0 + 16;
-      this.applyEffect(room);
+      if (room.options.effects) this.applyEffect(room);
     }
     if (ball.pos.x + 16 > 500) {
       ball.speed.x *= -1;
       ball.pos.x = 500 - 16;
-      this.applyEffect(room);
+      if (room.options.effects) this.applyEffect(room);
     }
   }
 
@@ -789,8 +809,12 @@ export class ServerService {
   }
 
   resetGameState(game: Game) {
+    const factor =
+      game.room.options.ballSpeed == 0 ? 0.5 : game.room.options.ballSpeed;
     game.gameState.ball.pos = { x: 250, y: 250 };
     game.gameState.ball.speed = this.getRandomStart();
+    game.gameState.ball.speed.x *= factor;
+    game.gameState.ball.speed.y *= factor;
     game.gameState.hostBar.pos = { x: 250, y: 460 };
     game.gameState.hostBar.speed = 0;
     game.gameState.hostBar.smashing = false;
@@ -866,25 +890,28 @@ export class ServerService {
   chargeUp(game: Game) {
     if (
       game.client.gameData.smashLeft > 0 &&
-      game.client.gameData.smashLeft < chargeMax
+      game.client.gameData.smashLeft <
+        chargeMax * game.room.options.smashStrength
     ) {
-      game.client.gameData.smashLeft += 0.01;
+      game.client.gameData.smashLeft += 0.01 * game.room.options.smashStrength;
     } else if (
       game.client.gameData.smashRight > 0 &&
-      game.client.gameData.smashRight < chargeMax
+      game.client.gameData.smashRight <
+        chargeMax * game.room.options.smashStrength
     ) {
-      game.client.gameData.smashRight += 0.01;
+      game.client.gameData.smashRight += 0.01 * game.room.options.smashStrength;
     }
     if (
       game.host.gameData.smashLeft > 0 &&
-      game.host.gameData.smashLeft < chargeMax
+      game.host.gameData.smashLeft < chargeMax * game.room.options.smashStrength
     ) {
-      game.host.gameData.smashLeft += 0.01;
+      game.host.gameData.smashLeft += 0.01 * game.room.options.smashStrength;
     } else if (
       game.host.gameData.smashRight > 0 &&
-      game.host.gameData.smashRight < chargeMax
+      game.host.gameData.smashRight <
+        chargeMax * game.room.options.smashStrength
     ) {
-      game.host.gameData.smashRight += 0.01;
+      game.host.gameData.smashRight += 0.01 * game.room.options.smashStrength;
     }
   }
 
@@ -903,10 +930,14 @@ export class ServerService {
         'client',
         game.room.options,
       );
-      this.chargeUp(game);
+      if (game.room.options.smashes) this.chargeUp(game);
       //this.handlePower(game);
-      this.moveBar(gameState.hostBar, game.host);
-      this.moveBar(gameState.clientBar, game.client);
+      this.moveBar(gameState.hostBar, game.host, game.room.options.barSpeed);
+      this.moveBar(
+        gameState.clientBar,
+        game.client,
+        game.room.options.barSpeed,
+      );
 
       this.barBallCollision(
         gameState.hostBar,

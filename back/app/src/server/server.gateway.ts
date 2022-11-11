@@ -12,7 +12,7 @@ import { ServerService } from './server.service';
 import { PrivateConvService } from '../private_conv/private_conv.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { Server, Socket } from 'socket.io';
-import { Game, GameOptions } from './entities/server.entity';
+import { Game, GameOptions, IPower } from './entities/server.entity';
 import { UserEntity } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
 import { NamingStrategyNotFoundError } from 'typeorm';
@@ -141,7 +141,6 @@ export class ServerGateway
 
   @SubscribeMessage('watchPath')
   switchPath(@ConnectedSocket() client: Socket) {
-    console.log(client.id + ' changing tab');
     let ingame = false;
     const player = this.serverService.userList.find(
       (element) => element.socket === client,
@@ -214,6 +213,10 @@ export class ServerGateway
       'ServerUpdate',
       this.serverService.sendState(game.gameState, game),
     );
+    this.server
+      .to(game.theatre.name)
+      .emit('ServerUpdate', this.serverService.sendState(game.gameState, game));
+    // this.server.to(game.room.name).emit('gameConfirmation', game.room);
 
     const loopTimer = setTimeout(() => {
       if (
@@ -260,6 +263,7 @@ export class ServerGateway
     if (!player || !(player.status === 'idle')) return;
     const game = this.serverService.joinQueue(client, power);
     if (game) {
+      console.log(game.host.socket.id + ' vs ' + game.client.socket.id);
       this.server.to(game.room.name).emit('gameConfirmation', game.room);
       //   console.log(game.client.socket.id);
       //   console.log(game.host.socket.id);
@@ -296,27 +300,6 @@ export class ServerGateway
     }
   }
 
-  @SubscribeMessage('customInvite')
-  customInvite(
-    @ConnectedSocket() socket: Socket,
-    @MessageBody() gameOpts: GameOptions,
-    power: string,
-    invitee: string,
-  ) {
-    const host = this.serverService.SocketToPlayer(socket);
-    if (!host || !(host.status === 'idle')) return;
-    host.status = 'inviting';
-    const client = this.serverService.userList.find(
-      (element) => element.name === invitee,
-    );
-    if (!client || !(client.status === 'idle')) {
-      host.status = 'idle';
-      return;
-    }
-    client.status = 'inviting';
-    client.socket.emit('customInvitation');
-  }
-
   @SubscribeMessage('playerReady')
   playerReady(@ConnectedSocket() client: Socket) {
     const player = this.serverService.userList.find(
@@ -333,6 +316,171 @@ export class ServerGateway
     if (player) player.status = 'idle';
   }
 
+  //spectate
+  @SubscribeMessage('spectate')
+  spectate(
+    @MessageBody('friend') friend: string,
+    @ConnectedSocket() client: Socket,
+  ) {
+    let response = 'na';
+    this.serverService.games.forEach((element) => {
+      console.log(element.host.name);
+      console.log(element.client.name);
+      console.log(friend);
+      if (element.client.name == friend || element.host.name == friend)
+        response = 'ingame';
+    });
+    return response;
+  }
+
+  @SubscribeMessage('readySpectate')
+  readySpectate(
+    @MessageBody('friend') friend: string,
+    @ConnectedSocket() client: Socket,
+  ) {
+    const game = this.serverService.games.find(
+      (element) =>
+        element.client.name === friend || element.host.name === friend,
+    );
+    if (game) {
+      client.emit('spectating', game.room);
+      client.join(game.theatre.name);
+      game.theatre.viewers.push(client);
+    }
+  }
+
+  //customInvite
+  @SubscribeMessage('customInvite')
+  customInvite(
+    @MessageBody('friend') friend: string,
+    @ConnectedSocket() client: Socket,
+  ) {
+    let response = 'failure';
+    let game: Game;
+    const inviter = this.serverService.userList.find(
+      (element) => element.socket === client,
+    );
+    const usr = this.serverService.userList.find(
+      (element) => element.name === friend,
+    );
+    if (usr && usr.status === 'idle') {
+      response = 'accepted';
+      game = this.serverService.newGame(usr, inviter);
+      game.room.name = 'game-' + game.host.name + '-' + game.client.name;
+      game.theatre.name = 'spec-' + game.host.name + '-' + game.client.name;
+      usr.status = 'inLobby';
+      inviter.status = 'inLobby';
+      game.host.socket.join(game.room.name);
+      usr.socket.emit('invitation', inviter.name);
+      this.serverService.games.push(game);
+    } else {
+      client.emit('inviteFailure');
+    }
+    return response;
+  }
+
+  //inviter logic
+  @SubscribeMessage('settingsInviter')
+  settingsInviter(
+    @MessageBody('friend') friend: string,
+    @ConnectedSocket() client: Socket,
+  ) {
+    client.emit('customInviter', friend);
+  }
+  @SubscribeMessage('readyInviter')
+  readyInviter(
+    @MessageBody('gameOpts') gameOpts: GameOptions,
+    @MessageBody('power') power: string,
+    @ConnectedSocket() client: Socket,
+  ) {
+    console.log('inviter is ready');
+    const usr = this.serverService.SocketToPlayer(client);
+    if (!usr) return;
+    const game = this.serverService.games.find(
+      (element) => element.host === usr,
+    );
+    if (!game) return;
+    if (game.room.options.powers) usr.gameData.power = new IPower(power);
+    usr.status = 'ready';
+    game.room.options = gameOpts;
+    if (game.client.status === 'ready') {
+      this.launchCustomGame(game);
+    }
+  }
+
+  //invitee logic
+  @SubscribeMessage('declineCustom')
+  declineCustom(@ConnectedSocket() client: Socket) {
+    const usr = this.serverService.SocketToPlayer(client);
+    const game = this.serverService.games.find(
+      (element) => element.client === usr,
+    );
+    if (game) {
+      game.host.status = 'idle';
+      game.host.socket.leave(game.room.name);
+      game.client.status = 'idle';
+      game.host.socket.emit('foreverAlone');
+      this.serverService.games.splice(
+        this.serverService.games.indexOf(game),
+        1,
+      );
+    }
+    //emit to host
+  }
+  @SubscribeMessage('settingsInvitee')
+  settingsInvitee(@ConnectedSocket() client: Socket) {
+    const usr = this.serverService.SocketToPlayer(client);
+    const game = this.serverService.games.find(
+      (element) => element.client === usr,
+    );
+    if (game) {
+      game.client.socket.join(game.room.name);
+      client.emit('customInvitee', game.host.name);
+    } else usr.status = 'idle';
+  }
+  @SubscribeMessage('readyInvitee')
+  readyInvitee(
+    @MessageBody('power') power: string,
+    @ConnectedSocket() client: Socket,
+  ) {
+    console.log('invitee is ready');
+    const usr = this.serverService.SocketToPlayer(client);
+    if (!usr) return;
+    const game = this.serverService.games.find(
+      (element) => element.client === usr,
+    );
+    if (!game) return;
+    if (game.room.options.powers) usr.gameData.power = new IPower(power);
+    usr.status = 'ready';
+    if (game.host.status === 'ready') {
+      this.launchCustomGame(game);
+    }
+  }
+
+  launchCustomGame(game: Game) {
+    this.serverService.initGameValues(game);
+    if (game.room.options.powers) {
+      this.serverService.initPower(
+        game.client,
+        game.gameState,
+        game.gameState.clientBar,
+        game.gameState.hostBar,
+      );
+      this.serverService.initPower(
+        game.host,
+        game.gameState,
+        game.gameState.hostBar,
+        game.gameState.clientBar,
+      );
+    }
+    game.room.status = 'playing';
+    game.room.hostName = game.host.name;
+    game.room.clientName = game.client.name;
+    this.server.to(game.room.name).emit('startGame', game.room);
+    this.serverService.startRound(game.room);
+    this.gameLoop(game);
+  }
+
   //Private conv version Lolo
   @SubscribeMessage('deliverMessage')
   async handleMessage(
@@ -340,58 +488,42 @@ export class ServerGateway
     @MessageBody('message') messageToDeliver: string,
     @MessageBody('friendNickname') friendNickname: string,
   ): Promise<void> {
+    let requester: UserEntity;
     const getAuthor = this.serverService.SocketToPlayer(client);
     const receiver = this.serverService.userList.find(
       (element) => element.name === friendNickname,
     );
     if (receiver) {
-      this.server.to(receiver.socket.id).emit('openChatWindow', {
-        author: getAuthor.name,
-      });
       this.server.to(receiver.socket.id).emit('Message to the client', {
         author: getAuthor.name,
         text: messageToDeliver,
       });
+      requester = await this.userService.getUserByNickname(receiver.name);
+    } else {
+      requester = await this.userService.getUserByNickname(friendNickname);
     }
 
     const author: UserEntity = await this.userService.getUserByNickname(
       getAuthor.name,
     );
-    const requester: UserEntity = await this.userService.getUserByNickname(
-      receiver.name,
-    );
+
     const conv = await this.privateMessageService
       .getConv(author, requester)
       .catch(async () => {
         return await this.privateMessageService.createConv(author, requester);
       });
+    await this.privateMessageService.updateLastMessageDate(conv);
+    if (receiver)
+      this.server.to(receiver.socket.id).emit('Update conv list', {
+        conv: conv,
+      }); //need to emit to both users, to signal them than the conv must be push to top of the list
+    this.server.to(client.id).emit('Update conv list', {
+      conv: conv,
+    });
     this.privateMessageService.createMessage({
       conv: conv,
       author: author,
       text: messageToDeliver,
     });
-  }
-  @SubscribeMessage('getMessages')
-  async getMessages(
-    @ConnectedSocket() client: Socket,
-    @MessageBody('friendNickname') friendNickname: string,
-  ): Promise<void> {
-    const receiver = this.serverService.userList.find(
-      (element) => element.name === friendNickname,
-    );
-    const getAuthor = this.serverService.SocketToPlayer(client);
-    const author: UserEntity = await this.userService.getUserByNickname(
-      getAuthor.name,
-    );
-    const requester: UserEntity = await this.userService.getUserByNickname(
-      receiver.name,
-    );
-    const messages = await this.privateMessageService.getMessages(
-      author,
-      requester,
-    );
-    this.server
-      .to(client.id)
-      .emit('Deliver all messages', { messages: messages });
   }
 }
