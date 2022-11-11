@@ -37,9 +37,14 @@ export class OauthService {
   }
 
   async login(token: any) {
-    const intraUser = await this.fetchUserFromIntra(token.access_token);
-    const user = await this.userService.getIntraUserById(intraUser.id);
-    return { token: this.jwtService.sign(user), user: user };
+    try {
+      const intraUser = await this.fetchUserFromIntra(token.access_token);
+      const user = await this.userService.getIntraUserById(intraUser.id);
+      return { token: this.jwtService.sign(user), user: user };
+    } catch (error) {
+      console.log(error);
+      console.log("Can't login the intra user");
+    }
   }
 
   //utils
@@ -78,6 +83,9 @@ export class OauthService {
       .then((val) => val.json())
       .then((data) => {
         return data;
+      })
+      .catch((err) => {
+        console.log(err);
       });
     return user;
   }

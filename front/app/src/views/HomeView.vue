@@ -168,10 +168,15 @@ async function getUserAndToken(intraToken: string) {
 }
 
 async function studentLogin(code: string) {
-  let intraToken = await getIntraToken(code);
-  const userAndToken = await getUserAndToken(intraToken.access_token);
-  localStorage.setItem("token", userAndToken.token);
-  localStorage.setItem("user", JSON.stringify(userAndToken.user));
+  try {
+    let intraToken = await getIntraToken(code);
+    const userAndToken = await getUserAndToken(intraToken.access_token);
+    localStorage.setItem("token", userAndToken.token);
+    localStorage.setItem("user", JSON.stringify(userAndToken.user));
+  } catch (error) {
+    console.log(error);
+    console.log("Can't login the student");
+  }
   funcs.trySetupUser().then(() => {
     router.push("/game");
   });
