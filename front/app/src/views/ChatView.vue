@@ -10,7 +10,7 @@
           placeholder="Player name"
         />
       </div>
-      <button class="privateMessagesHeader" @click="changeConvListStatus">
+      <button class="convListHeader" @click="changeConvListStatus">
         Private messages <i :class="iconConvList"></i>
       </button>
       <button
@@ -26,7 +26,7 @@
         <p v-else>{{ conv.user2.nickname }}</p>
       </button>
 
-      <button class="friendsHeader" @click="changeFriendListStatus">
+      <button class="convListHeader" @click="changeFriendListStatus">
         Friends <i :class="iconFriendList"></i>
       </button>
       <button
@@ -39,7 +39,7 @@
         <p>{{ friend.nickname }}</p>
       </button>
 
-      <button class="channelsHeader" @click="changeChannelListStatus">
+      <button class="convListHeader" @click="changeChannelListStatus">
         Channels <i :class="iconChannelList"></i>
       </button>
       <button
@@ -50,9 +50,14 @@
       >
         <p>{{ channel.name }}</p>
       </button>
-      <button class="buttonAllChannels" @click="loadAllChannels()">
-        Display all channels
-      </button>
+      <div class="leftActionPannel">
+        <button class="convListHeader" @click="channelCreationForm()">
+          Create channel
+        </button>
+        <button class="convListHeader" @click="loadAllChannels()">
+          Display all channels
+        </button>
+      </div>
     </div>
     <div v-if="show == 0" class="lobbyChat">
       <h2>Welcome on the chat</h2>
@@ -115,12 +120,6 @@
         </div>
       </div>
       <div class="input">
-        <input
-          type="text"
-          placeholder="Send message"
-          class="textInput"
-          v-model="messageInput"
-        />
         <button
           v-if="thisChannel == null"
           class="sendButton"
@@ -145,13 +144,39 @@
         </button>
       </div>
     </div>
+    <div v-if="show == 3" class="channelCreationForm">
+      <form @sumbit.prevent="createChannel()">
+        <h2>Create channel</h2>
+        <div class="searchBar">
+          <input type="text" class="searchField" placeholder="Channel name" />
+        </div>
+        <div>Channel type: {{ picked }}</div>
+
+        <div class="radioBundle">
+          <input
+            type="radio"
+            id="one"
+            value="public"
+            v-model="picked"
+            checked
+          />
+          <label for="public">public</label>
+
+          <input type="radio" id="two" value="protected" v-model="picked" />
+          <label for="protected">protected</label>
+
+          <input type="radio" id="three" value="private" v-model="picked" />
+          <label for="private">private</label>
+        </div>
+      </form>
+    </div>
   </div>
   <friend-alert :requester-name="props.incomingFriendRequest" />
 </template>
 
 <script setup lang="ts">
 import { io } from "socket.io-client";
-import { onMounted, onUpdated, ref, watch } from "vue";
+import { onMounted, onUpdated, ref, watch, Ref } from "vue";
 import config from "../config/config";
 import FriendAlert from "../components/FriendAlert.vue";
 import { Channel, ChannelType, ChannelRole } from "../types/Channel.ts";
@@ -208,6 +233,7 @@ const channelMembers = ref(Array<user>());
 const channelMessageSkip = ref(0);
 const channelsNum = ref(0);
 const show = ref(0);
+const picked = ref("public");
 
 onUpdated(() => {
   scrollDownMessages();
@@ -371,6 +397,16 @@ function loadAllChannels() {
   });
   getAllChannels();
   show.value = 1;
+}
+
+function channelCreationForm() {
+  thisChannel.value = null;
+  channelsNum.value = 0;
+  const conversations = document.querySelectorAll(".channelButton");
+  conversations.forEach((conversation) => {
+    conversation.classList.remove("inactiveConv");
+  });
+  show.value = 3;
 }
 
 function getAllChannels() {
@@ -822,8 +858,8 @@ function deleteConv(conv: privateConv) {
   background-color: #5b5a56;
   overflow-y: scroll;
 }
-.buttonAllChannels {
-  @extend .privateMessagesHeader;
+
+.leftActionPannel {
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -839,6 +875,20 @@ function deleteConv(conv: privateConv) {
   background-color: #3b3c44;
   height: 85vh;
   width: 85%;
+}
+.channelCreationForm {
+  background-color: #3b3c44;
+  color: white;
+  height: 90vh;
+  padding-top: 3%;
+  .searchBar {
+    width: 20%;
+  }
+  .radioBundle {
+    input {
+      margin: 1%;
+    }
+  }
 }
 .upperChat {
   width: 100%;
@@ -992,7 +1042,7 @@ function deleteConv(conv: privateConv) {
   gap: 3%;
 }
 .joinChannel {
-  @extend .friendsHeader;
+  @extend .convListHeader;
   width: 20%;
 }
 .textGrey {
@@ -1002,17 +1052,7 @@ function deleteConv(conv: privateConv) {
 .inactiveConv {
   opacity: 0.3;
 }
-.privateMessagesHeader {
-  padding: 5px;
-  border: 3px solid;
-  border-image-slice: 1;
-  border-image-source: linear-gradient(to bottom, #c1a36b, #635e4f);
-  display: flex;
-  flex-direction: row;
-  justify-content: space-around;
-  align-items: center;
-}
-.friendsHeader {
+.convListHeader {
   padding: 5px;
   border: 3px solid;
   border-image-slice: 1;
@@ -1024,9 +1064,6 @@ function deleteConv(conv: privateConv) {
 }
 .friendButton {
   @extend .privateConvButton;
-}
-.channelsHeader {
-  @extend .friendsHeader;
 }
 .channelButton {
   @extend .privateConvButton;

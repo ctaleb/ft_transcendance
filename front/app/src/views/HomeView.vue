@@ -153,7 +153,7 @@ export default defineComponent({
   methods: {
     async login() {
       fetch(
-        "http://" + window.location.hostname + ":3000/api/Authentication/login",
+        "http://" + window.location.hostname + ":3000/api/authentication/login",
         {
           method: "POST",
           headers: {
