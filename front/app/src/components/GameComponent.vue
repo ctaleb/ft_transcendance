@@ -33,6 +33,7 @@
     <div class="power">Selected power: {{ power }}</div>
   </div>
   <div :class="'custom' + (toggleLadder ? ' hidden' : '')">
+    <!-- TODO add a hiding toggle for invitee -->
     <div>
       <h1>Custom Game with {{ friendName }}</h1>
       <div :class="'inviter' + (toggleInvited ? ' hidden' : '')">
