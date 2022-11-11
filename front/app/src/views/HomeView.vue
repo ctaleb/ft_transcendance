@@ -136,8 +136,7 @@ async function login() {
 }
 
 function extractIntraCode(): string | null {
-  let current_url = window.location.href;
-  var url = new URL(current_url);
+  var url = new URL(window.location.href);
   return url.searchParams.get("code");
 }
 
