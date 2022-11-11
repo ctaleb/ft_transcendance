@@ -1,11 +1,13 @@
 <template>
-  <li class="friend debug-border">
+  <li class="friend">
     <div>
       <img class="user-image border-gold" :src="getUserAvatar(friend)" alt="" />
-      <button @click="unfriend()">Remove</button>
+      <div v-if="!$route.params.nickname">
+        <button @click="unfriend()">Remove</button>
+        <button @click="inviteCustom()">Invite</button>
+      </div>
       <button @click="watchProfile()">Profile</button>
       <button @click="spectateGame()">Spectate</button>
-      <button @click="inviteCustom()">Invite</button>
     </div>
     <h3>{{ friend.nickname }}</h3>
   </li>
@@ -59,11 +61,11 @@ const watchProfile = () => {
 };
 
 const spectateGame = () => {
-  router.push("game");
+  router.push("/game");
 };
 
 const inviteCustom = () => {
-  router.push("game");
+  router.push("/game");
 };
 </script>
 

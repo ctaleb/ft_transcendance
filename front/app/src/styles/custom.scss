@@ -1,19 +1,21 @@
 @import "mixins/sizes.scss";
+@import "variables.scss";
+@import "mixins/border";
 
 h2 {
-  font-size: 2.5rem;
+  font-size: 2.5em;
 }
 
 h3 {
-  font-size: 2rem;
+  font-size: 2em;
 }
 
 .border-gold {
-  border: 2px solid #c1a36b;
+  border: 3px solid $primary;
 }
 
 .user-image {
-  border-radius: 10000px;
+  @include rounded;
   object-fit: cover;
   object-position: center;
 }

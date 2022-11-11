@@ -1,18 +1,18 @@
 <template>
   <div>
-    <div
-      style="text-align: center"
-      v-if="$route.path != '/' && $route.path != '/signup'"
-    >
-      <nav>
+    <nav>
+      <div
+        style="display: flex; position: relative; justify-content: center"
+        v-if="$route.path != '/' && $route.path != '/signup'"
+      >
         <router-link to="/profile"
           >Profile
           <div :class="'dot' + (profileNotificationBadge ? ' show' : '')"></div
         ></router-link>
-        | <router-link to="/game">Game</router-link> |
+        |<router-link to="/game"> PLAY </router-link>|
         <router-link to="/chat">Chat</router-link>
-      </nav>
-    </div>
+      </div>
+    </nav>
     <router-view
       :key="$route.fullPath"
       @notification="changeNotificationValue"
