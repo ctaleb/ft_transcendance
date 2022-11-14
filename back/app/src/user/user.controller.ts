@@ -138,6 +138,11 @@ export class UserController {
       req.user.payload.id,
     );
   }
+  @UseGuards(JwtAuthGuard)
+  @Put('twoFactorAuthEdit')
+  async twoFactorEdit(@Request() req) {
+    return this._userService.updateTwoFactorAuth(req.user.payload.nickname);
+  }
 
   @UseGuards(JwtAuthGuard)
   @Delete('delete')

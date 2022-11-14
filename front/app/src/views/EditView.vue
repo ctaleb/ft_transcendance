@@ -5,8 +5,15 @@
       <input type="checkbox" id="2faSwitch" @change="twoFactorSwitch($event)" />
       <span class="slider round"></span>
     </label>
-    <div v-if="missingPhoneNumber == true">
-      Add a phone number to your profile in order to enable 2FA
+    <div v-if="toggleClicked == true">
+      <div v-if="missingPhoneNumber == true">
+        Add a phone number to your profile in order to enable 2FA
+      </div>
+      <div v-if="twoFactorEnabled == true">
+        2FA enabled ! You will be asked for a code sent by sms during your next
+        connection
+      </div>
+      <div v-else>2FA Disabled !</div>
     </div>
     <div>
       <div class="edition-section">
@@ -117,6 +124,8 @@ export default defineComponent({
       passwordMatchFlag: ref(true),
       updatePasswordSuccess: ref(false),
       missingPhoneNumber: ref(false),
+      twoFactorEnabled: ref(false),
+      toggleClicked: ref(false),
     };
   },
   emits: ["notification"],
@@ -274,6 +283,7 @@ export default defineComponent({
       }
     },
     twoFactorSwitch(event: any) {
+      this.toggleClicked = true;
       if (this.phone == null) {
         this.missingPhoneNumber = true;
         const checkbox = document.getElementById(
@@ -283,6 +293,8 @@ export default defineComponent({
         if (checkbox != null) {
           checkbox.checked = false;
         }
+      } else {
+        this.updateTwoFactorAuth();
       }
     },
     async updatePhone() {
@@ -311,6 +323,32 @@ export default defineComponent({
         this.phoneSuccess = true;
         this.missingPhoneNumber = false;
       } else this.phoneSuccess = false;
+    },
+
+    async updateTwoFactorAuth() {
+      let fetch_ret = await fetch(
+        "http://" +
+          window.location.hostname +
+          ":3000/api/user/twofactorAuthEdit/",
+        {
+          headers: {
+            Authorization: "Bearer " + localStorage.getItem("token"),
+          },
+          method: "PUT",
+        }
+      )
+        .then((res) => {
+          return res.json();
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+      if (fetch_ret.user) {
+        localStorage.setItem("user", JSON.stringify(fetch_ret.user));
+        localStorage.setItem("token", fetch_ret.token);
+        this.user = fetch_ret.user;
+        this.twoFactorEnabled = fetch_ret.newValue;
+      }
     },
   },
 });

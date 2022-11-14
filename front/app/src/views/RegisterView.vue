@@ -160,7 +160,7 @@ export default defineComponent({
           ),
         },
       },
-      phone: { required, minLength: minLength(9), maxLength: maxLength(13) },
+      phone: { minLength: minLength(9), maxLength: maxLength(13) },
       avatar: {},
     }));
 
@@ -176,7 +176,8 @@ export default defineComponent({
       let formData = new FormData();
 
       formData.append("nickname", state.nickname);
-      formData.append("phone", state.phone);
+      if (state.phone != "") formData.append("phone", state.phone);
+
       formData.append("password", state.password.firstTry);
       if (state.avatar != File.prototype) {
         formData.append("avatar", state.avatar, state.avatar.name);

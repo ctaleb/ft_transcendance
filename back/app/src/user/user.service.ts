@@ -132,6 +132,20 @@ export class UserService {
     return { success: true };
   }
 
+  async updateTwoFactorAuth(nickname: string) {
+    let twoFactor: boolean;
+    const user = await this._usersRepository.findOneBy({ nickname });
+    if (user) {
+      user.twoFactorAuth == true ? (twoFactor = false) : (twoFactor = true);
+      await this._usersRepository.update(user.id, { twoFactorAuth: twoFactor });
+      const user_with_password = await this.getUserByNickname(nickname);
+      const { password, ...user_without_password } = user_with_password;
+      const token = this._jwtService.sign(user_without_password);
+      return { user: user_without_password, token: token, newValue: twoFactor };
+    }
+    throw new HttpException('User not Found', HttpStatus.NOT_FOUND);
+  }
+
   async deleteAccount(user: any) {
     // this._friendshipRepository
     //   .createQueryBuilder()
