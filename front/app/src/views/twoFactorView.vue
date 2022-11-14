@@ -19,6 +19,7 @@
 import { computed } from "@vue/reactivity";
 import { watch } from "fs";
 import { onMounted, ref } from "vue";
+import * as funcs from "@/functions/funcs";
 let code = ref("");
 
 //const isCodeEntered = computed(() => {
@@ -27,12 +28,30 @@ let code = ref("");
 
 onMounted(() => {});
 
-function validateCode(code: string) {}
+async function validateCode() {
+  await fetch(
+    "http://" +
+      window.location.hostname +
+      ":3000/api/twofactor/verifyCode/" +
+      code.value,
+    {
+      method: "POST",
+    }
+  )
+    .then((data) => data.json())
+    .then((data) => {
+      if (data.status == "approved") funcs.trySetupUser();
+      //esle data.status = pending -> error in the code
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+}
 async function sendCode() {
   await fetch(
     "http://" +
       window.location.hostname +
-      ":3000/api/twofactor/step2/" +
+      ":3000/api/twofactor/sendCode/" +
       localStorage.getItem("phoneTo2fa"),
     {
       method: "POST",
@@ -41,6 +60,7 @@ async function sendCode() {
     .then((data) => data.json())
     .then((data) => {
       console.log(data);
+      //error in the console(unexpected json input) because i don't return jsons format in the service and the controller. Need to add return before the send function, and make a json return int eh last then
     })
     .catch((err) => {
       console.log(err);

@@ -128,6 +128,11 @@ async function login() {
   }
 
   let data = await response.json();
+  if (data.user.twoFactorAuth == true) {
+    localStorage.setItem("phoneTo2fa", data.user.phone);
+    router.push("twoFactor");
+    return;
+  }
   localStorage.setItem("token", data.token);
   localStorage.setItem("user", JSON.stringify(data.user));
   funcs.trySetupUser().then(() => {
