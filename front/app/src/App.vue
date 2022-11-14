@@ -144,6 +144,9 @@ const invFailure = () => {
 const logout = () => {
   localStorage.removeItem("token");
   localStorage.removeItem("user");
+  store.$reset();
+  // map through that list and use the **$reset** fn to reset the state
+
   socket?.emit("disco", {});
   //  socket? = io("http://" + window.location.hostname + ":3500", {
   //    transports: ["websocket"],
