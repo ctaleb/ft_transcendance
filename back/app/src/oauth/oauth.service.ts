@@ -94,7 +94,6 @@ export class OauthService {
     user.login = await this.check42NicknameUsed(user.login);
     const registrationDto = {
       nickname: user.login,
-      phone: user.phone,
       intraId: user.id,
     };
     const filename: string =

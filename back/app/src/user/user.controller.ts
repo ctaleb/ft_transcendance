@@ -94,6 +94,11 @@ export class UserController {
       newNickname,
     );
   }
+  @UseGuards(JwtAuthGuard)
+  @Put('phoneEdit/:phone')
+  async editPhone(@Request() req, @Param('phone') newPhone: string) {
+    return this._userService.updatePhone(req.user.payload.nickname, newPhone);
+  }
 
   @UseGuards(JwtAuthGuard)
   @Put('avatarEdit/')
