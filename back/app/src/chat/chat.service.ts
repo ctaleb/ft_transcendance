@@ -125,7 +125,7 @@ export class ChatService {
       }
       member = await this._channelMemberRepository.save(member);
       return {
-        id: member.id,
+        id: member.channel.id,
         name: member.channel.name,
         type: member.channel.type,
       };
@@ -269,7 +269,7 @@ export class ChatService {
         });
         if (admin) {
           admin.role = ChannelRole.OWNER;
-          this._channelMemberRepository.save(admin);
+          await this._channelMemberRepository.save(admin);
         } else {
           const user = await this._channelMemberRepository.findOneBy({
             channel: { id: leaveChannelDto.id },
@@ -277,13 +277,15 @@ export class ChatService {
           });
           if (user) {
             user.role = ChannelRole.OWNER;
-            this._channelMemberRepository.save(user);
+            await this._channelMemberRepository.save(user);
           } else {
-            this.deleteChannel(member.channel.id, userId);
+            await this.deleteChannel(member.channel.id, userId);
           }
         }
       }
-      return await this._channelMemberRepository.remove(member);
+      return {
+        id: (await this._channelMemberRepository.remove(member)).channel.id,
+      };
     } catch (err) {
       return err;
     }
@@ -442,7 +444,7 @@ export class ChatService {
 
   async getChannelMessages(getChannelMessagesDto: GetChannelMessagesDto) {
     try {
-      const result: { author: string; text: string; date: Date }[] = [];
+      const result: { author: string; text: string; date: string }[] = [];
       await this._channelMessageRepository
         .find({
           relations: {
@@ -459,7 +461,10 @@ export class ChatService {
             result.unshift({
               author: entry.sender ? entry.sender.user.nickname : 'UNKNOWN',
               text: entry.content,
-              date: entry.createdAt,
+              date:
+                entry.createdAt.toLocaleDateString() +
+                ' ' +
+                entry.createdAt.toLocaleTimeString(),
             });
           });
         });
@@ -482,14 +487,17 @@ export class ChatService {
       const ban = await this._channelRestrictionsRepository.findOneBy({
         channel: { id: channel.id },
         user: { id: userId },
-        ban: LessThan(new Date()),
       });
-      if (ban) throw new BadRequestException(`You are banned till ${ban.ban}`);
+      if (ban) {
+        if (ban.ban.getTime() < Date.now())
+          await this._channelRestrictionsRepository.remove(ban);
+        else throw new BadRequestException(`You are banned till ${ban.ban}`);
+      }
       const members: { nickname: string; path: string; role: ChannelRole }[] =
         [];
       await this._channelMemberRepository
         .find({
-          where: { channel: { id: channel.id }, user: { id: userId } },
+          where: { channel: { id: channel.id } },
           order: { role: 'ASC' },
         })
         .then((data) => {
@@ -542,7 +550,10 @@ export class ChatService {
       return {
         author: member.user.nickname,
         text: message.content,
-        date: message.createdAt,
+        date:
+          message.createdAt.toLocaleDateString() +
+          ' ' +
+          message.createdAt.toLocaleTimeString(),
       };
     } catch (err) {
       return err;

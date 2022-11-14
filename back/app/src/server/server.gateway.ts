@@ -328,4 +328,12 @@ export class ServerGateway
   ) {
     await this.serverService.joinChannelRoom(client, channelId);
   }
+
+  @SubscribeMessage('leaveChannelRoom')
+  async leaveChannelRoom(
+    @ConnectedSocket() client: Socket,
+    @MessageBody('id') channelId: number,
+  ) {
+    await this.serverService.leaveChannelRoom(client, channelId);
+  }
 }

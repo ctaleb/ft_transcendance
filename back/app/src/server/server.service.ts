@@ -723,4 +723,8 @@ export class ServerService {
       client.join(`${channelId}`);
     }
   }
+
+  async leaveChannelRoom(client: Socket, channelId: number) {
+      client.leave(`${channelId}`);
+  }
 }

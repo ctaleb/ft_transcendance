@@ -15,7 +15,7 @@
       </button>
       <button
         v-for="conv in privateConvs"
-        class="privateConvButton"
+        class="channelButton"
         @click="displayMessages(conv, $event)"
         v-bind:key="conv.uuid"
       >
@@ -31,7 +31,7 @@
       </button>
       <button
         v-for="friend in friends"
-        class="friendButton"
+        class="channelButton"
         @click="createConv(friend, $event)"
         v-bind:key="friend.nickname"
       >
@@ -87,7 +87,12 @@
     </div>
     <div v-if="show == 2" class="conversation">
       <div class="upperChat">
-        <div class="messages">
+        <div
+          :class="{
+            messagesPrivate: thisChannel == null,
+            messages: thisChannel != null,
+          }"
+        >
           <template v-for="message in messagesToDisplay">
             <div
               v-if="message.author == clientNickname"
@@ -115,11 +120,31 @@
             <h1>{{ thisChannel.name }}</h1>
             <h3>{{ thisChannel.type }}</h3>
           </div>
-          <template v-for="member in channelMember" class="member"> </template>
-          <div class="actionBar"></div>
+          <div v-for="member in channelMembers" class="channelMember">
+            <img :src="member.avatarToDisplay" alt="" width="45" height="45" />
+            <p
+              :class="{
+                textColorRed: member.role == ChannelRole.OWNER,
+                textColorGold: member.role == ChannelRole.ADMIN,
+              }"
+            >
+              {{ member.nickname }}
+            </p>
+          </div>
+          <div class="actionBar">
+            <button @click="leaveChannel()" class="convListHeader">
+              Leave channel
+            </button>
+          </div>
         </div>
       </div>
       <div class="input">
+        <input
+          type="text"
+          placeholder="Send message"
+          class="textInput"
+          v-model="messageInput"
+        />
         <button
           v-if="thisChannel == null"
           class="sendButton"
@@ -145,30 +170,63 @@
       </div>
     </div>
     <div v-if="show == 3" class="channelCreationForm">
-      <form @sumbit.prevent="createChannel()">
-        <h2>Create channel</h2>
+      <h2>Create channel</h2>
+      <label for="channelName">Channel name:</label>
+      <div class="searchBar">
+        <input
+          type="text"
+          class="searchField"
+          name="channelName"
+          placeholder="Channel name"
+          v-model="channelName"
+          required
+        />
+      </div>
+      <div>Channel type: {{ picked }}</div>
+
+      <div class="radioBundle">
+        <input
+          type="radio"
+          id="one"
+          name="public"
+          value="public"
+          v-model="picked"
+          checked
+        />
+        <label for="public">public</label>
+
+        <input
+          type="radio"
+          id="two"
+          name="protected"
+          value="protected"
+          v-model="picked"
+        />
+        <label for="protected">protected</label>
+
+        <input
+          type="radio"
+          id="three"
+          name="private"
+          value="private"
+          v-model="picked"
+        />
+        <label for="private">private</label>
+      </div>
+      <div v-if="picked == 'protected'">
+        <label for="channelPassword">Password:</label>
         <div class="searchBar">
-          <input type="text" class="searchField" placeholder="Channel name" />
-        </div>
-        <div>Channel type: {{ picked }}</div>
-
-        <div class="radioBundle">
           <input
-            type="radio"
-            id="one"
-            value="public"
-            v-model="picked"
-            checked
+            type="password"
+            class="searchField"
+            name="channelPassword"
+            placeholder="Password"
+            v-model="channelPassword"
+            required
           />
-          <label for="public">public</label>
-
-          <input type="radio" id="two" value="protected" v-model="picked" />
-          <label for="protected">protected</label>
-
-          <input type="radio" id="three" value="private" v-model="picked" />
-          <label for="private">private</label>
         </div>
-      </form>
+      </div>
+      <button @click="createChannel()" class="joinChannel">Submit</button>
     </div>
   </div>
   <friend-alert :requester-name="props.incomingFriendRequest" />
@@ -191,7 +249,7 @@ export interface privateConv {
 export interface message {
   text: string;
   author: string;
-  date: Date;
+  date: string;
 }
 
 export interface user {
@@ -216,7 +274,7 @@ const friendNickname = ref("");
 const imageUrl = ref("");
 const messageInput = ref("");
 const privateConvs = ref(Array<privateConv>());
-const messagesToDisplay = ref(Array<message>());
+const messagesToDisplay: Ref<Array<message>> = ref([]);
 const messagesBoxRef = ref<HTMLDivElement | null>(null);
 const convListFlag = ref(true);
 const friendListFlag = ref(true);
@@ -226,14 +284,16 @@ const iconFriendList = ref("gg-remove");
 const iconChannelList = ref("gg-remove");
 const friends = ref(Array<user>());
 
-const myChannels = ref(Array<Channel>());
+const myChannels: Ref<Array<Channel>> = ref([]);
 const allChannels: Ref<Array<Channel>> = ref([]);
 const thisChannel = ref<Channel | null>(null);
-const channelMembers = ref(Array<user>());
+const channelMembers: Ref<Array<user>> = ref([]);
 const channelMessageSkip = ref(0);
 const channelsNum = ref(0);
 const show = ref(0);
 const picked = ref("public");
+const channelName = ref("");
+const channelPassword = ref("");
 
 onUpdated(() => {
   scrollDownMessages();
@@ -292,6 +352,15 @@ onMounted(() => {
     });
 });
 
+function loadDefaultPage() {
+  thisChannel.value = null;
+  const conversations = document.querySelectorAll(".channelButton");
+  conversations.forEach((conversation) => {
+    conversation.classList.remove("inactiveConv");
+  });
+  show.value = 0;
+}
+
 function getChannels() {
   fetch("http://" + window.location.hostname + ":3000/api/chat", {
     method: "GET",
@@ -309,7 +378,23 @@ function getChannels() {
     .catch((err) => console.log(err));
 }
 
-function createNewChannel() {
+function createChannel() {
+  if (
+    channelName.value.length <= 0 ||
+    (picked.value == "protected" && channelPassword.value.length <= 0)
+  )
+    return;
+  let channelType: ChannelType;
+  switch (picked.value) {
+    case "protected":
+      channelType = ChannelType.PROTECTED;
+      break;
+    case "private":
+      channelType = ChannelType.PRIVATE;
+      break;
+    default:
+      channelType = ChannelType.PUBLIC;
+  }
   fetch(
     "http://" + window.location.hostname + ":3000/api/chat/create-channel",
     {
@@ -319,19 +404,36 @@ function createNewChannel() {
         Authorization: "Bearer " + localStorage.getItem("token"),
       },
       body: JSON.stringify({
-        name: "Three",
-        type: ChannelType.PUBLIC,
-        password: "",
+        name: channelName.value,
+        type: channelType,
+        password: channelPassword.value,
       }),
     }
   )
     .then((res) => {
+      if (!res.ok) throw res;
       return res.json();
     })
     .then((data) => {
-      console.log(data);
+      if (data.id && data.name && data.type) {
+        myChannels.value.push(data);
+        socket.emit("joinChannelRoom", { id: data.id });
+      }
     })
     .catch((err) => console.log(err));
+  channelCreationForm();
+}
+
+function channelCreationForm() {
+  thisChannel.value = null;
+  channelsNum.value = 0;
+  channelName.value = "";
+  channelPassword.value = "";
+  const conversations = document.querySelectorAll(".channelButton");
+  conversations.forEach((conversation) => {
+    conversation.classList.remove("inactiveConv");
+  });
+  show.value = 3;
 }
 
 function updateChannel() {
@@ -376,10 +478,14 @@ function joinChannel(channel: Channel) {
       return res.json();
     })
     .then((data) => {
-      myChannels.value.push(data);
-      allChannels.value.splice(this.allChannels.indexOf(channel), 1);
-      channelsNum.value--;
-      socket.emit("joinChannelRoom", { id: data.id });
+      if (data.id && data.name && data.type) {
+        myChannels.value.push(data);
+        allChannels.value.splice(this.allChannels.indexOf(channel), 1);
+        channelsNum.value--;
+        socket.emit("joinChannelRoom", { id: data.id });
+      } else {
+        console.log(data.status);
+      }
     })
     .catch((err) => {
       console.log(err);
@@ -397,16 +503,6 @@ function loadAllChannels() {
   });
   getAllChannels();
   show.value = 1;
-}
-
-function channelCreationForm() {
-  thisChannel.value = null;
-  channelsNum.value = 0;
-  const conversations = document.querySelectorAll(".channelButton");
-  conversations.forEach((conversation) => {
-    conversation.classList.remove("inactiveConv");
-  });
-  show.value = 3;
 }
 
 function getAllChannels() {
@@ -460,16 +556,21 @@ function leaveChannel() {
       Authorization: "Bearer " + localStorage.getItem("token"),
     },
     body: JSON.stringify({
-      id: 22,
+      id: thisChannel.value.id,
     }),
   })
     .then((res) => {
+      if (!res.ok) throw res;
       return res.json();
     })
     .then((data) => {
-      console.log(data);
+      if (data.id) {
+        myChannels.value.splice(myChannels.value.indexOf(thisChannel), 1);
+        socket.emit("leaveChannelRoom", { id: data.id });
+      }
     })
     .catch((err) => console.log(err));
+  loadDefaultPage();
 }
 
 function deleteChannel() {
@@ -629,7 +730,7 @@ async function getAvatar(privateConv: privateConv) {
 
 function displayMessages(conv: privateConv, event: any) {
   thisChannel.value = null;
-  const conversations = document.querySelectorAll(".privateConvButton");
+  const conversations = document.querySelectorAll(".channelButton");
   conversations.forEach((conversation) => {
     conversation.classList.add("inactiveConv");
   });
@@ -665,6 +766,8 @@ function loadChannel(channel: Channel, event: any) {
   });
   event.target.classList.remove("inactiveConv");
   channelMessageSkip.value = 0;
+  channelMembers.value = [];
+  thisChannel.value = null;
   fetch("http://" + window.location.hostname + ":3000/api/chat/load-channel", {
     method: "POST",
     headers: {
@@ -676,6 +779,7 @@ function loadChannel(channel: Channel, event: any) {
     }),
   })
     .then((data) => {
+      if (!data.ok) throw data;
       return data.json();
     })
     .then((data) => {
@@ -769,14 +873,14 @@ function sendPrivateMessage(nickname: string): void {
 
 function changeConvListStatus() {
   if (convListFlag.value == true) {
-    const el = document.querySelectorAll(".privateConvButton");
+    const el = document.querySelectorAll(".channelButton");
     el.forEach((element) => {
       element.classList.add("hidden");
     });
     iconConvList.value = "gg-add";
     convListFlag.value = false;
   } else {
-    const el = document.querySelectorAll(".privateConvButton");
+    const el = document.querySelectorAll(".channelButton");
     el.forEach((element) => {
       element.classList.remove("hidden");
     });
@@ -786,14 +890,14 @@ function changeConvListStatus() {
 }
 function changeFriendListStatus() {
   if (friendListFlag.value == true) {
-    const el = document.querySelectorAll(".friendButton");
+    const el = document.querySelectorAll(".channelButton");
     el.forEach((element) => {
       element.classList.add("hidden");
     });
     iconFriendList.value = "gg-add";
     friendListFlag.value = false;
   } else {
-    const el = document.querySelectorAll(".friendButton");
+    const el = document.querySelectorAll(".channelButton");
     el.forEach((element) => {
       element.classList.remove("hidden");
     });
@@ -866,6 +970,10 @@ function deleteConv(conv: privateConv) {
   position: absolute;
   bottom: 0;
   width: inherit;
+  height: 3rem;
+  button {
+    height: 100%;
+  }
 }
 .convList h4 {
   color: white;
@@ -881,6 +989,9 @@ function deleteConv(conv: privateConv) {
   color: white;
   height: 90vh;
   padding-top: 3%;
+  * {
+    margin: 1% auto;
+  }
   .searchBar {
     width: 20%;
   }
@@ -898,6 +1009,7 @@ function deleteConv(conv: privateConv) {
   position: relative;
   float: right;
   width: 20%;
+  height: 100%;
   .channelHeader {
     position: relative;
     text-align: left;
@@ -910,12 +1022,66 @@ function deleteConv(conv: privateConv) {
       color: white;
     }
   }
+  .actionBar {
+    position: absolute;
+    bottom: 0;
+  }
 }
 .messages {
   overflow-y: scroll;
   float: left;
   height: 100%;
   width: 80%;
+  padding: 0 5%;
+
+  .friendName {
+    color: #fadba2;
+    margin-bottom: 0;
+    margin-top: 0;
+  }
+  .clientName {
+    color: #85724e;
+    margin-bottom: 0;
+    margin-top: 0;
+  }
+  p {
+    margin-bottom: 0;
+  }
+
+  & > .clientMessage {
+    //border: #c1a36b;
+    //border-style: solid;
+    background-color: #ede4d3;
+    margin: 25px 0 25px auto;
+    text-align: left;
+    color: #453c2c;
+    border-radius: 1.125rem 1.125rem 0 1.125rem;
+    width: fit-content;
+    max-width: 66%;
+    overflow-wrap: break-word;
+    padding: 10px;
+    min-width: 30%;
+  }
+
+  & > .friendMessage {
+    background-color: #9c8356;
+    //border: #c1a36b;
+    //border-style: solid;
+    color: white;
+    margin: 25px auto 25px 0;
+    text-align: left;
+    border-radius: 1.125rem 1.125rem 1.125rem 0;
+    width: fit-content;
+    max-width: 66%;
+    overflow-wrap: break-word;
+    padding: 10px;
+    min-width: 30%;
+  }
+}
+.messagesPrivate {
+  overflow-y: scroll;
+  height: 100%;
+  width: 100%;
   padding: 0 5%;
 
   .friendName {
@@ -983,7 +1149,7 @@ function deleteConv(conv: privateConv) {
   background: #aa9e7d;
   width: 5%;
 }
-.privateConvButton {
+.channelButton {
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -991,15 +1157,43 @@ function deleteConv(conv: privateConv) {
   height: 4.5%;
   font-size: 25px;
 }
-.privateConvButton img {
+.channelButton img {
   margin-right: 20px;
   pointer-events: none;
 }
-.privateConvButton p {
+.channelButton p {
   pointer-events: none;
   text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;
+}
+
+.channelMember {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  background: #453800;
+  border-bottom: 3px solid black;
+  height: 4.5%;
+  font-size: 25px;
+  gap: 1em;
+  color: white;
+}
+.channelMember img {
+  margin-right: 0.5em;
+  pointer-events: none;
+}
+.channelMember p {
+  pointer-events: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.textColorRed {
+  color: red;
+}
+.textColorGold {
+  color: gold;
 }
 
 .lobbyChat {
@@ -1061,12 +1255,6 @@ function deleteConv(conv: privateConv) {
   flex-direction: row;
   justify-content: space-around;
   align-items: center;
-}
-.friendButton {
-  @extend .privateConvButton;
-}
-.channelButton {
-  @extend .privateConvButton;
 }
 
 //searchbar ,need to move it in a component
