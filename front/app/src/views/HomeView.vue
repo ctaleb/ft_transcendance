@@ -170,6 +170,11 @@ async function studentLogin(code: string) {
   try {
     let intraToken = await getIntraToken(code);
     const userAndToken = await getUserAndToken(intraToken.access_token);
+    if (userAndToken.user.twoFactorAuth == true) {
+      localStorage.setItem("phoneTo2fa", userAndToken.user.phone);
+      router.push("/twoFactor");
+      return;
+    }
     localStorage.setItem("token", userAndToken.token);
     localStorage.setItem("user", JSON.stringify(userAndToken.user));
   } catch (error) {

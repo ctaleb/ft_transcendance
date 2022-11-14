@@ -4,9 +4,8 @@ import GameView from "../views/GameView.vue";
 import ChatView from "../views/ChatView.vue";
 import RegisterView from "../views/RegisterView.vue";
 import ProfileView from "../views/ProfileView.vue";
-import PortalView from "../views/PortalView.vue";
-import AllUsersView from "../views/AllUsersView.vue";
 import EditView from "../views/EditView.vue";
+import twoFactorView from "../views/twoFactorView.vue";
 import { isConnected } from "@/functions/funcs";
 let funcs = require("../functions/funcs");
 
@@ -40,6 +39,11 @@ const routes: Array<RouteRecordRaw> = [
     path: "/edit",
     name: "edit",
     component: EditView,
+  },
+  {
+    path: "/twoFactor",
+    name: "twoFactor",
+    component: twoFactorView,
   },
 ];
 
