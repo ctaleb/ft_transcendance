@@ -246,6 +246,7 @@ async function studentLogin(code: string) {
   color: #aa9e7d;
   margin: 20rem auto;
   width: 60rem;
+  text-align: center;
 }
 .input {
   padding: 8px;

@@ -10,8 +10,8 @@ export class twoFactorController {
   async sendCode(@Param('phone') phone: string) {
     return await this.twoFactorService.sendCode(phone);
   }
-  @Post('verifyCode/:code')
-  async verifyCode(@Param('code') code: string) {
-    return await this.twoFactorService.verifyCode(code);
+  @Post('verifyCode/:code/:phone')
+  async verifyCode(@Param('code') code: string, @Param('phone') phone: string) {
+    return await this.twoFactorService.verifyCode(code, phone);
   }
 }

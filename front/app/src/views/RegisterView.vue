@@ -57,7 +57,7 @@
       v-model="v$.phone.$model"
       id="phone"
       name="phone"
-      placeholder="0611111111"
+      placeholder="+33625652388"
       pattern="[0-9]{10}"
     /><br /><br />
     <span v-for="error in v$.phone.$errors" :key="error.$uid" class="text-red">

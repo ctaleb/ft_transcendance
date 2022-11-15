@@ -36,7 +36,9 @@ async function validateCode() {
     "http://" +
       window.location.hostname +
       ":3000/api/twofactor/verifyCode/" +
-      code.value,
+      code.value +
+      "/" +
+      localStorage.getItem("phoneTo2fa"),
     {
       method: "POST",
     }

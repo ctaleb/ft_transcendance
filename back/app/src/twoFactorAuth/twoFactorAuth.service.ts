@@ -11,13 +11,13 @@ export class TwoFactorService {
   async sendCode(phone: string) {
     await client.verify.v2
       .services('VA21523e68da34bdab3f32d5fd886939b4')
-      .verifications.create({ to: '+33672763030', channel: 'sms' })
+      .verifications.create({ to: phone, channel: 'sms' })
       .then((verification) => console.log(verification.status));
   }
-  async verifyCode(code: string) {
+  async verifyCode(code: string, phone: string) {
     return await client.verify.v2
       .services('VA21523e68da34bdab3f32d5fd886939b4')
-      .verificationChecks.create({ to: '+33672763030', code: code })
+      .verificationChecks.create({ to: phone, code: code })
       .then((verification_check) => {
         return { status: verification_check.status };
       });
