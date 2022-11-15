@@ -58,6 +58,11 @@
   <div class="text-red" v-if="login_failed_msg">
     Login failed. Please try again.
   </div>
+  <two-factor-component
+    class="twoFactorComponent hidden"
+    v-model="codeValidated"
+    @twofaSuccess="login"
+  />
 </template>
 
 <script lang="ts" setup>
@@ -65,6 +70,7 @@ import * as funcs from "@/functions/funcs";
 import { log } from "console";
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
+import twoFactorComponent from "../components/twoFactorComponent.vue";
 
 const router = useRouter();
 let username = ref("");
@@ -84,14 +90,14 @@ let token = {
     created_at: null,
   },
   login_failed_msg = ref(false);
-
+let codeValidated = ref(false);
 // computed: {
 //   videoElement() {
 //     return this.$refs.video;
 //   },
 // },
 const props = defineProps(["incomingFriendRequest"]);
-const emit = defineEmits(["notification"]);
+const emit = defineEmits(["notification", "twofaSuccess", "update:modelValue"]);
 
 onMounted(async () => {
   let isConnected = await funcs.isConnected(
@@ -109,6 +115,7 @@ onMounted(async () => {
 });
 
 async function login() {
+  console.log(codeValidated.value);
   let response = await fetch(
     "http://" + window.location.hostname + ":3000/api/Authentication/login",
     {
@@ -128,9 +135,14 @@ async function login() {
   }
 
   let data = await response.json();
-  if (data.user.twoFactorAuth == true) {
+  if (data.user.twoFactorAuth == true && codeValidated.value == false) {
     localStorage.setItem("phoneTo2fa", data.user.phone);
-    router.push("twoFactor");
+    document
+      .getElementsByClassName("main_container")[0]
+      .classList.add("hidden");
+    document
+      .getElementsByClassName("twoFactorComponent")[0]
+      .classList.remove("hidden");
     return;
   }
   localStorage.setItem("token", data.token);

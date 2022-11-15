@@ -40,11 +40,6 @@ const routes: Array<RouteRecordRaw> = [
     name: "edit",
     component: EditView,
   },
-  {
-    path: "/twoFactor",
-    name: "twoFactor",
-    component: twoFactorView,
-  },
 ];
 
 const router = createRouter({
