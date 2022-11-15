@@ -720,11 +720,13 @@ export class ServerService {
       client.handshake.auth.user.id,
     );
     if (channels.find((ell) => ell.id === channelId)) {
+      this.server.to(`${channelId}`).emit('updateChannelMembers', channelId);
       client.join(`${channelId}`);
     }
   }
-
+  
   async leaveChannelRoom(client: Socket, channelId: number) {
-      client.leave(`${channelId}`);
+    this.server.to(`${channelId}`).emit('updateChannelMembers', channelId);
+    client.leave(`${channelId}`);
   }
 }

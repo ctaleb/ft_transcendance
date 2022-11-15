@@ -270,6 +270,7 @@ const clientNickname = JSON.parse(
   localStorage.getItem("user") || "{}"
 ).nickname;
 
+const moment = require("moment-timezone");
 const friendNickname = ref("");
 const imageUrl = ref("");
 const messageInput = ref("");
@@ -294,6 +295,7 @@ const show = ref(0);
 const picked = ref("public");
 const channelName = ref("");
 const channelPassword = ref("");
+const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 onUpdated(() => {
   scrollDownMessages();
@@ -310,12 +312,43 @@ onMounted(() => {
     }
   );
   socket.on("messageReceived", (channelId: number, msg: message) => {
-    console.log(thisChannel.value);
     if (thisChannel.value && channelId === thisChannel.value.id) {
+      msg.date = moment(msg.date)
+        .tz(timezone)
+        .add(1, "hours")
+        .format("MMMM Do YYYY, h:mm:ss a");
       messagesToDisplay.value.push(msg);
       channelMessageSkip.value++;
     } else {
       console.log("incoming message");
+    }
+  });
+  socket.on("updateChannelMembers", (channelId: number) => {
+    if (thisChannel.value && channelId === thisChannel.value.id) {
+      fetch("http://" + window.location.hostname + ":3000/api/chat/members", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + localStorage.getItem("token"),
+        },
+        body: JSON.stringify({
+          id: thisChannel.value.id,
+        }),
+      })
+        .then((res) => {
+          return res.json();
+        })
+        .then((data) => {
+          channelMembers.value = data;
+          channelMembers.value.forEach(async (member) => {
+            member.avatarToDisplay = await funcs
+              .getUserAvatar(member.path)
+              .then((image: any) => {
+                return URL.createObjectURL(image);
+              });
+          });
+        })
+        .catch((err) => console.log(err.message));
     }
   });
   socket.on("Update conv list", () => {
@@ -349,6 +382,9 @@ onMounted(() => {
             return URL.createObjectURL(data);
           });
       });
+    })
+    .catch((err) => {
+      console.log(err.message);
     });
 });
 
@@ -375,7 +411,7 @@ function getChannels() {
     .then((data: Channel[]) => {
       myChannels.value = data;
     })
-    .catch((err) => console.log(err));
+    .catch((err) => console.log(err.message));
 }
 
 function createChannel() {
@@ -411,16 +447,13 @@ function createChannel() {
     }
   )
     .then((res) => {
-      if (!res.ok) throw res;
       return res.json();
     })
     .then((data) => {
-      if (data.id && data.name && data.type) {
-        myChannels.value.push(data);
-        socket.emit("joinChannelRoom", { id: data.id });
-      }
+      myChannels.value.push(data);
+      socket.emit("joinChannelRoom", { id: data.id });
     })
-    .catch((err) => console.log(err));
+    .catch((err) => console.log(err.message));
   channelCreationForm();
 }
 
@@ -458,7 +491,7 @@ function updateChannel() {
     .then((data) => {
       console.log(data);
     })
-    .catch((err) => console.log(err));
+    .catch((err) => console.log(err.message));
 }
 
 function joinChannel(channel: Channel) {
@@ -520,13 +553,11 @@ function getAllChannels() {
       return res.json();
     })
     .then((data) => {
-      if (data.length) {
-        if (channelsNum.value == 0) allChannels.value = data;
-        else allChannels.value.push(data);
-        channelsNum.value += data.length;
-      }
+      if (channelsNum.value == 0) allChannels.value = data;
+      else allChannels.value.push(data);
+      channelsNum.value += data.length;
     })
-    .catch((err) => console.log(err));
+    .catch((err) => console.log(err.message));
 }
 
 function getAllConvs() {
@@ -545,7 +576,7 @@ function getAllConvs() {
         conv.avatarToDisplay = await getAvatar(conv);
       });
     })
-    .catch((err) => console.log(err));
+    .catch((err) => console.log(err.message));
 }
 
 function leaveChannel() {
@@ -560,16 +591,15 @@ function leaveChannel() {
     }),
   })
     .then((res) => {
-      if (!res.ok) throw res;
       return res.json();
     })
     .then((data) => {
-      if (data.id) {
-        myChannels.value.splice(myChannels.value.indexOf(thisChannel), 1);
-        socket.emit("leaveChannelRoom", { id: data.id });
-      }
+      myChannels.value = myChannels.value.filter((elem) => {
+        return elem.id != data.id;
+      });
+      socket.emit("leaveChannelRoom", { id: data.id });
     })
-    .catch((err) => console.log(err));
+    .catch((err) => console.log(err.message));
   loadDefaultPage();
 }
 
@@ -593,7 +623,7 @@ function deleteChannel() {
     .then((data) => {
       console.log(data);
     })
-    .catch((err) => console.log(err));
+    .catch((err) => console.log(err.message));
 }
 
 function inviteToChannel() {
@@ -617,7 +647,7 @@ function inviteToChannel() {
     .then((data) => {
       console.log(data);
     })
-    .catch((err) => console.log(err));
+    .catch((err) => console.log(err.message));
 }
 
 function giveAdmin() {
@@ -638,7 +668,7 @@ function giveAdmin() {
     .then((data) => {
       console.log(data);
     })
-    .catch((err) => console.log(err));
+    .catch((err) => console.log(err.message));
 }
 
 function takeAdmin() {
@@ -659,7 +689,7 @@ function takeAdmin() {
     .then((data) => {
       console.log(data);
     })
-    .catch((err) => console.log(err));
+    .catch((err) => console.log(err.message));
 }
 
 function ban() {
@@ -681,7 +711,7 @@ function ban() {
     .then((data) => {
       console.log(data);
     })
-    .catch((err) => console.log(err));
+    .catch((err) => console.log(err.message));
 }
 
 function organizeFriends() {
@@ -779,23 +809,26 @@ function loadChannel(channel: Channel, event: any) {
     }),
   })
     .then((data) => {
-      if (!data.ok) throw data;
       return data.json();
     })
     .then((data) => {
-      if (!data.message) {
-        thisChannel.value = channel;
-        channelMembers.value = data.members;
-        messagesToDisplay.value = data.messages;
-        channelMessageSkip.value = data.messages.length;
-        channelMembers.value.forEach(async (member) => {
-          member.avatarToDisplay = await funcs
-            .getUserAvatar(member.path)
-            .then((image: any) => {
-              return URL.createObjectURL(image);
-            });
-        });
-      }
+      thisChannel.value = channel;
+      channelMembers.value = data.members;
+      messagesToDisplay.value = data.messages;
+      messagesToDisplay.value.forEach((elem) => {
+        elem.date = moment(elem.date)
+          .tz(timezone)
+          .add(1, "hours")
+          .format("MMMM Do YYYY, h:mm:ss a");
+      });
+      channelMessageSkip.value = data.messages.length;
+      channelMembers.value.forEach(async (member) => {
+        member.avatarToDisplay = await funcs
+          .getUserAvatar(member.path)
+          .then((image: any) => {
+            return URL.createObjectURL(image);
+          });
+      });
     })
     .catch((err) => {
       messagesToDisplay.value = [
@@ -823,6 +856,10 @@ function loadChannelMessages(channel: Channel) {
   })
     .then((data) => data.json())
     .then((data) => {
+      data.date = moment(data.date)
+        .tz(timezone)
+        .add(1, "hours")
+        .format("MMMM Do YYYY, h:mm:ss a");
       messagesToDisplay.value.push(data);
       channelMessageSkip.value += data.length;
     })

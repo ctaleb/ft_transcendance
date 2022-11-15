@@ -128,4 +128,15 @@ export class ChatController {
   muteUser(@Request() req, @Body() restrictionDto: RestrictionDto) {
     return this.chatService.mute(restrictionDto, req.user.payload.id);
   }
+
+  @Post('members')
+  getChannelMembers(
+    @Request() req,
+    @Body() getChannelMembersDto: LeaveChannelDto,
+  ) {
+    return this.chatService.getChannelMembers(
+      getChannelMembersDto,
+      req.user.payload.id,
+    );
+  }
 }

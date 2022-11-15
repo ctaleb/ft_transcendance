@@ -327,6 +327,7 @@ export class ServerGateway
     @MessageBody('id') channelId: number,
   ) {
     await this.serverService.joinChannelRoom(client, channelId);
+    // update channel members
   }
 
   @SubscribeMessage('leaveChannelRoom')
