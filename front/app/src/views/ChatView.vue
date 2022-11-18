@@ -260,6 +260,7 @@ import { onMounted, onUpdated, ref, Ref } from "vue";
 import FriendAlert from "../components/FriendAlert.vue";
 import config from "../config/config";
 import { Channel, ChannelRole, ChannelType } from "../types/Channel";
+import { fetchJSONDatas } from "../functions/funcs";
 
 export interface privateConv {
   user1: user;
@@ -384,7 +385,7 @@ onMounted(() => {
   window.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       if (thisChannel.value == null) sendPrivateMessage(friendNickname.value);
-      else sendChannelMessage(thisChannel.value);
+      else sendChannelMessage();
     }
   });
   getAllConvs();
@@ -429,46 +430,6 @@ function showInvitation() {
 
 function closeInvitation() {
   showInvitationModal.value = false;
-}
-
-async function fetchJSONDatas(
-  path: string,
-  method: "GET" | "PUT" | "POST" | "DELETE"
-): Promise<any>;
-async function fetchJSONDatas(
-  path: string,
-  method: "GET" | "PUT" | "POST" | "DELETE",
-  body: object
-): Promise<any>;
-async function fetchJSONDatas(
-  path: string,
-  method: "GET" | "PUT" | "POST" | "DELETE",
-  body?: object
-): Promise<any> {
-  return fetch(`http://${window.location.hostname}:3000/${path}`, {
-    method: method,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + localStorage.getItem("token"),
-    },
-    body: JSON.stringify(body),
-  })
-    .then((res: Response) => {
-      if (!res.ok) return Promise.reject(res);
-      return res.json();
-    })
-    .catch((err: Response) => {
-      let message: string;
-      err
-        .json()
-        .then((d: { message: string }) => {
-          message = d.message;
-        })
-        .catch((e: any) => (message = e))
-        .finally(() => {
-          console.log(message);
-        });
-    });
 }
 
 function getChannels() {
@@ -578,7 +539,8 @@ function inviteToChannel() {
     fetchJSONDatas("api/chat/invite-to-channel", "POST", {
       channelId: thisChannel.value!.id,
       username: inviteUser.value,
-    }).then(console.log);
+    }).then(closeInvitation);
+    inviteUser.value = "";
   }
 }
 

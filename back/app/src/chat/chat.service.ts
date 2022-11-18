@@ -127,40 +127,39 @@ export class ChatService {
     inviteToChannelDto: InviteToChannelDto,
     userId: number,
   ): Promise<ChannelInvitationEntity> {
-    const channel = await this.getChannelById(inviteToChannelDto.channelId);
-    if (channel.type !== ChannelType.PRIVATE) {
+    const member = await this._channelMemberRepository.findOneBy({
+      user: { id: userId },
+      channel: { id: inviteToChannelDto.channelId },
+    });
+    if (member === null) {
+      throw new BadRequestException('You are not member of the given channel');
+    } else if (member.channel.type !== ChannelType.PRIVATE) {
       throw new BadRequestException(
         'This channel does not support invitation feature',
       );
     }
-    if (
-      (await this._channelMemberRepository.findOne({
-        where: {
-          user: { id: userId },
-          channel: { id: inviteToChannelDto.channelId },
-        },
-      })) === null
-    ) {
-      throw new BadRequestException(
-        'You cannot invite someone to this channel',
-      );
-    }
-    const user = await this._userService.getUserByNickname(
+    const invitationTarget = await this._userService.getUserByNickname(
       inviteToChannelDto.username,
     );
     if (
-      (await this._channelMemberRepository.findOne({
-        where: {
-          user: { id: user.id },
-          channel: { id: inviteToChannelDto.channelId },
-        },
+      (await this._channelInvitationRepository.findOneBy({
+        channel: { id: inviteToChannelDto.channelId },
+        target: { id: invitationTarget.id },
       })) !== null
     ) {
-      throw new BadRequestException('The user is already in that channel');
+      throw new BadRequestException('This user has already been invited');
+    }
+    if (
+      (await this._channelMemberRepository.findOneBy({
+        user: { id: invitationTarget.id },
+        channel: { id: inviteToChannelDto.channelId },
+      })) !== null
+    ) {
+      throw new BadRequestException('This user is already a channel member');
     }
     const invitation = this._channelInvitationRepository.create({
-      channel,
-      target: user,
+      channel: { id: inviteToChannelDto.channelId },
+      target: invitationTarget,
     });
     return await this._channelInvitationRepository.save(invitation);
   }

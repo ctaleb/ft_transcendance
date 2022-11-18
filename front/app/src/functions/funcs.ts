@@ -47,3 +47,43 @@ export function getUserAvatar(avatar: String): Promise<void | Blob> {
     })
     .catch((err) => console.log(err.message));
 }
+
+export async function fetchJSONDatas(
+  path: string,
+  method: "GET" | "PUT" | "POST" | "DELETE"
+): Promise<any>;
+export async function fetchJSONDatas(
+  path: string,
+  method: "GET" | "PUT" | "POST" | "DELETE",
+  body: object
+): Promise<any>;
+export async function fetchJSONDatas(
+  path: string,
+  method: "GET" | "PUT" | "POST" | "DELETE",
+  body?: object
+): Promise<any> {
+  return fetch(`http://${window.location.hostname}:3000/${path}`, {
+    method: method,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + localStorage.getItem("token"),
+    },
+    body: JSON.stringify(body),
+  })
+    .then((res: Response) => {
+      if (!res.ok) return Promise.reject(res);
+      return res.json();
+    })
+    .catch((err: Response) => {
+      let message: string;
+      err
+        .json()
+        .then((d: { message: string }) => {
+          message = d.message;
+        })
+        .catch((e: any) => (message = e))
+        .finally(() => {
+          console.log(message);
+        });
+    });
+}
