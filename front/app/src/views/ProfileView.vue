@@ -203,5 +203,5 @@ const invite = () => {
 </script>
 
 <style lang="scss">
-@import "../styles/_profile.scss";
+@import "../styles/_alert.scss";
 </style>

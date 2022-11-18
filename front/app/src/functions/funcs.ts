@@ -1,6 +1,6 @@
 import config from "@/config/config";
 import { useStore } from "@/store";
-import { User } from "@/types/GameSummary";
+import { User, Message } from "@/types/GameSummary";
 import { io } from "socket.io-client";
 
 export function isConnected(token: string): boolean {
@@ -125,4 +125,24 @@ function connectSocket(token: string, user: any): void {
   console.log(store.socket);
   //  debugger;
   console.log("store socket: " + store.socket.id);
+}
+
+export function addAlertMessage(
+  message: string,
+  type: number,
+  second: number = 5
+) {
+  const store = useStore();
+  const x: Message = {
+    type: type,
+    message: message,
+    time: second,
+  };
+  store.message?.push(x);
+
+  console.log(x);
+
+  setTimeout(() => {
+    store.message?.splice(store.message?.indexOf(x), 1);
+  }, second * 1000);
 }

@@ -58,6 +58,7 @@
   </div>
 </template>
 <script setup lang="ts">
+import { declareExportAllDeclaration } from "@babel/types";
 import { onMounted } from "vue";
 import "../styles/_slider.scss";
 

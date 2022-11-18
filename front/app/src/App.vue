@@ -34,16 +34,24 @@
     <div v-if="failedInvitation" class="overlay">
       <FailedInvitation @invFailure="invFailure()"></FailedInvitation>
     </div>
+    <div class="alertFlex">
+      <AlertCard v-for="message of alertMessages" :message="message" />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref, watch } from "vue";
 import { RouterLink, RouterView, useRoute, useRouter } from "vue-router";
-import { getUserByNickname, trySetupUser } from "@/functions/funcs";
-import { User } from "@/types/GameSummary";
+import {
+  getUserByNickname,
+  trySetupUser,
+  addAlertMessage,
+} from "@/functions/funcs";
+import { User, Message } from "@/types/GameSummary";
 import { useStore } from "@/store";
 import GameConfirmation from "./components/GameConfirmation/Modal.vue";
+import AlertCard from "./components/AlertCard.vue";
 import CustomInvitation from "./components/CustomInvitation/Modal.vue";
 import FailedInvitation from "./components/FailedInvitation/Modal.vue";
 
@@ -60,6 +68,7 @@ trySetupUser();
 
 const store = useStore();
 let socket = store.socket;
+let alertMessages: Message[] = store.message;
 
 store.$subscribe((mutation, state) => {
   socket = state.socket;
@@ -260,6 +269,7 @@ onMounted(() => {
 
 <style lang="scss">
 @import "styles/custom.scss";
+@import "styles/_alert.scss";
 
 body {
   background-color: #010b12;

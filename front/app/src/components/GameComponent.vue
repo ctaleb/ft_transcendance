@@ -8,15 +8,16 @@
     <div class="powerSlider" :class="powers ? '' : ' hidden'">
       <power-slider-component v-model="power" id="powerSlider" />
     </div>
+    <div class="loading" :class="powers ? ' hidden' : ''"></div>
     <!-- <div>
     <button @click="toggleGameQueue()">CHANGE MODE</button>
   </div> -->
     <div class="ladder" :class="toggleLadder ? '' : ' hidden'">
       <!-- <PowerSliderComponent v-model="power" id="powerSlider" /> -->
       <div>
-        <button @click="findMatch()" :disabled="startButton">
-          {{ lobbyStatus }}
-        </button>
+        <div @click="findMatch()" class="btn">
+          <div class="text">PLAY</div>
+        </div>
       </div>
       <div>
         <canvas class="canvas hidden" ref="canvas"></canvas>

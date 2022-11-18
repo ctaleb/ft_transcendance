@@ -12,6 +12,12 @@ export interface PlayerInfoData {
   eloChange: number;
 }
 
+export interface Message {
+  type: number;
+  message: string;
+  time: number;
+}
+
 export interface User {
   nickname: string;
   avatar: string;

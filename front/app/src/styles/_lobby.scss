@@ -1,13 +1,9 @@
 .lobby {
   display: flex;
-  justify-content: space-around;
+  justify-content: space-between;
   align-items: center;
   flex-direction: column;
-
-  img {
-    width: 20%;
-    height: 20%;
-  }
+  height: 750px;
 
   .overlay {
     position: absolute;
@@ -35,6 +31,36 @@
 
     @media screen and (max-width: 720px) {
       width: 95%;
+    }
+  }
+
+  .btn {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 0 0 4px lighten($background, 50%),
+      0 0 0 11px darken($background, 10%), 0 0 0 13px $primary;
+    background-color: lighten($background, 10%);
+    width: 150px;
+    height: 75px;
+    border-radius: 10000px;
+
+    .text {
+      user-select: none;
+      height: 50%;
+      transform: translateY(-5%);
+      text-align: center;
+      font-size: xx-large;
+      font-weight: bolder;
+      color: lighten($background, 70%);
+      // box-shadow: 0 0 2px 2px lighten($background, 70%);
+    }
+
+    &:hover {
+      box-shadow: 0 0 0px 4px lighten($background, 70%),
+        0 0 3px 6px lighten($background, 70%),
+        0 0 0 11px darken($background, 10%), 0 0 0 13px $primary,
+        0 0 4px 15px $primary;
     }
   }
 }
