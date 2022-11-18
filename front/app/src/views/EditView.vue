@@ -42,17 +42,22 @@
         <input
           class="text-input"
           type="text"
-          placeholder="Update your phone number"
+          placeholder="+33 6 11 22 33 44"
           v-model="phone"
+          @input="formatPhone"
         />
         <input
           class="submit-input"
           type="submit"
           value="update phone"
+          :disabled="phoneFormatError.length ? true : false"
           @click.stop.prevent="updatePhone()"
         />
         <div v-if="phoneSuccess == true">
           Phone number updated successfully !
+        </div>
+        <div v-if="phoneFormatError.length">
+          {{ phoneFormatError }}
         </div>
       </div>
       <div v-if="!user.intraId" class="edition-section">
@@ -97,7 +102,6 @@
 </template>
 
 <script lang="ts">
-import userCardComponentVue from "@/components/userCardComponent.vue";
 import { getUserAvatar } from "@/functions/funcs";
 import { useStore } from "@/store";
 import { defineComponent, ref } from "vue";
@@ -126,6 +130,7 @@ export default defineComponent({
       missingPhoneNumber: ref(false),
       twoFactorEnabled: ref(false),
       toggleClicked: ref(false),
+      phoneFormatError: ref(""),
     };
   },
   emits: ["notification"],
@@ -275,6 +280,7 @@ export default defineComponent({
     getUserAvatar(): string {
       return `http://${window.location.hostname}:3000${this.store.user?.avatar}`;
     },
+
     initTwoFactorToggle() {
       if (this.user.twoFactorAuth == true) {
         document.getElementById("2faSwitch")?.setAttribute("checked", "true");
@@ -350,6 +356,12 @@ export default defineComponent({
         this.twoFactorEnabled = fetch_ret.newValue;
       }
     },
+    formatPhone() {
+      if (this.phone.match(/\+\d{2}[1-9]\d{8}/))
+        this.phoneFormatError = "";
+      else
+        this.phoneFormatError = "phone must be in format '+33611223344'";
+    }
   },
 });
 </script>
@@ -437,5 +449,11 @@ input:checked + .slider:before {
 
 .slider.round:before {
   border-radius: 50%;
+}
+
+.image {
+  width: 15%;
+  height: 15rem;
+  object-fit: cover;
 }
 </style>
