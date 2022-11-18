@@ -47,9 +47,6 @@ import GameConfirmation from "./components/GameConfirmation/Modal.vue";
 import CustomInvitation from "./components/CustomInvitation/Modal.vue";
 import FailedInvitation from "./components/FailedInvitation/Modal.vue";
 
-const store = useStore();
-let socket = store.socket;
-
 const route = useRoute();
 const router = useRouter();
 const incomingFriendRequest = ref("");
@@ -59,11 +56,14 @@ const customInvitation = ref(false);
 const failedInvitation = ref(false);
 const invSender = ref("Placeholder");
 
+trySetupUser();
+
+const store = useStore();
+let socket = store.socket;
+
 store.$subscribe((mutation, state) => {
   socket = state.socket;
 });
-
-trySetupUser();
 
 //window.addEventListener("beforeunload", () => {
 //  socket?.disconnect;

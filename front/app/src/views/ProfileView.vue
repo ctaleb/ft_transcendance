@@ -1,25 +1,24 @@
 <template @update-invitations="getRelations()">
   <section v-if="currentUser !== undefined" id="profile" class="container">
     <div class="current-user border-gold">
-      <img
-        class="user-image"
-        :src="getUserAvatar(currentUser)"
-        alt=""
-        width="300"
-        height="300"
-      />
+      <div>
+        <img
+          class="border-gold user-image"
+          :src="getUserAvatar(currentUser)"
+          alt=""
+        />
+      </div>
       <div>
         <h2 class="playerName">{{ currentUser?.nickname }}</h2>
-        <div v-if="currentUser === store.user">
+        <h4>elo : 1500</h4>
+      </div>
+      <div>
+        <div class="buttons" v-if="currentUser === store.user">
           <router-link class="test" to="/" v-on:click.prevent="logout()">
-            <div class="logout">
-              <img :src="'../assets/shutdown.png'" />
-            </div>
+            <img :src="shutdownUrl" alt="edit" />
           </router-link>
           <router-link class="test" to="/edit">
-            <div class="edit">
-              <h4>Edit</h4>
-            </div>
+            <img :src="editUrl" alt="shutdown" />
           </router-link>
         </div>
       </div>
@@ -28,9 +27,6 @@
       <button @click="watchFriend()">Friend</button>
       <button @click="watchHistory()">Match History</button>
     </div>
-    <h2 style="margin: 1rem" :style="toogleMenu ? 'display: none' : ''">
-      Friends
-    </h2>
     <div class="search" :style="toogleMenu ? 'display: none' : ''">
       <div class="searchBar">
         <div class="searchIcon"><i class="gg-search"></i></div>
@@ -46,7 +42,7 @@
     </div>
     <div
       v-if="currentUser === store.user"
-      class="friends"
+      class="invitations"
       :style="toogleMenu ? 'display: none' : ''"
     >
       <h2 v-if="store.invitations?.length">Invitations</h2>
@@ -57,6 +53,9 @@
         />
       </ul>
     </div>
+    <h2 style="margin: 1rem" :style="toogleMenu ? 'display: none' : ''">
+      Friends
+    </h2>
     <div class="friends" :style="toogleMenu ? 'display: none' : ''">
       <ul>
         <FriendCard v-for="friend of currentFriend" :friend="friend" />
@@ -65,10 +64,6 @@
     <div class="summary" :style="toogleMenu ? '' : 'display: none'">
       <h2 style="margin: 1rem">Match History</h2>
       <ul>
-        <SummaryCard v-for="summary of currentSummary" :summary="summary" />
-        <SummaryCard v-for="summary of currentSummary" :summary="summary" />
-        <SummaryCard v-for="summary of currentSummary" :summary="summary" />
-        <SummaryCard v-for="summary of currentSummary" :summary="summary" />
         <SummaryCard v-for="summary of currentSummary" :summary="summary" />
       </ul>
     </div>
@@ -82,6 +77,8 @@ import FriendAlert from "@/components/FriendAlert.vue";
 import FriendCard from "@/components/profile/FriendCard.vue";
 import SummaryCard from "@/components/profile/SummaryCard.vue";
 import InvitationCard from "@/components/profile/InvitationCard.vue";
+import shutdownUrl from "../assets/shutdown.png";
+import editUrl from "../assets/edit.png";
 import { getUserAvatar, getUserByNickname } from "@/functions/funcs";
 import { useStore } from "@/store";
 import { User, History, GameSummaryData } from "@/types/GameSummary";
@@ -92,7 +89,11 @@ import config from "@/config/config";
 const route = useRoute();
 
 const store = useStore();
-const socket = store.socket;
+let socket = store.socket;
+
+store.$subscribe((mutation, state) => {
+  socket = state.socket;
+});
 
 // const prop = defineProps<{
 //   incomingFriendRequest: string;
@@ -202,5 +203,5 @@ const invite = () => {
 </script>
 
 <style lang="scss">
-@import "../styles/profile.scss";
+@import "../styles/_profile.scss";
 </style>

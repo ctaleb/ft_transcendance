@@ -52,14 +52,14 @@
       </div>
     </div>
     <div class="button-container">
-      <div class="button">&lt;-</div>
-      <div class="button">-></div>
+      <div class="button"></div>
+      <div class="button"></div>
     </div>
   </div>
 </template>
 <script setup lang="ts">
 import { onMounted } from "vue";
-import "./style.css";
+import "../styles/_slider.scss";
 
 const emit = defineEmits(["update:modelValue"]);
 let current = 0;

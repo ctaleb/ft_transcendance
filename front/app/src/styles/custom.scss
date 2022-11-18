@@ -11,13 +11,18 @@ h3 {
 }
 
 .border-gold {
-  border: 3px solid $primary;
+  border: $standard-border-size solid $primary;
 }
 
 .user-image {
   @include rounded;
   object-fit: cover;
   object-position: center;
+  aspect-ratio: 1 / 1;
+}
+
+.square {
+  aspect-ratio: 1 / 1;
 }
 
 .container {
