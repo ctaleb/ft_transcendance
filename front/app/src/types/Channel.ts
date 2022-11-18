@@ -1,3 +1,5 @@
+import { User } from "@/types/User";
+
 export interface Channel {
   id: number;
   name: string;
@@ -15,4 +17,8 @@ export enum ChannelRole {
   OWNER = "owner",
   ADMIN = "administrator",
   MEMBER = "member",
+}
+
+export interface ChannelUser extends User {
+	role: ChannelRole;
 }

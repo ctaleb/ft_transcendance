@@ -35,7 +35,7 @@
         @click="createConv(friend, $event)"
         v-bind:key="friend.nickname"
       >
-        <img :src="friend.avatarToDisplay" alt="" width="45" height="45" />
+        <img :src="friend.image" alt="" width="45" height="45" />
         <p>{{ friend.nickname }}</p>
       </button>
 
@@ -121,7 +121,7 @@
             <h3>{{ thisChannel.type }}</h3>
           </div>
           <div v-for="member in channelMembers" class="channelMember">
-            <img :src="member.avatarToDisplay" alt="" width="45" height="45" />
+            <img :src="member.image" alt="" width="45" height="45" />
             <p
               :class="{
                 textColorRed: member.role == ChannelRole.OWNER,
@@ -257,14 +257,15 @@
 
 <script setup lang="ts">
 import { onMounted, onUpdated, ref, Ref } from "vue";
-import FriendAlert from "../components/FriendAlert.vue";
-import config from "../config/config";
-import { Channel, ChannelRole, ChannelType } from "../types/Channel";
-import { fetchJSONDatas } from "../functions/funcs";
+import FriendAlert from "@/components/FriendAlert.vue";
+import config from "@/config/config";
+import { Channel, ChannelRole, ChannelType, ChannelUser } from "@/types/Channel";
+import { fetchJSONDatas } from "@/functions/funcs";
+import { fetchUserAvatarURL } from "@/types/User";
 
 export interface PrivateConv {
-  user1: User;
-  user2: User;
+  user1: ChannelUser;
+  user2: ChannelUser;
   avatarToDisplay: string;
   uuid: string;
 }
@@ -273,13 +274,6 @@ export interface Message {
   text: string;
   author: string;
   date: string;
-}
-
-export interface User {
-  nickname: string;
-  path: string;
-  role: ChannelRole;
-  avatarToDisplay: string;
 }
 
 const socket = config.socket;
@@ -306,12 +300,12 @@ const channelListFlag = ref(true);
 const iconConvList = ref("gg-remove");
 const iconFriendList = ref("gg-remove");
 const iconChannelList = ref("gg-remove");
-const friends = ref(Array<User>());
+const friends = ref(Array<ChannelUser>());
 
 const myChannels: Ref<Array<Channel>> = ref([]);
 const allChannels: Ref<Array<Channel>> = ref([]);
 const thisChannel = ref<Channel | null>(null);
-const channelMembers: Ref<Array<User>> = ref([]);
+const channelMembers: Ref<Array<ChannelUser>> = ref([]);
 const channelMessageSkip = ref(0);
 const channelsNum = ref(0);
 const show = ref(0);
@@ -349,38 +343,17 @@ onMounted(async () => {
       console.log("incoming message");
     }
   });
-  socket.on("updateChannelMembers", (channelId: number) => {
+  socket.on("updateChannelMembers", async (channelId: number) => {
     if (thisChannel.value && channelId === thisChannel.value.id) {
-      fetch("http://" + window.location.hostname + ":3000/api/chat/members", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + localStorage.getItem("token"),
-        },
-        body: JSON.stringify({
-          id: thisChannel.value.id,
-        }),
-      })
-        .then((res) => {
-          return res.json();
-        })
-        .then((data) => {
-          channelMembers.value = data;
-          channelMembers.value.forEach(async (member) => {
-            member.avatarToDisplay = await funcs
-              .getUserAvatar(member.path)
-              .then((image: any) => {
-                return URL.createObjectURL(image);
-              });
-          });
-        })
-        .catch((err) => console.log(err.message));
+      let data = await fetchJSONDatas("api/chat/members", "POST", { id: thisChannel.value.id });
+      channelMembers.value.forEach(await fetchUserAvatarURL);
+      channelMembers.value = data;
     }
   });
-  socket.on("Update conv list", () => {
-    getAllConvs().then(() => {
-      organizeFriends();
-    }); //If this signal is received, we fetch again convs to order them from latest to oldest
+  socket.on("Update conv list", async () => {
+    await getAllConvs();
+    organizeFriends();
+    //If this signal is received, we fetch again convs to order them from latest to oldest
   });
   window.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
@@ -388,15 +361,12 @@ onMounted(async () => {
       else sendChannelMessage();
     }
   });
-  getAllConvs();
-
-  let data: { friends: User[] } = await fetchJSONDatas("api/friendship", "GET");
+  
+  await getAllConvs();
+  let data: { friends: ChannelUser[] } = await fetchJSONDatas("api/friendship", "GET");
   friends.value = data.friends;
-  friends.value.forEach(async (friend) => {
-    let avatar = await funcs.getUserAvatar(friend.path);
-    friend.avatarToDisplay = URL.createObjectURL(avatar); 
-    organizeFriends();
-  });
+  friends.value.forEach(await fetchUserAvatarURL);
+  organizeFriends();
 });
 
 const loadDefaultPage = () => {
@@ -500,7 +470,7 @@ const getAllConvs = async (): Promise<void> => {
   let data: PrivateConv[] = await fetchJSONDatas("api/privateConv/getAllConvs", "GET");
   privateConvs.value = data;
   privateConvs.value.forEach(async (conv) => {
-    conv.avatarToDisplay = await getAvatar(conv);
+    conv.avatarToDisplay = await fetchUserAvatarURL(conv.user1.nickname == clientNickname ? conv.user2 : conv.user1);
   });
 }
 
@@ -562,20 +532,6 @@ const scrollDownMessages = () => {
   messagesBoxRef.value?.scrollIntoView({ behavior: "smooth", block: "end" });
 }
 
-const getAvatar = async (privateConv: PrivateConv): Promise<string> => {
-  let userToFetch: User;
-  if (privateConv.user1.nickname == clientNickname)
-    userToFetch = privateConv.user2;
-  else userToFetch = privateConv.user1;
-
-  let data = await fetchJSONDatas(
-    `api/user/bynickname/${userToFetch.nickname}`,
-    "GET"
-  )
-  let avatar = await funcs.getUserAvatar(data.avatar.path);
-  return URL.createObjectURL(avatar);
-}
-
 const displayMessages = async (conv: PrivateConv, event: any): Promise<void> => {
   thisChannel.value = null;
   const conversations = document.querySelectorAll(".channelButton");
@@ -612,10 +568,7 @@ const loadChannel = async (channel: Channel, event: any): Promise<void> => {
       .format("MMMM Do YYYY, h:mm:ss a");
   });
   channelMessageSkip.value = data.messages.length;
-  channelMembers.value.forEach(async (member) => {
-    let avatar = await funcs.getUserAvatar(member.path);
-    member.avatarToDisplay = URL.createObjectURL(avatar);
-  });
+  channelMembers.value.forEach(await fetchUserAvatarURL);
 }
 
 const loadChannelMessages = async (channel: Channel): Promise<void> => {
@@ -631,11 +584,10 @@ const loadChannelMessages = async (channel: Channel): Promise<void> => {
   channelMessageSkip.value += data.length;
 }
 
-const createConv = async (friend: User, event: any): Promise<void> => {
+const createConv = async (friend: ChannelUser, event: any): Promise<void> => {
   friendNickname.value = friend.nickname;
   let data = await fetchJSONDatas(`api/privateConv/createConv/${friend.nickname}`, "GET");
-  let avatar = await funcs.getUserAvatar(friend.path);
-  data.conv.avatarToDisplay = URL.createObjectURL(avatar);
+  await fetchUserAvatarURL(friend);
   if (data.created == true) {
     privateConvs.value.push(data.conv);
     organizeFriends();
