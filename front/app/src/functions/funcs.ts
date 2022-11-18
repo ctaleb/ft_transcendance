@@ -120,6 +120,7 @@ function connectSocket(token: string, user: any): void {
     auth: { token: token, user: user },
     transports: ["websocket"],
   });
+
   //  config.socket = io("http://" + window.location.hostname + ":3500", {
   //    auth: { token: token, user: user },
   //    transports: ["websocket"],
