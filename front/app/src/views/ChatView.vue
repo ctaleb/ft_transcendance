@@ -262,20 +262,20 @@ import config from "../config/config";
 import { Channel, ChannelRole, ChannelType } from "../types/Channel";
 import { fetchJSONDatas } from "../functions/funcs";
 
-export interface privateConv {
-  user1: user;
-  user2: user;
+export interface PrivateConv {
+  user1: User;
+  user2: User;
   avatarToDisplay: string;
   uuid: string;
 }
 
-export interface message {
+export interface Message {
   text: string;
   author: string;
   date: string;
 }
 
-export interface user {
+export interface User {
   nickname: string;
   path: string;
   role: ChannelRole;
@@ -297,8 +297,8 @@ const moment = require("moment-timezone");
 const friendNickname = ref("");
 const imageUrl = ref("");
 const messageInput = ref("");
-const privateConvs = ref(Array<privateConv>());
-const messagesToDisplay: Ref<Array<message>> = ref([]);
+const privateConvs = ref(Array<PrivateConv>());
+const messagesToDisplay: Ref<Array<Message>> = ref([]);
 const messagesBoxRef = ref<HTMLDivElement | null>(null);
 const convListFlag = ref(true);
 const friendListFlag = ref(true);
@@ -306,12 +306,12 @@ const channelListFlag = ref(true);
 const iconConvList = ref("gg-remove");
 const iconFriendList = ref("gg-remove");
 const iconChannelList = ref("gg-remove");
-const friends = ref(Array<user>());
+const friends = ref(Array<User>());
 
 const myChannels: Ref<Array<Channel>> = ref([]);
 const allChannels: Ref<Array<Channel>> = ref([]);
 const thisChannel = ref<Channel | null>(null);
-const channelMembers: Ref<Array<user>> = ref([]);
+const channelMembers: Ref<Array<User>> = ref([]);
 const channelMessageSkip = ref(0);
 const channelsNum = ref(0);
 const show = ref(0);
@@ -326,7 +326,7 @@ onUpdated(() => {
   scrollDownMessages();
 });
 
-onMounted(() => {
+onMounted(async () => {
   getChannels();
   var audio = new Audio(require("../assets/messageReceived.mp3"));
   socket.on(
@@ -337,7 +337,7 @@ onMounted(() => {
       audio.play();
     }
   );
-  socket.on("messageReceived", (channelId: number, msg: message) => {
+  socket.on("messageReceived", (channelId: number, msg: Message) => {
     if (thisChannel.value && channelId === thisChannel.value.id) {
       msg.date = moment(msg.date)
         .tz(timezone)
@@ -389,32 +389,17 @@ onMounted(() => {
     }
   });
   getAllConvs();
-  fetch("http://" + window.location.hostname + ":3000/api/friendship", {
-    method: "GET",
-    headers: {
-      Authorization: "Bearer " + localStorage.getItem("token"),
-    },
-  })
-    .then((res) => {
-      return res.json();
-    })
-    .then((data) => {
-      friends.value = data.friends;
-      friends.value.forEach(async (friend) => {
-        friend.avatarToDisplay = await funcs
-          .getUserAvatar(friend.path)
-          .then((data: any) => {
-            organizeFriends();
-            return URL.createObjectURL(data);
-          });
-      });
-    })
-    .catch((err) => {
-      console.log(err.message);
-    });
+
+  let data: { friends: User[] } = await fetchJSONDatas("api/friendship", "GET");
+  friends.value = data.friends;
+  friends.value.forEach(async (friend) => {
+    let avatar = await funcs.getUserAvatar(friend.path);
+    friend.avatarToDisplay = URL.createObjectURL(avatar); 
+    organizeFriends();
+  });
 });
 
-function loadDefaultPage() {
+const loadDefaultPage = () => {
   thisChannel.value = null;
   const conversations = document.querySelectorAll(".channelButton");
   conversations.forEach((conversation) => {
@@ -423,22 +408,21 @@ function loadDefaultPage() {
   show.value = 0;
 }
 
-function showInvitation() {
+const showInvitation = () => {
   inviteUser.value = "";
   showInvitationModal.value = true;
 }
 
-function closeInvitation() {
+const closeInvitation = () => {
   showInvitationModal.value = false;
 }
 
-function getChannels() {
-  fetchJSONDatas("api/chat", "GET").then(
-    (data: Channel[]) => (myChannels.value = data)
-  );
+const getChannels = async (): Promise<void> => {
+  let data: Channel[] = await fetchJSONDatas("api/chat", "GET")
+  myChannels.value = data;
 }
 
-function createChannel() {
+const createChannel = async (): Promise<void> => {
   if (
     channelName.value.length <= 0 ||
     (picked.value == "protected" && channelPassword.value.length <= 0)
@@ -446,18 +430,17 @@ function createChannel() {
     return;
   }
   let channelType = <ChannelType>picked.value;
-  fetchJSONDatas("api/chat/create-channel", "POST", {
+  let data: Channel = await fetchJSONDatas("api/chat/create-channel", "POST", {
     name: channelName.value,
     type: channelType,
     password: channelPassword.value,
-  }).then((data) => {
-    myChannels.value.push(data);
-    socket.emit("joinChannelRoom", { id: data.id });
   });
+  myChannels.value.push(data);
+  socket.emit("joinChannelRoom", { id: data.id });
   channelCreationForm();
 }
 
-function channelCreationForm() {
+const channelCreationForm = () => {
   thisChannel.value = null;
   channelsNum.value = 0;
   channelName.value = "";
@@ -469,28 +452,29 @@ function channelCreationForm() {
   show.value = 3;
 }
 
-function updateChannel() {
-  fetchJSONDatas("api/chat/update-channel", "PUT", {
+const updateChannel = async (): Promise<void> => {
+  await fetchJSONDatas("api/chat/update-channel", "PUT", {
     id: 22,
     type: "protected",
     password: "password",
-  }).then(console.log);
-}
-
-function joinChannel(channel: Channel) {
-  fetchJSONDatas("api/chat/join-channel", "POST", {
-    id: channel.id,
-    password: channel.passwordField,
-  }).then((data: Channel) => {
-    myChannels.value.push(data);
-    allChannels.value.splice(allChannels.value.indexOf(channel), 1);
-    channelsNum.value--;
-    socket.emit("joinChannelRoom", { id: data.id });
   });
-  channel.passwordField = "";
 }
 
-function loadAllChannels() {
+const joinChannel = async (channel: Channel): Promise<void> => {
+  let password = channel.passwordField;
+  channel.passwordField = "";
+
+  let data: Channel = await fetchJSONDatas("api/chat/join-channel", "POST", {
+    id: channel.id,
+    password: password,
+  });
+  myChannels.value.push(data);
+  allChannels.value.splice(allChannels.value.indexOf(channel), 1);
+  channelsNum.value--;
+  socket.emit("joinChannelRoom", { id: data.id });
+}
+
+const loadAllChannels = () => {
   thisChannel.value = null;
   channelsNum.value = 0;
   allChannels.value = [];
@@ -502,71 +486,67 @@ function loadAllChannels() {
   show.value = 1;
 }
 
-function getAllChannels() {
-  fetchJSONDatas("api/chat/list", "POST", {
+const getAllChannels = async (): Promise<void> => {
+  let data: Channel[] = await fetchJSONDatas("api/chat/list", "POST", {
     skip: channelsNum.value,
-  }).then((data: Channel[]) => {
-    // TODO Check
-    allChannels.value.push(...data);
-    // allChannels.value = [...allChannels.value, ...data];
-    channelsNum.value += data.length;
+  });
+  // TODO Check
+  allChannels.value.push(...data);
+  // allChannels.value = [...allChannels.value, ...data];
+  channelsNum.value += data.length;
+}
+
+const getAllConvs = async (): Promise<void> => {
+  let data: PrivateConv[] = await fetchJSONDatas("api/privateConv/getAllConvs", "GET");
+  privateConvs.value = data;
+  privateConvs.value.forEach(async (conv) => {
+    conv.avatarToDisplay = await getAvatar(conv);
   });
 }
 
-function getAllConvs() {
-  fetchJSONDatas("api/privateConv/getAllConvs", "GET").then(async (data) => {
-    privateConvs.value = data;
-    privateConvs.value.forEach(async (conv) => {
-      conv.avatarToDisplay = await getAvatar(conv);
-    });
-  });
-}
-
-function leaveChannel() {
-  fetchJSONDatas("api/chat/leave-channel", "DELETE", {
+const leaveChannel = async (): Promise<void> => {
+  let data: Channel = await fetchJSONDatas("api/chat/leave-channel", "DELETE", {
     id: thisChannel.value!.id,
-  }).then((data) => {
-    myChannels.value = myChannels.value.filter((elem) => {
-      return elem.id != data.id;
-    });
-    socket.emit("leaveChannelRoom", { id: data.id });
   });
+  myChannels.value = myChannels.value.filter((elem) => elem.id != data.id);
+  socket.emit("leaveChannelRoom", { id: data.id });
   loadDefaultPage();
 }
 
-function inviteToChannel() {
+const inviteToChannel = async (): Promise<void> => {
   if (inviteUser.value.length > 0) {
-    fetchJSONDatas("api/chat/invite-to-channel", "POST", {
-      channelId: thisChannel.value!.id,
-      username: inviteUser.value,
-    }).then(closeInvitation);
+    let username = inviteUser.value;
     inviteUser.value = "";
+    await fetchJSONDatas("api/chat/invite-to-channel", "POST", {
+      channelId: thisChannel.value!.id,
+      username: username,
+    });
   }
 }
 
-function giveAdmin() {
-  fetchJSONDatas("api/chat/give-admin", "PUT", {
+const giveAdmin = async (): Promise<void> => {
+  await fetchJSONDatas("api/chat/give-admin", "PUT", {
     id: 22,
     username: "Ah Sahm",
-  }).then(console.log);
+  });
 }
 
-function takeAdmin() {
-  fetchJSONDatas("api/chat/take-admin", "PUT", {
+const takeAdmin = async (): Promise<void> => {
+  await fetchJSONDatas("api/chat/take-admin", "PUT", {
     id: 22,
     username: "Ah Sahm",
-  }).then(console.log);
+  });
 }
 
-function ban() {
-  fetchJSONDatas("api/chat/ban", "POST", {
+const ban = async (): Promise<void> => {
+  await fetchJSONDatas("api/chat/ban", "POST", {
     id: 23,
     username: "Ah Sahm",
     minutes: 1500,
-  }).then(console.log);
+  });
 }
 
-function organizeFriends() {
+const organizeFriends = () => {
   for (let i = 0; i < privateConvs.value.length; i++) {
     for (let j = 0; j < friends.value.length; j++) {
       if (
@@ -578,27 +558,25 @@ function organizeFriends() {
   }
 }
 
-function scrollDownMessages() {
+const scrollDownMessages = () => {
   messagesBoxRef.value?.scrollIntoView({ behavior: "smooth", block: "end" });
 }
 
-async function getAvatar(privateConv: privateConv): Promise<string> {
-  let userToFetch: user;
+const getAvatar = async (privateConv: PrivateConv): Promise<string> => {
+  let userToFetch: User;
   if (privateConv.user1.nickname == clientNickname)
     userToFetch = privateConv.user2;
   else userToFetch = privateConv.user1;
 
-  return fetchJSONDatas(
+  let data = await fetchJSONDatas(
     `api/user/bynickname/${userToFetch.nickname}`,
     "GET"
-  ).then(async (data) => {
-    return await funcs.getUserAvatar(data.avatar.path).then((data: any) => {
-      return URL.createObjectURL(data);
-    });
-  });
+  )
+  let avatar = await funcs.getUserAvatar(data.avatar.path);
+  return URL.createObjectURL(avatar);
 }
 
-function displayMessages(conv: privateConv, event: any) {
+const displayMessages = async (conv: PrivateConv, event: any): Promise<void> => {
   thisChannel.value = null;
   const conversations = document.querySelectorAll(".channelButton");
   conversations.forEach((conversation) => {
@@ -608,15 +586,12 @@ function displayMessages(conv: privateConv, event: any) {
   conv.user1.nickname == clientNickname
     ? (friendNickname.value = conv.user2.nickname)
     : (friendNickname.value = conv.user1.nickname);
-  fetchJSONDatas(`api/privateConv/getMessages/${conv.uuid}`, "GET").then(
-    (data) => {
-      messagesToDisplay.value = data;
-    }
-  );
+  let data: Message[] = await fetchJSONDatas(`api/privateConv/getMessages/${conv.uuid}`, "GET");
+  messagesToDisplay.value = data;
   show.value = 2;
 }
 
-function loadChannel(channel: Channel, event: any) {
+const loadChannel = async (channel: Channel, event: any): Promise<void> => {
   const conversations = document.querySelectorAll(".channelButton");
   conversations.forEach((conversation) => {
     conversation.classList.add("inactiveConv");
@@ -626,44 +601,49 @@ function loadChannel(channel: Channel, event: any) {
   channelMembers.value = [];
   thisChannel.value = null;
   show.value = 2;
-  fetchJSONDatas("api/chat/load-channel", "POST", { id: channel.id }).then(
-    (data) => {
-      thisChannel.value = channel;
-      channelMembers.value = data.members;
-      messagesToDisplay.value = data.messages;
-      messagesToDisplay.value.forEach((elem) => {
-        elem.date = moment(elem.date)
-          .tz(timezone)
-          .add(1, "hours")
-          .format("MMMM Do YYYY, h:mm:ss a");
-      });
-      channelMessageSkip.value = data.messages.length;
-      channelMembers.value.forEach(async (member) => {
-        member.avatarToDisplay = await funcs
-          .getUserAvatar(member.path)
-          .then((image: any) => {
-            return URL.createObjectURL(image);
-          });
-      });
-    }
-  );
-}
-
-function loadChannelMessages(channel: Channel) {
-  fetchJSONDatas("api/chat/messages", "POST", {
-    id: channel.id,
-    skip: channelMessageSkip.value,
-  }).then((data) => {
-    data.date = moment(data.date)
+  let data = await fetchJSONDatas("api/chat/load-channel", "POST", { id: channel.id });
+  thisChannel.value = channel;
+  channelMembers.value = data.members;
+  messagesToDisplay.value = data.messages;
+  messagesToDisplay.value.forEach((elem) => {
+    elem.date = moment(elem.date)
       .tz(timezone)
       .add(1, "hours")
       .format("MMMM Do YYYY, h:mm:ss a");
-    messagesToDisplay.value.push(data);
-    channelMessageSkip.value += data.length;
+  });
+  channelMessageSkip.value = data.messages.length;
+  channelMembers.value.forEach(async (member) => {
+    let avatar = await funcs.getUserAvatar(member.path);
+    member.avatarToDisplay = URL.createObjectURL(avatar);
   });
 }
 
-function sendChannelMessage() {
+const loadChannelMessages = async (channel: Channel): Promise<void> => {
+  let data = await fetchJSONDatas("api/chat/messages", "POST", {
+    id: channel.id,
+    skip: channelMessageSkip.value,
+  });
+  data.date = moment(data.date)
+    .tz(timezone)
+    .add(1, "hours")
+    .format("MMMM Do YYYY, h:mm:ss a");
+  messagesToDisplay.value.push(data);
+  channelMessageSkip.value += data.length;
+}
+
+const createConv = async (friend: User, event: any): Promise<void> => {
+  friendNickname.value = friend.nickname;
+  let data = await fetchJSONDatas(`api/privateConv/createConv/${friend.nickname}`, "GET");
+  let avatar = await funcs.getUserAvatar(friend.path);
+  data.conv.avatarToDisplay = URL.createObjectURL(avatar);
+  if (data.created == true) {
+    privateConvs.value.push(data.conv);
+    organizeFriends();
+  }
+  displayMessages(data.conv, event);
+}
+
+const sendChannelMessage = () => {
   if (messageInput.value != "") {
     socket.emit(
       "sendChannelMessage",
@@ -671,7 +651,7 @@ function sendChannelMessage() {
         channelId: thisChannel.value!.id,
         content: messageInput.value,
       },
-      (response: message) => {
+      (response: Message) => {
         if (!response.author) {
           // TODO new notification message
         }
@@ -681,7 +661,7 @@ function sendChannelMessage() {
   }
 }
 
-function sendPrivateMessage(nickname: string): void {
+const sendPrivateMessage = (nickname: string): void => {
   if (messageInput.value != "") {
     socket.emit("deliverMessage", {
       message: messageInput.value,
@@ -696,7 +676,7 @@ function sendPrivateMessage(nickname: string): void {
   }
 }
 
-function changeConvListStatus() {
+const changeConvListStatus = () => {
   if (convListFlag.value == true) {
     const el = document.querySelectorAll(".privateMsg");
     el.forEach((element) => {
@@ -713,7 +693,8 @@ function changeConvListStatus() {
     iconConvList.value = "gg-remove";
   }
 }
-function changeFriendListStatus() {
+
+const changeFriendListStatus = () => {
   if (friendListFlag.value == true) {
     const el = document.querySelectorAll(".friendMsg");
     el.forEach((element) => {
@@ -730,7 +711,8 @@ function changeFriendListStatus() {
     iconFriendList.value = "gg-remove";
   }
 }
-function changeChannelListStatus() {
+
+const changeChannelListStatus = () => {
   if (channelListFlag.value == true) {
     const el = document.querySelectorAll(".channelMsg");
     el.forEach((element) => {
@@ -747,24 +729,8 @@ function changeChannelListStatus() {
     iconChannelList.value = "gg-remove";
   }
 }
-function createConv(friend: user, event: any) {
-  friendNickname.value = friend.nickname;
-  fetchJSONDatas(`api/privateConv/createConv/${friend.nickname}`, "GET").then(
-    async (data) => {
-      data.conv.avatarToDisplay = await funcs
-        .getUserAvatar(friend.path)
-        .then((data: any) => {
-          return URL.createObjectURL(data);
-        });
-      if (data.created == true) {
-        privateConvs.value.push(data.conv);
-        organizeFriends();
-      }
-      displayMessages(data.conv, event);
-    }
-  );
-}
-function deleteConv(conv: privateConv) {
+
+const deleteConv = (conv: PrivateConv) => {
   console.log("Oye brav gens");
 }
 </script>
