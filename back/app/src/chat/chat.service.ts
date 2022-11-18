@@ -126,12 +126,13 @@ export class ChatService {
   async inviteToChannel(
     inviteToChannelDto: InviteToChannelDto,
     userId: number,
-  ) {
+  ): Promise<ChannelInvitationEntity> {
     const channel = await this.getChannelById(inviteToChannelDto.channelId);
-    if (channel.type !== ChannelType.PRIVATE)
+    if (channel.type !== ChannelType.PRIVATE) {
       throw new BadRequestException(
         'This channel does not support invitation feature',
       );
+    }
     if (
       (await this._channelMemberRepository.findOne({
         where: {
@@ -139,10 +140,11 @@ export class ChatService {
           channel: { id: inviteToChannelDto.channelId },
         },
       })) === null
-    )
+    ) {
       throw new BadRequestException(
         'You cannot invite someone to this channel',
       );
+    }
     const user = await this._userService.getUserByNickname(
       inviteToChannelDto.username,
     );
@@ -153,8 +155,9 @@ export class ChatService {
           channel: { id: inviteToChannelDto.channelId },
         },
       })) !== null
-    )
+    ) {
       throw new BadRequestException('The user is already in that channel');
+    }
     const invitation = this._channelInvitationRepository.create({
       channel,
       target: user,

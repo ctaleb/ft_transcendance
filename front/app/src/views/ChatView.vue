@@ -15,7 +15,7 @@
       </button>
       <button
         v-for="conv in privateConvs"
-        class="channelButton"
+        class="channelButton privateMsg"
         @click="displayMessages(conv, $event)"
         v-bind:key="conv.uuid"
       >
@@ -31,7 +31,7 @@
       </button>
       <button
         v-for="friend in friends"
-        class="channelButton"
+        class="channelButton friendMsg"
         @click="createConv(friend, $event)"
         v-bind:key="friend.nickname"
       >
@@ -44,7 +44,7 @@
       </button>
       <button
         v-for="channel in myChannels"
-        class="channelButton"
+        class="channelButton channelMsg"
         @click="loadChannel(channel, $event)"
         v-bind:key="channel.id"
       >
@@ -134,6 +134,13 @@
           <div class="actionBar">
             <button @click="leaveChannel()" class="convListHeader">
               Leave channel
+            </button>
+            <button
+              v-if="thisChannel.type == ChannelType.PRIVATE"
+              @click="showInvitation()"
+              class="convListHeader"
+            >
+              Invite
             </button>
           </div>
         </div>
@@ -228,16 +235,31 @@
       </div>
       <button @click="createChannel()" class="joinChannel">Submit</button>
     </div>
+    <div v-if="showInvitationModal" class="overlay">
+      <div class="modal">
+        <span class="close" @click="closeInvitation()">&times;</span>
+        <h2>Invite to channel</h2>
+        <div class="searchBar">
+          <input
+            type="text"
+            class="searchField"
+            placeholder="Username"
+            v-model="inviteUser"
+            required
+          />
+        </div>
+        <button @click="inviteToChannel()">Submit</button>
+      </div>
+    </div>
   </div>
   <friend-alert :requester-name="props.incomingFriendRequest" />
 </template>
 
 <script setup lang="ts">
-import { io } from "socket.io-client";
-import { onMounted, onUpdated, ref, watch, Ref } from "vue";
-import config from "../config/config";
+import { onMounted, onUpdated, ref, Ref } from "vue";
 import FriendAlert from "../components/FriendAlert.vue";
-import { Channel, ChannelType, ChannelRole } from "../types/Channel.ts";
+import config from "../config/config";
+import { Channel, ChannelRole, ChannelType } from "../types/Channel";
 
 export interface privateConv {
   user1: user;
@@ -295,11 +317,14 @@ const show = ref(0);
 const picked = ref("public");
 const channelName = ref("");
 const channelPassword = ref("");
+const showInvitationModal = ref(false);
+const inviteUser = ref("");
 const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 onUpdated(() => {
   scrollDownMessages();
 });
+
 onMounted(() => {
   getChannels();
   var audio = new Audio(require("../assets/messageReceived.mp3"));
@@ -397,63 +422,77 @@ function loadDefaultPage() {
   show.value = 0;
 }
 
-function getChannels() {
-  fetch("http://" + window.location.hostname + ":3000/api/chat", {
-    method: "GET",
+function showInvitation() {
+  inviteUser.value = "";
+  showInvitationModal.value = true;
+}
+
+function closeInvitation() {
+  showInvitationModal.value = false;
+}
+
+async function fetchJSONDatas(
+  path: string,
+  method: "GET" | "PUT" | "POST" | "DELETE"
+): Promise<any>;
+async function fetchJSONDatas(
+  path: string,
+  method: "GET" | "PUT" | "POST" | "DELETE",
+  body: object
+): Promise<any>;
+async function fetchJSONDatas(
+  path: string,
+  method: "GET" | "PUT" | "POST" | "DELETE",
+  body?: object
+): Promise<any> {
+  return fetch(`http://${window.location.hostname}:3000/${path}`, {
+    method: method,
     headers: {
       "Content-Type": "application/json",
       Authorization: "Bearer " + localStorage.getItem("token"),
     },
+    body: JSON.stringify(body),
   })
-    .then((res) => {
+    .then((res: Response) => {
+      if (!res.ok) return Promise.reject(res);
       return res.json();
     })
-    .then((data: Channel[]) => {
-      myChannels.value = data;
-    })
-    .catch((err) => console.log(err.message));
+    .catch((err: Response) => {
+      let message: string;
+      err
+        .json()
+        .then((d: { message: string }) => {
+          message = d.message;
+        })
+        .catch((e: any) => (message = e))
+        .finally(() => {
+          console.log(message);
+        });
+    });
+}
+
+function getChannels() {
+  fetchJSONDatas("api/chat", "GET").then(
+    (data: Channel[]) => (myChannels.value = data)
+  );
 }
 
 function createChannel() {
   if (
     channelName.value.length <= 0 ||
     (picked.value == "protected" && channelPassword.value.length <= 0)
-  )
+  ) {
     return;
-  let channelType: ChannelType;
-  switch (picked.value) {
-    case "protected":
-      channelType = ChannelType.PROTECTED;
-      break;
-    case "private":
-      channelType = ChannelType.PRIVATE;
-      break;
-    default:
-      channelType = ChannelType.PUBLIC;
   }
-  fetch(
-    "http://" + window.location.hostname + ":3000/api/chat/create-channel",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + localStorage.getItem("token"),
-      },
-      body: JSON.stringify({
-        name: channelName.value,
-        type: channelType,
-        password: channelPassword.value,
-      }),
-    }
-  )
-    .then((res) => {
-      return res.json();
-    })
-    .then((data) => {
-      myChannels.value.push(data);
-      socket.emit("joinChannelRoom", { id: data.id });
-    })
-    .catch((err) => console.log(err.message));
+  let channelType = <ChannelType>picked.value;
+  fetchJSONDatas("api/chat/create-channel", "POST", {
+    name: channelName.value,
+    type: channelType,
+    password: channelPassword.value,
+  }).then((data) => {
+    myChannels.value.push(data);
+    socket.emit("joinChannelRoom", { id: data.id });
+  });
   channelCreationForm();
 }
 
@@ -470,59 +509,23 @@ function channelCreationForm() {
 }
 
 function updateChannel() {
-  fetch(
-    "http://" + window.location.hostname + ":3000/api/chat/update-channel",
-    {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + localStorage.getItem("token"),
-      },
-      body: JSON.stringify({
-        id: 22,
-        type: "protected",
-        password: "password",
-      }),
-    }
-  )
-    .then((res) => {
-      return res.json();
-    })
-    .then((data) => {
-      console.log(data);
-    })
-    .catch((err) => console.log(err.message));
+  fetchJSONDatas("api/chat/update-channel", "PUT", {
+    id: 22,
+    type: "protected",
+    password: "password",
+  }).then(console.log);
 }
 
 function joinChannel(channel: Channel) {
-  fetch("http://" + window.location.hostname + ":3000/api/chat/join-channel", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + localStorage.getItem("token"),
-    },
-    body: JSON.stringify({
-      id: channel.id,
-      password: channel.passwordField,
-    }),
-  })
-    .then((res) => {
-      if (!res.ok) throw res;
-      return res.json();
-    })
-    .then((data) => {
-      if (data.id && data.name && data.type) {
-        myChannels.value.push(data);
-        allChannels.value.splice(this.allChannels.indexOf(channel), 1);
-        channelsNum.value--;
-        socket.emit("joinChannelRoom", { id: data.id });
-      } else {
-        console.log(data.status);
-      }
-    })
-    .catch((err) => {
-      console.log(err);
-    });
+  fetchJSONDatas("api/chat/join-channel", "POST", {
+    id: channel.id,
+    password: channel.passwordField,
+  }).then((data: Channel) => {
+    myChannels.value.push(data);
+    allChannels.value.splice(allChannels.value.indexOf(channel), 1);
+    channelsNum.value--;
+    socket.emit("joinChannelRoom", { id: data.id });
+  });
   channel.passwordField = "";
 }
 
@@ -539,179 +542,66 @@ function loadAllChannels() {
 }
 
 function getAllChannels() {
-  fetch("http://" + window.location.hostname + ":3000/api/chat/list", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + localStorage.getItem("token"),
-    },
-    body: JSON.stringify({
-      skip: channelsNum.value,
-    }),
-  })
-    .then((res) => {
-      return res.json();
-    })
-    .then((data) => {
-      if (channelsNum.value == 0) allChannels.value = data;
-      else allChannels.value.push(data);
-      channelsNum.value += data.length;
-    })
-    .catch((err) => console.log(err.message));
+  fetchJSONDatas("api/chat/list", "POST", {
+    skip: channelsNum.value,
+  }).then((data: Channel[]) => {
+    // TODO Check
+    allChannels.value.push(...data);
+    // allChannels.value = [...allChannels.value, ...data];
+    channelsNum.value += data.length;
+  });
 }
 
 function getAllConvs() {
-  return fetch(
-    "http://" + window.location.hostname + ":3000/api/privateConv/getAllConvs",
-    {
-      headers: {
-        Authorization: "Bearer " + localStorage.getItem("token"),
-      },
-    }
-  )
-    .then((data) => data.json())
-    .then(async (data) => {
-      privateConvs.value = data;
-      privateConvs.value.forEach(async (conv) => {
-        conv.avatarToDisplay = await getAvatar(conv);
-      });
-    })
-    .catch((err) => console.log(err.message));
+  fetchJSONDatas("api/privateConv/getAllConvs", "GET").then(async (data) => {
+    privateConvs.value = data;
+    privateConvs.value.forEach(async (conv) => {
+      conv.avatarToDisplay = await getAvatar(conv);
+    });
+  });
 }
 
 function leaveChannel() {
-  fetch("http://" + window.location.hostname + ":3000/api/chat/leave-channel", {
-    method: "DELETE",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + localStorage.getItem("token"),
-    },
-    body: JSON.stringify({
-      id: thisChannel.value.id,
-    }),
-  })
-    .then((res) => {
-      return res.json();
-    })
-    .then((data) => {
-      myChannels.value = myChannels.value.filter((elem) => {
-        return elem.id != data.id;
-      });
-      socket.emit("leaveChannelRoom", { id: data.id });
-    })
-    .catch((err) => console.log(err.message));
+  fetchJSONDatas("api/chat/leave-channel", "DELETE", {
+    id: thisChannel.value!.id,
+  }).then((data) => {
+    myChannels.value = myChannels.value.filter((elem) => {
+      return elem.id != data.id;
+    });
+    socket.emit("leaveChannelRoom", { id: data.id });
+  });
   loadDefaultPage();
 }
 
-function deleteChannel() {
-  fetch(
-    "http://" + window.location.hostname + ":3000/api/chat/delete-channel",
-    {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + localStorage.getItem("token"),
-      },
-      body: JSON.stringify({
-        id: 24,
-      }),
-    }
-  )
-    .then((res) => {
-      return res.json();
-    })
-    .then((data) => {
-      console.log(data);
-    })
-    .catch((err) => console.log(err.message));
-}
-
 function inviteToChannel() {
-  fetch(
-    "http://" + window.location.hostname + ":3000/api/chat/invite-to-channel",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + localStorage.getItem("token"),
-      },
-      body: JSON.stringify({
-        channelId: 24,
-        username: "Boss",
-      }),
-    }
-  )
-    .then((res) => {
-      return res.json();
-    })
-    .then((data) => {
-      console.log(data);
-    })
-    .catch((err) => console.log(err.message));
+  if (inviteUser.value.length > 0) {
+    fetchJSONDatas("api/chat/invite-to-channel", "POST", {
+      channelId: thisChannel.value!.id,
+      username: inviteUser.value,
+    }).then(console.log);
+  }
 }
 
 function giveAdmin() {
-  fetch("http://" + window.location.hostname + ":3000/api/chat/give-admin", {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + localStorage.getItem("token"),
-    },
-    body: JSON.stringify({
-      id: 22,
-      username: "Ah Sahm",
-    }),
-  })
-    .then((res) => {
-      return res.json();
-    })
-    .then((data) => {
-      console.log(data);
-    })
-    .catch((err) => console.log(err.message));
+  fetchJSONDatas("api/chat/give-admin", "PUT", {
+    id: 22,
+    username: "Ah Sahm",
+  }).then(console.log);
 }
 
 function takeAdmin() {
-  fetch("http://" + window.location.hostname + ":3000/api/chat/take-admin", {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + localStorage.getItem("token"),
-    },
-    body: JSON.stringify({
-      id: 22,
-      username: "Ah Sahm",
-    }),
-  })
-    .then((res) => {
-      return res.json();
-    })
-    .then((data) => {
-      console.log(data);
-    })
-    .catch((err) => console.log(err.message));
+  fetchJSONDatas("api/chat/take-admin", "PUT", {
+    id: 22,
+    username: "Ah Sahm",
+  }).then(console.log);
 }
 
 function ban() {
-  fetch("http://" + window.location.hostname + ":3000/api/chat/ban", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + localStorage.getItem("token"),
-    },
-    body: JSON.stringify({
-      id: 23,
-      username: "Ah Sahm",
-      minutes: 1500,
-    }),
-  })
-    .then((res) => {
-      return res.json();
-    })
-    .then((data) => {
-      console.log(data);
-    })
-    .catch((err) => console.log(err.message));
+  fetchJSONDatas("api/chat/ban", "POST", {
+    id: 23,
+    username: "Ah Sahm",
+    minutes: 1500,
+  }).then(console.log);
 }
 
 function organizeFriends() {
@@ -730,32 +620,20 @@ function scrollDownMessages() {
   messagesBoxRef.value?.scrollIntoView({ behavior: "smooth", block: "end" });
 }
 
-async function getAvatar(privateConv: privateConv) {
+async function getAvatar(privateConv: privateConv): Promise<string> {
   let userToFetch: user;
-  let url_return: string;
   if (privateConv.user1.nickname == clientNickname)
     userToFetch = privateConv.user2;
   else userToFetch = privateConv.user1;
 
-  url_return = await fetch(
-    "http://" +
-      window.location.hostname +
-      ":3000/api/user/bynickname/" +
-      userToFetch.nickname,
-    {
-      headers: {
-        Authorization: "Bearer " + localStorage.getItem("token"),
-      },
-    }
-  )
-    .then((result) => result.json())
-    .then(async (data) => {
-      return await funcs.getUserAvatar(data.avatar.path).then((data: any) => {
-        return URL.createObjectURL(data);
-      });
-    })
-    .catch((err) => console.log(err));
-  return url_return;
+  return fetchJSONDatas(
+    `api/user/bynickname/${userToFetch.nickname}`,
+    "GET"
+  ).then(async (data) => {
+    return await funcs.getUserAvatar(data.avatar.path).then((data: any) => {
+      return URL.createObjectURL(data);
+    });
+  });
 }
 
 function displayMessages(conv: privateConv, event: any) {
@@ -768,24 +646,11 @@ function displayMessages(conv: privateConv, event: any) {
   conv.user1.nickname == clientNickname
     ? (friendNickname.value = conv.user2.nickname)
     : (friendNickname.value = conv.user1.nickname);
-  fetch(
-    "http://" +
-      window.location.hostname +
-      ":3000/api/privateConv/getMessages/" +
-      conv.uuid,
-    {
-      headers: {
-        Authorization: "Bearer " + localStorage.getItem("token"),
-      },
-    }
-  )
-    .then((data) => data.json())
-    .then((data) => {
+  fetchJSONDatas(`api/privateConv/getMessages/${conv.uuid}`, "GET").then(
+    (data) => {
       messagesToDisplay.value = data;
-    })
-    .catch((err) => {
-      console.log(err);
-    });
+    }
+  );
   show.value = 2;
 }
 
@@ -798,20 +663,9 @@ function loadChannel(channel: Channel, event: any) {
   channelMessageSkip.value = 0;
   channelMembers.value = [];
   thisChannel.value = null;
-  fetch("http://" + window.location.hostname + ":3000/api/chat/load-channel", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + localStorage.getItem("token"),
-    },
-    body: JSON.stringify({
-      id: channel.id,
-    }),
-  })
-    .then((data) => {
-      return data.json();
-    })
-    .then((data) => {
+  show.value = 2;
+  fetchJSONDatas("api/chat/load-channel", "POST", { id: channel.id }).then(
+    (data) => {
       thisChannel.value = channel;
       channelMembers.value = data.members;
       messagesToDisplay.value = data.messages;
@@ -829,47 +683,22 @@ function loadChannel(channel: Channel, event: any) {
             return URL.createObjectURL(image);
           });
       });
-    })
-    .catch((err) => {
-      messagesToDisplay.value = [
-        {
-          author: "ERROR",
-          text: err.message,
-          date: new Date(),
-        },
-      ];
-    });
-  show.value = 2;
+    }
+  );
 }
 
 function loadChannelMessages(channel: Channel) {
-  fetch("http://" + window.location.hostname + ":3000/api/chat/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + localStorage.getItem("token"),
-    },
-    body: JSON.stringify({
-      id: channel.id,
-      skip: channelMessageSkip.value,
-    }),
-  })
-    .then((data) => data.json())
-    .then((data) => {
-      data.date = moment(data.date)
-        .tz(timezone)
-        .add(1, "hours")
-        .format("MMMM Do YYYY, h:mm:ss a");
-      messagesToDisplay.value.push(data);
-      channelMessageSkip.value += data.length;
-    })
-    .catch((err) => {
-      messagesToDisplay.value.push({
-        author: "ERROR",
-        text: err.message,
-        date: new Date(),
-      });
-    });
+  fetchJSONDatas("api/chat/messages", "POST", {
+    id: channel.id,
+    skip: channelMessageSkip.value,
+  }).then((data) => {
+    data.date = moment(data.date)
+      .tz(timezone)
+      .add(1, "hours")
+      .format("MMMM Do YYYY, h:mm:ss a");
+    messagesToDisplay.value.push(data);
+    channelMessageSkip.value += data.length;
+  });
 }
 
 function sendChannelMessage() {
@@ -877,16 +706,12 @@ function sendChannelMessage() {
     socket.emit(
       "sendChannelMessage",
       {
-        channelId: thisChannel.value.id,
+        channelId: thisChannel.value!.id,
         content: messageInput.value,
       },
-      (response) => {
+      (response: message) => {
         if (!response.author) {
-          messagesToDisplay.value.push({
-            author: "ERROR",
-            text: response.message,
-            date: new Date(),
-          });
+          // TODO new notification message
         }
       }
     );
@@ -903,6 +728,7 @@ function sendPrivateMessage(nickname: string): void {
     messagesToDisplay.value.push({
       author: clientNickname,
       text: messageInput.value,
+      date: new Date().toLocaleString(),
     });
     messageInput.value = "";
   }
@@ -910,14 +736,14 @@ function sendPrivateMessage(nickname: string): void {
 
 function changeConvListStatus() {
   if (convListFlag.value == true) {
-    const el = document.querySelectorAll(".channelButton");
+    const el = document.querySelectorAll(".privateMsg");
     el.forEach((element) => {
       element.classList.add("hidden");
     });
     iconConvList.value = "gg-add";
     convListFlag.value = false;
   } else {
-    const el = document.querySelectorAll(".channelButton");
+    const el = document.querySelectorAll(".privateMsg");
     el.forEach((element) => {
       element.classList.remove("hidden");
     });
@@ -927,14 +753,14 @@ function changeConvListStatus() {
 }
 function changeFriendListStatus() {
   if (friendListFlag.value == true) {
-    const el = document.querySelectorAll(".channelButton");
+    const el = document.querySelectorAll(".friendMsg");
     el.forEach((element) => {
       element.classList.add("hidden");
     });
     iconFriendList.value = "gg-add";
     friendListFlag.value = false;
   } else {
-    const el = document.querySelectorAll(".channelButton");
+    const el = document.querySelectorAll(".friendMsg");
     el.forEach((element) => {
       element.classList.remove("hidden");
     });
@@ -944,14 +770,14 @@ function changeFriendListStatus() {
 }
 function changeChannelListStatus() {
   if (channelListFlag.value == true) {
-    const el = document.querySelectorAll(".channelButton");
+    const el = document.querySelectorAll(".channelMsg");
     el.forEach((element) => {
       element.classList.add("hidden");
     });
     iconChannelList.value = "gg-add";
     channelListFlag.value = false;
   } else {
-    const el = document.querySelectorAll(".channelButton");
+    const el = document.querySelectorAll(".channelMsg");
     el.forEach((element) => {
       element.classList.remove("hidden");
     });
@@ -961,19 +787,8 @@ function changeChannelListStatus() {
 }
 function createConv(friend: user, event: any) {
   friendNickname.value = friend.nickname;
-  fetch(
-    "http://" +
-      window.location.hostname +
-      ":3000/api/privateConv/createConv/" +
-      friend.nickname,
-    {
-      headers: {
-        Authorization: "Bearer " + localStorage.getItem("token"),
-      },
-    }
-  )
-    .then((data) => data.json())
-    .then(async (data) => {
+  fetchJSONDatas(`api/privateConv/createConv/${friend.nickname}`, "GET").then(
+    async (data) => {
       data.conv.avatarToDisplay = await funcs
         .getUserAvatar(friend.path)
         .then((data: any) => {
@@ -984,7 +799,8 @@ function createConv(friend: user, event: any) {
         organizeFriends();
       }
       displayMessages(data.conv, event);
-    });
+    }
+  );
 }
 function deleteConv(conv: privateConv) {
   console.log("Oye brav gens");
@@ -992,6 +808,47 @@ function deleteConv(conv: privateConv) {
 </script>
 
 <style lang="scss" scoped>
+.overlay {
+  position: fixed;
+  height: 100vh;
+  width: 100vw;
+  background: rgba(0, 0, 0, 0.5);
+}
+.modal {
+  position: fixed;
+  width: 40vw;
+  height: 25vh;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 3px solid;
+  border-image-slice: 1;
+  border-image-source: linear-gradient(to bottom, #c1a36b, #635e4f);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  .close {
+    position: absolute;
+    top: 0;
+    right: 1rem;
+    font-size: 2em;
+    font-weight: 600;
+    color: #c1a36b;
+  }
+  .searchBar {
+    width: 30vw;
+  }
+  button {
+    position: absolute;
+    border: 3px solid;
+    border-image-slice: 1;
+    border-image-source: linear-gradient(to bottom, #c1a36b, #635e4f);
+    width: 20vw;
+    bottom: 2rem;
+  }
+}
 .convList {
   height: 90vh;
   width: 15%;
@@ -1060,8 +917,16 @@ function deleteConv(conv: privateConv) {
     }
   }
   .actionBar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
     position: absolute;
     bottom: 0;
+    width: 100%;
+    height: 3rem;
+    .convListHeader {
+      height: 100%;
+    }
   }
 }
 .messages {
