@@ -28,4 +28,6 @@ clean:
 fclean:
 	docker-compose down --rmi all -v
 
+re: clean all
+
 .PHONY: all stop back front database adminer ps clean

@@ -60,112 +60,126 @@
   </div>
 </template>
 
-<script lang="ts">
+<script lang="ts" setup>
 import * as funcs from "@/functions/funcs";
-import { defineComponent, ref } from "vue";
-import router from "@/router";
+import { log } from "console";
+import { onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 
-export default defineComponent({
-  computed: {
-    videoElement() {
-      return this.$refs.video;
-    },
+const router = useRouter();
+let username = ref("");
+let password = ref("");
+let background_url = "../assets/stars.webm";
+let intra_redirection =
+  "https://api.intra.42.fr/oauth/authorize?client_id=" +
+  process.env.VUE_APP_42_ID +
+  "&redirect_uri=" +
+  process.env.VUE_APP_42_URI +
+  "&response_type=code";
+let token = {
+    access_token: null,
+    token_type: null,
+    expires_in: null,
+    scope: null,
+    created_at: null,
   },
-  props: ["incomingFriendRequest"],
-  data: () => {
-    return {
-      username: "",
-      password: "",
-      background_url: "../assets/stars.webm",
-      intra_redirection:
-        "https://api.intra.42.fr/oauth/authorize?client_id=" +
-        process.env.VUE_APP_42_ID +
-        "&redirect_uri=" +
-        process.env.VUE_APP_42_URI +
-        "&response_type=code",
+  login_failed_msg = ref(false);
 
-      token: {
-        access_token: null,
-        token_type: null,
-        expires_in: null,
-        scope: null,
-        created_at: null,
-      },
-      login_failed_msg: ref(false),
-    };
-  },
-  emits: ["notification"],
-  async mounted() {
-    let isConnected = funcs.isConnected(localStorage.getItem("token") || "");
-    if (isConnected) {
-      this.$router.push("/game");
-    } else console.log("not connected");
-    //get back intra code, if exists
-    let current_url = window.location.href;
-    var url = new URL(current_url);
-    let code = url.searchParams.get("code");
-    if (code != null) {
-      let response = await fetch(
-        "http://" + window.location.hostname + ":3000/api/oauth/" + code,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          method: "POST",
-        }
-      );
-      let data = await response.json();
-      fetch(
-        "http://" +
-          window.location.hostname +
-          ":3000/api/oauth/login/" +
-          data.access_token,
-        {
-          method: "POST",
-        }
-      )
-        .then((response) => {
-          return response.json();
-        })
-        .then((value: any) => {
-          localStorage.setItem("token", value.token);
-          localStorage.setItem("user", JSON.stringify(value.user));
-          funcs.trySetupUser().then(() => {
-            this.$router.push("/game");
-          });
-        })
-        .catch((err) => console.log(err));
-    }
-  },
-  methods: {
-    async login() {
-      let response = await fetch(
-        "http://" + window.location.hostname + ":3000/api/Authentication/login",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            username: this.username,
-            password: this.password,
-          }),
-        }
-      );
-      if (response.status != 201) {
-        this.login_failed_msg = true;
-        throw response.status;
-      }
+// computed: {
+//   videoElement() {
+//     return this.$refs.video;
+//   },
+// },
+const props = defineProps(["incomingFriendRequest"]);
+const emit = defineEmits(["notification"]);
 
-      let data = await response.json();
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
-      funcs.trySetupUser().then(() => {
-        this.$router.push("/game");
-      });
-    },
-  },
+onMounted(async () => {
+  let isConnected = await funcs.isConnected(
+    localStorage.getItem("token") || ""
+  );
+  if (isConnected) {
+    router.push("/game");
+  } else console.log("not connected");
+
+  //get back intra code, if exists
+  let code = extractIntraCode();
+  if (code != null) {
+    studentLogin(code);
+  }
 });
+
+async function login() {
+  let response = await fetch(
+    "http://" + window.location.hostname + ":3000/api/Authentication/login",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        username: username.value,
+        password: password.value,
+      }),
+    }
+  );
+  if (response.status != 201) {
+    login_failed_msg.value = true;
+    throw response.status;
+  }
+
+  let data = await response.json();
+  localStorage.setItem("token", data.token);
+  localStorage.setItem("user", JSON.stringify(data.user));
+  funcs.trySetupUser().then(() => {
+    router.push("/game");
+  });
+}
+
+function extractIntraCode(): string | null {
+  var url = new URL(window.location.href);
+  return url.searchParams.get("code");
+}
+
+async function getIntraToken(code: string) {
+  let getIntraToken = await fetch(
+    "http://" + window.location.hostname + ":3000/api/oauth/" + code,
+    {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      method: "POST",
+    }
+  );
+  return await getIntraToken.json();
+}
+
+async function getUserAndToken(intraToken: string) {
+  const userAndToken = await fetch(
+    "http://" +
+      window.location.hostname +
+      ":3000/api/oauth/login/" +
+      intraToken,
+    {
+      method: "POST",
+    }
+  );
+  return await userAndToken.json();
+}
+
+async function studentLogin(code: string) {
+  try {
+    let intraToken = await getIntraToken(code);
+    const userAndToken = await getUserAndToken(intraToken.access_token);
+    localStorage.setItem("token", userAndToken.token);
+    localStorage.setItem("user", JSON.stringify(userAndToken.user));
+  } catch (error) {
+    console.log(error);
+    console.log("Can't login the student");
+  }
+  funcs.trySetupUser().then(() => {
+    router.push("/game");
+  });
+}
 </script>
 
 <style lang="scss" scoped>
@@ -272,3 +286,5 @@ button {
   }
 }
 </style>
+
+function videoElement() { throw new Error("Function not implemented."); }

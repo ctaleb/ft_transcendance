@@ -3,11 +3,11 @@ import { useStore } from "@/store";
 import { User, Message } from "@/types/GameSummary";
 import { io } from "socket.io-client";
 
-export function isConnected(token: string): boolean {
+export async function isConnected(token: string): Promise<boolean> {
   if (token == null) return false;
 
   let ret: boolean = true;
-  fetch("http://" + window.location.hostname + ":3000/api/user/profile", {
+  await fetch("http://" + window.location.hostname + ":3000/api/user/profile", {
     method: "GET",
     headers: {
       Authorization: "Bearer " + token,
@@ -118,6 +118,7 @@ function connectSocket(token: string, user: any): void {
     auth: { token: token, user: user },
     transports: ["websocket"],
   });
+
   //  config.socket = io("http://" + window.location.hostname + ":3500", {
   //    auth: { token: token, user: user },
   //    transports: ["websocket"],
