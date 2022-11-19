@@ -97,6 +97,7 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @Put('phoneEdit/:phone')
   async editPhone(@Request() req, @Param('phone') newPhone: string) {
+    // input validation --> if (!newPhone.match(/\+\d{2}[1-9]\d{8}/)) throw error
     return this._userService.updatePhone(req.user.payload.nickname, newPhone);
   }
 

@@ -357,11 +357,9 @@ export default defineComponent({
       }
     },
     formatPhone() {
-      if (this.phone.match(/\+\d{2}[1-9]\d{8}/))
-        this.phoneFormatError = "";
-      else
-        this.phoneFormatError = "phone must be in format '+33611223344'";
-    }
+      if (this.phone.match(/\+\d{2}[6,7]\d{8}/)) this.phoneFormatError = "";
+      else this.phoneFormatError = "phone must be in format '+33611223344'";
+    },
   },
 });
 </script>
