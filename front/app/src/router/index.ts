@@ -32,19 +32,9 @@ const routes: Array<RouteRecordRaw> = [
     component: RegisterView,
   },
   {
-    path: "/profile",
+    path: "/profile/:nickname?",
     name: "profile",
     component: ProfileView,
-  },
-  {
-    path: "/portal",
-    name: "portal",
-    component: PortalView,
-  },
-  {
-    path: "/users",
-    name: "users",
-    component: AllUsersView,
   },
   {
     path: "/edit",

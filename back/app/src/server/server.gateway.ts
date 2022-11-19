@@ -12,7 +12,7 @@ import { ServerService } from './server.service';
 import { PrivateConvService } from '../private_conv/private_conv.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { Server, Socket } from 'socket.io';
-import { Game } from './entities/server.entity';
+import { Game, GameOptions, IPower } from './entities/server.entity';
 import { UserEntity } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
 import { NamingStrategyNotFoundError } from 'typeorm';
@@ -39,19 +39,20 @@ export class ServerGateway
   }
 
   handleConnection(@ConnectedSocket() client: Socket) {
-    let hsToken;
-    let hsNick;
+    let hsToken: string;
+    let hsNick: string;
+    console.log('%%%');
     if (client.handshake) {
       hsToken = client.handshake.auth.token;
       hsNick = client.handshake.auth.user.nickname;
     }
-    console.log(hsNick + ' trying to connect to socket');
+    console.log(hsNick + ' trying to connect to gateway server');
     const user = this.serverService.userList.find(
       (element) => element.name === hsNick,
     );
     if (user && user.token === hsToken) {
       user.socket = client;
-      console.log(user.name + ' rejoining game ' + user.status);
+      console.log(user.name + ' rejoining ' + user.status);
       if (user.status === 'ready') this.serverService.reconnect(user);
     } else {
       this.serverService.newUser(hsToken, hsNick, client);
@@ -64,9 +65,9 @@ export class ServerGateway
 
   @SubscribeMessage('debugging')
   debug(@ConnectedSocket() client: Socket) {
-    console.log('~~~~~~~~~~~ debugging ~~~~~~~~~~');
-    console.log(this.serverService.userList.length);
-    this.serverService.userList.forEach((element) => {
+    console.log('~~~~~~~~~~~ queue ~~~~~~~~~~');
+    console.log(this.serverService.playerQueue.length);
+    this.serverService.playerQueue.forEach((element) => {
       console.log(element.name + ' - ' + element.socket.id);
     });
     console.log(this.serverService.games.length);
@@ -80,8 +81,17 @@ export class ServerGateway
 
   @SubscribeMessage('chatting')
   debugchat() {
-    console.log('~~~~~~~~~~~ chat debugging ~~~~~~~~~~');
-
+    console.log('~~~~~~~~~~~ users + games ~~~~~~~~~~');
+    console.log(this.serverService.userList.length);
+    this.serverService.userList.forEach((element) => {
+      console.log(element.name + ' - ' + element.socket.id);
+    });
+    console.log(this.serverService.games.length);
+    this.serverService.games.forEach((element) => {
+      console.log(element.room.name + ' - ' + element.room.status);
+      console.log(element.client.name + ' _ ' + element.client.socket.id);
+      console.log(element.host.name + ' _ ' + element.host.socket.id);
+    });
     console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
   }
 
@@ -118,15 +128,37 @@ export class ServerGateway
             ingame = true;
           }
         });
-        if (!ingame) {
-          this.serverService.userList.splice(
-            this.serverService.userList.indexOf(player),
-            1,
-          );
-        }
+        // if (!ingame) {
+        this.serverService.userList.splice(
+          this.serverService.userList.indexOf(player),
+          1,
+        );
+        // }
       }
     }
     client.disconnect();
+  }
+
+  @SubscribeMessage('watchPath')
+  switchPath(@ConnectedSocket() client: Socket) {
+    let ingame = false;
+    const player = this.serverService.userList.find(
+      (element) => element.socket === client,
+    );
+    this.serverService.games.forEach((element) => {
+      if (
+        element.room.status === 'launching' /*||
+		  element.room.status === 'gameOver'*/
+      )
+        return;
+      if (element.client === player) {
+        element.room.status = 'clientForfeit';
+        ingame = true;
+      } else if (element.host === player) {
+        element.room.status = 'hostForfeit';
+        ingame = true;
+      }
+    });
   }
 
   handleDisconnect(@ConnectedSocket() client: Socket) {
@@ -173,11 +205,19 @@ export class ServerGateway
 
   gameLoop = (game: Game) => {
     // this.server.to(game.room.name).emit('ServerUpdate', game.gameState);
-    game.host.socket.emit('ServerUpdate', game.gameState);
     game.client.socket.emit(
       'ServerUpdate',
-      this.serverService.inverseState(game.gameState),
+      this.serverService.inverseState(game.gameState, game),
     );
+    game.host.socket.emit(
+      'ServerUpdate',
+      this.serverService.sendState(game.gameState, game),
+    );
+    this.server
+      .to(game.theatre.name)
+      .emit('ServerUpdate', this.serverService.sendState(game.gameState, game));
+    // this.server.to(game.room.name).emit('gameConfirmation', game.room);
+
     const loopTimer = setTimeout(() => {
       if (
         game.gameState.score.client >= game.room.options.scoreMax ||
@@ -201,22 +241,32 @@ export class ServerGateway
   };
 
   @SubscribeMessage('key')
-  downLeft(
+  recieveKey(
     @MessageBody('key') key: string,
     @ConnectedSocket()
     client: Socket,
   ) {
-    this.serverService.storeBarMove(client, key);
+    console.log('recieved ' + key + ' from ' + client.id);
+    // const player = this.serverService.SocketToPlayer(client);
+    // if (player && player.status != 'idle')
+    this.serverService.storeInput(client, key);
   }
 
   // Game Core
+  //@body() powerString as additional arg
   @SubscribeMessage('joinQueue')
-  joinQueue(@ConnectedSocket() client: Socket) {
+  joinQueue(
+    @ConnectedSocket() client: Socket,
+    @MessageBody('power') power: string,
+  ) {
     const player = this.serverService.SocketToPlayer(client);
     if (!player || !(player.status === 'idle')) return;
-    const game = this.serverService.joinQueue(client);
+    const game = this.serverService.joinQueue(client, power);
     if (game) {
+      console.log(game.host.socket.id + ' vs ' + game.client.socket.id);
       this.server.to(game.room.name).emit('gameConfirmation', game.room);
+      //   console.log(game.client.socket.id);
+      //   console.log(game.host.socket.id);
       setTimeout(() => {
         if (game.host.status === 'ready' && game.client.status === 'ready') {
           game.room.status = 'playing';
@@ -266,6 +316,171 @@ export class ServerGateway
     if (player) player.status = 'idle';
   }
 
+  //spectate
+  @SubscribeMessage('spectate')
+  spectate(
+    @MessageBody('friend') friend: string,
+    @ConnectedSocket() client: Socket,
+  ) {
+    let response = 'na';
+    this.serverService.games.forEach((element) => {
+      console.log(element.host.name);
+      console.log(element.client.name);
+      console.log(friend);
+      if (element.client.name == friend || element.host.name == friend)
+        response = 'ingame';
+    });
+    return response;
+  }
+
+  @SubscribeMessage('readySpectate')
+  readySpectate(
+    @MessageBody('friend') friend: string,
+    @ConnectedSocket() client: Socket,
+  ) {
+    const game = this.serverService.games.find(
+      (element) =>
+        element.client.name === friend || element.host.name === friend,
+    );
+    if (game) {
+      client.emit('spectating', game.room);
+      client.join(game.theatre.name);
+      game.theatre.viewers.push(client);
+    }
+  }
+
+  //customInvite
+  @SubscribeMessage('customInvite')
+  customInvite(
+    @MessageBody('friend') friend: string,
+    @ConnectedSocket() client: Socket,
+  ) {
+    let response = 'failure';
+    let game: Game;
+    const inviter = this.serverService.userList.find(
+      (element) => element.socket === client,
+    );
+    const usr = this.serverService.userList.find(
+      (element) => element.name === friend,
+    );
+    if (usr && usr.status === 'idle') {
+      response = 'accepted';
+      game = this.serverService.newGame(usr, inviter);
+      game.room.name = 'game-' + game.host.name + '-' + game.client.name;
+      game.theatre.name = 'spec-' + game.host.name + '-' + game.client.name;
+      usr.status = 'inLobby';
+      inviter.status = 'inLobby';
+      game.host.socket.join(game.room.name);
+      usr.socket.emit('invitation', inviter.name);
+      this.serverService.games.push(game);
+    } else {
+      client.emit('inviteFailure');
+    }
+    return response;
+  }
+
+  //inviter logic
+  @SubscribeMessage('settingsInviter')
+  settingsInviter(
+    @MessageBody('friend') friend: string,
+    @ConnectedSocket() client: Socket,
+  ) {
+    client.emit('customInviter', friend);
+  }
+  @SubscribeMessage('readyInviter')
+  readyInviter(
+    @MessageBody('gameOpts') gameOpts: GameOptions,
+    @MessageBody('power') power: string,
+    @ConnectedSocket() client: Socket,
+  ) {
+    console.log('inviter is ready');
+    const usr = this.serverService.SocketToPlayer(client);
+    if (!usr) return;
+    const game = this.serverService.games.find(
+      (element) => element.host === usr,
+    );
+    if (!game) return;
+    if (game.room.options.powers) usr.gameData.power = new IPower(power);
+    usr.status = 'ready';
+    game.room.options = gameOpts;
+    if (game.client.status === 'ready') {
+      this.launchCustomGame(game);
+    }
+  }
+
+  //invitee logic
+  @SubscribeMessage('declineCustom')
+  declineCustom(@ConnectedSocket() client: Socket) {
+    const usr = this.serverService.SocketToPlayer(client);
+    const game = this.serverService.games.find(
+      (element) => element.client === usr,
+    );
+    if (game) {
+      game.host.status = 'idle';
+      game.host.socket.leave(game.room.name);
+      game.client.status = 'idle';
+      game.host.socket.emit('foreverAlone');
+      this.serverService.games.splice(
+        this.serverService.games.indexOf(game),
+        1,
+      );
+    }
+    //emit to host
+  }
+  @SubscribeMessage('settingsInvitee')
+  settingsInvitee(@ConnectedSocket() client: Socket) {
+    const usr = this.serverService.SocketToPlayer(client);
+    const game = this.serverService.games.find(
+      (element) => element.client === usr,
+    );
+    if (game) {
+      game.client.socket.join(game.room.name);
+      client.emit('customInvitee', game.host.name);
+    } else usr.status = 'idle';
+  }
+  @SubscribeMessage('readyInvitee')
+  readyInvitee(
+    @MessageBody('power') power: string,
+    @ConnectedSocket() client: Socket,
+  ) {
+    console.log('invitee is ready');
+    const usr = this.serverService.SocketToPlayer(client);
+    if (!usr) return;
+    const game = this.serverService.games.find(
+      (element) => element.client === usr,
+    );
+    if (!game) return;
+    if (game.room.options.powers) usr.gameData.power = new IPower(power);
+    usr.status = 'ready';
+    if (game.host.status === 'ready') {
+      this.launchCustomGame(game);
+    }
+  }
+
+  launchCustomGame(game: Game) {
+    this.serverService.initGameValues(game);
+    if (game.room.options.powers) {
+      this.serverService.initPower(
+        game.client,
+        game.gameState,
+        game.gameState.clientBar,
+        game.gameState.hostBar,
+      );
+      this.serverService.initPower(
+        game.host,
+        game.gameState,
+        game.gameState.hostBar,
+        game.gameState.clientBar,
+      );
+    }
+    game.room.status = 'playing';
+    game.room.hostName = game.host.name;
+    game.room.clientName = game.client.name;
+    this.server.to(game.room.name).emit('startGame', game.room);
+    this.serverService.startRound(game.room);
+    this.gameLoop(game);
+  }
+
   //Private conv version Lolo
   @SubscribeMessage('deliverMessage')
   async handleMessage(
@@ -298,8 +513,13 @@ export class ServerGateway
         return await this.privateMessageService.createConv(author, requester);
       });
     await this.privateMessageService.updateLastMessageDate(conv);
-    if (receiver) this.server.to(receiver.socket.id).emit('Update conv list'); //need to emit to both users, to signal them than the conv must be push to top of the list
-    this.server.to(client.id).emit('Update conv list');
+    if (receiver)
+      this.server.to(receiver.socket.id).emit('Update conv list', {
+        conv: conv,
+      }); //need to emit to both users, to signal them than the conv must be push to top of the list
+    this.server.to(client.id).emit('Update conv list', {
+      conv: conv,
+    });
     this.privateMessageService.createMessage({
       conv: conv,
       author: author,

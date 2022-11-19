@@ -10,22 +10,40 @@
           placeholder="Player name"
         />
       </div>
-      <button class="convListHeader" @click="changeConvListStatus">
+      <button class="privateMessagesHeader" @click="changeConvListStatus">
         Private messages <i :class="iconConvList"></i>
       </button>
-      <button
-        v-for="conv in privateConvs"
-        class="channelButton privateMsg"
-        @click="displayMessages(conv, $event)"
-        v-bind:key="conv.uuid"
-      >
-        <img :src="conv.avatarToDisplay" alt="" />
-        <p v-if="conv.user1.nickname != clientNickname">
-          {{ conv.user1.nickname }}
-        </p>
-        <p v-else>{{ conv.user2.nickname }}</p>
-      </button>
-
+      <template v-for="conv in privateConvs" v-bind:key="conv.uuid">
+        <div class="fullPrivateConvButton">
+          <button
+            @click="displayMessages(conv, $event)"
+            :class="
+              conv.notif === true
+                ? 'notifPrivateConvButton'
+                : 'privateConvButton'
+            "
+          >
+            <img
+              :src="conv.avatarToDisplay"
+              alt=""
+              width="45"
+              height="45"
+              class="avatar"
+            />
+            <p v-if="conv.user1.nickname != clientNickname">
+              {{ conv.user1.nickname }}
+            </p>
+            <p v-else>{{ conv.user2.nickname }}</p>
+          </button>
+          <div
+            v-if="currentConv && currentConv.uuid == conv.uuid"
+            class="socialOptions"
+          >
+            <button @click="spectateGame()"><i class="gg-eye"></i></button>
+            <button @click="goToProfile()"><i class="gg-profile"></i></button>
+          </div>
+        </div>
+      </template>
       <button class="convListHeader" @click="changeFriendListStatus">
         Friends <i :class="iconFriendList"></i>
       </button>
@@ -108,6 +126,9 @@
             messages: thisChannel != null,
           }"
         >
+          <button class="loadMoreButton" @click="loadMoreMessages($event)">
+            Load more
+          </button>
           <template v-for="message in messagesToDisplay">
             <div
               v-if="message.author == clientNickname"
@@ -172,22 +193,10 @@
           class="sendButton"
           @click="sendPrivateMessage(friendNickname)"
         >
-          <img
-            src="https://uploads-ssl.webflow.com/61cccee6cefd62ba567150d5/61cccee6cefd6280d37151c9_AIRPLANE%20ICON%20256px.png"
-            alt=""
-            width="50"
-            height="50"
-            class="sendIcon"
-          />
+          <i class="gg-slack"></i>
         </button>
         <button v-else class="sendButton" @click="sendChannelMessage()">
-          <img
-            src="https://uploads-ssl.webflow.com/61cccee6cefd62ba567150d5/61cccee6cefd6280d37151c9_AIRPLANE%20ICON%20256px.png"
-            alt=""
-            width="50"
-            height="50"
-            class="sendIcon"
-          />
+          <i class="gg-slack"></i>
         </button>
       </div>
     </div>
@@ -281,33 +290,35 @@ import {
   ChannelUser,
 } from "@/types/Channel";
 import { fetchJSONDatas } from "@/functions/funcs";
-import { fetchUserAvatarURL, User } from "@/types/User";
+import { getUserAvatar, User } from "@/types/User";
+import { useStore } from "@/store";
+import { Private } from "@babel/types";
 
-export interface PrivateConv {
-  user1: ChannelUser;
-  user2: ChannelUser;
+export interface privateConv {
+  user1: User;
+  user2: User;
   avatarToDisplay: string;
   uuid: string;
+  offset: number;
+  notif: boolean;
 }
-
-export interface Message {
+export interface message {
   text: string;
   author: string;
-  date: string;
 }
 
-const socket = config.socket;
+const store = useStore();
+let socket = store.socket;
 
-const props = defineProps(["incomingFriendRequest"]);
-const emit = defineEmits(["notification"]);
+store.$subscribe((mutation, state) => {
+  socket = state.socket;
+});
 
 let funcs = require("../functions/funcs");
-
+const moment = require("moment-timezone");
 const clientNickname = JSON.parse(
   localStorage.getItem("user") || "{}"
 ).nickname;
-
-const moment = require("moment-timezone");
 const friendNickname = ref("");
 const imageUrl = ref("");
 const messageInput = ref("");
@@ -321,6 +332,13 @@ const iconConvList = ref("gg-remove");
 const iconFriendList = ref("gg-remove");
 const iconChannelList = ref("gg-remove");
 const friends = ref(Array<User>());
+let currentConv = ref<privateConv>();
+let isLoadMore = false;
+
+const props = defineProps(["incomingFriendRequest"]);
+const emit = defineEmits(["notification"]);
+const messageText = ref("");
+const joined = ref(false);
 
 const myChannels: Ref<Array<Channel>> = ref([]);
 const allChannels: Ref<Array<Channel>> = ref([]);
@@ -337,21 +355,27 @@ const inviteUser = ref("");
 const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 onUpdated(() => {
-  scrollDownMessages();
+  if (isLoadMore == false) scrollDownMessages();
+  isLoadMore = false;
 });
 
 onMounted(async () => {
   getChannels();
-  var audio = new Audio(require("../assets/messageReceived.mp3"));
-  socket.on(
+  var audio = new Audio(require("../assets/adelsol.mp3"));
+  socket?.on(
     "Message to the client",
-    (privateMessage: { author: string; text: string }) => {
+    async (privateMessage: { author: string; text: string }) => {
       if (privateMessage.author == friendNickname.value)
-        messagesToDisplay.value.push(privateMessage); //don't push in the current array if the message is sent from an other friend
-      audio.play();
+        messagesToDisplay.value.push(privateMessage);
+      else {
+        await getAllConvs();
+        organizeFriends();
+        notifConv(privateMessage.author);
+        audio.play();
+      }
     }
   );
-  socket.on("messageReceived", (channelId: number, msg: Message) => {
+  socket?.on("messageReceived", (channelId: number, msg: Message) => {
     if (thisChannel.value && channelId === thisChannel.value.id) {
       msg.date = moment(msg.date)
         .tz(timezone)
@@ -363,7 +387,7 @@ onMounted(async () => {
       console.log("incoming message");
     }
   });
-  socket.on("updateChannelMembers", async (channelId: number) => {
+  socket?.on("updateChannelMembers", async (channelId: number) => {
     if (thisChannel.value && channelId === thisChannel.value.id) {
       let data = await fetchJSONDatas("api/chat/members", "POST", {
         id: thisChannel.value.id,
@@ -372,10 +396,14 @@ onMounted(async () => {
       channelMembers.value = data;
     }
   });
-  socket.on("Update conv list", async () => {
-    await getAllConvs();
-    organizeFriends();
-    //If this signal is received, we fetch again convs to order them from latest to oldest
+  socket?.on("Update conv list", (convData: { conv: privateConv }) => {
+    console.log("UPDATE");
+
+    let convIndex = privateConvs.value.findIndex(
+      (conv) => conv.uuid === convData.conv.uuid
+    );
+    const convToTop = privateConvs.value.splice(convIndex, 1)[0];
+    privateConvs.value.splice(0, 0, convToTop);
   });
   window.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
@@ -383,13 +411,27 @@ onMounted(async () => {
       else sendChannelMessage();
     }
   });
-
   await getAllConvs();
-  let data: { friends: User[] } = await fetchJSONDatas("api/friendship", "GET");
-  friends.value = data.friends;
-  friends.value.forEach(await fetchUserAvatarURL);
+  if (store.user?.friends)
+    friends.value = JSON.parse(JSON.stringify(store.user?.friends));
   organizeFriends();
 });
+
+function getConvAvatar(conv: privateConv) {
+  if (clientNickname == conv.user1.nickname)
+    return `http://${window.location.hostname}:3000${conv.user2.avatar}`;
+  else return `http://${window.location.hostname}:3000${conv.user1.avatar}`;
+}
+function getFriendAvatar(friend: User) {
+  return `http://${window.location.hostname}:3000${friend.avatar}`;
+}
+
+function initConv(convs: Array<privateConv>) {
+  convs.forEach((conv) => {
+    conv.offset = 0;
+    conv.notif = false;
+  });
+}
 
 const loadDefaultPage = () => {
   thisChannel.value = null;
@@ -428,7 +470,7 @@ const createChannel = async (): Promise<void> => {
     password: channelPassword.value,
   });
   myChannels.value.push(data);
-  socket.emit("joinChannelRoom", { id: data.id });
+  socket?.emit("joinChannelRoom", { id: data.id });
   channelCreationForm();
 };
 
@@ -495,10 +537,9 @@ const getAllConvs = async (): Promise<void> => {
   );
   privateConvs.value = data;
   privateConvs.value.forEach(async (conv) => {
-    conv.avatarToDisplay = await fetchUserAvatarURL(
-      conv.user1.nickname == clientNickname ? conv.user2 : conv.user1
-    );
+    conv.avatarToDisplay = getConvAvatar(conv);
   });
+  initConv(privateConvs.value);
 };
 
 const leaveChannel = async (): Promise<void> => {
@@ -582,17 +623,18 @@ const displayMessages = async (
     ? (friendNickname.value = conv.user2.nickname)
     : (friendNickname.value = conv.user1.nickname);
   let data: Message[] = await fetchJSONDatas(
-    `api/privateConv/getMessages/${conv.uuid}`,
+    `api/privateConv/getMessages/${conv.uuid}/${conv.offset}`,
     "GET"
   );
-  data.forEach(
-    (message) =>
-      (message.date = moment(message.date)
-        .tz(timezone)
-        .add(1, "hours")
-        .format("MMMM Do YYYY, h:mm:ss a"))
-  );
-  messagesToDisplay.value = data;
+  //if currentConv == conv, the user clicked on load more, so we just need to append older messages at the beginning of the array
+  if (conv == currentConv.value && isLoadMore)
+    messagesToDisplay.value.splice(0, 0, ...data);
+  else {
+    //Otherwise, the user is changing conversation so we need to replace our array of messages with the new array, and finally set the offset of the previous conv to 0
+    messagesToDisplay.value = data;
+    if (currentConv.value) currentConv.value.offset = 0;
+    currentConv.value = conv;
+  }
   show.value = 2;
 };
 
@@ -676,9 +718,7 @@ const sendPrivateMessage = (nickname: string): void => {
     messagesToDisplay.value.push({
       author: clientNickname,
       text: messageInput.value,
-      date: moment(new Date())
-        .tz(timezone)
-        .format("MMMM Do YYYY, h:mm:ss a"),
+      date: moment(new Date()).tz(timezone).format("MMMM Do YYYY, h:mm:ss a"),
     });
     messageInput.value = "";
   }

@@ -30,10 +30,12 @@ export class PrivateConvController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('getMessages/:convUuid')
-  async getMessages(@Param('convUuid') convUuiD) {
-    console.log('uuid --> ' + convUuiD);
-    return await this.privateConvService.getMessages(convUuiD);
+  @Get('getMessages/:convUuid/:offset')
+  async getMessages(
+    @Param('convUuid') convUuiD,
+    @Param('offset') offset: number,
+  ) {
+    return await this.privateConvService.getMessages(convUuiD, offset);
   }
 
   @UseGuards(JwtAuthGuard)

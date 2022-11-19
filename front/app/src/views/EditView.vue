@@ -73,7 +73,7 @@ import FriendAlert from "../components/FriendAlert.vue";
 let funcs = require("../functions/funcs");
 
 export default defineComponent({
-  props: ['incomingFriendRequest'],
+  props: ["incomingFriendRequest"],
   data() {
     return {
       user: JSON.parse(localStorage.getItem("user") || "{}"),
@@ -94,9 +94,7 @@ export default defineComponent({
   mounted() {
     funcs.getUserById(this.user.id).then((data: any) => {
       this.avatar = data.path;
-      funcs.getUserAvatar(this.avatar).then((data: any) => {
-        this.image = URL.createObjectURL(data);
-      });
+      this.image = funcs.getUserAvatar(this.avatar);
     });
   },
   components: { FriendAlert },
@@ -155,11 +153,9 @@ export default defineComponent({
         .catch((err) => {
           console.log(err);
         });
-      funcs.getUserAvatar(fetch_ret.avatar.path).then((data: any) => {
-        this.image = URL.createObjectURL(data);
-        localStorage.setItem("user", JSON.stringify(fetch_ret.user));
-        localStorage.setItem("token", fetch_ret.token);
-      });
+      this.image = funcs.getUserAvatar(fetch_ret.avatar.path);
+      localStorage.setItem("user", JSON.stringify(fetch_ret.user));
+      localStorage.setItem("token", fetch_ret.token);
     },
 
     containsUppercase(value: string) {
@@ -241,19 +237,12 @@ export default defineComponent({
 });
 </script>
 
-<style>
+<style scoped>
 .edition-section {
   border: 0.2rem solid black;
   border-radius: 10px;
   margin-top: 0.5rem;
   padding: 0.5rem;
-}
-.image {
-  width: 300px;
-  height: 300px;
-  border-style: inset;
-  border-radius: 50%;
-  object-fit: cover;
 }
 .text-input {
   padding: 0.7rem;

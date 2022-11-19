@@ -1,60 +1,64 @@
 import {
   Body,
+  ClassSerializerInterceptor,
   Controller,
-  HttpCode,
-  HttpStatus,
-  Post,
-  Request,
-  Response,
-  UseGuards,
+  Delete,
   Get,
-  Put,
   Param,
   ParseIntPipe,
+  Put,
+  Request,
   Res,
-  UseInterceptors,
   UploadedFile,
-  Delete,
+  UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
-import { UserEntity } from 'src/user/user.entity';
-import { RegistrationDto } from 'src/authentication/registration.dto';
-import { CreateUserDto } from 'src/user/user.dto';
-import { UserService } from './user.service';
-import { JwtAuthGuard } from 'src/authentication/jwt-auth.guard';
-import { read } from 'fs';
-import { Observable, of } from 'rxjs';
-import { join } from 'path';
-import { get } from 'http';
-import { ImageDto } from 'src/image/image.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
+import { join } from 'path';
+import { Observable, of } from 'rxjs';
+import { JwtAuthGuard } from 'src/authentication/jwt-auth.guard';
+import { UserEntity } from 'src/user/user.entity';
 import { editFileName, imageFileFilter } from 'src/utils/file-uploading.utils';
 import { updatePasswordDto } from './dto/updatePassword';
+import { UserService } from './user.service';
 
+@UseInterceptors(ClassSerializerInterceptor)
 @Controller('user')
 export class UserController {
   constructor(private readonly _userService: UserService) {}
 
   @UseGuards(JwtAuthGuard)
   @Get('profile')
-  async getProfile(@Request() req) {
-    return req.user;
+  async getProfile(@Request() req): Promise<UserEntity> {
+    const user: UserEntity = await this._userService.getUserById(
+      req.user.payload.id,
+    );
+    user.friends = await user.getFriends();
+    return user;
   }
-  @UseGuards(JwtAuthGuard)
+
   @Get('profile-picture/assets/:imagename')
   getPicture(@Param('imagename') imagename, @Res() res): Observable<Object> {
     return of(res.sendFile(join(process.cwd(), '/assets/' + imagename)));
   }
+
   @UseGuards(JwtAuthGuard)
   @Get(':id')
   async getUserById(@Param('id', ParseIntPipe) id: number) {
     return this._userService.getUserById(id);
   }
+
   @UseGuards(JwtAuthGuard)
   @Get('bynickname/:nickname')
-  async getUserByNickname(@Param('nickname') nickname: string) {
-    return this._userService.getUserByNickname(nickname);
+  async getUserByNickname(
+    @Param('nickname') nickname: string,
+  ): Promise<UserEntity> {
+    console.log(await this._userService.getUserByNickname(nickname));
+
+    return await this._userService.getUserByNickname(nickname);
   }
+
   //@UseGuards(JwtAuthGuard)
   @Get('findIntraUser/:intraId')
   async getIntraUserById(@Param('intraId') intraId: string) {

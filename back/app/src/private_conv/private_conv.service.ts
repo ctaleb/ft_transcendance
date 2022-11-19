@@ -44,15 +44,19 @@ export class PrivateConvService {
 
     return this.privateConvRepository.save(ToSave);
   }
-  async getMessages(convUuid: string) {
+  async getMessages(convUuid: string, offset: number) {
     const allMessages: { author: string; text: string; date: Date }[] = [];
     const conv = await this.privateConvRepository.findOneBy({ uuid: convUuid });
     await this.privateMessagesRepository
       .find({
+        order: {
+          createdAt: 'DESC',
+        },
         where: {
           conv: { id: conv.id },
         },
-        order: { createdAt: 'DESC' },
+        take: 10,
+        skip: offset,
       })
       .then((data) => {
         data.forEach((message) => {

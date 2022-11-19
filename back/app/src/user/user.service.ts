@@ -33,19 +33,17 @@ export class UserService {
   }
 
   async getUserById(id: number): Promise<UserEntity> {
-    const user = await this._usersRepository.findOneBy({ id });
+    const user = await UserEntity.findOneBy({ id });
     if (user) {
-      const avatar = await this._imageService.getImageById(user.avatarId);
-      return { ...avatar, ...user };
+      return user;
     }
     throw new HttpException('User not found', HttpStatus.NOT_FOUND);
   }
 
   async getUserByNickname(nickname: string): Promise<UserEntity> {
-    const user = await this._usersRepository.findOneBy({ nickname });
+    const user = await UserEntity.findOneBy({ nickname });
     if (user) {
-      const avatar = await this._imageService.getImageById(user.avatarId);
-      return { ...user, avatar };
+      return user;
     }
     throw new HttpException('User not found', HttpStatus.NOT_FOUND);
   }
