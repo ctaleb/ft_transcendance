@@ -45,19 +45,21 @@ export class PrivateConvService {
     return this.privateConvRepository.save(ToSave);
   }
   async getMessages(convUuid: string) {
-    const allMessages: { author: string; text: string }[] = [];
+    const allMessages: { author: string; text: string; date: Date }[] = [];
     const conv = await this.privateConvRepository.findOneBy({ uuid: convUuid });
     await this.privateMessagesRepository
       .find({
         where: {
           conv: { id: conv.id },
         },
+        order: { createdAt: 'DESC' },
       })
       .then((data) => {
         data.forEach((message) => {
-          allMessages.push({
+          allMessages.unshift({
             author: message.author.nickname,
             text: message.text,
+            date: message.createdAt,
           });
         });
       });

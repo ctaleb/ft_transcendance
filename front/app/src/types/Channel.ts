@@ -5,6 +5,7 @@ export interface Channel {
   name: string;
   type: ChannelType;
   passwordField: string;
+  members: number[];
 }
 
 export enum ChannelType {
@@ -20,5 +21,5 @@ export enum ChannelRole {
 }
 
 export interface ChannelUser extends User {
-	role: ChannelRole;
+  role: ChannelRole;
 }

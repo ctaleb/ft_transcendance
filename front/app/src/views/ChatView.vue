@@ -19,7 +19,7 @@
         @click="displayMessages(conv, $event)"
         v-bind:key="conv.uuid"
       >
-        <img :src="conv.avatarToDisplay" alt="" width="45" height="45" />
+        <img :src="conv.avatarToDisplay" alt="" />
         <p v-if="conv.user1.nickname != clientNickname">
           {{ conv.user1.nickname }}
         </p>
@@ -35,7 +35,7 @@
         @click="createConv(friend, $event)"
         v-bind:key="friend.nickname"
       >
-        <img :src="friend.image" alt="" width="45" height="45" />
+        <img :src="friend.image" alt="" />
         <p>{{ friend.nickname }}</p>
       </button>
 
@@ -67,6 +67,7 @@
     <div v-if="show == 1" class="lobbyChat allChannels">
       <template v-for="channel in allChannels">
         <div class="channel">
+          <h5 v-if="channel.type == ChannelType.PRIVATE">Channel invitation</h5>
           <h3>{{ channel.name }}</h3>
           <h5 class="textGrey">{{ channel.type }}</h5>
           <div class="channelControl">
@@ -78,8 +79,22 @@
                 v-model="channel.passwordField"
               />
             </div>
-            <button class="joinChannel" @click="joinChannel(channel)">
+            <button
+              v-if="channel.type == ChannelType.PRIVATE"
+              class="joinChannel"
+              @click="joinChannel(channel)"
+            >
+              Accept
+            </button>
+            <button v-else class="joinChannel" @click="joinChannel(channel)">
               Join
+            </button>
+            <button
+              v-if="channel.type == ChannelType.PRIVATE"
+              class="joinChannel"
+              @click="declineChannelInvitation(channel)"
+            >
+              Decline
             </button>
           </div>
         </div>
@@ -121,7 +136,7 @@
             <h3>{{ thisChannel.type }}</h3>
           </div>
           <div v-for="member in channelMembers" class="channelMember">
-            <img :src="member.image" alt="" width="45" height="45" />
+            <img :src="member.image" alt="" />
             <p
               :class="{
                 textColorRed: member.role == ChannelRole.OWNER,
@@ -237,7 +252,7 @@
     </div>
     <div v-if="showInvitationModal" class="overlay">
       <div class="modal">
-        <span class="close" @click="closeInvitation()">&times;</span>
+        <button class="close" @click="closeInvitation()">&times;</button>
         <h2>Invite to channel</h2>
         <div class="searchBar">
           <input
@@ -248,7 +263,7 @@
             required
           />
         </div>
-        <button @click="inviteToChannel()">Submit</button>
+        <button class="modalBtn" @click="inviteToChannel()">Submit</button>
       </div>
     </div>
   </div>
@@ -259,9 +274,14 @@
 import { onMounted, onUpdated, ref, Ref } from "vue";
 import FriendAlert from "@/components/FriendAlert.vue";
 import config from "@/config/config";
-import { Channel, ChannelRole, ChannelType, ChannelUser } from "@/types/Channel";
+import {
+  Channel,
+  ChannelRole,
+  ChannelType,
+  ChannelUser,
+} from "@/types/Channel";
 import { fetchJSONDatas } from "@/functions/funcs";
-import { fetchUserAvatarURL } from "@/types/User";
+import { fetchUserAvatarURL, User } from "@/types/User";
 
 export interface PrivateConv {
   user1: ChannelUser;
@@ -300,7 +320,7 @@ const channelListFlag = ref(true);
 const iconConvList = ref("gg-remove");
 const iconFriendList = ref("gg-remove");
 const iconChannelList = ref("gg-remove");
-const friends = ref(Array<ChannelUser>());
+const friends = ref(Array<User>());
 
 const myChannels: Ref<Array<Channel>> = ref([]);
 const allChannels: Ref<Array<Channel>> = ref([]);
@@ -345,7 +365,9 @@ onMounted(async () => {
   });
   socket.on("updateChannelMembers", async (channelId: number) => {
     if (thisChannel.value && channelId === thisChannel.value.id) {
-      let data = await fetchJSONDatas("api/chat/members", "POST", { id: thisChannel.value.id });
+      let data = await fetchJSONDatas("api/chat/members", "POST", {
+        id: thisChannel.value.id,
+      });
       channelMembers.value.forEach(await fetchUserAvatarURL);
       channelMembers.value = data;
     }
@@ -361,9 +383,9 @@ onMounted(async () => {
       else sendChannelMessage();
     }
   });
-  
+
   await getAllConvs();
-  let data: { friends: ChannelUser[] } = await fetchJSONDatas("api/friendship", "GET");
+  let data: { friends: User[] } = await fetchJSONDatas("api/friendship", "GET");
   friends.value = data.friends;
   friends.value.forEach(await fetchUserAvatarURL);
   organizeFriends();
@@ -376,21 +398,21 @@ const loadDefaultPage = () => {
     conversation.classList.remove("inactiveConv");
   });
   show.value = 0;
-}
+};
 
 const showInvitation = () => {
   inviteUser.value = "";
   showInvitationModal.value = true;
-}
+};
 
 const closeInvitation = () => {
   showInvitationModal.value = false;
-}
+};
 
 const getChannels = async (): Promise<void> => {
-  let data: Channel[] = await fetchJSONDatas("api/chat", "GET")
+  let data: Channel[] = await fetchJSONDatas("api/chat", "GET");
   myChannels.value = data;
-}
+};
 
 const createChannel = async (): Promise<void> => {
   if (
@@ -408,7 +430,7 @@ const createChannel = async (): Promise<void> => {
   myChannels.value.push(data);
   socket.emit("joinChannelRoom", { id: data.id });
   channelCreationForm();
-}
+};
 
 const channelCreationForm = () => {
   thisChannel.value = null;
@@ -420,7 +442,7 @@ const channelCreationForm = () => {
     conversation.classList.remove("inactiveConv");
   });
   show.value = 3;
-}
+};
 
 const updateChannel = async (): Promise<void> => {
   await fetchJSONDatas("api/chat/update-channel", "PUT", {
@@ -428,7 +450,7 @@ const updateChannel = async (): Promise<void> => {
     type: "protected",
     password: "password",
   });
-}
+};
 
 const joinChannel = async (channel: Channel): Promise<void> => {
   let password = channel.passwordField;
@@ -442,7 +464,7 @@ const joinChannel = async (channel: Channel): Promise<void> => {
   allChannels.value.splice(allChannels.value.indexOf(channel), 1);
   channelsNum.value--;
   socket.emit("joinChannelRoom", { id: data.id });
-}
+};
 
 const loadAllChannels = () => {
   thisChannel.value = null;
@@ -454,7 +476,7 @@ const loadAllChannels = () => {
   });
   getAllChannels();
   show.value = 1;
-}
+};
 
 const getAllChannels = async (): Promise<void> => {
   let data: Channel[] = await fetchJSONDatas("api/chat/list", "POST", {
@@ -464,15 +486,20 @@ const getAllChannels = async (): Promise<void> => {
   allChannels.value.push(...data);
   // allChannels.value = [...allChannels.value, ...data];
   channelsNum.value += data.length;
-}
+};
 
 const getAllConvs = async (): Promise<void> => {
-  let data: PrivateConv[] = await fetchJSONDatas("api/privateConv/getAllConvs", "GET");
+  let data: PrivateConv[] = await fetchJSONDatas(
+    "api/privateConv/getAllConvs",
+    "GET"
+  );
   privateConvs.value = data;
   privateConvs.value.forEach(async (conv) => {
-    conv.avatarToDisplay = await fetchUserAvatarURL(conv.user1.nickname == clientNickname ? conv.user2 : conv.user1);
+    conv.avatarToDisplay = await fetchUserAvatarURL(
+      conv.user1.nickname == clientNickname ? conv.user2 : conv.user1
+    );
   });
-}
+};
 
 const leaveChannel = async (): Promise<void> => {
   let data: Channel = await fetchJSONDatas("api/chat/leave-channel", "DELETE", {
@@ -481,7 +508,7 @@ const leaveChannel = async (): Promise<void> => {
   myChannels.value = myChannels.value.filter((elem) => elem.id != data.id);
   socket.emit("leaveChannelRoom", { id: data.id });
   loadDefaultPage();
-}
+};
 
 const inviteToChannel = async (): Promise<void> => {
   if (inviteUser.value.length > 0) {
@@ -492,21 +519,30 @@ const inviteToChannel = async (): Promise<void> => {
       username: username,
     });
   }
-}
+};
+
+const declineChannelInvitation = async (channel: Channel): Promise<void> => {
+  await fetchJSONDatas("api/chat/decline-invitation", "DELETE", {
+    id: channel.id,
+  }).then(() => {
+    allChannels.value = allChannels.value.filter((x) => x.id != channel.id);
+    if (channelsNum.value > 0) channelsNum.value--;
+  });
+};
 
 const giveAdmin = async (): Promise<void> => {
   await fetchJSONDatas("api/chat/give-admin", "PUT", {
     id: 22,
     username: "Ah Sahm",
   });
-}
+};
 
 const takeAdmin = async (): Promise<void> => {
   await fetchJSONDatas("api/chat/take-admin", "PUT", {
     id: 22,
     username: "Ah Sahm",
   });
-}
+};
 
 const ban = async (): Promise<void> => {
   await fetchJSONDatas("api/chat/ban", "POST", {
@@ -514,7 +550,7 @@ const ban = async (): Promise<void> => {
     username: "Ah Sahm",
     minutes: 1500,
   });
-}
+};
 
 const organizeFriends = () => {
   for (let i = 0; i < privateConvs.value.length; i++) {
@@ -526,13 +562,16 @@ const organizeFriends = () => {
         friends.value.splice(j, 1);
     }
   }
-}
+};
 
 const scrollDownMessages = () => {
   messagesBoxRef.value?.scrollIntoView({ behavior: "smooth", block: "end" });
-}
+};
 
-const displayMessages = async (conv: PrivateConv, event: any): Promise<void> => {
+const displayMessages = async (
+  conv: PrivateConv,
+  event: any
+): Promise<void> => {
   thisChannel.value = null;
   const conversations = document.querySelectorAll(".channelButton");
   conversations.forEach((conversation) => {
@@ -542,10 +581,20 @@ const displayMessages = async (conv: PrivateConv, event: any): Promise<void> => 
   conv.user1.nickname == clientNickname
     ? (friendNickname.value = conv.user2.nickname)
     : (friendNickname.value = conv.user1.nickname);
-  let data: Message[] = await fetchJSONDatas(`api/privateConv/getMessages/${conv.uuid}`, "GET");
+  let data: Message[] = await fetchJSONDatas(
+    `api/privateConv/getMessages/${conv.uuid}`,
+    "GET"
+  );
+  data.forEach(
+    (message) =>
+      (message.date = moment(message.date)
+        .tz(timezone)
+        .add(1, "hours")
+        .format("MMMM Do YYYY, h:mm:ss a"))
+  );
   messagesToDisplay.value = data;
   show.value = 2;
-}
+};
 
 const loadChannel = async (channel: Channel, event: any): Promise<void> => {
   const conversations = document.querySelectorAll(".channelButton");
@@ -557,7 +606,9 @@ const loadChannel = async (channel: Channel, event: any): Promise<void> => {
   channelMembers.value = [];
   thisChannel.value = null;
   show.value = 2;
-  let data = await fetchJSONDatas("api/chat/load-channel", "POST", { id: channel.id });
+  let data = await fetchJSONDatas("api/chat/load-channel", "POST", {
+    id: channel.id,
+  });
   thisChannel.value = channel;
   channelMembers.value = data.members;
   messagesToDisplay.value = data.messages;
@@ -569,7 +620,7 @@ const loadChannel = async (channel: Channel, event: any): Promise<void> => {
   });
   channelMessageSkip.value = data.messages.length;
   channelMembers.value.forEach(await fetchUserAvatarURL);
-}
+};
 
 const loadChannelMessages = async (channel: Channel): Promise<void> => {
   let data = await fetchJSONDatas("api/chat/messages", "POST", {
@@ -582,18 +633,21 @@ const loadChannelMessages = async (channel: Channel): Promise<void> => {
     .format("MMMM Do YYYY, h:mm:ss a");
   messagesToDisplay.value.push(data);
   channelMessageSkip.value += data.length;
-}
+};
 
 const createConv = async (friend: ChannelUser, event: any): Promise<void> => {
   friendNickname.value = friend.nickname;
-  let data = await fetchJSONDatas(`api/privateConv/createConv/${friend.nickname}`, "GET");
+  let data = await fetchJSONDatas(
+    `api/privateConv/createConv/${friend.nickname}`,
+    "GET"
+  );
   await fetchUserAvatarURL(friend);
   if (data.created == true) {
     privateConvs.value.push(data.conv);
     organizeFriends();
   }
   displayMessages(data.conv, event);
-}
+};
 
 const sendChannelMessage = () => {
   if (messageInput.value != "") {
@@ -611,7 +665,7 @@ const sendChannelMessage = () => {
     );
     messageInput.value = "";
   }
-}
+};
 
 const sendPrivateMessage = (nickname: string): void => {
   if (messageInput.value != "") {
@@ -622,11 +676,13 @@ const sendPrivateMessage = (nickname: string): void => {
     messagesToDisplay.value.push({
       author: clientNickname,
       text: messageInput.value,
-      date: new Date().toLocaleString(),
+      date: moment(new Date())
+        .tz(timezone)
+        .format("MMMM Do YYYY, h:mm:ss a"),
     });
     messageInput.value = "";
   }
-}
+};
 
 const changeConvListStatus = () => {
   if (convListFlag.value == true) {
@@ -644,7 +700,7 @@ const changeConvListStatus = () => {
     convListFlag.value = true;
     iconConvList.value = "gg-remove";
   }
-}
+};
 
 const changeFriendListStatus = () => {
   if (friendListFlag.value == true) {
@@ -662,7 +718,7 @@ const changeFriendListStatus = () => {
     friendListFlag.value = true;
     iconFriendList.value = "gg-remove";
   }
-}
+};
 
 const changeChannelListStatus = () => {
   if (channelListFlag.value == true) {
@@ -680,11 +736,11 @@ const changeChannelListStatus = () => {
     channelListFlag.value = true;
     iconChannelList.value = "gg-remove";
   }
-}
+};
 
 const deleteConv = (conv: PrivateConv) => {
   console.log("Oye brav gens");
-}
+};
 </script>
 
 <style lang="scss" scoped>
@@ -697,7 +753,6 @@ const deleteConv = (conv: PrivateConv) => {
 .modal {
   position: fixed;
   width: 40vw;
-  height: 25vh;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
@@ -708,7 +763,8 @@ const deleteConv = (conv: PrivateConv) => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2rem;
+  justify-content: space-around;
+  gap: 1rem;
   .close {
     position: absolute;
     top: 0;
@@ -716,17 +772,19 @@ const deleteConv = (conv: PrivateConv) => {
     font-size: 2em;
     font-weight: 600;
     color: #c1a36b;
+    background: none;
+    height: 5%;
+    width: 5%;
   }
   .searchBar {
     width: 30vw;
   }
-  button {
-    position: absolute;
+  .modalBtn {
     border: 3px solid;
     border-image-slice: 1;
     border-image-source: linear-gradient(to bottom, #c1a36b, #635e4f);
-    width: 20vw;
-    bottom: 2rem;
+    width: auto;
+    padding: 0.5em;
   }
 }
 .convList {
@@ -773,6 +831,9 @@ const deleteConv = (conv: PrivateConv) => {
     input {
       margin: 1%;
     }
+  }
+  .joinChannel {
+    width: 20%;
   }
 }
 .upperChat {
@@ -934,20 +995,18 @@ const deleteConv = (conv: PrivateConv) => {
 .channelButton {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
   background: #3b3c44;
-  height: 4.5%;
   font-size: 25px;
-}
-.channelButton img {
-  margin-right: 20px;
-  pointer-events: none;
-}
-.channelButton p {
-  pointer-events: none;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  overflow: hidden;
+  img {
+    height: 40px;
+  }
+  p {
+    padding: 0 8px;
+    margin: 0;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+  }
 }
 
 .channelMember {
@@ -956,12 +1015,12 @@ const deleteConv = (conv: PrivateConv) => {
   justify-content: flex-start;
   background: #453800;
   border-bottom: 3px solid black;
-  height: 4.5%;
   font-size: 25px;
   gap: 1em;
   color: white;
 }
 .channelMember img {
+  height: 40px;
   margin-right: 0.5em;
   pointer-events: none;
 }
@@ -1007,7 +1066,6 @@ const deleteConv = (conv: PrivateConv) => {
   border-image-source: linear-gradient(to bottom, #c1a36b, #635e4f);
   width: 20%;
   text-align: left;
-  padding-left: 1em;
   h3 {
     margin-bottom: 0;
   }
@@ -1019,7 +1077,6 @@ const deleteConv = (conv: PrivateConv) => {
 }
 .joinChannel {
   @extend .convListHeader;
-  width: 20%;
 }
 .textGrey {
   color: grey;

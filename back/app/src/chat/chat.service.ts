@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { UserEntity } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
-import { LessThan, Not, Repository } from 'typeorm';
+import { Entity, LessThan, Not, Repository } from 'typeorm';
 import { ChangeRoleDto } from './dtos/change-role.dto';
 import { CreateChannelDto } from './dtos/create-channel.dto';
 import { DeclineInvitationDto } from './dtos/decline-invitation.dto';
@@ -365,13 +365,28 @@ export class ChatService {
     const userChannels: { id: number; name: string; type: string }[] =
       await this.getUserChannels(userId);
     const result: { id: number; name: string; type: string }[] = [];
+    if (getChannelsListDto.skip === 0) {
+      await this._channelInvitationRepository
+        .findBy({
+          target: { id: userId },
+        })
+        .then((data) => {
+          data.forEach((elem) => {
+            result.push({
+              id: elem.channel.id,
+              name: elem.channel.name,
+              type: elem.channel.type,
+            });
+          });
+        });
+    }
     await this._channelRepository
       .find({
         where: {
           type: Not(ChannelType.PRIVATE),
         },
         order: { id: 'ASC' },
-        take: 30,
+        take: 20,
         skip: getChannelsListDto.skip,
       })
       .then((data) => {
@@ -382,6 +397,7 @@ export class ChatService {
           result.push({ id: elem.id, name: elem.name, type: elem.type });
         });
       });
+
     return result;
   }
 
