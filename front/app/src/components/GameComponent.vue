@@ -2,8 +2,8 @@
   <!-- <div>
     <button @click="toggleGameQueue()">CHANGE MODE</button>
   </div> -->
-  <div>{{ toggleLadder }}</div>
-  <div>{{ toggleInvited }}</div>
+  <!-- <div>{{ toggleLadder }}</div>
+  <div>{{ toggleInvited }}</div> -->
   <div v-if="toggleLadder" class="ladder">
     <!-- <PowerSliderComponent v-model="power" id="powerSlider" /> -->
     <div>
@@ -11,9 +11,10 @@
         {{ lobbyStatus }}
       </button>
     </div>
-    <div>
-      <canvas class="canvas hidden" ref="canvas"></canvas>
-    </div>
+    <!-- <div v-if="gameBoard">
+      {{ gameBoard }}
+      <canvas class="canvas" ref="canvas"></canvas>
+    </div> -->
 
     <div v-if="summary" class="overlay">
       <!-- <div v-if="modal" class="modal">
@@ -168,6 +169,7 @@
   <div class="powerSlider" :class="powers ? '' : 'hidden'">
     <PowerSliderComponent v-model="power" id="powerSlider" />
   </div>
+  <canvas class="canvas" ref="canvas"></canvas>
 </template>
 
 <style lang="scss">
@@ -270,6 +272,7 @@ const noFriends = ref(false);
 const summary = ref(false);
 const toggleLadder = ref(true);
 const toggleInvited = ref(false);
+const gameBoard = ref(false);
 
 const friendName = ref("Placeholder");
 const customReady = ref("Ready ?");
@@ -572,10 +575,11 @@ function resizeCanvas() {
 }
 
 onMounted(() => {
-  let ctx = canvas.value?.getContext("2d");
-  scaling(ctx);
+  ctx = canvas.value?.getContext("2d");
+  console.log("ctx " + ctx);
+  ctx?.drawImage(plateauImg, 0, 0, cWidth, cHeight);
 
-  console.log("Je suis une petite vache meuh meuh");
+  scaling(ctx);
 
   registerSockets(store.socket as any);
   store.$subscribe((mutation, state) => {
@@ -663,6 +667,7 @@ const spectating = (gameRoom: GameRoom) => {
   lobbyStatus.value = "Spectating";
   startButton.value = false;
   powers.value = false;
+  //   gameBoard.value = true;
   document.querySelector(".canvas")?.classList.remove("hidden");
 };
 
@@ -674,6 +679,7 @@ const reconnect = (gameRoom: GameRoom) => {
   lobbyStatus.value = "Play !";
   startButton.value = false;
   powers.value = false;
+  //   gameBoard.value = true;
   document.querySelector(".canvas")?.classList.remove("hidden");
 };
 
@@ -735,6 +741,7 @@ const Win = (
   color.value = "red";
   sumTitle.value = "Defeat";
   showSummary(true);
+  //   gameBoard.value = false;
   document.querySelector(".canvas")?.classList.add("hidden");
 };
 
@@ -755,6 +762,7 @@ const Lose = (
   color.value = "green";
   sumTitle.value = "Victory";
   showSummary(true);
+  //   gameBoard.value = false;
   document.querySelector(".canvas")?.classList.add("hidden");
 };
 
@@ -767,6 +775,9 @@ const startGame = (gameRoom: GameRoom) => {
   hostName.value = theRoom.hostName;
   clientName.value = theRoom.clientName;
   start = new Date();
+  //   gameBoard.value = true;
+  console.log(gameBoard.value);
+  console.log(canvas.value);
   document.querySelector(".canvas")?.classList.remove("hidden");
 };
 
