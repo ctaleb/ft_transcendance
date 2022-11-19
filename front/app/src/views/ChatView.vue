@@ -399,12 +399,41 @@ onMounted(async () => {
   socket?.on("Update conv list", (convData: { conv: privateConv }) => {
     console.log("UPDATE");
 
-    let convIndex = privateConvs.value.findIndex(
-      (conv) => conv.uuid === convData.conv.uuid
-    );
-    const convToTop = privateConvs.value.splice(convIndex, 1)[0];
-    privateConvs.value.splice(0, 0, convToTop);
+  store.$subscribe((mutation, state) => {
+    if (!state.socket?.hasListeners("Message to the client")) {
+      state.socket?.on(
+        "Message to the client",
+        async (privateMessage: { author: string; text: string }) => {
+          console.log(1);
+
+          if (privateMessage.author == friendNickname.value)
+            messagesToDisplay.value.push(privateMessage);
+          else {
+            await getAllConvs();
+            organizeFriends();
+            notifConv(privateMessage.author);
+            audio.play();
+          }
+        }
+      );
+    }
+
+    if (!state.socket?.hasListeners("Update conv list")) {
+      state.socket?.on(
+        "Update conv list",
+        (convData: { conv: privateConv }) => {
+          console.log("UPDATE");
+
+          let convIndex = privateConvs.value.findIndex(
+            (conv) => conv.uuid === convData.conv.uuid
+          );
+          const convToTop = privateConvs.value.splice(convIndex, 1)[0];
+          privateConvs.value.splice(0, 0, convToTop);
+        }
+      );
+    }
   });
+
   window.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       if (thisChannel.value == null) sendPrivateMessage(friendNickname.value);

@@ -1,21 +1,18 @@
 <template>
   <div>
-    <div
-      style="text-align: center"
-      v-if="$route.path != '/' && $route.path != '/signup'"
-    >
-      <nav>
+    <nav>
+      <div
+        style="display: flex; position: relative; justify-content: center"
+        v-if="$route.path != '/' && $route.path != '/signup'"
+      >
         <router-link to="/profile"
           >Profile
           <div :class="'dot' + (profileNotificationBadge ? ' show' : '')"></div
         ></router-link>
-        | <router-link to="/game">Game</router-link> | |
-        <router-link to="/chat">Chat</router-link> |
-        <router-link to="/users">All users</router-link> |
-        <router-link to="/edit">Profile Editing</router-link> |
-        <router-link to="/" v-on:click.prevent="logout()">Logout</router-link>
-      </nav>
-    </div>
+        |<router-link to="/game"> PLAY </router-link>|
+        <router-link to="/chat">Chat</router-link>
+      </div>
+    </nav>
     <router-view
       :key="$route.fullPath"
       @notification="changeNotificationValue"
@@ -37,22 +34,28 @@
     <div v-if="failedInvitation" class="overlay">
       <FailedInvitation @invFailure="invFailure()"></FailedInvitation>
     </div>
+    <div class="alertFlex">
+      <AlertCard v-for="message of alertMessages" :message="message" />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref, watch } from "vue";
 import { RouterLink, RouterView, useRoute, useRouter } from "vue-router";
-import { trySetupUser } from "@/functions/funcs";
 import { User, getUserByNickname } from "@/types/User";
+import {
+  trySetupUser,
+  addAlertMessage,
+} from "@/functions/funcs";
+import { Message } from "@/types/GameSummary";
 import { useStore } from "@/store";
 import GameConfirmation from "./components/GameConfirmation/Modal.vue";
+import AlertCard from "./components/AlertCard.vue";
 import CustomInvitation from "./components/CustomInvitation/Modal.vue";
 import FailedInvitation from "./components/FailedInvitation/Modal.vue";
 
 const store = useStore();
-let socket = store.socket;
-
 const route = useRoute();
 const router = useRouter();
 const incomingFriendRequest = ref("");
@@ -62,81 +65,137 @@ const customInvitation = ref(false);
 const failedInvitation = ref(false);
 const invSender = ref("Placeholder");
 
-store.$subscribe((mutation, state) => {
-  socket = state.socket;
-});
-
 trySetupUser();
 
+const store = useStore();
+let socket = store.socket;
+let alertMessages: Message[] = store.message;
+
+store.$subscribe((mutation, state) => {
+  if (!state.socket?.hasListeners("customInvite")) {
+    state.socket?.on("customInvite", (inviter: string) => {
+      // theRoom = gameRoom;
+      showInvite(true);
+    });
+  }
+  if (!state.socket?.hasListeners("gameConfirmation")) {
+    state.socket?.on("gameConfirmation", (gameRoom: any) => {
+      // theRoom = gameRoom;
+      showConfirmation(true);
+    });
+  }
+  if (!state.socket?.hasListeners("invitation")) {
+    state.socket?.on("invitation", (requester: string) => {
+      invSender.value = requester;
+      showInvite(true);
+    });
+  }
+  if (!state.socket?.hasListeners("gameConfirmationTimeout")) {
+    state.socket?.on("gameConfirmationTimeout", () => {
+      showConfirmation(false);
+      // startButton.value = true;
+      // lobbyStatus.value = "Find Match";
+    });
+  }
+  if (!state.socket?.hasListeners("friendshipInvite")) {
+    state.socket?.on("friendshipInvite", (requester: User) => {
+      incomingFriendRequest.value = requester.nickname;
+      profileNotificationBadge.value = true;
+      getUserByNickname(requester.nickname).then((data) => {
+        state.invitations?.push(data!);
+      });
+    });
+  }
+  if (!state.socket?.hasListeners("acceptInvite")) {
+    state.socket?.on("acceptInvite", (requester: User) => {
+      getUserByNickname(requester.nickname).then((data) => {
+        state.user?.friends?.push(data!);
+      });
+    });
+  }
+  if (!state.socket?.hasListeners("removeFriend")) {
+    state.socket?.on("removeFriend", (requester: User) => {
+      getUserByNickname(requester.nickname).then((data) => {
+        state.user?.friends?.splice(state.user?.friends?.indexOf(data!), 1);
+      });
+    });
+  }
+  if (!state.socket?.hasListeners("inviteFailure")) {
+    state.socket?.on("inviteFailure", () => {
+      showFailure(true);
+    });
+  }
+});
+
 //window.addEventListener("beforeunload", () => {
-//  socket?.disconnect;
+//  store.socket?.disconnect;
 //});
 
 window.addEventListener("keydown", (e) => {
-  console.log("keydown " + socket?.id);
+  console.log("keydown " + store.socket?.id);
   if (e.key === "ArrowLeft")
-    socket?.emit("key", {
+    store.socket?.emit("key", {
       key: "downLeft",
     });
   else if (e.key === "ArrowRight")
-    socket?.emit("key", {
+    store.socket?.emit("key", {
       key: "downRight",
     });
   if (e.key === "a" || e.key === "A")
-    socket?.emit("key", {
+    store.socket?.emit("key", {
       key: "downA",
     });
   else if (e.key === "d" || e.key === "D")
-    socket?.emit("key", {
+    store.socket?.emit("key", {
       key: "downD",
     });
   else if (e.key === " ") {
-    socket?.emit("key", {
+    store.socket?.emit("key", {
       key: "downSpace",
     });
   }
-  if (e.key === "o") socket?.emit("debugging");
-  if (e.key === "i") socket?.emit("chatting");
+  if (e.key === "o") store.socket?.emit("debugging");
+  if (e.key === "i") store.socket?.emit("chatting");
 });
 
 window.addEventListener("keyup", (e) => {
   if (e.key === "ArrowLeft")
-    socket?.emit("key", {
+    store.socket?.emit("key", {
       key: "upLeft",
     });
   else if (e.key === "ArrowRight")
-    socket?.emit("key", {
+    store.socket?.emit("key", {
       key: "upRight",
     });
   if (e.key === "a")
-    socket?.emit("key", {
+    store.socket?.emit("key", {
       key: "upA",
     });
   else if (e.key === "d")
-    socket?.emit("key", {
+    store.socket?.emit("key", {
       key: "upD",
     });
 });
 
 const confirmGame = () => {
-  socket?.emit("playerReady", {}, () => {});
+  store.socket?.emit("playerReady", {}, () => {});
   showConfirmation(false);
   router.push("/game");
 };
 
 const denyGame = () => {
-  socket?.emit("playerNotReady");
+  store.socket?.emit("playerNotReady");
   showConfirmation(false);
 };
 
 const acceptCustom = () => {
   showInvite(false);
   router.push("/game");
-  socket?.emit("settingsInvitee");
+  store.socket?.emit("settingsInvitee");
 };
 
 const denyCustom = () => {
-  socket?.emit("declineCustom");
+  store.socket?.emit("declineCustom");
   showInvite(false);
 };
 
@@ -147,7 +206,12 @@ const invFailure = () => {
 const logout = () => {
   localStorage.removeItem("token");
   localStorage.removeItem("user");
-  socket?.emit("disco", {});
+  store.socket?.emit("disco", {});
+  //  store.socket? = io("http://" + window.location.hostname + ":3500", {
+  //    transports: ["websocket"],
+  //    // path: "/api/socket.io/",
+  //    autoConnect: false,
+  //  });
 };
 
 const changeNotificationValue = (value: boolean) => {
@@ -170,60 +234,7 @@ onMounted(() => {
   watch(
     () => route.path,
     (currentValue, oldValue) => {
-      if (!socket?.hasListeners("customInvite")) {
-        socket?.on("customInvite", (inviter: string) => {
-          // theRoom = gameRoom;
-          showInvite(true);
-        });
-      }
-      if (!socket?.hasListeners("gameConfirmation")) {
-        socket?.on("gameConfirmation", (gameRoom: any) => {
-          // theRoom = gameRoom;
-          showConfirmation(true);
-        });
-      }
-      if (!socket?.hasListeners("invitation")) {
-        socket?.on("invitation", (requester: string) => {
-          invSender.value = requester;
-          showInvite(true);
-        });
-      }
-      if (!socket?.hasListeners("gameConfirmationTimeout")) {
-        socket?.on("gameConfirmationTimeout", () => {
-          showConfirmation(false);
-          // startButton.value = true;
-          // lobbyStatus.value = "Find Match";
-        });
-      }
-      if (!socket?.hasListeners("friendshipInvite")) {
-        socket?.on("friendshipInvite", (requester: User) => {
-          incomingFriendRequest.value = requester.nickname;
-          profileNotificationBadge.value = true;
-          getUserByNickname(requester.nickname).then((data) => {
-            store.invitations?.push(data!);
-          });
-        });
-      }
-      if (!socket?.hasListeners("acceptInvite")) {
-        socket?.on("acceptInvite", (requester: User) => {
-          getUserByNickname(requester.nickname).then((data) => {
-            store.user?.friends?.push(data!);
-          });
-        });
-      }
-      if (!socket?.hasListeners("removeFriend")) {
-        socket?.on("removeFriend", (requester: User) => {
-          getUserByNickname(requester.nickname).then((data) => {
-            store.user?.friends?.splice(store.user?.friends?.indexOf(data!), 1);
-          });
-        });
-      }
-      if (!socket?.hasListeners("inviteFailure")) {
-        socket?.on("inviteFailure", () => {
-          showFailure(true);
-        });
-      }
-      if (currentValue != "/game") socket?.emit("watchPath");
+      if (currentValue != "/game") store.socket?.emit("watchPath");
 
       if (
         localStorage.getItem("token") &&
@@ -258,6 +269,7 @@ onMounted(() => {
 
 <style lang="scss">
 @import "styles/custom.scss";
+@import "styles/_alert.scss";
 
 body {
   background-color: #010b12;

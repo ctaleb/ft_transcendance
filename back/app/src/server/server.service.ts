@@ -34,7 +34,7 @@ const chargeMax = 1;
 const ballSize = 16;
 const barSize: IPoint = { x: 50, y: 10 };
 const defaultGameOptions: GameOptions = {
-  scoreMax: 100,
+  scoreMax: 10,
   ballSpeed: 1,
   ballSize: 1,
   barSpeed: 1,
@@ -419,8 +419,8 @@ export class ServerService {
     return data;
   }
 
-  getMatchHistory(name: string) {
-    return this._matchHistoryRepository.find({
+  async getMatchHistory(name: string) {
+    return await this._matchHistoryRepository.find({
       where: [
         {
           host: { nickname: name },

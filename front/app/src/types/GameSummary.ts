@@ -1,4 +1,4 @@
-import { User } from "@/types/User"
+import { User } from "@/types/User";
 
 export interface GameSummaryData {
   host: PlayerInfoData;
@@ -12,6 +12,12 @@ export interface PlayerInfoData {
   power: String;
   score: number;
   eloChange: number;
+}
+
+export interface Message {
+  type: number;
+  message: string;
+  time: number;
 }
 
 export interface History {

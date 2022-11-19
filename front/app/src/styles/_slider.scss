@@ -1,0 +1,83 @@
+@import "custom.scss";
+
+.items {
+  z-index: -2;
+  display: flex;
+  justify-content: space-around;
+  overflow: hidden;
+  align-items: center;
+
+  width: 500px;
+  height: 300px;
+
+  .item {
+    display: flex;
+    width: 80%;
+    color: $primary;
+    user-select: none;
+    // animation: ease-out 3s slide;
+
+    @keyframes slide1 {
+      0% {
+        opacity: 1;
+        transform: translateX(0px);
+      }
+      25% {
+        opacity: 0;
+        transform: translateX(-500px);
+      }
+      50% {
+        opacity: 0;
+        transform: translateX(500px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateX(0px);
+      }
+    }
+
+    @keyframes slide2 {
+      0% {
+        opacity: 1;
+        transform: translateX(0px);
+      }
+      25% {
+        transform: translateX(500px);
+        opacity: 0;
+      }
+      50% {
+        opacity: 0;
+        transform: translateX(-500px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateX(0px);
+      }
+    }
+
+    img {
+      width: 40%;
+    }
+    .info {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      width: 60%;
+      height: 100%;
+
+      h4 {
+        font-size: x-large;
+      }
+
+      & > {
+        height: 50%;
+      }
+    }
+  }
+
+  .button {
+    width: 10%;
+    height: 50px;
+    background-color: aliceblue;
+  }
+}

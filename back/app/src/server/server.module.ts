@@ -10,6 +10,7 @@ import { PrivateConvModule } from 'src/private_conv/private_conv.module';
 import { PrivateMessageEntity } from 'src/private_conv/entities/privateMessage.entity';
 import { PrivateConvEntity } from 'src/private_conv/entities/private_conv.entity';
 import { ChatModule } from 'src/chat/chat.module';
+import { ProfileController } from 'src/server/profile.controller';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { ChatModule } from 'src/chat/chat.module';
     ChatModule,
     PrivateConvModule,
   ],
+  controllers: [ProfileController],
   providers: [ServerGateway, ServerService, PrivateConvService],
   exports: [ServerService],
 })
