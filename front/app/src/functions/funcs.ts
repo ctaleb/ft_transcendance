@@ -1,5 +1,6 @@
 import config from "@/config/config";
 import { useStore } from "@/store";
+import { Alert } from "@/types/GameSummary";
 import { User } from "@/types/User";
 import { io } from "socket.io-client";
 
@@ -25,11 +26,7 @@ export function getUserAvatar(avatar: String): Promise<Blob> {
   return fetchBlobDatas(`api/user/profile-picture/${avatar}`, "GET");
 }
 
-async function fetchDatas(
-  path: string,
-  method: "GET" | "PUT" | "POST" | "DELETE",
-  body?: object
-): Promise<any> {
+async function fetchDatas(path: string, method: "GET" | "PUT" | "POST" | "DELETE", body?: object): Promise<any> {
   return fetch(`http://${window.location.hostname}:3000/${path}`, {
     method: method,
     headers: {
@@ -47,20 +44,9 @@ async function getErrorMessage(response: Response): Promise<string> {
     .catch((e: string) => e);
 }
 
-export async function fetchJSONDatas(
-  path: string,
-  method: "GET" | "PUT" | "POST" | "DELETE"
-): Promise<any>;
-export async function fetchJSONDatas(
-  path: string,
-  method: "GET" | "PUT" | "POST" | "DELETE",
-  body: object
-): Promise<any>;
-export async function fetchJSONDatas(
-  path: string,
-  method: "GET" | "PUT" | "POST" | "DELETE",
-  body?: object
-): Promise<any> {
+export async function fetchJSONDatas(path: string, method: "GET" | "PUT" | "POST" | "DELETE"): Promise<any>;
+export async function fetchJSONDatas(path: string, method: "GET" | "PUT" | "POST" | "DELETE", body: object): Promise<any>;
+export async function fetchJSONDatas(path: string, method: "GET" | "PUT" | "POST" | "DELETE", body?: object): Promise<any> {
   return fetchDatas(path, method, body)
     .then((res: Response) => {
       if (!res.ok) return Promise.reject(res);
@@ -73,20 +59,9 @@ export async function fetchJSONDatas(
     });
 }
 
-export async function fetchBlobDatas(
-  path: string,
-  method: "GET" | "PUT" | "POST" | "DELETE"
-): Promise<any>;
-export async function fetchBlobDatas(
-  path: string,
-  method: "GET" | "PUT" | "POST" | "DELETE",
-  body: object
-): Promise<any>;
-export async function fetchBlobDatas(
-  path: string,
-  method: "GET" | "PUT" | "POST" | "DELETE",
-  body?: object
-): Promise<Blob> {
+export async function fetchBlobDatas(path: string, method: "GET" | "PUT" | "POST" | "DELETE"): Promise<any>;
+export async function fetchBlobDatas(path: string, method: "GET" | "PUT" | "POST" | "DELETE", body: object): Promise<any>;
+export async function fetchBlobDatas(path: string, method: "GET" | "PUT" | "POST" | "DELETE", body?: object): Promise<Blob> {
   return fetchDatas(path, method, body)
     .then((res: Response) => {
       if (!res.ok) return Promise.reject(res);
@@ -119,15 +94,12 @@ export async function trySetupUser(): Promise<void> {
 async function fetchUser(token: string): Promise<void> {
   const store = useStore();
 
-  let response = await fetch(
-    `http://${window.location.hostname}:3000/api/user/profile`,
-    {
-      method: "GET",
-      headers: {
-        Authorization: "Bearer " + token,
-      },
-    }
-  );
+  let response = await fetch(`http://${window.location.hostname}:3000/api/user/profile`, {
+    method: "GET",
+    headers: {
+      Authorization: "Bearer " + token,
+    },
+  });
   if (!response.ok) {
     return Promise.reject();
   }
@@ -135,20 +107,16 @@ async function fetchUser(token: string): Promise<void> {
   let data = await response.json();
   store.user = data;
 
-  let res = await fetch(
-    `http://${window.location.hostname}:3000/api/friendship`,
-    {
-      method: "GET",
-      headers: {
-        Authorization: "Bearer " + token,
-      },
-    }
-  );
+  let res = await fetch(`http://${window.location.hostname}:3000/api/friendship`, {
+    method: "GET",
+    headers: {
+      Authorization: "Bearer " + token,
+    },
+  });
   if (!res.ok) {
     return Promise.reject();
   }
-  const resTyped: { friends: User[]; invitations: User[] } =
-    (await res.json()) as { friends: User[]; invitations: User[] };
+  const resTyped: { friends: User[]; invitations: User[] } = (await res.json()) as { friends: User[]; invitations: User[] };
   store.invitations = resTyped.invitations;
 }
 
@@ -169,13 +137,9 @@ function connectSocket(token: string, user: any): void {
   console.log("store socket: " + store.socket.id);
 }
 
-export function addAlertMessage(
-  message: string,
-  type: number,
-  second: number = 5
-) {
+export function addAlertMessage(message: string, type: number, second: number = 5) {
   const store = useStore();
-  const x: Message = {
+  const x: Alert = {
     type: type,
     message: message,
     time: second,

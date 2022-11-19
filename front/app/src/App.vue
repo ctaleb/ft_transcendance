@@ -1,10 +1,7 @@
 <template>
   <div>
     <nav>
-      <div
-        style="display: flex; position: relative; justify-content: center"
-        v-if="$route.path != '/' && $route.path != '/signup'"
-      >
+      <div style="display: flex; position: relative; justify-content: center" v-if="$route.path != '/' && $route.path != '/signup'">
         <router-link to="/profile"
           >Profile
           <div :class="'dot' + (profileNotificationBadge ? ' show' : '')"></div
@@ -13,23 +10,12 @@
         <router-link to="/chat">Chat</router-link>
       </div>
     </nav>
-    <router-view
-      :key="$route.fullPath"
-      @notification="changeNotificationValue"
-      :incoming-friend-request="incomingFriendRequest"
-    />
+    <router-view :key="$route.fullPath" @notification="changeNotificationValue" :incoming-friend-request="incomingFriendRequest" />
     <div v-if="gameConfirmation" class="overlay">
-      <GameConfirmation
-        @confirmGame="confirmGame()"
-        @denyGame="denyGame()"
-      ></GameConfirmation>
+      <GameConfirmation @confirmGame="confirmGame()" @denyGame="denyGame()"></GameConfirmation>
     </div>
     <div v-if="customInvitation" class="overlay">
-      <CustomInvitation
-        :inviter="invSender"
-        @acceptCustom="acceptCustom()"
-        @denyCustom="denyCustom()"
-      ></CustomInvitation>
+      <CustomInvitation :inviter="invSender" @acceptCustom="acceptCustom()" @denyCustom="denyCustom()"></CustomInvitation>
     </div>
     <div v-if="failedInvitation" class="overlay">
       <FailedInvitation @invFailure="invFailure()"></FailedInvitation>
@@ -44,10 +30,7 @@
 import { onMounted, ref, watch } from "vue";
 import { RouterLink, RouterView, useRoute, useRouter } from "vue-router";
 import { User, getUserByNickname } from "@/types/User";
-import {
-  trySetupUser,
-  addAlertMessage,
-} from "@/functions/funcs";
+import { trySetupUser, addAlertMessage } from "@/functions/funcs";
 import { Message } from "@/types/GameSummary";
 import { useStore } from "@/store";
 import GameConfirmation from "./components/GameConfirmation/Modal.vue";
@@ -67,7 +50,6 @@ const invSender = ref("Placeholder");
 
 trySetupUser();
 
-const store = useStore();
 let socket = store.socket;
 let alertMessages: Message[] = store.message;
 
@@ -236,21 +218,13 @@ onMounted(() => {
     (currentValue, oldValue) => {
       if (currentValue != "/game") store.socket?.emit("watchPath");
 
-      if (
-        localStorage.getItem("token") &&
-        profileNotificationBadge.value === false
-      ) {
-        fetch(
-          "http://" +
-            window.location.hostname +
-            ":3000/api/friendship/has-invitations",
-          {
-            method: "GET",
-            headers: {
-              Authorization: "Bearer " + localStorage.getItem("token"),
-            },
-          }
-        )
+      if (localStorage.getItem("token") && profileNotificationBadge.value === false) {
+        fetch("http://" + window.location.hostname + ":3000/api/friendship/has-invitations", {
+          method: "GET",
+          headers: {
+            Authorization: "Bearer " + localStorage.getItem("token"),
+          },
+        })
           .then((res) => {
             return res.json();
           })

@@ -1,180 +1,88 @@
 <template>
   <section class="lobby container">
-    <img
-      class="border-gold user-image michel"
-      :src="getUserAvatar(store.user)"
-      alt=""
-    />
+    <img class="border-gold user-image michel" :src="getUserAvatar(store.user)" alt="" />
     <div :class="powers ? '' : ' hidden'">
       <power-slider-component v-model="power" id="powerSlider" />
     </div>
     <!-- <div>
     <button @click="toggleGameQueue()">CHANGE MODE</button>
   </div> -->
-  <!-- <div>{{ toggleLadder }}</div>
+    <!-- <div>{{ toggleLadder }}</div>
   <div>{{ toggleInvited }}</div> -->
-  <div v-if="toggleLadder" class="ladder">
-    <!-- <PowerSliderComponent v-model="power" id="powerSlider" /> -->
-    <div>
-      <div @click="findMatch()" class="btn">
-        <div class="text">PLAY</div>
+    <div v-if="toggleLadder" class="ladder">
+      <PowerSliderComponent v-model="power" id="powerSlider" />
+      <div>
+        <div @click="findMatch()" class="btn">
+          <div class="text">PLAY</div>
+        </div>
       </div>
-    </div>
-    <!-- <div v-if="gameBoard">
+      <!-- <div v-if="gameBoard">
       {{ gameBoard }}
       <canvas class="canvas" ref="canvas"></canvas>
     </div> -->
       <div v-if="summary" class="overlay">
         <!-- <div v-if="modal" class="modal">
-        <h1>Ready to play ?</h1>
-        <button @click="confirmGame()">Yes</button>
-        <button @click="denyGame()">No</button>
-      </div> -->
-        <Modal
-          :title="sumTitle"
-          :data="gameSummary"
-          :start="start"
-          :end="end"
-          @close="showSummary(false)"
-        ></Modal>
+          <h1>Ready to play ?</h1>
+          <button @click="confirmGame()">Yes</button>
+          <button @click="denyGame()">No</button>
+        </div> -->
+        <Modal :title="sumTitle" :data="gameSummary" :start="start" :end="end" @close="showSummary(false)"></Modal>
       </div>
       <div v-if="noFriends" class="overlay">
         <Denial :inviter="friendName" @sadStory="showDenial(false)"></Denial>
       </div>
       <div class="power">Selected power: {{ power }}</div>
     </div>
-    <div class="power">Selected power: {{ power }}</div>
-  </div>
-  <div v-else class="custom">
-    <!-- TODO add a hiding toggle for invitee -->
-    <div>
-      <h1>Custom Game with {{ friendName }}</h1>
-      <div v-if="!toggleInvited" class="inviter">
-        <div>
-          <label for="score">Max Score: {{ score }}</label>
+    <div v-else class="custom">
+      <!-- TODO add a hiding toggle for invitee -->
+      <div>
+        <h1>Custom Game with {{ friendName }}</h1>
+        <div v-if="!toggleInvited" class="inviter">
           <div>
             <label for="score">Max Score: {{ score }}</label>
             <div>
-              1<input
-                v-model="score"
-                type="range"
-                id="score"
-                name="score"
-                min="1"
-                max="100"
-                :disabled="readyButton == true"
-              />100
+              <label for="score">Max Score: {{ score }}</label>
+              <div>1<input v-model="score" type="range" id="score" name="score" min="1" max="100" :disabled="readyButton == true" />100</div>
             </div>
-          </div>
-          <div>
-            <label for="ballSpeed"
-              >Initial Ball Speed (0 for half speed): {{ ballSpeed }}</label
-            >
             <div>
-              0<input
-                v-model="ballSpeed"
-                type="range"
-                id="ballSpeed"
-                name="ballSpeed"
-                min="0"
-                max="5"
-                :disabled="readyButton == true"
-              />5
+              <label for="ballSpeed">Initial Ball Speed (0 for half speed): {{ ballSpeed }}</label>
+              <div>0<input v-model="ballSpeed" type="range" id="ballSpeed" name="ballSpeed" min="0" max="5" :disabled="readyButton == true" />5</div>
             </div>
-          </div>
-          <div>
-            <label for="ballSize"
-              >Ball Size Factor (0 for half size): {{ ballSize }}</label
-            >
             <div>
-              0<input
-                v-model="ballSize"
-                type="range"
-                id="ballSize"
-                name="ballSize"
-                min="0"
-                max="3"
-                :disabled="readyButton == true"
-              />3
+              <label for="ballSize">Ball Size Factor (0 for half size): {{ ballSize }}</label>
+              <div>0<input v-model="ballSize" type="range" id="ballSize" name="ballSize" min="0" max="3" :disabled="readyButton == true" />3</div>
             </div>
-          </div>
-          <div>
-            <label for="barSpeed"
-              >Bar Speed Factor (0 for half speed): {{ barSpeed }}</label
-            >
             <div>
-              0<input
-                v-model="barSpeed"
-                type="range"
-                id="barSpeed"
-                name="barSpeed"
-                min="0"
-                max="5"
-                :disabled="readyButton == true"
-              />5
+              <label for="barSpeed">Bar Speed Factor (0 for half speed): {{ barSpeed }}</label>
+              <div>0<input v-model="barSpeed" type="range" id="barSpeed" name="barSpeed" min="0" max="5" :disabled="readyButton == true" />5</div>
             </div>
-          </div>
-          <div>
-            <label for="barSize"
-              >Bar Size Factor (0 for half size): {{ barSize }}</label
-            >
             <div>
-              0<input
-                v-model="barSize"
-                type="range"
-                id="barSize"
-                name="barSize"
-                min="0"
-                max="2"
-                :disabled="readyButton == true"
-              />2
+              <label for="barSize">Bar Size Factor (0 for half size): {{ barSize }}</label>
+              <div>0<input v-model="barSize" type="range" id="barSize" name="barSize" min="0" max="2" :disabled="readyButton == true" />2</div>
             </div>
-          </div>
-          <div>
-            <input
-              v-model="smashes"
-              type="checkbox"
-              id="switch"
-              :disabled="readyButton == true"
-            /><label for="smashes">Toggle smashes</label>
-          </div>
-          <div>
-            <label for="smashStrength"
-              >Smash Strength Factor: {{ smashStrength }}</label
-            >
+            <div><input v-model="smashes" type="checkbox" id="switch" :disabled="readyButton == true" /><label for="smashes">Toggle smashes</label></div>
             <div>
-              1<input
-                v-model="smashStrength"
-                type="range"
-                id="smashStrength"
-                name="smashStrength"
-                min="1"
-                max="10"
-                :disabled="smashes == false || readyButton == true"
-              />10
+              <label for="smashStrength">Smash Strength Factor: {{ smashStrength }}</label>
+              <div>
+                1<input
+                  v-model="smashStrength"
+                  type="range"
+                  id="smashStrength"
+                  name="smashStrength"
+                  min="1"
+                  max="10"
+                  :disabled="smashes == false || readyButton == true"
+                />10
+              </div>
             </div>
+            <div><input v-model="effects" type="checkbox" id="switch" :disabled="readyButton == true" /><label for="effects">Toggle effects</label></div>
+            <div><input v-model="powers" type="checkbox" id="switch" :disabled="readyButton == true" /><label for="powers">Toggle powers</label></div>
           </div>
           <div>
-            <input
-              v-model="effects"
-              type="checkbox"
-              id="switch"
-              :disabled="readyButton == true"
-            /><label for="effects">Toggle effects</label>
+            <button @click="readyUp()" :disabled="readyButton">
+              {{ customReady }}
+            </button>
           </div>
-          <div>
-            <input
-              v-model="powers"
-              type="checkbox"
-              id="switch"
-              :disabled="readyButton == true"
-            /><label for="powers">Toggle powers</label>
-          </div>
-        </div>
-        <div>
-          <button @click="readyUp()" :disabled="readyButton">
-            {{ customReady }}
-          </button>
         </div>
       </div>
     </div>
@@ -199,23 +107,9 @@ import paddleEnergyRedUrl from "../assets/energy_paddle_red.png";
 import slotUrl from "../assets/slot.png";
 import fillUrl from "../assets/fill_slot.png";
 import fillRedUrl from "../assets/slot_fill_enemy.png";
-import {
-  ref,
-  reactive,
-  onMounted,
-  onBeforeMount,
-  watch,
-  onUnmounted,
-} from "vue";
+import { ref, reactive, onMounted, onBeforeMount, watch, onUnmounted } from "vue";
 import { io } from "socket.io-client";
-import {
-  GameState,
-  GameRoom,
-  IBall,
-  IBar,
-  IPoint,
-  GameOptions,
-} from "../../../../back/app/src/server/entities/server.entity";
+import { GameState, GameRoom, IBall, IBar, IPoint, GameOptions } from "../../../../back/app/src/server/entities/server.entity";
 //import config from "../config/config";
 import { title } from "process";
 import PowerSliderComponent from "./PowerSliderComponent.vue";
@@ -224,7 +118,8 @@ import { GameSummaryData } from "@/types/GameSummary";
 import Modal from "./Summary/Modal.vue";
 import { useStore } from "@/store";
 import Denial from "./InviteDenied/Modal.vue";
-import { getUserAvatar, getUserByNickname } from "@/functions/funcs";
+import { getUserAvatar } from "@/functions/funcs";
+import { getUserByNickname } from "@/types/User";
 import { Socket } from "engine.io-client";
 //import { SCOPABLE_TYPES } from "@babel/types";
 
@@ -412,11 +307,7 @@ function kickoffLoading(ctx: any) {
   }
 }
 
-function drawSmashingEffect(
-  bar: IBar,
-  smashingPercent: number,
-  ctx: CanvasRenderingContext2D
-) {
+function drawSmashingEffect(bar: IBar, smashingPercent: number, ctx: CanvasRenderingContext2D) {
   if (bar.smashing) {
     ctx.drawImage(
       bar.pos.y < 250 ? energyPaddleRedImg : energyPaddleImg,
@@ -455,13 +346,7 @@ function drawScore(ctx: CanvasRenderingContext2D, gameState: GameState) {
   let slot = theRoom.options.scoreMax;
 
   for (let i = 0; i < slot; i++) {
-    ctx.drawImage(
-      slotImg,
-      cWidth * 0.25 + ((cWidth * 0.5) / (slot + 1)) * (i + 1) - 10 * scale,
-      cHeight * 0.148 - 25 * scale,
-      20 * scale,
-      20 * scale
-    );
+    ctx.drawImage(slotImg, cWidth * 0.25 + ((cWidth * 0.5) / (slot + 1)) * (i + 1) - 10 * scale, cHeight * 0.148 - 25 * scale, 20 * scale, 20 * scale);
     if (i < gameState.score.client)
       ctx.drawImage(
         fillRedImg,
@@ -472,13 +357,7 @@ function drawScore(ctx: CanvasRenderingContext2D, gameState: GameState) {
       );
   }
   for (let i = 0; i < slot; i++) {
-    ctx.drawImage(
-      slotImg,
-      cWidth * 0.25 + ((cWidth * 0.5) / (slot + 1)) * (i + 1) - 10 * scale,
-      cHeight * 0.894 - 25 * scale,
-      20 * scale,
-      20 * scale
-    );
+    ctx.drawImage(slotImg, cWidth * 0.25 + ((cWidth * 0.5) / (slot + 1)) * (i + 1) - 10 * scale, cHeight * 0.894 - 25 * scale, 20 * scale, 20 * scale);
     if (i < gameState.score.host)
       ctx.drawImage(
         fillImg,
@@ -518,10 +397,7 @@ function updateSummary(summary: GameSummaryData) {
 }
 
 let gState: GameState;
-function test(
-  ctx: CanvasRenderingContext2D | null | undefined,
-  gameState: GameState
-) {
+function test(ctx: CanvasRenderingContext2D | null | undefined, gameState: GameState) {
   if (theRoom && ctx) {
     let ball = gameState.ball;
     clientScore.value = gameState.score.client;
@@ -536,13 +412,7 @@ function test(
       drawPlayground(ctx);
       drawScore(ctx, gameState);
       kickoffLoading(ctx);
-      ctx.drawImage(
-        ballImg,
-        ball.pos.x - ball.size * scale,
-        ball.pos.y - ball.size * scale,
-        ball.size * 2 * scale,
-        ball.size * 2 * scale
-      );
+      ctx.drawImage(ballImg, ball.pos.x - ball.size * scale, ball.pos.y - ball.size * scale, ball.size * 2 * scale, ball.size * 2 * scale);
       ctx.fillStyle = "black";
       drawSmashingEffect(gameState.clientBar, cSmashingPercent, ctx);
       drawSmashingEffect(gameState.hostBar, hSmashingPercent, ctx);
@@ -620,23 +490,18 @@ onUnmounted(() => {
 });
 
 const registerSockets = (state: Socket) => {
-  !socket?.hasListeners("customInviter") &&
-    socket?.on("customInviter", customInviter);
-  !socket?.hasListeners("customInvitee") &&
-    socket?.on("customInvitee", customInvitee);
-  !socket?.hasListeners("foreverAlone") &&
-    socket?.on("foreverAlone", foreverAlone);
+  !socket?.hasListeners("customInviter") && socket?.on("customInviter", customInviter);
+  !socket?.hasListeners("customInvitee") && socket?.on("customInvitee", customInvitee);
+  !socket?.hasListeners("foreverAlone") && socket?.on("foreverAlone", foreverAlone);
   !socket?.hasListeners("spectating") && socket?.on("spectating", spectating);
   !socket?.hasListeners("reconnect") && socket?.on("reconnect", reconnect);
   !socket?.hasListeners("kickOff") && socket?.on("kickOff", kickOfff);
   !socket?.hasListeners("play") && socket?.on("play", play);
-  !socket?.hasListeners("ServerUpdate") &&
-    socket?.on("ServerUpdate", ServerUpdate);
+  !socket?.hasListeners("ServerUpdate") && socket?.on("ServerUpdate", ServerUpdate);
   !socket?.hasListeners("Win") && socket?.on("Win", Win);
   !socket?.hasListeners("Lose") && socket?.on("Lose", Lose);
   !socket?.hasListeners("startGame") && socket?.on("startGame", startGame);
-  !socket?.hasListeners("customInvitation") &&
-    socket?.on("customInvitation", customInvitation);
+  !socket?.hasListeners("customInvitation") && socket?.on("customInvitation", customInvitation);
 };
 
 const unregisterSockets = (state: Socket) => {
@@ -721,13 +586,7 @@ const ServerUpdate = (gameState: GameState) => {
       drawScore(ctx, gameState);
       drawPowerCharge(ctx, gameState);
       kickoffLoading(ctx);
-      ctx.drawImage(
-        ballImg,
-        ball.pos.x - ball.size * scale,
-        ball.pos.y - ball.size * scale,
-        ball.size * 2 * scale,
-        ball.size * 2 * scale
-      );
+      ctx.drawImage(ballImg, ball.pos.x - ball.size * scale, ball.pos.y - ball.size * scale, ball.size * 2 * scale, ball.size * 2 * scale);
       ctx.fillStyle = "black";
       drawSmashingEffect(gameState.clientBar, cSmashingPercent, ctx);
       drawSmashingEffect(gameState.hostBar, hSmashingPercent, ctx);
@@ -735,14 +594,9 @@ const ServerUpdate = (gameState: GameState) => {
   }
 };
 
-const Win = (
-  gameRoom: GameRoom,
-  elo_diff: number,
-  summary: GameSummaryData
-) => {
+const Win = (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) => {
   theRoom = gameRoom;
-  lobbyStatus.value =
-    "Defeat... You lost -" + elo_diff + " elo ! Return to lobby ?";
+  lobbyStatus.value = "Defeat... You lost -" + elo_diff + " elo ! Return to lobby ?";
   startButton.value = false;
   readyButton.value = false;
   customReady.value = "Ready ?";
@@ -756,14 +610,9 @@ const Win = (
   document.querySelector(".canvas")?.classList.add("hidden");
 };
 
-const Lose = (
-  gameRoom: GameRoom,
-  elo_diff: number,
-  summary: GameSummaryData
-) => {
+const Lose = (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) => {
   theRoom = gameRoom;
-  lobbyStatus.value =
-    "Victory ! You gained +" + elo_diff + " elo ! Return to lobby ?";
+  lobbyStatus.value = "Victory ! You gained +" + elo_diff + " elo ! Return to lobby ?";
   startButton.value = false;
   readyButton.value = false;
   customReady.value = "Ready ?";

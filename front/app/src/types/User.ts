@@ -1,12 +1,17 @@
 import { fetchJSONDatas } from "@/functions/funcs";
+import { Pictured } from "@/types/Utils";
 
-export interface User {
-  id: number;
-  nickname: string;
-  avatar: string;
+export class User implements Pictured {
+  id!: number;
+  nickname!: string;
+  avatar!: string;
   friends?: User[];
   invitations?: User[];
   history?: History[];
+
+  getPicture(): string {
+    return this.avatar;
+  }
 }
 
 export function getUserAvatar(user: User): string {

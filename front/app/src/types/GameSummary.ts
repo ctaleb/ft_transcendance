@@ -14,7 +14,7 @@ export interface PlayerInfoData {
   eloChange: number;
 }
 
-export interface Message {
+export interface Alert {
   type: number;
   message: string;
   time: number;
