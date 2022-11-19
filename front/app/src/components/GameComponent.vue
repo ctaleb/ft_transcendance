@@ -2,16 +2,19 @@
   <!-- <div>
     <button @click="toggleGameQueue()">CHANGE MODE</button>
   </div> -->
-  <div :class="'ladder' + (toggleLadder ? '' : ' hidden')">
+  <!-- <div>{{ toggleLadder }}</div>
+  <div>{{ toggleInvited }}</div> -->
+  <div v-if="toggleLadder" class="ladder">
     <!-- <PowerSliderComponent v-model="power" id="powerSlider" /> -->
     <div>
       <button @click="findMatch()" :disabled="startButton">
         {{ lobbyStatus }}
       </button>
     </div>
-    <div>
-      <canvas class="canvas hidden" ref="canvas"></canvas>
-    </div>
+    <!-- <div v-if="gameBoard">
+      {{ gameBoard }}
+      <canvas class="canvas" ref="canvas"></canvas>
+    </div> -->
 
     <div v-if="summary" class="overlay">
       <!-- <div v-if="modal" class="modal">
@@ -32,11 +35,11 @@
     </div>
     <div class="power">Selected power: {{ power }}</div>
   </div>
-  <div :class="'custom' + (toggleLadder ? ' hidden' : '')">
+  <div v-else class="custom">
     <!-- TODO add a hiding toggle for invitee -->
     <div>
       <h1>Custom Game with {{ friendName }}</h1>
-      <div :class="'inviter' + (toggleInvited ? ' hidden' : '')">
+      <div v-if="!toggleInvited" class="inviter">
         <div>
           <label for="score">Max Score: {{ score }}</label>
           <div>
@@ -163,13 +166,14 @@
       </div>
     </div>
   </div>
-  <div :class="'powerSlider' + (powers ? '' : ' hidden')">
+  <div class="powerSlider" :class="powers ? '' : 'hidden'">
     <PowerSliderComponent v-model="power" id="powerSlider" />
   </div>
+  <canvas class="canvas" ref="canvas"></canvas>
 </template>
 
 <style lang="scss">
-@import "../style/summary.scss";
+// @import "../style/summary.scss";
 </style>
 
 <script setup lang="ts">
@@ -185,7 +189,14 @@ import paddleEnergyRedUrl from "../assets/energy_paddle_red.png";
 import slotUrl from "../assets/slot.png";
 import fillUrl from "../assets/fill_slot.png";
 import fillRedUrl from "../assets/slot_fill_enemy.png";
-import { ref, reactive, onMounted, onBeforeMount } from "vue";
+import {
+  ref,
+  reactive,
+  onMounted,
+  onBeforeMount,
+  watch,
+  onUnmounted,
+} from "vue";
 import { io } from "socket.io-client";
 import {
   GameState,
@@ -203,6 +214,7 @@ import { GameSummaryData } from "@/types/GameSummary";
 import Modal from "./Summary/Modal.vue";
 import { useStore } from "@/store";
 import Denial from "./InviteDenied/Modal.vue";
+import { Socket } from "engine.io-client";
 //import { SCOPABLE_TYPES } from "@babel/types";
 
 const store = useStore();
@@ -260,6 +272,7 @@ const noFriends = ref(false);
 const summary = ref(false);
 const toggleLadder = ref(true);
 const toggleInvited = ref(false);
+const gameBoard = ref(false);
 
 const friendName = ref("Placeholder");
 const customReady = ref("Ready ?");
@@ -562,153 +575,213 @@ function resizeCanvas() {
 }
 
 onMounted(() => {
-  let ctx = canvas.value?.getContext("2d");
+  ctx = canvas.value?.getContext("2d");
+  console.log("ctx " + ctx);
+  ctx?.drawImage(plateauImg, 0, 0, cWidth, cHeight);
+
   scaling(ctx);
-  //   socket.on("gameConfirmation", (gameRoom: GameRoom) => {
-  //     theRoom = gameRoom;
-  //     showModal(true);
-  //   });
 
-  //   socket.on("gameConfirmationTimeout", () => {
-  //     showModal(false);
-  //     startButton.value = true;
-  //     lobbyStatus.value = "Find Match";
-  //   });
+  registerSockets(store.socket as any);
+  store.$subscribe((mutation, state) => {
+    //   socket.on("gameConfirmation", (gameRoom: GameRoom) => {
+    //     theRoom = gameRoom;
+    //     showModal(true);
+    //   });
 
-  socket?.on("customInviter", (friend: string) => {
-    friendName.value = friend;
-    toggleGameQueue();
-  });
-  socket?.on("customInvitee", (friend: string) => {
-    friendName.value = friend;
-    toggleInvitedMode();
-    toggleGameQueue();
-  });
-  socket?.on("foreverAlone", () => {
-    toggleGameQueue();
-    noFriends.value = true;
-  });
+    //   socket.on("gameConfirmationTimeout", () => {
+    //     showModal(false);
+    //     startButton.value = true;
+    //     lobbyStatus.value = "Find Match";
+    //   });
 
-  socket?.on("spectating", (gameRoom: GameRoom) => {
-    console.log("watching game");
-    theRoom = gameRoom;
-    hostName.value = theRoom.hostName;
-    clientName.value = theRoom.clientName;
-    lobbyStatus.value = "Spectating";
-    startButton.value = false;
-    powers.value = false;
-    document.querySelector(".canvas")?.classList.remove("hidden");
-  });
-
-  socket?.on("reconnect", (gameRoom: GameRoom) => {
-    console.log("reconnecting");
-    theRoom = gameRoom;
-    hostName.value = theRoom.hostName;
-    clientName.value = theRoom.clientName;
-    lobbyStatus.value = "Play !";
-    startButton.value = false;
-    powers.value = false;
-    document.querySelector(".canvas")?.classList.remove("hidden");
-  });
-
-  socket?.on("kickOff", () => {
-    kickOff = true;
-  });
-
-  socket?.on("play", () => {
-    kickOff = false;
-    loadPercent = 120;
-  });
-
-  socket?.on("ServerUpdate", (gameState: GameState) => {
-    gState = gameState;
-    scalePosition(gameState);
-    if (theRoom) {
-      let ball = gameState.ball;
-      clientScore.value = gameState.score.client;
-      hostScore.value = gameState.score.host;
-      if (gameState.clientBar.smashing && cSmashingPercent < 100 && !kickOff) {
-        cSmashingPercent += 2;
-      } else if (!gameState.clientBar.smashing || kickOff) cSmashingPercent = 0;
-      if (gameState.hostBar.smashing && hSmashingPercent < 100 && !kickOff) {
-        hSmashingPercent += 2;
-      } else if (!gameState.hostBar.smashing || kickOff) hSmashingPercent = 0;
-      if (ctx) {
-        drawPlayground(ctx);
-        drawScore(ctx, gameState);
-        drawPowerCharge(ctx, gameState);
-        kickoffLoading(ctx);
-        ctx.drawImage(
-          ballImg,
-          ball.pos.x - ball.size * scale,
-          ball.pos.y - ball.size * scale,
-          ball.size * 2 * scale,
-          ball.size * 2 * scale
-        );
-        ctx.fillStyle = "black";
-        drawSmashingEffect(gameState.clientBar, cSmashingPercent, ctx);
-        drawSmashingEffect(gameState.hostBar, hSmashingPercent, ctx);
-      }
+    if (state.socket) {
+      registerSockets(state.socket as any);
     }
   });
-
-  socket?.on(
-    "Win",
-    (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) => {
-      theRoom = gameRoom;
-      lobbyStatus.value =
-        "Victory ! You gained +" + elo_diff + " elo ! Return to lobby ?";
-      startButton.value = false;
-      readyButton.value = false;
-      customReady.value = "Ready ?";
-      powers.value = true;
-      end = new Date();
-      updateSummary(summary);
-      color.value = "green";
-      sumTitle.value = "Victory";
-      showSummary(true);
-      document.querySelector(".canvas")?.classList.add("hidden");
-    }
-  );
-
-  socket?.on(
-    "Lose",
-    (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) => {
-      theRoom = gameRoom;
-      lobbyStatus.value =
-        "Defeat... You lost -" + elo_diff + " elo ! Return to lobby ?";
-      startButton.value = false;
-      readyButton.value = false;
-      customReady.value = "Ready ?";
-      powers.value = true;
-      end = new Date();
-      updateSummary(summary);
-      color.value = "red";
-      sumTitle.value = "Defeat";
-      showSummary(true);
-      document.querySelector(".canvas")?.classList.add("hidden");
-    }
-  );
-
-  socket?.on("startGame", (gameRoom: GameRoom) => {
-    lobbyStatus.value = "Play !";
-    if (!toggleLadder.value) toggleLadder.value = true;
-    if (toggleInvited.value) toggleInvited.value = false;
-    powers.value = false;
-    theRoom = gameRoom;
-    hostName.value = theRoom.hostName;
-    clientName.value = theRoom.clientName;
-    start = new Date();
-    document.querySelector(".canvas")?.classList.remove("hidden");
-  });
-
-  //todo / tochange
-  socket?.on("customInvitation", () => {});
 
   //needs to be moved
   //window.removeEventListener("resize", resizeCanvas);
   window.addEventListener("resize", resizeCanvas);
 });
+
+onUnmounted(() => {
+  unregisterSockets(store.socket as any);
+});
+
+const registerSockets = (state: Socket) => {
+  !socket?.hasListeners("customInviter") &&
+    socket?.on("customInviter", customInviter);
+  !socket?.hasListeners("customInvitee") &&
+    socket?.on("customInvitee", customInvitee);
+  !socket?.hasListeners("foreverAlone") &&
+    socket?.on("foreverAlone", foreverAlone);
+  !socket?.hasListeners("spectating") && socket?.on("spectating", spectating);
+  !socket?.hasListeners("reconnect") && socket?.on("reconnect", reconnect);
+  !socket?.hasListeners("kickOff") && socket?.on("kickOff", kickOfff);
+  !socket?.hasListeners("play") && socket?.on("play", play);
+  !socket?.hasListeners("ServerUpdate") &&
+    socket?.on("ServerUpdate", ServerUpdate);
+  !socket?.hasListeners("Win") && socket?.on("Win", Win);
+  !socket?.hasListeners("Lose") && socket?.on("Lose", Lose);
+  !socket?.hasListeners("startGame") && socket?.on("startGame", startGame);
+  !socket?.hasListeners("customInvitation") &&
+    socket?.on("customInvitation", customInvitation);
+};
+
+const unregisterSockets = (state: Socket) => {
+  socket?.removeListener("customInviter");
+  socket?.removeListener("customInvitee");
+  socket?.removeListener("foreverAlone");
+  socket?.removeListener("spectating");
+  socket?.removeListener("reconnect");
+  socket?.removeListener("kickOff");
+  socket?.removeListener("play");
+  socket?.removeListener("ServerUpdate");
+  socket?.removeListener("Win");
+  socket?.removeListener("Lose");
+  socket?.removeListener("startGame");
+  socket?.removeListener("customInvitation");
+};
+
+const customInviter = (friend: string) => {
+  friendName.value = friend;
+  toggleGameQueue();
+};
+
+const customInvitee = (friend: string) => {
+  friendName.value = friend;
+  toggleInvitedMode();
+  toggleGameQueue();
+};
+
+const foreverAlone = () => {
+  toggleGameQueue();
+  noFriends.value = true;
+};
+
+const spectating = (gameRoom: GameRoom) => {
+  console.log("watching game");
+  theRoom = gameRoom;
+  hostName.value = theRoom.hostName;
+  clientName.value = theRoom.clientName;
+  lobbyStatus.value = "Spectating";
+  startButton.value = false;
+  powers.value = false;
+  //   gameBoard.value = true;
+  document.querySelector(".canvas")?.classList.remove("hidden");
+};
+
+const reconnect = (gameRoom: GameRoom) => {
+  console.log("reconnecting");
+  theRoom = gameRoom;
+  hostName.value = theRoom.hostName;
+  clientName.value = theRoom.clientName;
+  lobbyStatus.value = "Play !";
+  startButton.value = false;
+  powers.value = false;
+  //   gameBoard.value = true;
+  document.querySelector(".canvas")?.classList.remove("hidden");
+};
+
+const kickOfff = () => {
+  kickOff = true;
+};
+
+const play = () => {
+  kickOff = false;
+  loadPercent = 120;
+};
+
+const ServerUpdate = (gameState: GameState) => {
+  gState = gameState;
+  scalePosition(gameState);
+  if (theRoom) {
+    let ball = gameState.ball;
+    clientScore.value = gameState.score.client;
+    hostScore.value = gameState.score.host;
+    if (gameState.clientBar.smashing && cSmashingPercent < 100 && !kickOff) {
+      cSmashingPercent += 2;
+    } else if (!gameState.clientBar.smashing || kickOff) cSmashingPercent = 0;
+    if (gameState.hostBar.smashing && hSmashingPercent < 100 && !kickOff) {
+      hSmashingPercent += 2;
+    } else if (!gameState.hostBar.smashing || kickOff) hSmashingPercent = 0;
+    if (ctx) {
+      drawPlayground(ctx);
+      drawScore(ctx, gameState);
+      drawPowerCharge(ctx, gameState);
+      kickoffLoading(ctx);
+      ctx.drawImage(
+        ballImg,
+        ball.pos.x - ball.size * scale,
+        ball.pos.y - ball.size * scale,
+        ball.size * 2 * scale,
+        ball.size * 2 * scale
+      );
+      ctx.fillStyle = "black";
+      drawSmashingEffect(gameState.clientBar, cSmashingPercent, ctx);
+      drawSmashingEffect(gameState.hostBar, hSmashingPercent, ctx);
+    }
+  }
+};
+
+const Win = (
+  gameRoom: GameRoom,
+  elo_diff: number,
+  summary: GameSummaryData
+) => {
+  theRoom = gameRoom;
+  lobbyStatus.value =
+    "Defeat... You lost -" + elo_diff + " elo ! Return to lobby ?";
+  startButton.value = false;
+  readyButton.value = false;
+  customReady.value = "Ready ?";
+  powers.value = true;
+  end = new Date();
+  updateSummary(summary);
+  color.value = "red";
+  sumTitle.value = "Defeat";
+  showSummary(true);
+  //   gameBoard.value = false;
+  document.querySelector(".canvas")?.classList.add("hidden");
+};
+
+const Lose = (
+  gameRoom: GameRoom,
+  elo_diff: number,
+  summary: GameSummaryData
+) => {
+  theRoom = gameRoom;
+  lobbyStatus.value =
+    "Victory ! You gained +" + elo_diff + " elo ! Return to lobby ?";
+  startButton.value = false;
+  readyButton.value = false;
+  customReady.value = "Ready ?";
+  powers.value = true;
+  end = new Date();
+  updateSummary(summary);
+  color.value = "green";
+  sumTitle.value = "Victory";
+  showSummary(true);
+  //   gameBoard.value = false;
+  document.querySelector(".canvas")?.classList.add("hidden");
+};
+
+const startGame = (gameRoom: GameRoom) => {
+  lobbyStatus.value = "Play !";
+  if (!toggleLadder.value) toggleLadder.value = true;
+  if (toggleInvited.value) toggleInvited.value = false;
+  powers.value = false;
+  theRoom = gameRoom;
+  hostName.value = theRoom.hostName;
+  clientName.value = theRoom.clientName;
+  start = new Date();
+  //   gameBoard.value = true;
+  console.log(gameBoard.value);
+  console.log(canvas.value);
+  document.querySelector(".canvas")?.classList.remove("hidden");
+};
+
+const customInvitation = () => {};
 </script>
 
 <style type="text/css">
