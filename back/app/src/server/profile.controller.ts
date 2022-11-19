@@ -15,7 +15,7 @@ import { ServerService } from './server.service';
 export class ProfileController {
   constructor(private readonly _serverService: ServerService) {}
 
-  @Get('match-history/:name')
+  @Get('/summary/:name')
   async matchHistory(@Request() req, @Param('name') name: string) {
     return await this._serverService.getMatchHistory(name);
   }

@@ -1,0 +1,82 @@
+@import "mixins/_sizes";
+@import "mixins/_border";
+@import "variables";
+
+.lobby {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-direction: column;
+  height: 750px;
+
+  .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(3px);
+    z-index: 5;
+  }
+
+  .modal {
+    z-index: 5;
+    width: 70%;
+    max-width: 1200px;
+    background-color: #030f19;
+    border-radius: 1rem;
+    border: 0.3rem solid #bcaf7b;
+    box-shadow: 0 2rem 3rem rgba(0, 0, 0, 0.3);
+    padding: 25px;
+
+    @media screen and (max-width: 720px) {
+      width: 95%;
+    }
+  }
+
+  .btn {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 0 0 4px lighten($background, 50%),
+      0 0 0 11px darken($background, 10%), 0 0 0 13px $primary;
+    background-color: lighten($background, 10%);
+    width: 150px;
+    height: 75px;
+    border-radius: 10000px;
+    // animation: ease 2s loading infinite;
+
+    @keyframes loading {
+      0% {
+        transform: rotate(0deg);
+      }
+      50% {
+        transform: rotate(180deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .text {
+      user-select: none;
+      height: 50%;
+      transform: translateY(-5%);
+      text-align: center;
+      font-size: xx-large;
+      font-weight: bolder;
+      color: lighten($background, 70%);
+    }
+
+    &:hover {
+      box-shadow: 0 0 0px 4px lighten($background, 70%),
+        0 0 3px 6px lighten($background, 70%),
+        0 0 0 11px darken($background, 10%), 0 0 0 13px $primary,
+        0 0 4px 15px $primary;
+    }
+  }
+}

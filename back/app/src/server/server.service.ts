@@ -426,8 +426,8 @@ export class ServerService {
     return data;
   }
 
-  getMatchHistory(name: string) {
-    return this._matchHistoryRepository.find({
+  async getMatchHistory(name: string) {
+    return await this._matchHistoryRepository.find({
       where: [
         {
           host: { nickname: name },

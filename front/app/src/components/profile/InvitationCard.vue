@@ -1,17 +1,28 @@
 <template>
-  <li class="friend debug-border">
-    <div>
-      <img
-        class="user-image border-gold"
-        :src="getUserAvatar(invitation)"
-        alt=""
-      />
-      <button @click="block(invitation)">Block</button>
+  <li>
+    <section class="invitation">
+      <div class="top-buttons">
+        <div @click="watchProfile()" class="square left"></div>
+        <div @click="block(invitation)" class="border-gold square right"></div>
+      </div>
+      <div class="user-invite border-gold">
+        <img
+          class="user-image border-gold"
+          :src="getUserAvatar(invitation)"
+          alt=""
+        />
+        <h3>{{ invitation.nickname }}</h3>
+        <!-- <p>{{ "status" }}</p> -->
+      </div>
+      <div class="bot-buttons">
+        <div @click="decline(invitation)" class="border-gold left"></div>
+        <div @click="befriend(invitation)" class="border-gold right"></div>
+      </div>
+      <!-- <button @click="block(invitation)">Block</button>
       <button @click="watchProfile()">Profile</button>
       <button @click="decline(invitation)">Deny</button>
-      <button @click="befriend(invitation)">Accept</button>
-    </div>
-    <h3>{{ invitation.nickname }}</h3>
+      <button @click="befriend(invitation)">Accept</button> -->
+    </section>
   </li>
 </template>
 

@@ -1,23 +1,33 @@
 <template @update-invitations="getRelations()">
   <section v-if="currentUser !== undefined" id="profile" class="container">
-    <div class="current-user debug-border">
-      <img
-        class="user-image border-gold"
-        :src="getUserAvatar(currentUser)"
-        alt=""
-        width="300"
-        height="300"
-      />
+    <div class="current-user border-gold">
+      <div>
+        <img
+          class="border-gold user-image"
+          :src="getUserAvatar(currentUser)"
+          alt=""
+        />
+      </div>
       <div>
         <h2 class="playerName">{{ currentUser?.nickname }}</h2>
-        <div v-if="currentUser === store.user">
-          <router-link to="/edit">Profile Editing</router-link>
-          |
-          <router-link to="/" v-on:click.prevent="logout()">Logout</router-link>
+        <h4>elo : 1500</h4>
+      </div>
+      <div>
+        <div class="buttons" v-if="currentUser === store.user">
+          <router-link class="test" to="/" v-on:click.prevent="logout()">
+            <img :src="shutdownUrl" alt="edit" />
+          </router-link>
+          <router-link class="test" to="/edit">
+            <img :src="editUrl" alt="shutdown" />
+          </router-link>
         </div>
       </div>
     </div>
-    <div class="search debug-border">
+    <div class="subMenu">
+      <button @click="watchFriend()">Friend</button>
+      <button @click="watchHistory()">Match History</button>
+    </div>
+    <div class="search" :style="toogleMenu ? 'display: none' : ''">
       <div class="searchBar">
         <div class="searchIcon"><i class="gg-search"></i></div>
         <input
@@ -30,7 +40,11 @@
       </div>
       <button @click="invite()">Add Friend</button>
     </div>
-    <div v-if="currentUser === store.user" class="friends debug-border">
+    <div
+      v-if="currentUser === store.user"
+      class="invitations"
+      :style="toogleMenu ? 'display: none' : ''"
+    >
       <h2 v-if="store.invitations?.length">Invitations</h2>
       <ul>
         <InvitationCard
@@ -39,10 +53,18 @@
         />
       </ul>
     </div>
-    <div class="friends debug-border">
-      <h2>Friends</h2>
+    <h2 style="margin: 1rem" :style="toogleMenu ? 'display: none' : ''">
+      Friends
+    </h2>
+    <div class="friends" :style="toogleMenu ? 'display: none' : ''">
       <ul>
-        <FriendCard v-for="friend of store.user?.friends" :friend="friend" />
+        <FriendCard v-for="friend of currentFriend" :friend="friend" />
+      </ul>
+    </div>
+    <div class="summary" :style="toogleMenu ? '' : 'display: none'">
+      <h2 style="margin: 1rem">Match History</h2>
+      <ul>
+        <SummaryCard v-for="summary of currentSummary" :summary="summary" />
       </ul>
     </div>
   </section>
@@ -53,18 +75,22 @@
 <script lang="ts" setup>
 import FriendAlert from "@/components/FriendAlert.vue";
 import FriendCard from "@/components/profile/FriendCard.vue";
+import SummaryCard from "@/components/profile/SummaryCard.vue";
 import InvitationCard from "@/components/profile/InvitationCard.vue";
+import shutdownUrl from "../assets/shutdown.png";
+import editUrl from "../assets/edit.png";
 import { getUserAvatar, getUserByNickname } from "@/functions/funcs";
 import { useStore } from "@/store";
-import { User } from "@/types/GameSummary";
+import { User, History, GameSummaryData } from "@/types/GameSummary";
 import { onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
-//import config from "@/config/config";
+import config from "@/config/config";
 
 const route = useRoute();
 
 const store = useStore();
 let socket = store.socket;
+
 store.$subscribe((mutation, state) => {
   socket = state.socket;
 });
@@ -81,23 +107,31 @@ store.$subscribe((mutation, state) => {
 // };
 
 const searchFriend = ref("");
+const toogleMenu = ref(false);
 
 const currentUser = ref<User>();
 const currentFriend = ref<User[]>();
+const currentSummary = ref<History[]>();
 
 onMounted(async () => {
   let nick = <string | undefined>route.params.nickname;
 
   if (nick) {
     currentUser.value = await getUserByNickname(nick);
-    console.log(currentUser.value);
 
     if (!currentUser.value) return;
-    await fetch("http://" + window.location.hostname + ":3000/api/friendship", {
-      headers: {
-        Authorization: "Bearer " + localStorage.getItem("token"),
-      },
-    })
+    await fetch(
+      "http://" +
+        window.location.hostname +
+        ":3000/api/friendship/profile/" +
+        nick,
+      {
+        method: "GET",
+        headers: {
+          Authorization: "Bearer " + localStorage.getItem("token"),
+        },
+      }
+    )
       .then((data) => data.json())
       .then((data) => {
         currentFriend.value = data.friends;
@@ -107,9 +141,36 @@ onMounted(async () => {
     currentFriend.value = store.user?.friends;
     store.$subscribe((mutation, state) => {
       currentUser.value = state.user;
+      currentFriend.value = store.user?.friends;
     });
   }
+
+  await fetch(
+    "http://" +
+      window.location.hostname +
+      ":3000/api/profile/summary/" +
+      currentUser.value?.nickname,
+    {
+      method: "GET",
+      headers: {
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+    }
+  )
+    .then((data) => data.json())
+    .then((data) => {
+      console.log(data);
+      currentSummary.value = data;
+    });
 });
+
+const watchFriend = () => {
+  toogleMenu.value = false;
+};
+
+const watchHistory = () => {
+  toogleMenu.value = true;
+};
 
 const logout = () => {
   localStorage.removeItem("token");
@@ -142,5 +203,5 @@ const invite = () => {
 </script>
 
 <style lang="scss">
-@import "../styles/profile.scss";
+@import "../styles/_alert.scss";
 </style>

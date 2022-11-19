@@ -1,6 +1,6 @@
 import config from "@/config/config";
 import { useStore } from "@/store";
-import { User } from "@/types/GameSummary";
+import { User, Message } from "@/types/GameSummary";
 import { io } from "socket.io-client";
 
 export async function isConnected(token: string): Promise<boolean> {
@@ -72,7 +72,6 @@ export async function trySetupUser(): Promise<void> {
 
   await fetchUser(token);
   connectSocket(token, JSON.parse(user));
-
   return Promise.resolve();
 }
 
@@ -115,7 +114,6 @@ async function fetchUser(token: string): Promise<void> {
 function connectSocket(token: string, user: any): void {
   const store = useStore();
 
-  console.log(store.user);
   store.socket = io("http://" + window.location.hostname + ":3500", {
     auth: { token: token, user: user },
     transports: ["websocket"],
@@ -128,4 +126,24 @@ function connectSocket(token: string, user: any): void {
   console.log(store.socket);
   //  debugger;
   console.log("store socket: " + store.socket.id);
+}
+
+export function addAlertMessage(
+  message: string,
+  type: number,
+  second: number = 5
+) {
+  const store = useStore();
+  const x: Message = {
+    type: type,
+    message: message,
+    time: second,
+  };
+  store.message?.push(x);
+
+  console.log(x);
+
+  setTimeout(() => {
+    store.message?.splice(store.message?.indexOf(x), 1);
+  }, second * 1000);
 }

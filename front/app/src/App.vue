@@ -1,18 +1,18 @@
 <template>
   <div>
-    <div
-      style="text-align: center"
-      v-if="$route.path != '/' && $route.path != '/signup'"
-    >
-      <nav>
+    <nav>
+      <div
+        style="display: flex; position: relative; justify-content: center"
+        v-if="$route.path != '/' && $route.path != '/signup'"
+      >
         <router-link to="/profile"
           >Profile
           <div :class="'dot' + (profileNotificationBadge ? ' show' : '')"></div
         ></router-link>
-        | <router-link to="/game">Game</router-link> |
+        |<router-link to="/game"> PLAY </router-link>|
         <router-link to="/chat">Chat</router-link>
-      </nav>
-    </div>
+      </div>
+    </nav>
     <router-view
       :key="$route.fullPath"
       @notification="changeNotificationValue"
@@ -34,21 +34,28 @@
     <div v-if="failedInvitation" class="overlay">
       <FailedInvitation @invFailure="invFailure()"></FailedInvitation>
     </div>
+    <div class="alertFlex">
+      <AlertCard v-for="message of alertMessages" :message="message" />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref, watch } from "vue";
 import { RouterLink, RouterView, useRoute, useRouter } from "vue-router";
-import { getUserByNickname, trySetupUser } from "@/functions/funcs";
-import { User } from "@/types/GameSummary";
+import {
+  getUserByNickname,
+  trySetupUser,
+  addAlertMessage,
+} from "@/functions/funcs";
+import { User, Message } from "@/types/GameSummary";
 import { useStore } from "@/store";
 import GameConfirmation from "./components/GameConfirmation/Modal.vue";
+import AlertCard from "./components/AlertCard.vue";
 import CustomInvitation from "./components/CustomInvitation/Modal.vue";
 import FailedInvitation from "./components/FailedInvitation/Modal.vue";
 
 const store = useStore();
-
 const route = useRoute();
 const router = useRouter();
 const incomingFriendRequest = ref("");
@@ -57,6 +64,12 @@ const gameConfirmation = ref(false);
 const customInvitation = ref(false);
 const failedInvitation = ref(false);
 const invSender = ref("Placeholder");
+
+trySetupUser();
+
+const store = useStore();
+let socket = store.socket;
+let alertMessages: Message[] = store.message;
 
 store.$subscribe((mutation, state) => {
   if (!state.socket?.hasListeners("customInvite")) {
@@ -113,8 +126,6 @@ store.$subscribe((mutation, state) => {
     });
   }
 });
-
-trySetupUser();
 
 //window.addEventListener("beforeunload", () => {
 //  store.socket?.disconnect;
@@ -258,6 +269,7 @@ onMounted(() => {
 
 <style lang="scss">
 @import "styles/custom.scss";
+@import "styles/_alert.scss";
 
 body {
   background-color: #010b12;

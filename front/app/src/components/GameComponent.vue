@@ -1,5 +1,14 @@
 <template>
-  <!-- <div>
+  <section class="lobby container">
+    <img
+      class="border-gold user-image michel"
+      :src="getUserAvatar(store.user)"
+      alt=""
+    />
+    <div :class="powers ? '' : ' hidden'">
+      <power-slider-component v-model="power" id="powerSlider" />
+    </div>
+    <!-- <div>
     <button @click="toggleGameQueue()">CHANGE MODE</button>
   </div> -->
   <!-- <div>{{ toggleLadder }}</div>
@@ -7,31 +16,32 @@
   <div v-if="toggleLadder" class="ladder">
     <!-- <PowerSliderComponent v-model="power" id="powerSlider" /> -->
     <div>
-      <button @click="findMatch()" :disabled="startButton">
-        {{ lobbyStatus }}
-      </button>
+      <div @click="findMatch()" class="btn">
+        <div class="text">PLAY</div>
+      </div>
     </div>
     <!-- <div v-if="gameBoard">
       {{ gameBoard }}
       <canvas class="canvas" ref="canvas"></canvas>
     </div> -->
-
-    <div v-if="summary" class="overlay">
-      <!-- <div v-if="modal" class="modal">
+      <div v-if="summary" class="overlay">
+        <!-- <div v-if="modal" class="modal">
         <h1>Ready to play ?</h1>
         <button @click="confirmGame()">Yes</button>
         <button @click="denyGame()">No</button>
       </div> -->
-      <Modal
-        :title="sumTitle"
-        :data="gameSummary"
-        :start="start"
-        :end="end"
-        @close="showSummary(false)"
-      ></Modal>
-    </div>
-    <div v-if="noFriends" class="overlay">
-      <Denial :inviter="friendName" @sadStory="showDenial(false)"></Denial>
+        <Modal
+          :title="sumTitle"
+          :data="gameSummary"
+          :start="start"
+          :end="end"
+          @close="showSummary(false)"
+        ></Modal>
+      </div>
+      <div v-if="noFriends" class="overlay">
+        <Denial :inviter="friendName" @sadStory="showDenial(false)"></Denial>
+      </div>
+      <div class="power">Selected power: {{ power }}</div>
     </div>
     <div class="power">Selected power: {{ power }}</div>
   </div>
@@ -43,137 +53,137 @@
         <div>
           <label for="score">Max Score: {{ score }}</label>
           <div>
-            1<input
-              v-model="score"
-              type="range"
-              id="score"
-              name="score"
-              min="1"
-              max="100"
-              :disabled="readyButton == true"
-            />100
+            <label for="score">Max Score: {{ score }}</label>
+            <div>
+              1<input
+                v-model="score"
+                type="range"
+                id="score"
+                name="score"
+                min="1"
+                max="100"
+                :disabled="readyButton == true"
+              />100
+            </div>
           </div>
-        </div>
-        <div>
-          <label for="ballSpeed"
-            >Initial Ball Speed (0 for half speed): {{ ballSpeed }}</label
-          >
           <div>
-            0<input
-              v-model="ballSpeed"
-              type="range"
-              id="ballSpeed"
-              name="ballSpeed"
-              min="0"
-              max="5"
-              :disabled="readyButton == true"
-            />5
+            <label for="ballSpeed"
+              >Initial Ball Speed (0 for half speed): {{ ballSpeed }}</label
+            >
+            <div>
+              0<input
+                v-model="ballSpeed"
+                type="range"
+                id="ballSpeed"
+                name="ballSpeed"
+                min="0"
+                max="5"
+                :disabled="readyButton == true"
+              />5
+            </div>
           </div>
-        </div>
-        <div>
-          <label for="ballSize"
-            >Ball Size Factor (0 for half size): {{ ballSize }}</label
-          >
           <div>
-            0<input
-              v-model="ballSize"
-              type="range"
-              id="ballSize"
-              name="ballSize"
-              min="0"
-              max="3"
-              :disabled="readyButton == true"
-            />3
+            <label for="ballSize"
+              >Ball Size Factor (0 for half size): {{ ballSize }}</label
+            >
+            <div>
+              0<input
+                v-model="ballSize"
+                type="range"
+                id="ballSize"
+                name="ballSize"
+                min="0"
+                max="3"
+                :disabled="readyButton == true"
+              />3
+            </div>
           </div>
-        </div>
-        <div>
-          <label for="barSpeed"
-            >Bar Speed Factor (0 for half speed): {{ barSpeed }}</label
-          >
           <div>
-            0<input
-              v-model="barSpeed"
-              type="range"
-              id="barSpeed"
-              name="barSpeed"
-              min="0"
-              max="5"
-              :disabled="readyButton == true"
-            />5
+            <label for="barSpeed"
+              >Bar Speed Factor (0 for half speed): {{ barSpeed }}</label
+            >
+            <div>
+              0<input
+                v-model="barSpeed"
+                type="range"
+                id="barSpeed"
+                name="barSpeed"
+                min="0"
+                max="5"
+                :disabled="readyButton == true"
+              />5
+            </div>
           </div>
-        </div>
-        <div>
-          <label for="barSize"
-            >Bar Size Factor (0 for half size): {{ barSize }}</label
-          >
           <div>
-            0<input
-              v-model="barSize"
-              type="range"
-              id="barSize"
-              name="barSize"
-              min="0"
-              max="2"
-              :disabled="readyButton == true"
-            />2
+            <label for="barSize"
+              >Bar Size Factor (0 for half size): {{ barSize }}</label
+            >
+            <div>
+              0<input
+                v-model="barSize"
+                type="range"
+                id="barSize"
+                name="barSize"
+                min="0"
+                max="2"
+                :disabled="readyButton == true"
+              />2
+            </div>
           </div>
-        </div>
-        <div>
-          <input
-            v-model="smashes"
-            type="checkbox"
-            id="switch"
-            :disabled="readyButton == true"
-          /><label for="smashes">Toggle smashes</label>
-        </div>
-        <div>
-          <label for="smashStrength"
-            >Smash Strength Factor: {{ smashStrength }}</label
-          >
           <div>
-            1<input
-              v-model="smashStrength"
-              type="range"
-              id="smashStrength"
-              name="smashStrength"
-              min="1"
-              max="10"
-              :disabled="smashes == false || readyButton == true"
-            />10
+            <input
+              v-model="smashes"
+              type="checkbox"
+              id="switch"
+              :disabled="readyButton == true"
+            /><label for="smashes">Toggle smashes</label>
+          </div>
+          <div>
+            <label for="smashStrength"
+              >Smash Strength Factor: {{ smashStrength }}</label
+            >
+            <div>
+              1<input
+                v-model="smashStrength"
+                type="range"
+                id="smashStrength"
+                name="smashStrength"
+                min="1"
+                max="10"
+                :disabled="smashes == false || readyButton == true"
+              />10
+            </div>
+          </div>
+          <div>
+            <input
+              v-model="effects"
+              type="checkbox"
+              id="switch"
+              :disabled="readyButton == true"
+            /><label for="effects">Toggle effects</label>
+          </div>
+          <div>
+            <input
+              v-model="powers"
+              type="checkbox"
+              id="switch"
+              :disabled="readyButton == true"
+            /><label for="powers">Toggle powers</label>
           </div>
         </div>
         <div>
-          <input
-            v-model="effects"
-            type="checkbox"
-            id="switch"
-            :disabled="readyButton == true"
-          /><label for="effects">Toggle effects</label>
+          <button @click="readyUp()" :disabled="readyButton">
+            {{ customReady }}
+          </button>
         </div>
-        <div>
-          <input
-            v-model="powers"
-            type="checkbox"
-            id="switch"
-            :disabled="readyButton == true"
-          /><label for="powers">Toggle powers</label>
-        </div>
-      </div>
-      <div>
-        <button @click="readyUp()" :disabled="readyButton">
-          {{ customReady }}
-        </button>
       </div>
     </div>
-  </div>
-  <div class="powerSlider" :class="powers ? '' : 'hidden'">
-    <PowerSliderComponent v-model="power" id="powerSlider" />
-  </div>
-  <canvas class="canvas" ref="canvas"></canvas>
+  </section>
 </template>
 
-<style lang="scss">
-// @import "../style/summary.scss";
+<style lang="scss" scoped>
+@import "../styles/custom.scss";
+@import "../styles/_lobby.scss";
 </style>
 
 <script setup lang="ts">
@@ -214,6 +224,7 @@ import { GameSummaryData } from "@/types/GameSummary";
 import Modal from "./Summary/Modal.vue";
 import { useStore } from "@/store";
 import Denial from "./InviteDenied/Modal.vue";
+import { getUserAvatar, getUserByNickname } from "@/functions/funcs";
 import { Socket } from "engine.io-client";
 //import { SCOPABLE_TYPES } from "@babel/types";
 
