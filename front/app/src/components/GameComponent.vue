@@ -5,10 +5,9 @@
       :src="getUserAvatar(store.user)"
       alt=""
     />
-    <div class="powerSlider" :class="powers ? '' : ' hidden'">
+    <div :class="powers ? '' : ' hidden'">
       <power-slider-component v-model="power" id="powerSlider" />
     </div>
-    <div class="loading" :class="powers ? ' hidden' : ''"></div>
     <!-- <div>
     <button @click="toggleGameQueue()">CHANGE MODE</button>
   </div> -->

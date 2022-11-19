@@ -74,12 +74,13 @@
           width: 15%;
           background-color: $primary;
           display: flex;
-          justify-content: center;
           align-items: center;
-          transition: width 1s ease;
+          justify-content: center;
+          transition: all 1s ease;
 
           &:hover {
             width: 40%;
+            border-radius: 20px 0 0 20px;
           }
           img {
             margin-right: 20%;

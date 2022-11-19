@@ -1,3 +1,7 @@
+@import "mixins/_sizes";
+@import "mixins/_border";
+@import "variables";
+
 .lobby {
   display: flex;
   justify-content: space-between;
@@ -44,6 +48,19 @@
     width: 150px;
     height: 75px;
     border-radius: 10000px;
+    // animation: ease 2s loading infinite;
+
+    @keyframes loading {
+      0% {
+        transform: rotate(0deg);
+      }
+      50% {
+        transform: rotate(180deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
 
     .text {
       user-select: none;
@@ -53,7 +70,6 @@
       font-size: xx-large;
       font-weight: bolder;
       color: lighten($background, 70%);
-      // box-shadow: 0 0 2px 2px lighten($background, 70%);
     }
 
     &:hover {
