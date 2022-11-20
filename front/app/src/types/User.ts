@@ -19,7 +19,7 @@ export namespace User {
   }
 
   export async function createConversation(other: User): Promise<void> {
-    let data = await fetchJSONDatas(`api/privateConv/createConv/${other.nickname}`, "GET");
+    let data = await fetchJSONDatas(`api/privateConv/create/${other.id}`, "GET");
     console.log(data);
   }
 }

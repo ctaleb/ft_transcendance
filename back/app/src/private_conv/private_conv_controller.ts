@@ -1,4 +1,5 @@
-import { Controller, Get, Param, Request, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe, Request, UnprocessableEntityException, UseGuards } from '@nestjs/common';
+import { instanceToPlain } from 'class-transformer';
 import { JwtAuthGuard } from 'src/authentication/jwt-auth.guard';
 import { UserService } from 'src/user/user.service';
 import { PrivateConvEntity } from './entities/private_conv.entity';
@@ -15,22 +16,22 @@ export class PrivateConvController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('getMessages/:convUuid/:offset')
-  async getMessages(@Request() req, @Param('convUuid') convUuid, @Param('offset') offset: number) {
-    const conv = await this.privateConvService.getJoinedConv(req.user.payload.id, convUuid);
-    return await this.privateConvService.getMessages(conv, offset);
+  @Get('getMessages/:id/:offset')
+  async getMessages(@Request() req, @Param('id') id, @Param('offset') offset: number) {
+    const conv = await this.privateConvService.getJoinedConv(req.user.payload.id, id);
+    return await conv.messages;
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('createConv/:friend')
-  async createConv(@Request() req, @Param('friend') friendNickname) {
+  @Get('create/:friend')
+  async createConv(@Request() req, @Param('friend', ParseIntPipe) friend: number) {
+    const current = req.user.payload.id;
     let convCreated = false;
-    const user1 = await this.userService.getUserByNickname(req.user.payload.nickname);
-    const user2 = await this.userService.getUserByNickname(friendNickname);
-    const conv = await this.privateConvService.getConv(user1, user2).catch(async () => {
+
+    const conv = await this.privateConvService.getConv(current, friend).catch(async () => {
       convCreated = true;
-      return await this.privateConvService.createConv(user1, user2);
+      return await this.privateConvService.createConv(current, friend);
     });
-    return { conv: conv, created: convCreated };
+    return { conv: instanceToPlain(conv, { groups: [current == conv.user1 ? 'user2' : ''] }), created: convCreated };
   }
 }

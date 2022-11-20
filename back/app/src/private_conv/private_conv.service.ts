@@ -8,19 +8,6 @@ import { PrivateConvEntity } from './entities/private_conv.entity';
 export class PrivateConvService {
   constructor() {}
 
-  async getMessages(conv: PrivateConvEntity, offset: number): Promise<PrivateMessageEntity[]> {
-    return await PrivateMessageEntity.find({
-      order: {
-        createdAt: 'DESC',
-      },
-      where: {
-        conv: { id: conv.id },
-      },
-      take: 10,
-      skip: offset,
-    });
-  }
-
   async createMessage(messageDto: MessageDto): Promise<PrivateMessageEntity> {
     const message = PrivateMessageEntity.create(messageDto as any);
     return await PrivateMessageEntity.save(message);
@@ -29,32 +16,32 @@ export class PrivateConvService {
   /**
    * Finds a conversation where user1 or user2 is equals to the first parameter `user`.
    * @param user The user
-   * @param convUuid The uuid of the conversation to find.
+   * @param id The uuid of the conversation to find.
    * @returns
    */
-  async getJoinedConv(user: number, convUuid: string): Promise<PrivateConvEntity> {
-    const conv = await PrivateConvEntity.findOneBy({ uuid: convUuid });
+  async getJoinedConv(user: number, id: number): Promise<PrivateConvEntity> {
+    const conv = await PrivateConvEntity.findOneBy({ id });
     if (conv.user1.id != user && conv.user2.id != user) {
       return Promise.reject('Conversation not found');
     }
     return conv;
   }
 
-  async getConv(sender: UserEntity, requester: UserEntity): Promise<PrivateConvEntity> {
+  async getConv(user1Id: number, user2Id: number): Promise<PrivateConvEntity> {
     const conv = await PrivateConvEntity.findOne({
       where: [
-        { user1: { id: sender.id }, user2: { id: requester.id } },
-        { user1: { id: requester.id }, user2: { id: sender.id } },
+        { user1: { id: user1Id }, user2: { id: user2Id } },
+        { user1: { id: user2Id }, user2: { id: user1Id } },
       ],
     });
     if (conv) return conv;
     throw new HttpException('User not found', HttpStatus.NOT_FOUND);
   }
 
-  async createConv(sender: UserEntity, requester: UserEntity): Promise<PrivateConvEntity> {
+  async createConv(user1Id: number, user2Id: number): Promise<PrivateConvEntity> {
     const ToSave = PrivateConvEntity.create({
-      user1: sender,
-      user2: requester,
+      user1: { id: user1Id },
+      user2: { id: user2Id },
     });
 
     return await PrivateConvEntity.save(ToSave);
