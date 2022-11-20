@@ -1,77 +1,67 @@
-import { string } from '@hapi/joi';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { messageParamsFactory } from '@vuelidate/validators';
-import { authorize } from 'passport';
-import { User } from 'src/server/entities/server.entity';
+import { PrivateMessageEntity } from 'src/private_conv/entities/privateMessage.entity';
 import { UserEntity } from 'src/user/user.entity';
-import { Repository } from 'typeorm';
-import { CreatePrivateConvDto } from './dto/create-private_conv.dto';
 import { MessageDto } from './dto/MessageDto';
-import { UpdatePrivateConvDto } from './dto/update-private_conv.dto';
-import { PrivateMessageEntity } from './entities/privateMessage.entity';
 import { PrivateConvEntity } from './entities/private_conv.entity';
 
 @Injectable()
 export class PrivateConvService {
-  constructor(
-    @InjectRepository(PrivateMessageEntity)
-    private privateMessagesRepository: Repository<PrivateMessageEntity>,
-    @InjectRepository(PrivateConvEntity)
-    private privateConvRepository: Repository<PrivateConvEntity>,
-  ) {}
+  constructor() {}
 
-  createMessage(messageDto: MessageDto) {
-    const message = this.privateMessagesRepository.create(messageDto);
-    this.privateMessagesRepository.save(message);
-    return 'This action adds a new privateConv';
+  async getMessages(conv: PrivateConvEntity, offset: number): Promise<PrivateMessageEntity[]> {
+    return await PrivateMessageEntity.find({
+      order: {
+        createdAt: 'DESC',
+      },
+      where: {
+        conv: { id: conv.id },
+      },
+      take: 10,
+      skip: offset,
+    });
   }
 
-  async getConv(sender: UserEntity, requester: UserEntity) {
-    const conv = await this.privateConvRepository.findOneBy([
-      { user1: { id: sender.id }, user2: { id: requester.id } },
-      { user1: { id: requester.id }, user2: { id: sender.id } },
-    ]);
+  async createMessage(messageDto: MessageDto): Promise<PrivateMessageEntity> {
+    const message = PrivateMessageEntity.create(messageDto as any);
+    return await PrivateMessageEntity.save(message);
+  }
+
+  /**
+   * Finds a conversation where user1 or user2 is equals to the first parameter `user`.
+   * @param user The user
+   * @param convUuid The uuid of the conversation to find.
+   * @returns
+   */
+  async getJoinedConv(user: number, convUuid: string): Promise<PrivateConvEntity> {
+    const conv = await PrivateConvEntity.findOneBy({ uuid: convUuid });
+    if (conv.user1.id != user && conv.user2.id != user) {
+      return Promise.reject('Conversation not found');
+    }
+    return conv;
+  }
+
+  async getConv(sender: UserEntity, requester: UserEntity): Promise<PrivateConvEntity> {
+    const conv = await PrivateConvEntity.findOne({
+      where: [
+        { user1: { id: sender.id }, user2: { id: requester.id } },
+        { user1: { id: requester.id }, user2: { id: sender.id } },
+      ],
+    });
     if (conv) return conv;
     throw new HttpException('User not found', HttpStatus.NOT_FOUND);
   }
 
-  createConv(sender: UserEntity, requester: UserEntity) {
-    const ToSave = this.privateConvRepository.create({
+  async createConv(sender: UserEntity, requester: UserEntity): Promise<PrivateConvEntity> {
+    const ToSave = PrivateConvEntity.create({
       user1: sender,
       user2: requester,
     });
 
-    return this.privateConvRepository.save(ToSave);
-  }
-  async getMessages(convUuid: string, offset: number) {
-    const allMessages: { author: string; text: string; date: Date }[] = [];
-    const conv = await this.privateConvRepository.findOneBy({ uuid: convUuid });
-    await this.privateMessagesRepository
-      .find({
-        order: {
-          createdAt: 'DESC',
-        },
-        where: {
-          conv: { id: conv.id },
-        },
-        take: 10,
-        skip: offset,
-      })
-      .then((data) => {
-        data.forEach((message) => {
-          allMessages.unshift({
-            author: message.author.nickname,
-            text: message.text,
-            date: message.createdAt,
-          });
-        });
-      });
-    return allMessages;
+    return await PrivateConvEntity.save(ToSave);
   }
 
   async getAllConvs(id: number) {
-    const convs = await this.privateConvRepository.find({
+    const convs = await PrivateConvEntity.find({
       where: [{ user1: { id: id } }, { user2: { id: id } }],
       order: {
         lastMessage: 'DESC',
@@ -82,10 +72,10 @@ export class PrivateConvService {
   }
 
   async updateLastMessageDate(conv: PrivateConvEntity) {
-    const convToUpdate = await this.privateConvRepository.findOneBy({
+    const convToUpdate = await PrivateConvEntity.findOneBy({
       uuid: conv.uuid,
     });
     convToUpdate.lastMessage = new Date();
-    return await this.privateConvRepository.save(convToUpdate);
+    return await PrivateConvEntity.save(convToUpdate);
   }
 }

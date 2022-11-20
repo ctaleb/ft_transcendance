@@ -1,16 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  UseGuards,
-  Put,
-  Request,
-} from '@nestjs/common';
-import { eventNames } from 'process';
+import { Body, Controller, Delete, Get, Param, Post, Put, Request, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/authentication/jwt-auth.guard';
 import { FriendshipDto } from './friendship.dto';
 import { FriendshipService } from './friendship.service';
@@ -22,42 +10,27 @@ export class FriendshipController {
 
   @Post('invite')
   invite(@Request() req, @Body() friendshipDto: FriendshipDto) {
-    this._friendshipService.invite(
-      req.user.payload.nickname,
-      friendshipDto.addressee,
-    );
+    this._friendshipService.invite(req.user.payload.nickname, friendshipDto.addressee);
   }
 
   @Put('befriend')
   befriend(@Request() req, @Body() friendshipDto: FriendshipDto) {
-    return this._friendshipService.befriend(
-      req.user.payload.nickname,
-      friendshipDto.addressee,
-    );
+    return this._friendshipService.befriend(req.user.payload.nickname, friendshipDto.addressee);
   }
 
   @Delete('decline')
   decline(@Request() req, @Body() friendshipDto: FriendshipDto) {
-    return this._friendshipService.declineFriendship(
-      req.user.payload.nickname,
-      friendshipDto.addressee,
-    );
+    return this._friendshipService.declineFriendship(req.user.payload.nickname, friendshipDto.addressee);
   }
 
   @Delete('unfriend')
   unfriend(@Request() req, @Body() friendshipDto: FriendshipDto) {
-    return this._friendshipService.unfriend(
-      req.user.payload.nickname,
-      friendshipDto.addressee,
-    );
+    return this._friendshipService.unfriend(req.user.payload.nickname, friendshipDto.addressee);
   }
 
   @Put('block')
   block(@Request() req, @Body() friendshipDto: FriendshipDto) {
-    return this._friendshipService.block(
-      req.user.payload.nickname,
-      friendshipDto.addressee,
-    );
+    return this._friendshipService.block(req.user.payload.nickname, friendshipDto.addressee);
   }
 
   @Get()
@@ -72,8 +45,6 @@ export class FriendshipController {
 
   @Get('has-invitations')
   hasInvitations(@Request() req) {
-    return this._friendshipService.hasPendingInvitations(
-      req.user.payload.nickname,
-    );
+    return this._friendshipService.hasPendingInvitations(req.user.payload.nickname);
   }
 }

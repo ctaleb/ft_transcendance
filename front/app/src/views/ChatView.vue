@@ -1,6 +1,6 @@
 <template>
-  <div class="mainContainer">
-    <ChatMenu :current="<any>{}" :channels="[]" :convs="[]" />
+  <div id="chat">
+    <ChatMenu :current="<any>{}" :channels="allChannels" :convs="privateConvs" />
     <div v-if="show == 0" class="lobbyChat">
       <h2>Welcome on the chat</h2>
       <br />
@@ -123,15 +123,13 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUpdated, ref, Ref } from "vue";
+import ChatMenu from "@/components/chat/ChatMenu.vue";
 import FriendAlert from "@/components/FriendAlert.vue";
-import config from "@/config/config";
-import { Channel, ChannelRole, ChannelType, ChannelUser } from "@/types/Channel";
 import { fetchJSONDatas } from "@/functions/funcs";
-import { getUserAvatar, User } from "@/types/User";
 import { useStore } from "@/store";
-import { Private } from "@babel/types";
-import ChatMenu from "@/components/Chat/ChatMenu.vue";
+import { Channel, ChannelRole, ChannelType, ChannelUser } from "@/types/Channel";
+import { User } from "@/types/User";
+import { onMounted, onUpdated, ref, Ref } from "vue";
 
 const store = useStore();
 let socket = store.socket;
@@ -140,29 +138,14 @@ store.$subscribe((mutation, state) => {
   socket = state.socket;
 });
 
-let funcs = require("../functions/funcs");
 const moment = require("moment-timezone");
-const clientNickname = JSON.parse(localStorage.getItem("user") || "{}").nickname;
-const friendNickname = ref("");
-const imageUrl = ref("");
-const messageInput = ref("");
 const privateConvs = ref(Array<PrivateConv>());
 const messagesToDisplay: Ref<Array<Message>> = ref([]);
 const messagesBoxRef = ref<HTMLDivElement | null>(null);
-const convListFlag = ref(true);
-const friendListFlag = ref(true);
-const channelListFlag = ref(true);
-const iconConvList = ref("gg-remove");
-const iconFriendList = ref("gg-remove");
-const iconChannelList = ref("gg-remove");
-const friends = ref(Array<User>());
 let currentConv = ref<privateConv>();
 let isLoadMore = false;
 
 const props = defineProps(["incomingFriendRequest"]);
-const emit = defineEmits(["notification"]);
-const messageText = ref("");
-const joined = ref(false);
 
 const myChannels: Ref<Array<Channel>> = ref([]);
 const allChannels: Ref<Array<Channel>> = ref([]);
@@ -489,17 +472,6 @@ const loadChannelMessages = async (channel: Channel): Promise<void> => {
   channelMessageSkip.value += data.length;
 };
 
-const createConv = async (friend: ChannelUser, event: any): Promise<void> => {
-  friendNickname.value = friend.nickname;
-  let data = await fetchJSONDatas(`api/privateConv/createConv/${friend.nickname}`, "GET");
-  await fetchUserAvatarURL(friend);
-  if (data.created == true) {
-    privateConvs.value.push(data.conv);
-    organizeFriends();
-  }
-  displayMessages(data.conv, event);
-};
-
 const sendChannelMessage = () => {
   if (messageInput.value != "") {
     socket.emit(
@@ -531,64 +503,6 @@ const sendPrivateMessage = (nickname: string): void => {
     });
     messageInput.value = "";
   }
-};
-
-const changeConvListStatus = () => {
-  if (convListFlag.value == true) {
-    const el = document.querySelectorAll(".privateMsg");
-    el.forEach((element) => {
-      element.classList.add("hidden");
-    });
-    iconConvList.value = "gg-add";
-    convListFlag.value = false;
-  } else {
-    const el = document.querySelectorAll(".privateMsg");
-    el.forEach((element) => {
-      element.classList.remove("hidden");
-    });
-    convListFlag.value = true;
-    iconConvList.value = "gg-remove";
-  }
-};
-
-const changeFriendListStatus = () => {
-  if (friendListFlag.value == true) {
-    const el = document.querySelectorAll(".friendMsg");
-    el.forEach((element) => {
-      element.classList.add("hidden");
-    });
-    iconFriendList.value = "gg-add";
-    friendListFlag.value = false;
-  } else {
-    const el = document.querySelectorAll(".friendMsg");
-    el.forEach((element) => {
-      element.classList.remove("hidden");
-    });
-    friendListFlag.value = true;
-    iconFriendList.value = "gg-remove";
-  }
-};
-
-const changeChannelListStatus = () => {
-  if (channelListFlag.value == true) {
-    const el = document.querySelectorAll(".channelMsg");
-    el.forEach((element) => {
-      element.classList.add("hidden");
-    });
-    iconChannelList.value = "gg-add";
-    channelListFlag.value = false;
-  } else {
-    const el = document.querySelectorAll(".channelMsg");
-    el.forEach((element) => {
-      element.classList.remove("hidden");
-    });
-    channelListFlag.value = true;
-    iconChannelList.value = "gg-remove";
-  }
-};
-
-const deleteConv = (conv: PrivateConv) => {
-  console.log("Oye brav gens");
 };
 </script>
 
@@ -635,13 +549,6 @@ const deleteConv = (conv: PrivateConv) => {
     width: auto;
     padding: 0.5em;
   }
-}
-.convList {
-  height: 90vh;
-  width: 15%;
-  float: left;
-  background-color: #5b5a56;
-  overflow-y: scroll;
 }
 
 .leftActionPannel {

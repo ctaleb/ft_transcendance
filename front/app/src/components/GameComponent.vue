@@ -89,11 +89,6 @@
   </section>
 </template>
 
-<style lang="scss" scoped>
-@import "../styles/custom.scss";
-@import "../styles/_lobby.scss";
-</style>
-
 <script setup lang="ts">
 import ballUrl from "../assets/ball.png";
 import paddleUrl from "../assets/paddle_grec.png";

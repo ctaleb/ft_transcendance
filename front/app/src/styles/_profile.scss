@@ -58,7 +58,7 @@
     justify-content: space-around;
     position: relative;
     height: 15em;
-    @include rounded;
+    @extend .rounded;
 
     & > div {
       flex: 1;
@@ -218,19 +218,11 @@
         display: flex;
         flex-direction: row;
         & > .left {
-          background-image: radial-gradient(
-            rgb(200, 163, 95),
-            rgb(149, 121, 69),
-            rgb(181, 152, 98)
-          );
+          background-image: radial-gradient(rgb(200, 163, 95), rgb(149, 121, 69), rgb(181, 152, 98));
           border-radius: 10000px 0px 0px 0px;
 
           &:hover {
-            background-image: radial-gradient(
-              rgb(218, 179, 108),
-              rgb(190, 157, 95),
-              rgb(217, 183, 118)
-            );
+            background-image: radial-gradient(rgb(218, 179, 108), rgb(190, 157, 95), rgb(217, 183, 118));
           }
         }
         & > .right {
@@ -273,33 +265,21 @@
           border-radius: 0px 0px 0px 50px;
           box-shadow: inset 0px 0px 0px 3px darken($defeat, 10%);
           transition: box-shadow 0.5s ease;
-          background-image: radial-gradient(
-            rgba(172, 56, 14, 0.5),
-            #764ba200 70%
-          );
+          background-image: radial-gradient(rgba(172, 56, 14, 0.5), #764ba200 70%);
           &:hover {
             box-shadow: inset 0px 0px 1px 4px darken($defeat, 5%);
-            background-image: radial-gradient(
-              rgba(172, 56, 14, 0.7),
-              #764ba200 80%
-            );
+            background-image: radial-gradient(rgba(172, 56, 14, 0.7), #764ba200 80%);
           }
         }
         & > .right {
           border-radius: 0px 0px 50px 0px;
           box-shadow: inset 0px 0px 0px 3px darken($victory, 10%);
           transition: box-shadow 0.5s ease;
-          background-image: radial-gradient(
-            rgba(32, 212, 92, 0.3),
-            #764ba200 70%
-          );
+          background-image: radial-gradient(rgba(32, 212, 92, 0.3), #764ba200 70%);
 
           &:hover {
             box-shadow: inset 0px 0px 1px 4px darken($victory, 5%);
-            background-image: radial-gradient(
-              rgba(32, 212, 92, 0.5),
-              #764ba200 80%
-            );
+            background-image: radial-gradient(rgba(32, 212, 92, 0.5), #764ba200 80%);
           }
         }
       }
@@ -384,7 +364,7 @@
         position: relative;
 
         .insideSummary {
-          @include rounded;
+          @extend .rounded;
           display: flex;
           justify-content: space-between;
           align-items: center;

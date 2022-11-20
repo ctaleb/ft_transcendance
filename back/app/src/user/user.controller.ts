@@ -1,18 +1,4 @@
-import {
-  Body,
-  ClassSerializerInterceptor,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  ParseIntPipe,
-  Put,
-  Request,
-  Res,
-  UploadedFile,
-  UseGuards,
-  UseInterceptors,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Put, Request, Res, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { join } from 'path';
@@ -23,7 +9,6 @@ import { editFileName, imageFileFilter } from 'src/utils/file-uploading.utils';
 import { updatePasswordDto } from './dto/updatePassword';
 import { UserService } from './user.service';
 
-@UseInterceptors(ClassSerializerInterceptor)
 @Controller('user')
 export class UserController {
   constructor(private readonly _userService: UserService) {}
@@ -31,9 +16,7 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @Get('profile')
   async getProfile(@Request() req): Promise<UserEntity> {
-    const user: UserEntity = await this._userService.getUserById(
-      req.user.payload.id,
-    );
+    const user: UserEntity = await this._userService.getUserById(req.user.payload.id);
     user.friends = await user.getFriends();
     return user;
   }
@@ -51,9 +34,7 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard)
   @Get('bynickname/:nickname')
-  async getUserByNickname(
-    @Param('nickname') nickname: string,
-  ): Promise<UserEntity> {
+  async getUserByNickname(@Param('nickname') nickname: string): Promise<UserEntity> {
     return await this._userService.getUserByNickname(nickname);
   }
 
@@ -83,14 +64,8 @@ export class UserController {
   //PROFILE EDITION
   @UseGuards(JwtAuthGuard)
   @Put('nicknameEdit/:newNickname')
-  async editNickname(
-    @Request() req,
-    @Param('newNickname') newNickname: string,
-  ) {
-    return this._userService.updateNickname(
-      req.user.payload.nickname,
-      newNickname,
-    );
+  async editNickname(@Request() req, @Param('newNickname') newNickname: string) {
+    return this._userService.updateNickname(req.user.payload.nickname, newNickname);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -104,10 +79,7 @@ export class UserController {
       fileFilter: imageFileFilter,
     }),
   )
-  async editAvatar(
-    @UploadedFile() avatar: Express.Multer.File,
-    @Request() req,
-  ) {
+  async editAvatar(@UploadedFile() avatar: Express.Multer.File, @Request() req) {
     return this._userService.updateAvatar(
       avatar
         ? {
@@ -122,14 +94,8 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard)
   @Put('passwordEdit')
-  async editPassword(
-    @Request() req,
-    @Body() newPasswordDto: updatePasswordDto,
-  ) {
-    return this._userService.updatePassword(
-      newPasswordDto.newPassword,
-      req.user.payload.id,
-    );
+  async editPassword(@Request() req, @Body() newPasswordDto: updatePasswordDto) {
+    return this._userService.updatePassword(newPasswordDto.newPassword, req.user.payload.id);
   }
 
   @UseGuards(JwtAuthGuard)

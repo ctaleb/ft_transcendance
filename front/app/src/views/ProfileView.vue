@@ -2,11 +2,7 @@
   <section v-if="currentUser !== undefined" id="profile" class="container">
     <div class="current-user border-gold">
       <div>
-        <img
-          class="border-gold user-image"
-          :src="getUserAvatar(currentUser)"
-          alt=""
-        />
+        <img class="border-gold user-image" :src="getUserAvatar(currentUser)" alt="" />
       </div>
       <div>
         <h2 class="playerName">{{ currentUser?.nickname }}</h2>
@@ -30,32 +26,17 @@
     <div class="search" :style="toogleMenu ? 'display: none' : ''">
       <div class="searchBar">
         <div class="searchIcon"><i class="gg-search"></i></div>
-        <input
-          type="text"
-          class="searchField"
-          name="searchFriend"
-          v-model="searchFriend"
-          placeholder="Player name"
-        />
+        <input type="text" class="searchField" name="searchFriend" v-model="searchFriend" placeholder="Player name" />
       </div>
       <button @click="invite()">Add Friend</button>
     </div>
-    <div
-      v-if="currentUser === store.user"
-      class="invitations"
-      :style="toogleMenu ? 'display: none' : ''"
-    >
+    <div v-if="currentUser === store.user" class="invitations" :style="toogleMenu ? 'display: none' : ''">
       <h2 v-if="store.invitations?.length">Invitations</h2>
       <ul>
-        <InvitationCard
-          v-for="invitation of store.invitations"
-          :invitation="invitation"
-        />
+        <InvitationCard v-for="invitation of store.invitations" :invitation="invitation" />
       </ul>
     </div>
-    <h2 style="margin: 1rem" :style="toogleMenu ? 'display: none' : ''">
-      Friends
-    </h2>
+    <h2 style="margin: 1rem" :style="toogleMenu ? 'display: none' : ''">Friends</h2>
     <div class="friends" :style="toogleMenu ? 'display: none' : ''">
       <ul>
         <FriendCard v-for="friend of currentFriend" :friend="friend" />
@@ -120,18 +101,12 @@ onMounted(async () => {
     currentUser.value = await getUserByNickname(nick);
 
     if (!currentUser.value) return;
-    await fetch(
-      "http://" +
-        window.location.hostname +
-        ":3000/api/friendship/profile/" +
-        nick,
-      {
-        method: "GET",
-        headers: {
-          Authorization: "Bearer " + localStorage.getItem("token"),
-        },
-      }
-    )
+    await fetch("http://" + window.location.hostname + ":3000/api/friendship/profile/" + nick, {
+      method: "GET",
+      headers: {
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+    })
       .then((data) => data.json())
       .then((data) => {
         currentFriend.value = data.friends;
@@ -145,18 +120,12 @@ onMounted(async () => {
     });
   }
 
-  await fetch(
-    "http://" +
-      window.location.hostname +
-      ":3000/api/profile/summary/" +
-      currentUser.value?.nickname,
-    {
-      method: "GET",
-      headers: {
-        Authorization: "Bearer " + localStorage.getItem("token"),
-      },
-    }
-  )
+  await fetch("http://" + window.location.hostname + ":3000/api/profile/summary/" + currentUser.value?.nickname, {
+    method: "GET",
+    headers: {
+      Authorization: "Bearer " + localStorage.getItem("token"),
+    },
+  })
     .then((data) => data.json())
     .then((data) => {
       console.log(data);
@@ -201,7 +170,3 @@ const invite = () => {
   searchFriend.value = "";
 };
 </script>
-
-<style lang="scss">
-@import "../styles/_alert.scss";
-</style>

@@ -1,21 +1,27 @@
 import { fetchJSONDatas } from "@/functions/funcs";
-import { Pictured } from "@/types/Utils";
 
-export class User implements Pictured {
-  id!: number;
-  nickname!: string;
-  avatar!: string;
+export interface User {
+  id: number;
+  nickname: string;
+  avatar: string;
   friends?: User[];
   invitations?: User[];
   history?: History[];
-
-  getPicture(): string {
-    return this.avatar;
-  }
 }
 
-export function getUserAvatar(user: User): string {
-  return `http://${window.location.hostname}:3000${user.avatar}`;
+export namespace User {
+  export function getName(user: User): string {
+    return user.nickname;
+  }
+
+  export function getAvatar(user: User): string {
+    return `http://${window.location.hostname}:3000${user.avatar}`;
+  }
+
+  export async function createConversation(other: User): Promise<void> {
+    let data = await fetchJSONDatas(`api/privateConv/createConv/${other.nickname}`, "GET");
+    console.log(data);
+  }
 }
 
 export async function getUserByNickname(nickname: string): Promise<User> {

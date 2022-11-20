@@ -1,13 +1,17 @@
 <template>
-  <div>
-    <img src="" alt="" />
-  </div>
+  <button @click="$emit('click')">
+    <img v-if="picture !== undefined" class="user-image" :src="picture" alt="" />
+    <h4>{{ title }}</h4>
+  </button>
 </template>
 
 <script setup lang="ts">
-import { Pictured } from "@/types/Utils";
+defineEmits<{
+  (e: "click"): void;
+}>();
 
-const props = defineProps<{
-  data: object;
+defineProps<{
+  title: string;
+  picture?: string;
 }>();
 </script>

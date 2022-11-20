@@ -16,8 +16,3 @@ const props = defineProps<{
 
 function close() {}
 </script>
-
-<style lang="scss">
-@import "../styles/_profile.scss";
-@import "../styles/custom.scss";
-</style>

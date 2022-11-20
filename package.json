@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "moment-timezone": "^0.5.39",
     "pinia-plugin-persistedstate": "^2.3.0"
   }
 }

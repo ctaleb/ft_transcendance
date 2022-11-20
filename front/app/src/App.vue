@@ -1,6 +1,6 @@
 <template>
   <div>
-    <nav>
+    <nav class="navbar">
       <div style="display: flex; position: relative; justify-content: center" v-if="$route.path != '/' && $route.path != '/signup'">
         <router-link to="/profile"
           >Profile
@@ -114,7 +114,6 @@ store.$subscribe((mutation, state) => {
 //});
 
 window.addEventListener("keydown", (e) => {
-  console.log("keydown " + store.socket?.id);
   if (e.key === "ArrowLeft")
     store.socket?.emit("key", {
       key: "downLeft",
@@ -243,7 +242,6 @@ onMounted(() => {
 
 <style lang="scss">
 @import "styles/custom.scss";
-@import "styles/_alert.scss";
 
 body {
   background-color: #010b12;
@@ -257,10 +255,7 @@ body {
   color: #2c3e50;
 }
 
-nav {
-  padding: 30px;
-  height: 10vh;
-
+.navbar {
   a {
     font-weight: bold;
     color: #f0e68c;

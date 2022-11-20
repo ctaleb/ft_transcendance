@@ -1,5 +1,5 @@
 import { User } from "@/types/User";
-import { Pictured } from "./Utils";
+import { Message } from "@/types/Message";
 
 export enum ChannelType {
   PUBLIC = "public",
@@ -17,29 +17,16 @@ export interface ChannelUser extends User {
   role: ChannelRole;
 }
 
-export interface Message {
-  text: string;
-  author: string;
-  date: Date;
+export interface Channel {
+  messages: Message[];
+  id: number;
+  name: string;
+  type: ChannelType;
+  members: number[];
 }
 
-export class BaseChannel {
-  messages: Message[] = [];
-}
-
-export class Channel extends BaseChannel {
-  id!: number;
-  name!: string;
-  type!: ChannelType;
-  members!: number[];
-}
-
-export class Conversation extends BaseChannel implements Pictured {
-  uuid!: string;
-  other!: User;
-  notif!: boolean;
-
-  getPicture(): string {
-    return this.other.avatar;
+export namespace Channel {
+  export function getName(channel: Channel): string {
+    return channel.name;
   }
 }

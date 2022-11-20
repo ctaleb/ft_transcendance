@@ -1,15 +1,6 @@
 import { AbstractEntity } from 'src/database/abstract.entity';
-import { User } from 'src/server/entities/server.entity';
 import { UserEntity } from 'src/user/user.entity';
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  OneToMany,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { PrivateMessageEntity } from './privateMessage.entity';
 
 @Entity({ name: 'PrivateConvEntity' })

@@ -1,6 +1,11 @@
-@import "mixins/sizes.scss";
-@import "variables.scss";
+@import "mixins/sizes";
 @import "mixins/border";
+@import "variables";
+@import "chat/menu";
+@import "profile";
+@import "alert";
+@import "lobby";
+@import "slider";
 
 h2 {
   font-size: 2.5em;
@@ -14,15 +19,24 @@ h3 {
   border: $standard-border-size solid $primary;
 }
 
-.user-image {
-  @include rounded;
-  object-fit: cover;
-  object-position: center;
+.square {
   aspect-ratio: 1 / 1;
 }
 
-.square {
-  aspect-ratio: 1 / 1;
+.rounded {
+  border-radius: 10000px;
+  overflow: hidden;
+}
+
+.avatar {
+  @extend .square;
+  object-fit: cover;
+  object-position: center;
+}
+
+.user-image {
+  @extend .rounded;
+  @extend .avatar;
 }
 
 .container {
