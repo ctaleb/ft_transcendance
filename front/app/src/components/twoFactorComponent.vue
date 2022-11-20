@@ -24,11 +24,16 @@ import { onMounted, ref } from "vue";
 import * as funcs from "@/functions/funcs";
 let code = ref("");
 let error = ref(false);
+let userType = localStorage.getItem("userType");
 
 //const isCodeEntered = computed(() => {
 //  return code.value.length == 6 ? true : false;
 //});
-const emit = defineEmits(["twofaSuccess", "update:modelValue"]);
+const emit = defineEmits([
+  "twofaSuccessClassicUser",
+  "twofaSuccessIntraUser",
+  "update:modelValue",
+]);
 onMounted(() => {});
 
 async function validateCode() {
@@ -48,7 +53,8 @@ async function validateCode() {
       if (data.status == "approved") {
         console.log("code validated");
         emit("update:modelValue", true);
-        emit("twofaSuccess");
+        if (userType == "classic") emit("twofaSuccessClassicUser");
+        else emit("twofaSuccessIntraUser");
         error.value = false;
       } else {
         error.value = true;
@@ -78,7 +84,7 @@ async function sendCode() {
     });
 }
 </script>
-<style lang="scss">
+<style lang="scss" scoped>
 .mainContainer {
   height: 50vh;
   margin: auto;

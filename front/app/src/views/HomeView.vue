@@ -61,7 +61,8 @@
   <two-factor-component
     class="twoFactorComponent hidden"
     v-model="codeValidated"
-    @twofaSuccess="login"
+    @twofaSuccessClassicUser="login"
+    @twofaSuccessIntraUser="studentLogin"
   />
 </template>
 
@@ -97,7 +98,12 @@ let codeValidated = ref(false);
 //   },
 // },
 const props = defineProps(["incomingFriendRequest"]);
-const emit = defineEmits(["notification", "twofaSuccess", "update:modelValue"]);
+const emit = defineEmits([
+  "notification",
+  "twofaSuccessClassicUser",
+  "twofaSuccessIntraUser",
+  "update:modelValue",
+]);
 
 onMounted(async () => {
   let isConnected = await funcs.isConnected(
@@ -137,6 +143,7 @@ async function login() {
   let data = await response.json();
   if (data.user.twoFactorAuth == true && codeValidated.value == false) {
     localStorage.setItem("phoneTo2fa", data.user.phone);
+    localStorage.setItem("userType", "classic");
     document
       .getElementsByClassName("main_container")[0]
       .classList.add("hidden");
@@ -185,11 +192,21 @@ async function getUserAndToken(intraToken: string) {
 
 async function studentLogin(code: string) {
   try {
+    if (code == undefined) code = extractIntraCode() || "";
     let intraToken = await getIntraToken(code);
     const userAndToken = await getUserAndToken(intraToken.access_token);
-    if (userAndToken.user.twoFactorAuth == true) {
+    if (
+      userAndToken.user.twoFactorAuth == true &&
+      codeValidated.value == false
+    ) {
+      localStorage.setItem("userType", "intra");
       localStorage.setItem("phoneTo2fa", userAndToken.user.phone);
-      router.push("/twoFactor");
+      document
+        .getElementsByClassName("main_container")[0]
+        .classList.add("hidden");
+      document
+        .getElementsByClassName("twoFactorComponent")[0]
+        .classList.remove("hidden");
       return;
     }
     localStorage.setItem("token", userAndToken.token);

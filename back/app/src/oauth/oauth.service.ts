@@ -27,7 +27,7 @@ export class OauthService {
   async connect(code: string): Promise<any> {
     const token = await this.getIntraToken(code);
     if (token.access_token == null) {
-      throw UnauthorizedException;
+      throw new UnauthorizedException();
     }
     const user: intraUser = await this.fetchUserFromIntra(token.access_token);
     await this.userService.getIntraUserById(user.id).catch(async (err) => {

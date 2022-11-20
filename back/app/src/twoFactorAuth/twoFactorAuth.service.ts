@@ -9,10 +9,12 @@ export class TwoFactorService {
   constructor(private configService: ConfigService) {}
 
   async sendCode(phone: string) {
-    await client.verify.v2
+    return await client.verify.v2
       .services('VA21523e68da34bdab3f32d5fd886939b4')
       .verifications.create({ to: phone, channel: 'sms' })
-      .then((verification) => console.log(verification.status));
+      .then((verification) => {
+        return { status: verification.status };
+      });
   }
   async verifyCode(code: string, phone: string) {
     return await client.verify.v2
