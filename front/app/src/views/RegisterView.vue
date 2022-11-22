@@ -1,84 +1,75 @@
 <template>
-  <h2>Sign up</h2>
-  <form>
-    <label for="nickname">Nickname:</label><br />
-    <input type="text" v-model="v$.nickname.$model" id="nick" name="nickname" />
-    <br /><br />
-    <span
-      v-for="error in v$.nickname.$errors"
-      :key="error.$uid"
-      class="text-red"
-    >
-      {{ error.$message }}
+  <div class="mainContainer">
+    <h2>Sign up</h2>
+    <form>
+      <label for="nickname">Nickname:</label><br />
+      <input type="text" v-model="v$.nickname.$model" id="nick" name="nickname" class="input" />
       <br /><br />
-    </span>
+      <span
+        v-for="error in v$.nickname.$errors"
+        :key="error.$uid"
+        class="text-red"
+      >
+        {{ error.$message }}
+        <br /><br />
+      </span>
 
-    <label for="password">Password:</label><br />
-    <input
-      :type="passwordFieldType"
-      v-model="v$.password.firstTry.$model"
-      id="password"
-      name="password"
-    />
-    <button
-      class="right"
-      type="button"
-      @click.prevent="hidePassword = !hidePassword"
-    >
-      show / hide
-    </button>
-    <br /><br />
-    <span
-      v-for="error in v$.password.firstTry.$errors"
-      :key="error.$uid"
-      class="text-red"
-    >
-      {{ error.$message }}
+      <label for="password">Password:</label><br />
+      <input
+        :type="passwordFieldType"
+        v-model="v$.password.firstTry.$model"
+        id="password"
+        name="password"
+        class="input"
+      />
+      <button
+        class="right"
+        type="button"
+        @click.prevent="hidePassword = !hidePassword"
+      >
+        show / hide
+      </button>
       <br /><br />
-    </span>
-    <label for="confirm password">Confirm password:</label><br />
-    <input
-      type="password"
-      v-model="v$.password.confirmation.$model"
-      placeholder="Confirm password"
-      autocomplete="off"
-    /><br /><br />
-    <span
-      v-for="error in v$.password.confirmation.$errors"
-      :key="error.$uid"
-      class="text-red"
-    >
-      {{ error.$message }}
-      <br /><br />
-    </span>
-    <label for="phone">Phone number:</label><br />
-    <input
-      type="tel"
-      v-model="v$.phone.$model"
-      id="phone"
-      name="phone"
-      placeholder="+33625652388"
-      pattern="[0-9]{10}"
-    /><br /><br />
-    <span v-for="error in v$.phone.$errors" :key="error.$uid" class="text-red">
-      {{ error.$message }}
-      <br /><br />
-    </span>
-    <label for="avatar">Choose a profile picture:</label><br />
-    <input
-      type="file"
-      id="avatar"
-      name="avatar"
-      accept="image/*"
-      @change="updateAvatar"
-    /><br /><br />
-    <span v-for="error in v$.avatar.$errors" :key="error.$uid" class="text-red">
-      {{ error.$message }}
-      <br /><br />
-    </span>
+      <span
+        v-for="error in v$.password.firstTry.$errors"
+        :key="error.$uid"
+        class="text-red"
+      >
+        {{ error.$message }}
+        <br /><br />
+      </span>
+      <label for="confirm password">Confirm password:</label><br />
+      <input
+        type="password"
+        v-model="v$.password.confirmation.$model"
+        placeholder="Confirm password"
+        autocomplete="off"
+        class="input"
+      /><br /><br />
+      <span
+        v-for="error in v$.password.confirmation.$errors"
+        :key="error.$uid"
+        class="text-red"
+      >
+        {{ error.$message }}
+        <br /><br />
+      </span>
+      <label for="avatar">Choose a profile picture:</label><br />
+      <input
+        type="file"
+        id="avatar"
+        name="avatar"
+        accept="image/*"
+        @change="updateAvatar"
+      /><br /><br />
+      <span v-for="error in v$.avatar.$errors" :key="error.$uid" class="text-red">
+        {{ error.$message }}
+        <br /><br />
+      </span>
 
-    <input type="submit" value="Submit" @click.stop.prevent="submitForm()" />
-  </form>
+      <input type="submit" value="Submit" @click.stop.prevent="submitForm()" class="submit" />
+    </form>
+  </div>
 </template>
 
 <script lang="ts">
@@ -221,8 +212,36 @@ export default defineComponent({
 });
 </script>
 
-<style scoped>
-p {
-  user-select: none;
+<style lang="scss" scoped>
+
+.mainContainer {
+  height: auto;
+  margin: auto;
+  background-color: rgb(25, 23, 23);
+  border-radius: 30px;
+  width: 40%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  margin-top: 10vh;
+
+  .h2 {
+    margin-top: 10vh;
+  }
+
+  .input {
+    height: 30px;
+    font-size: 20px;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+  .submit {
+    width: 20%;
+    height: 5%;
+    margin-top: 15px;
+    align-items: center;
+  }
 }
 </style>
