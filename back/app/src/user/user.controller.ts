@@ -9,6 +9,7 @@ import {
   Put,
   Request,
   Res,
+  UnauthorizedException,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -92,6 +93,12 @@ export class UserController {
       newNickname,
     );
   }
+  @UseGuards(JwtAuthGuard)
+  @Put('phoneEdit/:phone')
+  async editPhone(@Request() req, @Param('phone') newPhone: string) {
+    // input validation --> if (!newPhone.match(/\+\d{2}[1-9]\d{8}/)) throw error
+    return this._userService.updatePhone(req.user.payload.nickname, newPhone);
+  }
 
   @UseGuards(JwtAuthGuard)
   @Put('avatarEdit/')
@@ -130,6 +137,11 @@ export class UserController {
       newPasswordDto.newPassword,
       req.user.payload.id,
     );
+  }
+  @UseGuards(JwtAuthGuard)
+  @Put('twoFactorAuthEdit')
+  async twoFactorEdit(@Request() req) {
+    return this._userService.updateTwoFactorAuth(req.user.payload.nickname);
   }
 
   @UseGuards(JwtAuthGuard)

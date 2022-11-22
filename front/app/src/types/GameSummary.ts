@@ -20,7 +20,9 @@ export interface Message {
 
 export interface User {
   nickname: string;
+  phone: string;
   avatar: string;
+  twoFactorAuth: boolean;
   friends?: User[];
   invitations?: User[];
   history?: History[];

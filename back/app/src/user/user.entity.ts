@@ -1,7 +1,14 @@
 import { Exclude, Expose, Transform } from 'class-transformer';
 import { FriendshipEntity } from 'src/friendship/entities/friendship.entity';
 import { ImageEntity } from 'src/image/image.entity';
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Generated,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+} from 'typeorm';
 import { AbstractEntity } from '../database/abstract.entity';
 
 @Exclude()
@@ -11,8 +18,11 @@ export class UserEntity extends AbstractEntity {
   @Column({ unique: true })
   public nickname: string;
 
-  @Column({ unique: false })
+  @Column({ unique: false, nullable: true })
   public phone: string;
+
+  @Column({ type: 'boolean', default: false })
+  public twoFactorAuth: boolean;
 
   @Column({ nullable: true })
   public password: string;

@@ -1,10 +1,10 @@
 <template>
   <div id="backgroundVideo">
     <video class="video" ref="video" autoplay loop muted>
-      <source src="../assets/homepageBackground.mp4" type="video/mp4" />
+      <source src="../assets/stars.webm" type="video/mp4" />
     </video>
   </div>
-  <div class="main_container">
+  <div v-if="twofaFlag == false" class="main_container">
     <img
       src="https://findicons.com/files/icons/1275/naruto_vol_1/256/uzumaki_naruto.png"
       width="80"
@@ -58,15 +58,29 @@
   <div class="text-red" v-if="login_failed_msg">
     Login failed. Please try again.
   </div>
+  <div class="twofaComponentDiv">
+    <two-factor-component
+      v-if="twofaFlag == true"
+      class="twoFactorComponent"
+      v-model="codeValidated"
+      @twofaSuccessClassicUser="login"
+      @twofaSuccessIntraUser="studentLogin"
+    />
+  </div>
 </template>
 
 <script lang="ts" setup>
 import * as funcs from "@/functions/funcs";
+import { useStore } from "@/store";
+import { User } from "@/types/GameSummary";
 import { log } from "console";
+import { storeToRefs } from "pinia";
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
+import twoFactorComponent from "../components/twoFactorComponent.vue";
 
 const router = useRouter();
+const store = useStore();
 let username = ref("");
 let password = ref("");
 let background_url = "../assets/stars.webm";
@@ -84,19 +98,28 @@ let token = {
     created_at: null,
   },
   login_failed_msg = ref(false);
-
+let codeValidated = ref(false);
+let twofaFlag = ref(false);
 // computed: {
 //   videoElement() {
 //     return this.$refs.video;
 //   },
 // },
 const props = defineProps(["incomingFriendRequest"]);
-const emit = defineEmits(["notification"]);
+const emit = defineEmits([
+  "notification",
+  "twofaSuccessClassicUser",
+  "twofaSuccessIntraUser",
+  "update:modelValue",
+]);
 
 onMounted(async () => {
-  let isConnected = await funcs.isConnected(
-    localStorage.getItem("token") || ""
-  );
+  let isConnected: boolean = await funcs
+    .isConnected(localStorage.getItem("token") || "")
+    .catch((err) => {
+      console.log(err);
+      return false;
+    });
   if (isConnected) {
     router.push("/game");
   } else console.log("not connected");
@@ -109,6 +132,7 @@ onMounted(async () => {
 });
 
 async function login() {
+  console.log("CODEVALIDATED --> " + codeValidated.value);
   let response = await fetch(
     "http://" + window.location.hostname + ":3000/api/Authentication/login",
     {
@@ -128,6 +152,14 @@ async function login() {
   }
 
   let data = await response.json();
+  if (data.user.twoFactorAuth == true && codeValidated.value == false) {
+    twofaFlag.value = true;
+    localStorage.setItem("phoneTo2fa", data.user.phone);
+    localStorage.setItem("userType", "classic");
+
+    //sendCode();
+    return;
+  }
   localStorage.setItem("token", data.token);
   localStorage.setItem("user", JSON.stringify(data.user));
   funcs.trySetupUser().then(() => {
@@ -167,9 +199,33 @@ async function getUserAndToken(intraToken: string) {
 }
 
 async function studentLogin(code: string) {
+  console.log("stuent login");
+  let userAndToken: { user: User; token: string } = {
+    user: <User>{},
+    token: "",
+  };
   try {
-    let intraToken = await getIntraToken(code);
-    const userAndToken = await getUserAndToken(intraToken.access_token);
+    if (code == undefined) code = extractIntraCode() || "";
+    if (store.token != undefined && store.user != undefined) {
+      userAndToken.user = store.user;
+      userAndToken.token = store.token;
+    } else {
+      let intraToken = await getIntraToken(code);
+      userAndToken = await getUserAndToken(intraToken.access_token);
+      store.user = userAndToken.user;
+      store.token = userAndToken.token;
+    }
+    if (
+      userAndToken.user.twoFactorAuth == true &&
+      codeValidated.value == false
+    ) {
+      twofaFlag.value = true;
+      localStorage.setItem("userType", "intra");
+      localStorage.setItem("phoneTo2fa", userAndToken.user.phone);
+
+      //sendCode();
+      return;
+    }
     localStorage.setItem("token", userAndToken.token);
     localStorage.setItem("user", JSON.stringify(userAndToken.user));
   } catch (error) {
@@ -179,12 +235,40 @@ async function studentLogin(code: string) {
   funcs.trySetupUser().then(() => {
     router.push("/game");
   });
+
+  async function sendCode() {
+    await fetch(
+      "http://" +
+        window.location.hostname +
+        ":3000/api/twofactor/sendCode/" +
+        localStorage.getItem("phoneTo2fa"),
+      {
+        method: "POST",
+      }
+    )
+      .then((data) => data.json())
+      .then((data) => {
+        console.log(data.status);
+        //error in the console(unexpected json input) because i don't return jsons format in the service and the controller. Need to add return before the send function, and make a json return int eh last then
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }
 }
 </script>
 
 <style lang="scss" scoped>
 @import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Press+Start+2P&display=swap");
+
+.twofaComponentDiv {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
 #backgroundVideo {
   position: fixed;
@@ -224,6 +308,7 @@ async function studentLogin(code: string) {
   color: #aa9e7d;
   margin: 20rem auto;
   width: 60rem;
+  text-align: center;
 }
 .input {
   padding: 8px;

@@ -6,6 +6,7 @@ interface State {
   user: User | undefined;
   invitations: User[] | undefined;
   socket: Socket | undefined;
+  token: string | undefined;
   message: Message[];
 }
 
@@ -15,6 +16,7 @@ export const useStore = defineStore("default", {
       user: undefined,
       invitations: undefined,
       socket: undefined,
+      token: undefined,
       message: [],
     };
   },

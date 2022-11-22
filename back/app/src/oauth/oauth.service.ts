@@ -27,7 +27,7 @@ export class OauthService {
   async connect(code: string): Promise<any> {
     const token = await this.getIntraToken(code);
     if (token.access_token == null) {
-      throw UnauthorizedException;
+      throw new UnauthorizedException();
     }
     const user: intraUser = await this.fetchUserFromIntra(token.access_token);
     await this.userService.getIntraUserById(user.id).catch(async (err) => {
@@ -36,9 +36,9 @@ export class OauthService {
     return token;
   }
 
-  async login(token: any) {
+  async login(token: string) {
     try {
-      const intraUser = await this.fetchUserFromIntra(token.access_token);
+      const intraUser = await this.fetchUserFromIntra(token);
       const user = await this.userService.getIntraUserById(intraUser.id);
       return { token: this.jwtService.sign(user), user: user };
     } catch (error) {
@@ -75,7 +75,7 @@ export class OauthService {
   }
 
   async fetchUserFromIntra(access_token: string): Promise<intraUser> {
-    let user = await fetch('https://api.intra.42.fr/v2/me', {
+    const user = await fetch('https://api.intra.42.fr/v2/me', {
       headers: {
         Authorization: 'Bearer ' + access_token,
       },
@@ -94,12 +94,12 @@ export class OauthService {
     user.login = await this.check42NicknameUsed(user.login);
     const registrationDto = {
       nickname: user.login,
-      phone: user.phone,
       intraId: user.id,
     };
-    const filename: string = user.login + '.' + getUrlExtension(user.image_url);
+    const filename: string =
+      user.login + '.' + getUrlExtension(user.image.link);
     const file_path: string = './assets/' + filename;
-    download(user.image_url, file_path, function () {
+    download(user.image.link, file_path, function () {
       console.log('done');
     });
     await this.authenticationService.registration(registrationDto, {

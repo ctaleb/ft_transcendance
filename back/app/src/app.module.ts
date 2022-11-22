@@ -11,6 +11,7 @@ import { OauthModule } from './oauth/oauth.module';
 import { FriendshipModule } from './friendship/friendship.module';
 import { ChatModule } from './chat/chat.module';
 import { PrivateConvModule } from './private_conv/private_conv.module';
+import { twofactorModule } from './twoFactorAuth/twoFactorAuth.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { PrivateConvModule } from './private_conv/private_conv.module';
     FriendshipModule,
     ChatModule,
     PrivateConvModule,
+    twofactorModule,
   ],
 })
 export class AppModule {}

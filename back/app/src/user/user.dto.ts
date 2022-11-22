@@ -5,11 +5,7 @@ export class CreateUserDto {
   @IsNotEmpty()
   readonly nickname: string;
 
-  @IsString()
-  @IsNotEmpty()
-  //@MinLength(9)
-  @MaxLength(13)
-  readonly phone: string;
+  readonly phone?: string;
 
   readonly password?: string;
 

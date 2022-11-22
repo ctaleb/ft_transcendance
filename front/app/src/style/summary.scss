@@ -1,0 +1,31 @@
+* {
+  box-sizing: border-box;
+}
+
+.modal {
+  width: 70%;
+  max-width: 1200px;
+  background-color: #030f19;
+  border-radius: 1rem;
+  border: 0.3rem solid #bcaf7b;
+  box-shadow: 0 2rem 3rem rgba(0, 0, 0, 0.3);
+  padding: 25px;
+
+  @media screen and (max-width: 720px) {
+    width: 95%;
+  }
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(3px);
+  z-index: 5;
+}
