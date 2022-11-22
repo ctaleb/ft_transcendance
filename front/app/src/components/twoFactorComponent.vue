@@ -1,30 +1,27 @@
 <template>
   <div class="mainContainer">
     <h3>Two Factor Authentication</h3>
-    <p>A code will be send to your phone number</p>
+    <p>A code was sent to the {{ phone }}</p>
     <input
       class="codeInput"
       type="text"
-      placeholder="_ _ _ - _ _ _"
+      placeholder="X X X X X X"
       v-model="code"
       maxlength="6"
+      @input="validateCode()"
     />
     <div v-if="error == true">Please enter a valid code</div>
-    <button class="sendCodeButton" @click="sendCode()">Send code</button>
-    <button class="validateCodeButton" @click="validateCode(code)">
-      Validate code
-    </button>
   </div>
 </template>
 
 <script lang="ts" setup>
 import { computed } from "@vue/reactivity";
 import { watch } from "fs";
-import { onMounted, ref } from "vue";
+import { onMounted, onUpdated, ref } from "vue";
 import * as funcs from "@/functions/funcs";
 let code = ref("");
 let error = ref(false);
-
+let phone = ref(hidePhone(localStorage.getItem("phoneTo2fa")));
 //const isCodeEntered = computed(() => {
 //  return code.value.length == 6 ? true : false;
 //});
@@ -33,9 +30,21 @@ const emit = defineEmits([
   "twofaSuccessIntraUser",
   "update:modelValue",
 ]);
-onMounted(() => {});
+
+onMounted(() => {
+  phone.value = hidePhone(localStorage.getItem("phoneTo2fa"));
+});
+
+function hidePhone(phone: string | null): string | null {
+  let retPhone = phone;
+  if (phone) {
+    retPhone = phone.slice(0, 4) + phone.slice(4).replace(/.(?=....)/g, "*");
+  }
+  return retPhone;
+}
 
 async function validateCode() {
+  if (code.value.length != 6) return;
   await fetch(
     "http://" +
       window.location.hostname +
@@ -88,8 +97,9 @@ async function sendCode() {
 </script>
 <style lang="scss" scoped>
 .mainContainer {
-  height: 50vh;
+  height: 30vh;
   margin: auto;
+  text-align: center;
   background-color: rgb(25, 23, 23);
   border-radius: 30px;
   width: 40%;
@@ -104,6 +114,9 @@ async function sendCode() {
     font-size: 20px;
     margin-bottom: 10px;
     text-align: center;
+    letter-spacing: 5px;
+    border: 1px solid white;
+    border-radius: 10px;
   }
   .sendCodeButton {
     width: 20%;

@@ -4,7 +4,7 @@
       <source src="../assets/stars.webm" type="video/mp4" />
     </video>
   </div>
-  <div class="main_container">
+  <div v-if="twofaFlag == false" class="main_container">
     <img
       src="https://findicons.com/files/icons/1275/naruto_vol_1/256/uzumaki_naruto.png"
       width="80"
@@ -58,12 +58,15 @@
   <div class="text-red" v-if="login_failed_msg">
     Login failed. Please try again.
   </div>
-  <two-factor-component
-    class="twoFactorComponent hidden"
-    v-model="codeValidated"
-    @twofaSuccessClassicUser="login"
-    @twofaSuccessIntraUser="studentLogin"
-  />
+  <div class="twofaComponentDiv">
+    <two-factor-component
+      v-if="twofaFlag == true"
+      class="twoFactorComponent"
+      v-model="codeValidated"
+      @twofaSuccessClassicUser="login"
+      @twofaSuccessIntraUser="studentLogin"
+    />
+  </div>
 </template>
 
 <script lang="ts" setup>
@@ -96,6 +99,7 @@ let token = {
   },
   login_failed_msg = ref(false);
 let codeValidated = ref(false);
+let twofaFlag = ref(false);
 // computed: {
 //   videoElement() {
 //     return this.$refs.video;
@@ -149,14 +153,11 @@ async function login() {
 
   let data = await response.json();
   if (data.user.twoFactorAuth == true && codeValidated.value == false) {
+    twofaFlag.value = true;
     localStorage.setItem("phoneTo2fa", data.user.phone);
     localStorage.setItem("userType", "classic");
-    document
-      .getElementsByClassName("main_container")[0]
-      .classList.add("hidden");
-    document
-      .getElementsByClassName("twoFactorComponent")[0]
-      .classList.remove("hidden");
+
+    //sendCode();
     return;
   }
   localStorage.setItem("token", data.token);
@@ -218,18 +219,13 @@ async function studentLogin(code: string) {
       userAndToken.user.twoFactorAuth == true &&
       codeValidated.value == false
     ) {
+      twofaFlag.value = true;
       localStorage.setItem("userType", "intra");
       localStorage.setItem("phoneTo2fa", userAndToken.user.phone);
-      document
-        .getElementsByClassName("main_container")[0]
-        .classList.add("hidden");
-      document
-        .getElementsByClassName("twoFactorComponent")[0]
-        .classList.remove("hidden");
+
+      //sendCode();
       return;
     }
-    console.log("LS token -- > " + userAndToken.token);
-    console.log("LS user -- > " + JSON.stringify(userAndToken.user));
     localStorage.setItem("token", userAndToken.token);
     localStorage.setItem("user", JSON.stringify(userAndToken.user));
   } catch (error) {
@@ -239,12 +235,40 @@ async function studentLogin(code: string) {
   funcs.trySetupUser().then(() => {
     router.push("/game");
   });
+
+  async function sendCode() {
+    await fetch(
+      "http://" +
+        window.location.hostname +
+        ":3000/api/twofactor/sendCode/" +
+        localStorage.getItem("phoneTo2fa"),
+      {
+        method: "POST",
+      }
+    )
+      .then((data) => data.json())
+      .then((data) => {
+        console.log(data.status);
+        //error in the console(unexpected json input) because i don't return jsons format in the service and the controller. Need to add return before the send function, and make a json return int eh last then
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }
 }
 </script>
 
 <style lang="scss" scoped>
 @import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Press+Start+2P&display=swap");
+
+.twofaComponentDiv {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
 #backgroundVideo {
   position: fixed;
