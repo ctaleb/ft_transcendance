@@ -9,6 +9,7 @@ import {
   Put,
   Request,
   Res,
+  UnauthorizedException,
   UploadedFile,
   UseGuards,
   UseInterceptors,

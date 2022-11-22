@@ -63,7 +63,9 @@ store.$subscribe((mutation, state) => {
   socket = state.socket;
 });
 
-trySetupUser();
+trySetupUser().catch((err) => {
+  console.log("Cant't set up user for now");
+});
 
 //window.addEventListener("beforeunload", () => {
 //  socket?.disconnect;
@@ -204,23 +206,38 @@ onMounted(() => {
         socket?.on("friendshipInvite", (requester: User) => {
           incomingFriendRequest.value = requester.nickname;
           profileNotificationBadge.value = true;
-          getUserByNickname(requester.nickname).then((data) => {
-            store.invitations?.push(data!);
-          });
+          getUserByNickname(requester.nickname)
+            .then((data) => {
+              store.invitations?.push(data!);
+            })
+            .catch((err) => {
+              console.log(err);
+            });
         });
       }
       if (!socket?.hasListeners("acceptInvite")) {
         socket?.on("acceptInvite", (requester: User) => {
-          getUserByNickname(requester.nickname).then((data) => {
-            store.user?.friends?.push(data!);
-          });
+          getUserByNickname(requester.nickname)
+            .then((data) => {
+              store.user?.friends?.push(data!);
+            })
+            .catch((err) => {
+              console.log(err);
+            });
         });
       }
       if (!socket?.hasListeners("removeFriend")) {
         socket?.on("removeFriend", (requester: User) => {
-          getUserByNickname(requester.nickname).then((data) => {
-            store.user?.friends?.splice(store.user?.friends?.indexOf(data!), 1);
-          });
+          getUserByNickname(requester.nickname)
+            .then((data) => {
+              store.user?.friends?.splice(
+                store.user?.friends?.indexOf(data!),
+                1
+              );
+            })
+            .catch((err) => {
+              console.log(err);
+            });
         });
       }
       if (!socket?.hasListeners("inviteFailure")) {

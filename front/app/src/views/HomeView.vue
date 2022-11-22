@@ -1,7 +1,7 @@
 <template>
   <div id="backgroundVideo">
     <video class="video" ref="video" autoplay loop muted>
-      <source src="../assets/homepageBackground.mp4" type="video/mp4" />
+      <source src="../assets/stars.webm" type="video/mp4" />
     </video>
   </div>
   <div class="main_container">
@@ -68,12 +68,16 @@
 
 <script lang="ts" setup>
 import * as funcs from "@/functions/funcs";
+import { useStore } from "@/store";
+import { User } from "@/types/GameSummary";
 import { log } from "console";
+import { storeToRefs } from "pinia";
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import twoFactorComponent from "../components/twoFactorComponent.vue";
 
 const router = useRouter();
+const store = useStore();
 let username = ref("");
 let password = ref("");
 let background_url = "../assets/stars.webm";
@@ -106,9 +110,12 @@ const emit = defineEmits([
 ]);
 
 onMounted(async () => {
-  let isConnected = await funcs.isConnected(
-    localStorage.getItem("token") || ""
-  );
+  let isConnected: boolean = await funcs
+    .isConnected(localStorage.getItem("token") || "")
+    .catch((err) => {
+      console.log(err);
+      return false;
+    });
   if (isConnected) {
     router.push("/game");
   } else console.log("not connected");
@@ -121,7 +128,7 @@ onMounted(async () => {
 });
 
 async function login() {
-  console.log(codeValidated.value);
+  console.log("CODEVALIDATED --> " + codeValidated.value);
   let response = await fetch(
     "http://" + window.location.hostname + ":3000/api/Authentication/login",
     {
@@ -191,10 +198,21 @@ async function getUserAndToken(intraToken: string) {
 }
 
 async function studentLogin(code: string) {
+  let userAndToken: { user: User; token: string } = {
+    user: <User>{},
+    token: "",
+  };
   try {
     if (code == undefined) code = extractIntraCode() || "";
-    let intraToken = await getIntraToken(code);
-    const userAndToken = await getUserAndToken(intraToken.access_token);
+    if (store.token != undefined && store.user != undefined) {
+      userAndToken.user = store.user;
+      userAndToken.token = store.token;
+    } else {
+      let intraToken = await getIntraToken(code);
+      userAndToken = await getUserAndToken(intraToken.access_token);
+      store.user = userAndToken.user;
+      store.token = userAndToken.token;
+    }
     if (
       userAndToken.user.twoFactorAuth == true &&
       codeValidated.value == false

@@ -24,7 +24,6 @@ import { onMounted, ref } from "vue";
 import * as funcs from "@/functions/funcs";
 let code = ref("");
 let error = ref(false);
-let userType = localStorage.getItem("userType");
 
 //const isCodeEntered = computed(() => {
 //  return code.value.length == 6 ? true : false;
@@ -53,8 +52,10 @@ async function validateCode() {
       if (data.status == "approved") {
         console.log("code validated");
         emit("update:modelValue", true);
-        if (userType == "classic") emit("twofaSuccessClassicUser");
+        if (localStorage.getItem("userType") == "classic")
+          emit("twofaSuccessClassicUser");
         else emit("twofaSuccessIntraUser");
+        localStorage.clear();
         error.value = false;
       } else {
         error.value = true;

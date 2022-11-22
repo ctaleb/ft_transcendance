@@ -4,20 +4,26 @@ import { User } from "@/types/GameSummary";
 import { io } from "socket.io-client";
 
 export async function isConnected(token: string): Promise<boolean> {
-  if (token == null) return false;
+  if (token == "") return false;
 
-  let ret: boolean = true;
-  await fetch("http://" + window.location.hostname + ":3000/api/user/profile", {
-    method: "GET",
-    headers: {
-      Authorization: "Bearer " + token,
-    },
-  })
+  let ret: boolean = await fetch(
+    "http://" + window.location.hostname + ":3000/api/user/profile",
+    {
+      method: "GET",
+      headers: {
+        Authorization: "Bearer " + token,
+      },
+    }
+  )
     .then((res) => res.json())
     .then((data) => {
-      if (data.message) ret = false;
+      if (data.message) return false;
+      else return true;
     })
-    .catch((err) => console.log(err.message));
+    .catch((err) => {
+      console.log(err.message);
+      return false;
+    });
   return ret;
 }
 
