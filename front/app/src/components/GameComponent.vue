@@ -11,19 +11,20 @@
     <!-- <div>
     <button @click="toggleGameQueue()">CHANGE MODE</button>
   </div> -->
-  <!-- <div>{{ toggleLadder }}</div>
+    <!-- <div>{{ toggleLadder }}</div>
   <div>{{ toggleInvited }}</div> -->
-  <div v-if="toggleLadder" class="ladder">
-    <!-- <PowerSliderComponent v-model="power" id="powerSlider" /> -->
-    <div>
-      <div @click="findMatch()" class="btn">
-        <div class="text">PLAY</div>
+    <div v-if="toggleLadder" class="ladder">
+      <!-- <PowerSliderComponent v-model="power" id="powerSlider" /> -->
+      <div>
+        <div @click="findMatch()" class="btn">
+          <div class="text">PLAY</div>
+        </div>
       </div>
-    </div>
-    <!-- <div v-if="gameBoard">
+      <!-- <div v-if="gameBoard">
       {{ gameBoard }}
-      <canvas class="canvas" ref="canvas"></canvas>
+      
     </div> -->
+      <canvas class="canvas hidden" ref="canvas"></canvas>
       <div v-if="summary" class="overlay">
         <!-- <div v-if="modal" class="modal">
         <h1>Ready to play ?</h1>
@@ -42,139 +43,138 @@
         <Denial :inviter="friendName" @sadStory="showDenial(false)"></Denial>
       </div>
       <div class="power">Selected power: {{ power }}</div>
+      <div class="power">Selected power: {{ power }}</div>
     </div>
-    <div class="power">Selected power: {{ power }}</div>
-  </div>
-  <div v-else class="custom">
-    <!-- TODO add a hiding toggle for invitee -->
-    <div>
-      <h1>Custom Game with {{ friendName }}</h1>
-      <div v-if="!toggleInvited" class="inviter">
-        <div>
-          <label for="score">Max Score: {{ score }}</label>
+    <div v-else class="custom">
+      <div>
+        <h1>Custom Game with {{ friendName }}</h1>
+        <div v-if="!toggleInvited" class="inviter">
           <div>
             <label for="score">Max Score: {{ score }}</label>
             <div>
-              1<input
-                v-model="score"
-                type="range"
-                id="score"
-                name="score"
-                min="1"
-                max="100"
-                :disabled="readyButton == true"
-              />100
+              <label for="score">Max Score: {{ score }}</label>
+              <div>
+                1<input
+                  v-model="score"
+                  type="range"
+                  id="score"
+                  name="score"
+                  min="1"
+                  max="100"
+                  :disabled="readyButton == true"
+                />100
+              </div>
             </div>
-          </div>
-          <div>
-            <label for="ballSpeed"
-              >Initial Ball Speed (0 for half speed): {{ ballSpeed }}</label
-            >
             <div>
-              0<input
-                v-model="ballSpeed"
-                type="range"
-                id="ballSpeed"
-                name="ballSpeed"
-                min="0"
-                max="5"
-                :disabled="readyButton == true"
-              />5
+              <label for="ballSpeed"
+                >Initial Ball Speed (0 for half speed): {{ ballSpeed }}</label
+              >
+              <div>
+                0<input
+                  v-model="ballSpeed"
+                  type="range"
+                  id="ballSpeed"
+                  name="ballSpeed"
+                  min="0"
+                  max="5"
+                  :disabled="readyButton == true"
+                />5
+              </div>
             </div>
-          </div>
-          <div>
-            <label for="ballSize"
-              >Ball Size Factor (0 for half size): {{ ballSize }}</label
-            >
             <div>
-              0<input
-                v-model="ballSize"
-                type="range"
-                id="ballSize"
-                name="ballSize"
-                min="0"
-                max="3"
-                :disabled="readyButton == true"
-              />3
+              <label for="ballSize"
+                >Ball Size Factor (0 for half size): {{ ballSize }}</label
+              >
+              <div>
+                0<input
+                  v-model="ballSize"
+                  type="range"
+                  id="ballSize"
+                  name="ballSize"
+                  min="0"
+                  max="3"
+                  :disabled="readyButton == true"
+                />3
+              </div>
             </div>
-          </div>
-          <div>
-            <label for="barSpeed"
-              >Bar Speed Factor (0 for half speed): {{ barSpeed }}</label
-            >
             <div>
-              0<input
-                v-model="barSpeed"
-                type="range"
-                id="barSpeed"
-                name="barSpeed"
-                min="0"
-                max="5"
-                :disabled="readyButton == true"
-              />5
+              <label for="barSpeed"
+                >Bar Speed Factor (0 for half speed): {{ barSpeed }}</label
+              >
+              <div>
+                0<input
+                  v-model="barSpeed"
+                  type="range"
+                  id="barSpeed"
+                  name="barSpeed"
+                  min="0"
+                  max="5"
+                  :disabled="readyButton == true"
+                />5
+              </div>
             </div>
-          </div>
-          <div>
-            <label for="barSize"
-              >Bar Size Factor (0 for half size): {{ barSize }}</label
-            >
             <div>
-              0<input
-                v-model="barSize"
-                type="range"
-                id="barSize"
-                name="barSize"
-                min="0"
-                max="2"
-                :disabled="readyButton == true"
-              />2
+              <label for="barSize"
+                >Bar Size Factor (0 for half size): {{ barSize }}</label
+              >
+              <div>
+                0<input
+                  v-model="barSize"
+                  type="range"
+                  id="barSize"
+                  name="barSize"
+                  min="0"
+                  max="2"
+                  :disabled="readyButton == true"
+                />2
+              </div>
             </div>
-          </div>
-          <div>
-            <input
-              v-model="smashes"
-              type="checkbox"
-              id="switch"
-              :disabled="readyButton == true"
-            /><label for="smashes">Toggle smashes</label>
-          </div>
-          <div>
-            <label for="smashStrength"
-              >Smash Strength Factor: {{ smashStrength }}</label
-            >
             <div>
-              1<input
-                v-model="smashStrength"
-                type="range"
-                id="smashStrength"
-                name="smashStrength"
-                min="1"
-                max="10"
-                :disabled="smashes == false || readyButton == true"
-              />10
+              <input
+                v-model="smashes"
+                type="checkbox"
+                id="switch"
+                :disabled="readyButton == true"
+              /><label for="smashes">Toggle smashes</label>
+            </div>
+            <div>
+              <label for="smashStrength"
+                >Smash Strength Factor: {{ smashStrength }}</label
+              >
+              <div>
+                1<input
+                  v-model="smashStrength"
+                  type="range"
+                  id="smashStrength"
+                  name="smashStrength"
+                  min="1"
+                  max="10"
+                  :disabled="smashes == false || readyButton == true"
+                />10
+              </div>
+            </div>
+            <div>
+              <input
+                v-model="effects"
+                type="checkbox"
+                id="switch"
+                :disabled="readyButton == true"
+              /><label for="effects">Toggle effects</label>
+            </div>
+            <div>
+              <input
+                v-model="powers"
+                type="checkbox"
+                id="switch"
+                :disabled="readyButton == true"
+              /><label for="powers">Toggle powers</label>
             </div>
           </div>
           <div>
-            <input
-              v-model="effects"
-              type="checkbox"
-              id="switch"
-              :disabled="readyButton == true"
-            /><label for="effects">Toggle effects</label>
+            <button @click="readyUp()" :disabled="readyButton">
+              {{ customReady }}
+            </button>
           </div>
-          <div>
-            <input
-              v-model="powers"
-              type="checkbox"
-              id="switch"
-              :disabled="readyButton == true"
-            /><label for="powers">Toggle powers</label>
-          </div>
-        </div>
-        <div>
-          <button @click="readyUp()" :disabled="readyButton">
-            {{ customReady }}
-          </button>
         </div>
       </div>
     </div>
@@ -692,6 +692,7 @@ const reconnect = (gameRoom: GameRoom) => {
   powers.value = false;
   //   gameBoard.value = true;
   document.querySelector(".canvas")?.classList.remove("hidden");
+  //   return "done";
 };
 
 const kickOfff = () => {

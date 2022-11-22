@@ -54,6 +54,7 @@ import GameConfirmation from "./components/GameConfirmation/Modal.vue";
 import AlertCard from "./components/AlertCard.vue";
 import CustomInvitation from "./components/CustomInvitation/Modal.vue";
 import FailedInvitation from "./components/FailedInvitation/Modal.vue";
+import { stat } from "fs";
 
 const store = useStore();
 const route = useRoute();
@@ -67,7 +68,6 @@ const invSender = ref("Placeholder");
 
 trySetupUser();
 
-const store = useStore();
 let socket = store.socket;
 let alertMessages: Message[] = store.message;
 
@@ -123,6 +123,12 @@ store.$subscribe((mutation, state) => {
   if (!state.socket?.hasListeners("inviteFailure")) {
     state.socket?.on("inviteFailure", () => {
       showFailure(true);
+    });
+  }
+  if (!state.socket?.hasListeners("reconnect")) {
+    state.socket?.on("reconnect", () => {
+      console.log("received");
+      return "done";
     });
   }
 });

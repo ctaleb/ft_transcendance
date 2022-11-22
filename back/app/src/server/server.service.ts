@@ -29,6 +29,7 @@ import { DeepPartial, Repository } from 'typeorm';
 import { UserService } from 'src/user/user.service';
 import { Channel } from './entities/channel';
 import { ChatService } from 'src/chat/chat.service';
+import { response } from 'express';
 
 const chargeMax = 1;
 const ballSize = 16;
@@ -240,7 +241,9 @@ export class ServerService {
     if (!game)
       game = this.games.find((element) => element.client.name === player.name);
     if (game) {
-      player.socket.emit('reconnect', game.room);
+      player.socket.emit('reconnect', game.room, (response: string) => {
+        console.log('response: ' + response);
+      });
       player.socket.join(game.room.name);
     }
   }
