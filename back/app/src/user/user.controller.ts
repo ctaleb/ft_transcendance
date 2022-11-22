@@ -55,8 +55,6 @@ export class UserController {
   async getUserByNickname(
     @Param('nickname') nickname: string,
   ): Promise<UserEntity> {
-    console.log(await this._userService.getUserByNickname(nickname));
-
     return await this._userService.getUserByNickname(nickname);
   }
 

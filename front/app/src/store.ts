@@ -1,4 +1,4 @@
-import { User } from "@/types/GameSummary";
+import { User, Message } from "@/types/GameSummary";
 import { defineStore } from "pinia";
 import { Socket } from "socket.io-client";
 
@@ -7,6 +7,7 @@ interface State {
   invitations: User[] | undefined;
   socket: Socket | undefined;
   token: string | undefined;
+  message: Message[];
 }
 
 export const useStore = defineStore("default", {
@@ -16,6 +17,7 @@ export const useStore = defineStore("default", {
       invitations: undefined,
       socket: undefined,
       token: undefined,
+      message: [],
     };
   },
 });

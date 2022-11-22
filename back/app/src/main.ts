@@ -16,7 +16,13 @@ async function bootstrap() {
 
   app.use(cookieParser());
   app.setGlobalPrefix('api');
-  app.enableCors();
+  app.enableCors({
+    origin: '*',
+  });
+  //   app.enableCors({
+  //     origin: /^(http:\/\/([^\.]*\.)?127.0.0.1:4000)$/i,
+  //   });
+
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
   app.useGlobalInterceptors(new ClassSerializerInterceptor(reflector));
 

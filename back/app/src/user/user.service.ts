@@ -45,7 +45,7 @@ export class UserService {
     if (user) {
       return user;
     }
-    throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    throw new HttpException('User not found' + nickname, HttpStatus.NOT_FOUND);
   }
 
   async createUser(createUserDto: CreateUserDto): Promise<UserEntity> {
@@ -111,7 +111,6 @@ export class UserService {
     const oldAvatar = await this._imageService.getImageById(user.avatarId);
     unlink(oldAvatar.path, (err) => {
       if (err) throw err;
-      console.log(oldAvatar.path + ' has been deleted');
     });
 
     await this.setAvatar(user.id, imageDto);
@@ -155,7 +154,6 @@ export class UserService {
     //   .orWhere('addresseeId = :userId', { userId: user.id })
     //   .execute();
 
-    console.log('Tout va bien');
     this._usersRepository.delete({ id: user.id });
     if (user.avatarId !== 0) this._imageService.deleteImage(user.avatarId);
   }

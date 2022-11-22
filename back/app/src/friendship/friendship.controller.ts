@@ -10,6 +10,7 @@ import {
   Put,
   Request,
 } from '@nestjs/common';
+import { eventNames } from 'process';
 import { JwtAuthGuard } from 'src/authentication/jwt-auth.guard';
 import { FriendshipDto } from './friendship.dto';
 import { FriendshipService } from './friendship.service';
@@ -62,6 +63,11 @@ export class FriendshipController {
   @Get()
   getRelations(@Request() req) {
     return this._friendshipService.getRelationsOf(req.user.payload.nickname);
+  }
+
+  @Get('/profile/:name')
+  async getRelationsProfile(@Request() req, @Param('name') name) {
+    return await this._friendshipService.getRelationsOf(name);
   }
 
   @Get('has-invitations')
