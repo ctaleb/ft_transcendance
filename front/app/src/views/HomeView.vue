@@ -198,6 +198,7 @@ async function getUserAndToken(intraToken: string) {
 }
 
 async function studentLogin(code: string) {
+  console.log("stuent login");
   let userAndToken: { user: User; token: string } = {
     user: <User>{},
     token: "",
@@ -227,6 +228,8 @@ async function studentLogin(code: string) {
         .classList.remove("hidden");
       return;
     }
+    console.log("LS token -- > " + userAndToken.token);
+    console.log("LS user -- > " + JSON.stringify(userAndToken.user));
     localStorage.setItem("token", userAndToken.token);
     localStorage.setItem("user", JSON.stringify(userAndToken.user));
   } catch (error) {

@@ -55,7 +55,8 @@ async function validateCode() {
         if (localStorage.getItem("userType") == "classic")
           emit("twofaSuccessClassicUser");
         else emit("twofaSuccessIntraUser");
-        localStorage.clear();
+        localStorage.removeItem("phoneTo2fa");
+        localStorage.removeItem("userType");
         error.value = false;
       } else {
         error.value = true;
