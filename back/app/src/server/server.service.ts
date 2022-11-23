@@ -154,15 +154,9 @@ export class ServerService {
   async elo_calc(winner: User, loser: User) {
     const elo = 20;
     winner.gameData.elo += elo;
-    this._userService.updateElo(
-      winner.gameData.elo,
-      (await this._userService.getUserByNickname(winner.name)).id,
-    );
+    this._userService.updateElo(winner.gameData.elo, winner.id);
     loser.gameData.elo -= elo;
-    this._userService.updateElo(
-      loser.gameData.elo,
-      (await this._userService.getUserByNickname(loser.name)).id,
-    );
+    this._userService.updateElo(loser.gameData.elo, loser.id);
     return elo;
   }
 
