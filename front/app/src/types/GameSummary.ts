@@ -22,6 +22,7 @@ export interface User {
   nickname: string;
   phone: string;
   avatar: string;
+  elo: number;
   twoFactorAuth: boolean;
   friends?: User[];
   invitations?: User[];
