@@ -7,7 +7,6 @@ import ProfileView from "../views/ProfileView.vue";
 import EditView from "../views/EditView.vue";
 import twoFactorView from "../views/twoFactorView.vue";
 import { isConnected } from "@/functions/funcs";
-let funcs = require("../functions/funcs");
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -43,7 +42,7 @@ const routes: Array<RouteRecordRaw> = [
 ];
 
 const router = createRouter({
-  history: createWebHistory(process.env.BASE_URL),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes,
 });
 

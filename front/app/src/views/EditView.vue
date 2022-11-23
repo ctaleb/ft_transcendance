@@ -102,11 +102,11 @@
 </template>
 
 <script lang="ts">
-import { getUserAvatar } from "@/functions/funcs";
+import { getUserAvatar, getUserById } from "@/functions/funcs";
 import { useStore } from "@/store";
 import { defineComponent, ref } from "vue";
 import FriendAlert from "../components/FriendAlert.vue";
-let funcs = require("../functions/funcs");
+//let funcs = require("../functions/funcs");
 
 export default defineComponent({
   props: ["incomingFriendRequest"],
@@ -136,9 +136,9 @@ export default defineComponent({
   emits: ["notification"],
   mounted() {
     this.initTwoFactorToggle();
-    funcs.getUserById(this.user.id).then((data: any) => {
+    getUserById(this.user.id).then((data: any) => {
       this.avatar = data.path;
-      this.image = funcs.getUserAvatar(this.avatar);
+      this.image = getUserAvatar(this.avatar);
     });
   },
   components: { FriendAlert },
@@ -197,7 +197,7 @@ export default defineComponent({
         .catch((err) => {
           console.log(err);
         });
-      this.image = funcs.getUserAvatar(fetch_ret.avatar.path);
+      this.image = getUserAvatar(fetch_ret.avatar.path);
       localStorage.setItem("user", JSON.stringify(fetch_ret.user));
       localStorage.setItem("token", fetch_ret.token);
     },

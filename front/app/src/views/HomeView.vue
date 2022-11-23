@@ -73,7 +73,6 @@
 import * as funcs from "@/functions/funcs";
 import { useStore } from "@/store";
 import { User } from "@/types/GameSummary";
-import { log } from "console";
 import { storeToRefs } from "pinia";
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
@@ -86,9 +85,9 @@ let password = ref("");
 let background_url = "../assets/stars.webm";
 let intra_redirection =
   "https://api.intra.42.fr/oauth/authorize?client_id=" +
-  process.env.VUE_APP_42_ID +
+  import.meta.env.VUE_APP_42_ID +
   "&redirect_uri=" +
-  process.env.VUE_APP_42_URI +
+  import.meta.env.VUE_APP_42_URI +
   "&response_type=code";
 let token = {
     access_token: null,

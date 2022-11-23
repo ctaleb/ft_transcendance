@@ -119,7 +119,6 @@ import FriendAlert from "../components/FriendAlert.vue";
 import { onMounted, onUpdated, ref, watch } from "vue";
 import { useStore } from "@/store";
 import { User } from "@/types/GameSummary";
-import { Private } from "@babel/types";
 
 const store = useStore();
 let socket = store.socket;
