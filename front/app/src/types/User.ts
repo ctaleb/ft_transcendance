@@ -4,6 +4,7 @@ export interface User {
   id: number;
   nickname: string;
   avatar: string;
+  twoFactorAuth?: boolean;
   friends?: User[];
   invitations?: User[];
   history?: History[];

@@ -48,7 +48,9 @@ const customInvitation = ref(false);
 const failedInvitation = ref(false);
 const invSender = ref("Placeholder");
 
-trySetupUser();
+trySetupUser().catch((err) => {
+  console.log("Cant't set up user for now");
+});
 
 let socket = store.socket;
 let alertMessages: Message[] = store.message;
@@ -109,9 +111,6 @@ store.$subscribe((mutation, state) => {
   }
 });
 
-//window.addEventListener("beforeunload", () => {
-//  store.socket?.disconnect;
-//});
 
 window.addEventListener("keydown", (e) => {
   if (e.key === "ArrowLeft")
@@ -187,6 +186,9 @@ const invFailure = () => {
 const logout = () => {
   localStorage.removeItem("token");
   localStorage.removeItem("user");
+  store.$reset();
+  // map through that list and use the **$reset** fn to reset the state
+  //  socket? = io("http://" + window.location.hostname + ":3500", {
   store.socket?.emit("disco", {});
   //  store.socket? = io("http://" + window.location.hostname + ":3500", {
   //    transports: ["websocket"],

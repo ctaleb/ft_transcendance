@@ -54,18 +54,17 @@
 </template>
 
 <script lang="ts" setup>
-import FriendAlert from "@/components/FriendAlert.vue";
 import FriendCard from "@/components/profile/FriendCard.vue";
-import SummaryCard from "@/components/profile/SummaryCard.vue";
 import InvitationCard from "@/components/profile/InvitationCard.vue";
-import shutdownUrl from "../assets/shutdown.png";
-import editUrl from "../assets/edit.png";
-import { getUserAvatar, getUserByNickname } from "@/functions/funcs";
+import SummaryCard from "@/components/profile/SummaryCard.vue";
+import { getUserAvatar } from "@/functions/funcs";
 import { useStore } from "@/store";
-import { User, History, GameSummaryData } from "@/types/GameSummary";
+import { History } from "@/types/GameSummary";
+import { getUserByNickname, User } from "@/types/User";
 import { onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
-import config from "@/config/config";
+import editUrl from "../assets/edit.png";
+import shutdownUrl from "../assets/shutdown.png";
 
 const route = useRoute();
 

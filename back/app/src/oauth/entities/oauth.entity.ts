@@ -1,6 +1,9 @@
+export class intraImage {
+  link: string;
+}
 export class intraUser {
   id: string;
   login: string;
-  image_url: string;
+  image: intraImage;
   phone: string;
 }
