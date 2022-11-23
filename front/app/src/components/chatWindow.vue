@@ -20,8 +20,7 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { functionExpression } from "@babel/types";
-import { onMounted, Ref, ref, watch } from "vue";
+import { onMounted, ref } from "vue";
 import config from "../config/config";
 let funcs = require("../functions/funcs");
 const socket = config.socket;

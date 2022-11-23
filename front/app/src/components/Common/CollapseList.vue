@@ -12,12 +12,13 @@
 <script setup lang="ts">
 import { ref } from "vue";
 
-defineProps<{
+const props = defineProps<{
+  toggleMode: boolean,
   title: string;
   data: any[] | undefined;
 }>();
 
-const show = ref(true);
+const show = ref(props.toggleMode);
 
 const toggle = () => {
   show.value = !show.value;

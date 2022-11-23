@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
+import { IChannel } from 'src/chat/chat.types';
 import { UserEntity } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
 import { LessThan, Not } from 'typeorm';
@@ -16,10 +17,7 @@ import { SaveMessageDto } from './dtos/save-message.dto';
 import { UpdateChannelDto } from './dtos/update-channel.dto';
 import { ChannelEntity, ChannelType } from './entities/channel.entity';
 import { ChannelInvitationEntity } from './entities/channel_invitation.entity';
-import {
-  ChannelMemberEntity,
-  ChannelRole,
-} from './entities/channel_member.entity';
+import { ChannelMemberEntity, ChannelRole } from './entities/channel_member.entity';
 import { ChannelMessageEntity } from './entities/channel_message.entity';
 import { ChannelRestrictionsEntity } from './entities/channel_restrictions.entity';
 
@@ -28,14 +26,11 @@ export class ChatService {
   constructor(private _userService: UserService) {}
 
   async createChannel(channelDto: CreateChannelDto, nickname: string) {
-    const user: UserEntity = await this._userService.getUserByNickname(
-      nickname,
-    );
+    const user: UserEntity = await this._userService.getUserByNickname(nickname);
     let channel: ChannelEntity = ChannelEntity.create({
       name: channelDto.name,
       type: channelDto.type,
-      password:
-        channelDto.type === ChannelType.PROTECTED ? channelDto.password : null,
+      password: channelDto.type === ChannelType.PROTECTED ? channelDto.password : null,
     });
     channel = await ChannelEntity.save(channel);
     let owner = ChannelMemberEntity.create({
@@ -51,12 +46,8 @@ export class ChatService {
     const owner = await ChannelMemberEntity.findOne({
       where: { user: { id: userId } },
     });
-    if (owner.channel.id !== updateChannelDto.id)
-      throw new BadRequestException('You are not the channel owner');
-    owner.channel.password =
-      updateChannelDto.type === ChannelType.PROTECTED
-        ? updateChannelDto.password
-        : null;
+    if (owner.channel.id !== updateChannelDto.id) throw new BadRequestException('You are not the channel owner');
+    owner.channel.password = updateChannelDto.type === ChannelType.PROTECTED ? updateChannelDto.password : null;
     owner.channel.type = updateChannelDto.type;
     return await ChannelEntity.save(owner.channel);
   }
@@ -86,8 +77,7 @@ export class ChatService {
       const invitation = await ChannelInvitationEntity.findOne({
         where: { target: { id: userId }, channel: { id: joinChannelDto.id } },
       });
-      if (invitation === null)
-        throw new BadRequestException('You have not been invited');
+      if (invitation === null) throw new BadRequestException('You have not been invited');
       await ChannelInvitationEntity.remove(invitation);
       member = ChannelMemberEntity.create({
         channel,
@@ -110,10 +100,7 @@ export class ChatService {
     return channel;
   }
 
-  async inviteToChannel(
-    inviteToChannelDto: InviteToChannelDto,
-    userId: number,
-  ): Promise<ChannelInvitationEntity> {
+  async inviteToChannel(inviteToChannelDto: InviteToChannelDto, userId: number): Promise<ChannelInvitationEntity> {
     const member = await ChannelMemberEntity.findOneBy({
       user: { id: userId },
       channel: { id: inviteToChannelDto.channelId },
@@ -121,13 +108,9 @@ export class ChatService {
     if (member === null) {
       throw new BadRequestException('You are not member of the given channel');
     } else if (member.channel.type !== ChannelType.PRIVATE) {
-      throw new BadRequestException(
-        'This channel does not support invitation feature',
-      );
+      throw new BadRequestException('This channel does not support invitation feature');
     }
-    const invitationTarget = await this._userService.getUserByNickname(
-      inviteToChannelDto.username,
-    );
+    const invitationTarget = await this._userService.getUserByNickname(inviteToChannelDto.username);
     if (
       (await ChannelInvitationEntity.findOneBy({
         channel: { id: inviteToChannelDto.channelId },
@@ -151,18 +134,12 @@ export class ChatService {
     return await ChannelInvitationEntity.save(invitation);
   }
 
-  async declineInvitation(
-    declineInvitationDto: DeclineInvitationDto,
-    userId: number,
-  ) {
+  async declineInvitation(declineInvitationDto: DeclineInvitationDto, userId: number) {
     const invitation = await ChannelInvitationEntity.findOneBy({
       channel: { id: declineInvitationDto.id },
       target: { id: userId },
     });
-    if (invitation === null)
-      throw new BadRequestException(
-        'You have not received an invitation from this channel',
-      );
+    if (invitation === null) throw new BadRequestException('You have not received an invitation from this channel');
     return await ChannelInvitationEntity.remove(invitation);
   }
 
@@ -171,18 +148,13 @@ export class ChatService {
       channel: { id: giveAdminRole.id },
       user: { id: userId },
     });
-    if (owner === null || owner.role !== ChannelRole.OWNER)
-      throw new BadRequestException(
-        'You are not the owner of the given channel',
-      );
+    if (owner === null || owner.role !== ChannelRole.OWNER) throw new BadRequestException('You are not the owner of the given channel');
     const user = await ChannelMemberEntity.findOneBy({
       channel: { id: giveAdminRole.id },
       user: { nickname: giveAdminRole.username },
     });
-    if (user === null)
-      throw new BadRequestException('Channel member not found');
-    if (user.role === ChannelRole.OWNER || user.role === ChannelRole.ADMIN)
-      throw new BadRequestException("Can't give admin role");
+    if (user === null) throw new BadRequestException('Channel member not found');
+    if (user.role === ChannelRole.OWNER || user.role === ChannelRole.ADMIN) throw new BadRequestException("Can't give admin role");
     user.role = ChannelRole.ADMIN;
     return await ChannelMemberEntity.save(user);
   }
@@ -192,18 +164,13 @@ export class ChatService {
       channel: { id: takeAdminRole.id },
       user: { id: userId },
     });
-    if (owner === null || owner.role !== ChannelRole.OWNER)
-      throw new BadRequestException(
-        'You are not the owner of the given channel',
-      );
+    if (owner === null || owner.role !== ChannelRole.OWNER) throw new BadRequestException('You are not the owner of the given channel');
     const user = await ChannelMemberEntity.findOneBy({
       channel: { id: takeAdminRole.id },
       user: { nickname: takeAdminRole.username },
     });
-    if (user === null)
-      throw new BadRequestException('Channel member not found');
-    if (user.role === ChannelRole.OWNER || user.role === ChannelRole.MEMBER)
-      throw new BadRequestException("Can't take admin role");
+    if (user === null) throw new BadRequestException('Channel member not found');
+    if (user.role === ChannelRole.OWNER || user.role === ChannelRole.MEMBER) throw new BadRequestException("Can't take admin role");
     user.role = ChannelRole.MEMBER;
     return await ChannelMemberEntity.save(user);
   }
@@ -213,8 +180,7 @@ export class ChatService {
       channel: { id: leaveChannelDto.id },
       user: { id: userId },
     });
-    if (member === null)
-      throw new BadRequestException('Channel member not found');
+    if (member === null) throw new BadRequestException('Channel member not found');
     if (member.role === ChannelRole.OWNER) {
       const admin = await ChannelMemberEntity.findOneBy({
         channel: { id: leaveChannelDto.id },
@@ -247,22 +213,15 @@ export class ChatService {
       user: { id: userId },
       role: ChannelRole.OWNER,
     });
-    if (owner === null)
-      throw new BadRequestException(
-        'You are not the owner of the given channel',
-      );
+    if (owner === null) throw new BadRequestException('You are not the owner of the given channel');
     return await ChannelEntity.remove(owner.channel);
   }
 
-  async getUserChannels(userId: number) {
+  async getUserChannels(userId: number): Promise<IChannel[]> {
     return await ChannelMemberEntity.createQueryBuilder('member')
       .leftJoinAndSelect('member.channel', 'channel')
       .leftJoinAndSelect('member.user', 'user')
-      .select([
-        'channel.id AS id',
-        'channel.name AS name',
-        'channel.type AS type',
-      ])
+      .select(['channel.id AS id', 'channel.name AS name', 'channel.type AS type'])
       .where('user.id = :id', { id: userId })
       .execute();
   }
@@ -276,19 +235,13 @@ export class ChatService {
       channel: { id: restrictionDto.id },
       user: { id: userId },
     });
-    if (admin === null || admin.role === ChannelRole.MEMBER)
-      throw new BadRequestException(
-        'You have no rights to ban someone on this channel',
-      );
+    if (admin === null || admin.role === ChannelRole.MEMBER) throw new BadRequestException('You have no rights to ban someone on this channel');
     const target = await ChannelMemberEntity.findOneBy({
       channel: { id: restrictionDto.id },
       user: { nickname: restrictionDto.username },
       role: ChannelRole.MEMBER,
     });
-    if (target === null)
-      throw new BadRequestException(
-        `${restrictionDto.username} is not part of this channel or has admin rights`,
-      );
+    if (target === null) throw new BadRequestException(`${restrictionDto.username} is not part of this channel or has admin rights`);
     const date = new Date();
     date.setMinutes(date.getMinutes() + restrictionDto.minutes);
     if (restriction) {
@@ -313,25 +266,16 @@ export class ChatService {
       channel: { id: restrictionDto.id },
       user: { id: userId },
     });
-    if (admin === null || admin.role === ChannelRole.MEMBER)
-      throw new BadRequestException(
-        'You have no rights to mute someone on this channel',
-      );
+    if (admin === null || admin.role === ChannelRole.MEMBER) throw new BadRequestException('You have no rights to mute someone on this channel');
     const target = await ChannelMemberEntity.findOneBy({
       channel: { id: restrictionDto.id },
       user: { nickname: restrictionDto.username },
       role: ChannelRole.MEMBER,
     });
-    if (target === null)
-      throw new BadRequestException(
-        `${restrictionDto.username} is not part of this channel or has admin rights`,
-      );
+    if (target === null) throw new BadRequestException(`${restrictionDto.username} is not part of this channel or has admin rights`);
     const date = new Date();
     date.setMinutes(date.getMinutes() + restrictionDto.minutes);
-    if (restriction && restriction.ban)
-      throw new BadRequestException(
-        'The user is already banned on this channel',
-      );
+    if (restriction && restriction.ban) throw new BadRequestException('The user is already banned on this channel');
     else if (restriction) {
       restriction.mute = date;
       return await ChannelRestrictionsEntity.save(restriction);
@@ -344,26 +288,27 @@ export class ChatService {
     return await ChannelRestrictionsEntity.save(mute);
   }
 
-  async getChannelsList(
-    getChannelsListDto: GetChannelsListDto,
-    userId: number,
-  ) {
-    const userChannels: { id: number; name: string; type: string }[] =
-      await this.getUserChannels(userId);
-    const result: { id: number; name: string; type: string }[] = [];
-    if (getChannelsListDto.skip === 0) {
-      await ChannelInvitationEntity.findBy({
-        target: { id: userId },
-      }).then((data) => {
-        data.forEach((elem) => {
-          result.push({
-            id: elem.channel.id,
-            name: elem.channel.name,
-            type: elem.channel.type,
-          });
+  async getChannelInvitations(userId: number): Promise<IChannel[]> {
+    const result: IChannel[] = [];
+
+    await ChannelInvitationEntity.findBy({
+      target: { id: userId },
+    }).then((data) => {
+      data.forEach((elem) => {
+        result.push({
+          id: elem.channel.id,
+          name: elem.channel.name,
+          type: elem.channel.type,
         });
       });
-    }
+    });
+    return result;
+  }
+
+  async getChannelsList(getChannelsListDto: GetChannelsListDto, userId: number): Promise<IChannel[]> {
+    const userChannels: IChannel[] = await this.getUserChannels(userId);
+    const result: IChannel[] = [];
+
     await ChannelEntity.find({
       where: {
         // @ts-ignore
@@ -373,21 +318,15 @@ export class ChatService {
       take: 20,
       skip: getChannelsListDto.skip,
     }).then((data) => {
-      data = data.filter(
-        (elem) => !userChannels.find((userChan) => userChan.id === elem.id),
-      );
+      data = data.filter((elem) => !userChannels.find((userChan) => userChan.id === elem.id));
       data.forEach((elem) => {
         result.push({ id: elem.id, name: elem.name, type: elem.type });
       });
     });
-
     return result;
   }
 
-  async getChannelMembers(
-    getChannelMembersDto: LeaveChannelDto,
-    userId: number,
-  ) {
+  async getChannelMembers(getChannelMembersDto: LeaveChannelDto, userId: number) {
     const query = ChannelMemberEntity.createQueryBuilder('member')
       .select('member.channelId')
       .where('member.userId = :id', { id: userId })
@@ -398,11 +337,7 @@ export class ChatService {
       .innerJoin('channel.members', 'members')
       .innerJoin('members.user', 'user')
       .innerJoin('user.avatar', 'avatar')
-      .select([
-        'user.nickname AS nickname',
-        'avatar.path AS path',
-        'members.role AS role',
-      ])
+      .select(['user.nickname AS nickname', 'avatar.path AS path', 'members.role AS role'])
       .where('channel.id IN (' + query.getQuery() + ')')
       .setParameters(query.getParameters())
       .orderBy('members.role', 'ASC')
@@ -447,8 +382,7 @@ export class ChatService {
       user: { id: userId },
     });
     if (ban) {
-      if (ban.ban.getTime() < Date.now())
-        await ChannelRestrictionsEntity.remove(ban);
+      if (ban.ban.getTime() < Date.now()) await ChannelRestrictionsEntity.remove(ban);
       else throw new BadRequestException(`You are banned till ${ban.ban}`);
     }
     const members: { nickname: string; path: string; role: ChannelRole }[] = [];
@@ -489,8 +423,7 @@ export class ChatService {
       channel: { id: saveMessageDto.id },
       user: { id: userId },
     });
-    if (member === null)
-      throw new BadRequestException('Channel member not found');
+    if (member === null) throw new BadRequestException('Channel member not found');
     let message = ChannelMessageEntity.create({
       channel: { id: channel.id },
       sender: { id: member.id },

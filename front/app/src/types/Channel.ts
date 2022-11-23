@@ -18,11 +18,11 @@ export interface ChannelUser extends User {
 }
 
 export interface Channel {
-  messages: Message[];
   id: number;
   name: string;
   type: ChannelType;
-  members: number[];
+  members?: number[];
+  messages?: Message[];
 }
 
 export namespace Channel {

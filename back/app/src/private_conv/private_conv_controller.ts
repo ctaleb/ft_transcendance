@@ -32,6 +32,6 @@ export class PrivateConvController {
       convCreated = true;
       return await this.privateConvService.createConv(current, friend);
     });
-    return { conv: instanceToPlain(conv, { groups: [current == conv.user1 ? 'user2' : ''] }), created: convCreated };
+    return { conv: instanceToPlain(conv, { groups: [current === conv.user1.id ? 'user2' : ''] }), created: convCreated };
   }
 }

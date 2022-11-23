@@ -1,4 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { instanceToPlain } from 'class-transformer';
 import { PrivateMessageEntity } from 'src/private_conv/entities/privateMessage.entity';
 import { UserEntity } from 'src/user/user.entity';
 import { MessageDto } from './dto/MessageDto';
@@ -48,13 +49,17 @@ export class PrivateConvService {
   }
 
   async getAllConvs(id: number) {
+    const result = [];
     const convs = await PrivateConvEntity.find({
       where: [{ user1: { id: id } }, { user2: { id: id } }],
       order: {
         lastMessage: 'DESC',
       },
     });
-    if (convs) return convs;
+    convs.forEach((conv) => {
+      result.push(instanceToPlain(conv, { groups: [id === conv.user1.id ? 'user2' : ''] }));
+    });
+    if (result) return result;
     throw new HttpException('User not found', HttpStatus.NOT_FOUND);
   }
 

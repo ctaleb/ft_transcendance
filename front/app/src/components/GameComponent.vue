@@ -1,6 +1,6 @@
 <template>
   <section class="lobby container">
-    <img class="border-gold user-image michel" :src="getUserAvatar(store.user)" alt="" />
+    <img class="border-gold user-image michel" :src="User.getAvatar(store.user!)" alt="" />
     <div :class="powers ? '' : ' hidden'">
       <power-slider-component v-model="power" id="powerSlider" />
     </div>
@@ -180,32 +180,27 @@
 </template>
 
 <script setup lang="ts">
+import { useStore } from "@/store";
+import { GameSummaryData } from "@/types/GameSummary";
+import { Socket } from "engine.io-client";
+import { onMounted, onUnmounted, reactive, ref } from "vue";
+import { GameOptions, GameRoom, GameState, IBar } from "../../../../back/app/src/server/entities/server.entity";
+import { User } from "@/types/User";
 import ballUrl from "../assets/ball.png";
-import paddleUrl from "../assets/paddle_grec.png";
-import powerChargeUrl from "../assets/powerCharge.png";
 import energyUrl from "../assets/energy.png";
 import paddleEnergyUrl from "../assets/energy_paddle_grec.png";
-import plateauUrl from "../assets/plateauV2.png";
-import energyRedUrl from "../assets/energy_red.png";
-import paddleRedUrl from "../assets/paddle_grec_red.png";
 import paddleEnergyRedUrl from "../assets/energy_paddle_red.png";
-import slotUrl from "../assets/slot.png";
+import energyRedUrl from "../assets/energy_red.png";
 import fillUrl from "../assets/fill_slot.png";
+import paddleUrl from "../assets/paddle_grec.png";
+import paddleRedUrl from "../assets/paddle_grec_red.png";
+import plateauUrl from "../assets/plateauV2.png";
+import powerChargeUrl from "../assets/powerCharge.png";
+import slotUrl from "../assets/slot.png";
 import fillRedUrl from "../assets/slot_fill_enemy.png";
-import { ref, reactive, onMounted, onBeforeMount, watch, onUnmounted } from "vue";
-import { io } from "socket.io-client";
-import { GameState, GameRoom, IBall, IBar, IPoint, GameOptions } from "../../../../back/app/src/server/entities/server.entity";
-//import config from "../config/config";
-import { title } from "process";
-import PowerSliderComponent from "./PowerSliderComponent.vue";
-import Summary from "./Summary.vue";
-import { GameSummaryData } from "@/types/GameSummary";
-import Modal from "./Summary/Modal.vue";
-import { useStore } from "@/store";
 import Denial from "./InviteDenied/Modal.vue";
-import { getUserAvatar } from "@/functions/funcs";
-import { getUserByNickname } from "@/types/User";
-import { Socket } from "engine.io-client";
+import PowerSliderComponent from "./PowerSliderComponent.vue";
+import Modal from "./Summary/Modal.vue";
 //import { SCOPABLE_TYPES } from "@babel/types";
 
 const store = useStore();

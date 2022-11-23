@@ -11,15 +11,11 @@ export interface Conversation {
 export namespace Conversation {
   export function getName(conv: Conversation): string {
     // TODO Change to other
-    // @ts-ignore
-    return User.getName(conv.user1);
     return User.getName(conv.other);
   }
 
   export function getAvatar(conv: Conversation): string {
     // TODO Change to other
-    // @ts-ignore
-    return User.getAvatar(conv.user1);
     return User.getAvatar(conv.other);
   }
 }

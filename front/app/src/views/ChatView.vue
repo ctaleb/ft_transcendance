@@ -1,6 +1,7 @@
 <template>
   <div id="chat">
-    <ChatMenu :current="<any>{}" :channels="allChannels" :convs="privateConvs" />
+    <ChatMenu :channels="myChannels" :convs="privateConvs" :allChannels="allChannels" :invitations="channelInvitations" />
+    <ChatWindow />
     <div v-if="show == 0" class="lobbyChat">
       <h2>Welcome on the chat</h2>
       <br />
@@ -119,15 +120,18 @@
       </div>
     </div>
   </div>
-  <friend-alert :requester-name="props.incomingFriendRequest" />
+  <friend-alert :requester-name="incomingFriendRequest" />
 </template>
 
 <script setup lang="ts">
 import ChatMenu from "@/components/chat/ChatMenu.vue";
+import ChatWindow from "@/components/chat/ChatWindow.vue";
 import FriendAlert from "@/components/FriendAlert.vue";
 import { fetchJSONDatas } from "@/functions/funcs";
 import { useStore } from "@/store";
 import { Channel, ChannelRole, ChannelType, ChannelUser } from "@/types/Channel";
+import { Conversation } from "@/types/Conversation";
+import { Message } from "@/types/Message";
 import { User } from "@/types/User";
 import { onMounted, onUpdated, ref, Ref } from "vue";
 
@@ -138,21 +142,21 @@ store.$subscribe((mutation, state) => {
   socket = state.socket;
 });
 
-const moment = require("moment-timezone");
-const privateConvs = ref(Array<PrivateConv>());
+const privateConvs = ref(Array<Conversation>());
 const messagesToDisplay: Ref<Array<Message>> = ref([]);
 const messagesBoxRef = ref<HTMLDivElement | null>(null);
-let currentConv = ref<privateConv>();
+let currentConv = ref<Conversation>();
 let isLoadMore = false;
 
-const props = defineProps(["incomingFriendRequest"]);
+defineProps(["incomingFriendRequest"]);
+defineEmits(["notification"]);
 
 const myChannels: Ref<Array<Channel>> = ref([]);
 const allChannels: Ref<Array<Channel>> = ref([]);
+const channelInvitations: Ref<Array<Channel>> = ref([]);
 const thisChannel = ref<Channel | null>(null);
 const channelMembers: Ref<Array<ChannelUser>> = ref([]);
 const channelMessageSkip = ref(0);
-const channelsNum = ref(0);
 const show = ref(0);
 const picked = ref("public");
 const channelName = ref("");
@@ -167,7 +171,9 @@ onUpdated(() => {
 });
 
 onMounted(async () => {
-  getChannels();
+  getMyChannels();
+  getAllChannels();
+  getChannelInvitations();
   var audio = new Audio(require("../assets/adelsol.mp3"));
   socket?.on("Message to the client", async (privateMessage: { author: string; text: string }) => {
     if (privateMessage.author == friendNickname.value) messagesToDisplay.value.push(privateMessage);
@@ -233,17 +239,24 @@ onMounted(async () => {
     }
   });
   await getAllConvs();
-  if (store.user?.friends) friends.value = JSON.parse(JSON.stringify(store.user?.friends));
-  organizeFriends();
+  // if (store.user?.friends) friends.value = JSON.parse(JSON.stringify(store.user?.friends)); what is this
+  // organizeFriends();
 });
 
-function getConvAvatar(conv: privateConv) {
-  if (clientNickname == conv.user1.nickname) return `http://${window.location.hostname}:3000${conv.user2.avatar}`;
-  else return `http://${window.location.hostname}:3000${conv.user1.avatar}`;
-}
-function getFriendAvatar(friend: User) {
-  return `http://${window.location.hostname}:3000${friend.avatar}`;
-}
+const getMyChannels = async (): Promise<void> => {
+  myChannels.value = await fetchJSONDatas("api/chat", "GET");
+};
+
+const getAllChannels = async (): Promise<void> => {
+  const data: Channel[] = await fetchJSONDatas("api/chat/list", "POST", {
+    skip: allChannels.value.length,
+  });
+  allChannels.value = [...allChannels.value, ...data];
+};
+
+const getChannelInvitations = async (): Promise<void> => {
+  channelInvitations.value = await fetchJSONDatas("api/chat/invitations", "GET");
+};
 
 function initConv(convs: Array<privateConv>) {
   convs.forEach((conv) => {
@@ -270,11 +283,6 @@ const closeInvitation = () => {
   showInvitationModal.value = false;
 };
 
-const getChannels = async (): Promise<void> => {
-  let data: Channel[] = await fetchJSONDatas("api/chat", "GET");
-  myChannels.value = data;
-};
-
 const createChannel = async (): Promise<void> => {
   if (channelName.value.length <= 0 || (picked.value == "protected" && channelPassword.value.length <= 0)) {
     return;
@@ -292,7 +300,6 @@ const createChannel = async (): Promise<void> => {
 
 const channelCreationForm = () => {
   thisChannel.value = null;
-  channelsNum.value = 0;
   channelName.value = "";
   channelPassword.value = "";
   const conversations = document.querySelectorAll(".channelButton");
@@ -320,7 +327,6 @@ const joinChannel = async (channel: Channel): Promise<void> => {
   });
   myChannels.value.push(data);
   allChannels.value.splice(allChannels.value.indexOf(channel), 1);
-  channelsNum.value--;
   socket.emit("joinChannelRoom", { id: data.id });
 };
 
@@ -336,22 +342,10 @@ const loadAllChannels = () => {
   show.value = 1;
 };
 
-const getAllChannels = async (): Promise<void> => {
-  let data: Channel[] = await fetchJSONDatas("api/chat/list", "POST", {
-    skip: channelsNum.value,
-  });
-  // TODO Check
-  allChannels.value.push(...data);
-  // allChannels.value = [...allChannels.value, ...data];
-  channelsNum.value += data.length;
-};
-
 const getAllConvs = async (): Promise<void> => {
-  let data: PrivateConv[] = await fetchJSONDatas("api/privateConv/getAllConvs", "GET");
+  let data: Conversation[] = await fetchJSONDatas("api/privateConv/getAllConvs", "GET");
   privateConvs.value = data;
-  privateConvs.value.forEach(async (conv) => {
-    conv.avatarToDisplay = getConvAvatar(conv);
-  });
+  console.log(privateConvs.value);
   initConv(privateConvs.value);
 };
 
@@ -406,20 +400,20 @@ const ban = async (): Promise<void> => {
   });
 };
 
-const organizeFriends = () => {
-  for (let i = 0; i < privateConvs.value.length; i++) {
-    for (let j = 0; j < friends.value.length; j++) {
-      if (privateConvs.value[i].user1.nickname == friends.value[j].nickname || privateConvs.value[i].user2.nickname == friends.value[j].nickname)
-        friends.value.splice(j, 1);
-    }
-  }
-};
+// const organizeFriends = () => {
+//   for (let i = 0; i < privateConvs.value.length; i++) {
+//     for (let j = 0; j < friends.value.length; j++) {
+//       if (privateConvs.value[i].user1.nickname == friends.value[j].nickname || privateConvs.value[i].user2.nickname == friends.value[j].nickname)
+//         friends.value.splice(j, 1);
+//     }
+//   }
+// };
 
 const scrollDownMessages = () => {
   messagesBoxRef.value?.scrollIntoView({ behavior: "smooth", block: "end" });
 };
 
-const displayMessages = async (conv: PrivateConv, event: any): Promise<void> => {
+const displayMessages = async (conv: Conversation, event: any): Promise<void> => {
   thisChannel.value = null;
   const conversations = document.querySelectorAll(".channelButton");
   conversations.forEach((conversation) => {

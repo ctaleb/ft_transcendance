@@ -1,5 +1,5 @@
 <template>
-  <button @click="$emit('click')">
+  <button @click="$emit('setCurrentChatWindow')">
     <img v-if="picture !== undefined" class="user-image" :src="picture" alt="" />
     <h4>{{ title }}</h4>
   </button>
@@ -7,7 +7,7 @@
 
 <script setup lang="ts">
 defineEmits<{
-  (e: "click"): void;
+  (e: "setCurrentChatWindow"): void;
 }>();
 
 defineProps<{

@@ -1,7 +1,7 @@
 <template>
   <li class="friend border-gold">
     <div>
-      <img class="user-image" :src="getUserAvatar(friend)" alt="" />
+      <img class="user-image" :src="User.getAvatar(friend)" alt="" />
       <button @click="unfriend()">Remove</button>
       <button @click="watchProfile()">Profile</button>
       <button @click="spectateGame(friend.nickname)">Spectate</button>
@@ -13,9 +13,8 @@
 </template>
 
 <script lang="ts" setup>
-import { getUserAvatar } from "@/functions/funcs";
 import { useStore } from "@/store";
-import { User } from "@/types/GameSummary";
+import { User } from "@/types/User";
 import { useRouter } from "vue-router";
 
 const props = defineProps<{
@@ -31,19 +30,16 @@ store.$subscribe((mutation, state) => {
 });
 
 const unfriend = () => {
-  fetch(
-    "http://" + window.location.hostname + ":3000/api/friendship/unfriend",
-    {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + localStorage.getItem("token"),
-      },
-      body: JSON.stringify({
-        addressee: props.friend.nickname,
-      }),
-    }
-  )
+  fetch("http://" + window.location.hostname + ":3000/api/friendship/unfriend", {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + localStorage.getItem("token"),
+    },
+    body: JSON.stringify({
+      addressee: props.friend.nickname,
+    }),
+  })
     .then((res) => {
       if (res.status !== 200) {
         throw res.statusText;
@@ -51,10 +47,7 @@ const unfriend = () => {
       return res.json();
     })
     .then((data) => {
-      store.user?.friends!.splice(
-        store.user?.friends!.indexOf(props.friend),
-        1
-      );
+      store.user?.friends!.splice(store.user?.friends!.indexOf(props.friend), 1);
     })
     .catch((err) => console.log(err));
   console.log(props.friend.nickname);

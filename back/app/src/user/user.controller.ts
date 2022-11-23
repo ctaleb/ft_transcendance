@@ -33,6 +33,7 @@ export class UserController {
   async getProfile(@Request() req): Promise<UserEntity> {
     const user: UserEntity = await this._userService.getUserById(req.user.payload.id);
     user.friends = await user.getFriends();
+    user.invitations = await user.getInvitations();
     return user;
   }
 

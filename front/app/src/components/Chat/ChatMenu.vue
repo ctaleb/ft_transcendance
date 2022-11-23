@@ -1,17 +1,20 @@
 <template>
   <div class="chat-menu">
-    <CollapseList title="Conversations" :data="convs" v-slot="{ element }: { element: Conversation }">
-      <ChatMenuItem :title="Conversation.getName(element)" :picture="Conversation.getAvatar(element)" />
+    <CollapseList :toggleMode="true" title="Conversations" :data="convs" v-slot="{ element }: { element: Conversation }">
+      <ChatMenuItem @set-current-chat-area="setCurrentChatWindow(element)" :title="Conversation.getName(element)" :picture="Conversation.getAvatar(element)" />
     </CollapseList>
-    <CollapseList title="Channels" :data="channels" v-slot="{ element }: { element: Channel }">
-      <ChatMenuItem :title="Channel.getName(element)" />
+    <CollapseList :toggleMode="true" title="Channels" :data="channels" v-slot="{ element }: { element: Channel }">
+      <ChatMenuItem @set-current-chat-area="setCurrentChatWindow(element)" :title="Channel.getName(element)" />
     </CollapseList>
     <hr />
-    <CollapseList title="Friends" :data="store.user?.friends" v-slot="{ element }: { element: User }">
+    <CollapseList :toggleMode="false" title="Friends" :data="friends" v-slot="{ element }: { element: User }">
       <ChatMenuItem @click="User.createConversation(element)" :title="User.getName(element)" :picture="User.getAvatar(element)" />
     </CollapseList>
-    <CollapseList title="Avaliable channels" :data="channels" v-slot="{ element }: { element: User }">
-      <ChatMenuItem :title="User.getName(element)" />
+    <CollapseList :toggleMode="false" title="Channel invitations" :data="invitations" v-slot="{ element }: { element: Channel }">
+      <ChatMenuItem :title="Channel.getName(element)" />
+    </CollapseList>
+    <CollapseList :toggleMode="false" title="Avaliable channels" :data="allChannels" v-slot="{ element }: { element: Channel }">
+      <ChatMenuItem :title="Channel.getName(element)" />
     </CollapseList>
   </div>
 </template>
@@ -23,12 +26,28 @@ import { useStore } from "@/store";
 import { Channel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
 import { User } from "@/types/User";
+import { onMounted, onUpdated, Ref, ref } from "vue";
 
 const props = defineProps<{
-  current: Channel | Conversation;
   channels: Channel[];
+  allChannels: Channel[];
   convs: Conversation[];
+  invitations: Channel[];
 }>();
 
+const emits = defineEmits<{
+  (e: "setCurrentChatWindow"): void;
+}>();
+
+const friends: Ref<User[] | undefined> = ref();
+
 const store = useStore();
+
+const setCurrentChatWindow = async (chatTarget: Channel | Conversation) => {
+  store.currentChat = chatTarget;
+};
+
+onMounted(() => {
+  friends.value = store.user?.friends?.filter((user) => !props.convs.find((conv) => conv.other.id === user.id));
+});
 </script>

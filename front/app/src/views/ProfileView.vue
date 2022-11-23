@@ -2,7 +2,7 @@
   <section v-if="currentUser !== undefined" id="profile" class="container">
     <div class="current-user border-gold">
       <div>
-        <img class="border-gold user-image" :src="getUserAvatar(currentUser)" alt="" />
+        <img class="border-gold user-image" :src="User.getAvatar(currentUser)" alt="" />
       </div>
       <div>
         <h2 class="playerName">{{ currentUser?.nickname }}</h2>
@@ -31,9 +31,9 @@
       <button @click="invite()">Add Friend</button>
     </div>
     <div v-if="currentUser === store.user" class="invitations" :style="toogleMenu ? 'display: none' : ''">
-      <h2 v-if="store.invitations?.length">Invitations</h2>
+      <h2 v-if="store.user?.invitations?.length">Invitations</h2>
       <ul>
-        <InvitationCard v-for="invitation of store.invitations" :invitation="invitation" />
+        <InvitationCard v-for="invitation of store.user?.invitations" :invitation="invitation" />
       </ul>
     </div>
     <h2 style="margin: 1rem" :style="toogleMenu ? 'display: none' : ''">Friends</h2>
@@ -57,7 +57,6 @@
 import FriendCard from "@/components/profile/FriendCard.vue";
 import InvitationCard from "@/components/profile/InvitationCard.vue";
 import SummaryCard from "@/components/profile/SummaryCard.vue";
-import { getUserAvatar } from "@/functions/funcs";
 import { useStore } from "@/store";
 import { History } from "@/types/GameSummary";
 import { getUserByNickname, User } from "@/types/User";
@@ -83,7 +82,7 @@ store.$subscribe((mutation, state) => {
 //   (e: "updateInvitations"): void;
 // }>();
 // const checkNotificationBadge = () => {
-//   if (store.invitations?.length === 0) emit("notification", false);
+//   if (store.user?.invitations?.length === 0) emit("notification", false);
 // };
 
 const searchFriend = ref("");

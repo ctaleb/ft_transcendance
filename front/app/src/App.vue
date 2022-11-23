@@ -30,8 +30,8 @@
 import { onMounted, ref, watch } from "vue";
 import { RouterLink, RouterView, useRoute, useRouter } from "vue-router";
 import { User, getUserByNickname } from "@/types/User";
-import { trySetupUser, addAlertMessage } from "@/functions/funcs";
-import { Message } from "@/types/GameSummary";
+import { trySetupUser } from "@/functions/funcs";
+import { Alert } from "@/types/GameSummary";
 import { useStore } from "@/store";
 import GameConfirmation from "./components/GameConfirmation/Modal.vue";
 import AlertCard from "./components/AlertCard.vue";
@@ -53,7 +53,7 @@ trySetupUser().catch((err) => {
 });
 
 let socket = store.socket;
-let alertMessages: Message[] = store.message;
+let alertMessages: Alert[] = store.message;
 
 store.$subscribe((mutation, state) => {
   if (!state.socket?.hasListeners("customInvite")) {
@@ -86,7 +86,7 @@ store.$subscribe((mutation, state) => {
       incomingFriendRequest.value = requester.nickname;
       profileNotificationBadge.value = true;
       getUserByNickname(requester.nickname).then((data) => {
-        state.invitations?.push(data!);
+        state.user?.invitations?.push(data!);
       });
     });
   }
@@ -110,7 +110,6 @@ store.$subscribe((mutation, state) => {
     });
   }
 });
-
 
 window.addEventListener("keydown", (e) => {
   if (e.key === "ArrowLeft")

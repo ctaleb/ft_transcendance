@@ -7,15 +7,12 @@ import { io } from "socket.io-client";
 export async function isConnected(token: string): Promise<boolean> {
   if (token == "") return false;
 
-  let ret: boolean = await fetch(
-    "http://" + window.location.hostname + ":3000/api/user/profile",
-    {
-      method: "GET",
-      headers: {
-        Authorization: "Bearer " + token,
-      },
-    }
-  )
+  let ret: boolean = await fetch("http://" + window.location.hostname + ":3000/api/user/profile", {
+    method: "GET",
+    headers: {
+      Authorization: "Bearer " + token,
+    },
+  })
     .then((res) => res.json())
     .then((data) => {
       if (data.message) return false;
@@ -85,8 +82,8 @@ export async function trySetupUser(): Promise<void> {
     return Promise.resolve();
   }
 
-  let token = localStorage.getItem("token");
-  let user = localStorage.getItem("user");
+  const token = localStorage.getItem("token");
+  const user = localStorage.getItem("user");
 
   if (!token || !user) {
     return Promise.reject();
@@ -100,30 +97,8 @@ export async function trySetupUser(): Promise<void> {
 async function fetchUser(token: string): Promise<void> {
   const store = useStore();
 
-  let response = await fetch(`http://${window.location.hostname}:3000/api/user/profile`, {
-    method: "GET",
-    headers: {
-      Authorization: "Bearer " + token,
-    },
-  });
-  if (!response.ok) {
-    return Promise.reject();
-  }
-
-  let data = await response.json();
-  store.user = data;
-
-  let res = await fetch(`http://${window.location.hostname}:3000/api/friendship`, {
-    method: "GET",
-    headers: {
-      Authorization: "Bearer " + token,
-    },
-  });
-  if (!res.ok) {
-    return Promise.reject();
-  }
-  const resTyped: { friends: User[]; invitations: User[] } = (await res.json()) as { friends: User[]; invitations: User[] };
-  store.invitations = resTyped.invitations;
+  const response = await fetchJSONDatas("api/user/profile", "GET");
+  store.user = response;
 }
 
 function connectSocket(token: string, user: any): void {

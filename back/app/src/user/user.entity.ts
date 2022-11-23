@@ -1,14 +1,7 @@
 import { Exclude, Expose, Transform } from 'class-transformer';
 import { FriendshipEntity } from 'src/friendship/entities/friendship.entity';
 import { ImageEntity } from 'src/image/image.entity';
-import {
-  Column,
-  Entity,
-  Generated,
-  JoinColumn,
-  ManyToOne,
-  OneToMany,
-} from 'typeorm';
+import { Column, Entity, Generated, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { AbstractEntity } from '../database/abstract.entity';
 
 @Exclude()
@@ -36,6 +29,9 @@ export class UserEntity extends AbstractEntity {
 
   @Expose({ name: 'friends' })
   public friends?: UserEntity[];
+
+  @Expose({ name: 'invitations' })
+  public invitations?: UserEntity[];
 
   async getFriends(): Promise<UserEntity[]> {
     const friends = await FriendshipEntity.find({
