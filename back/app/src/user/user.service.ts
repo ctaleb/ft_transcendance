@@ -131,6 +131,11 @@ export class UserService {
     return { success: true };
   }
 
+  async updateElo(newElo: number, userId: number) {
+    await this._usersRepository.update(userId, { elo: newElo });
+    return { success: true };
+  }
+
   async updateTwoFactorAuth(nickname: string) {
     let twoFactor: boolean;
     const user = await this._usersRepository.findOneBy({ nickname });

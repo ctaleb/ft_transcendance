@@ -102,6 +102,7 @@ export class User {
   token: string;
   socket: Socket;
   name: string;
+  id: number;
   status: string;
   gameData: GameData;
   chatData: ChatData;

@@ -10,7 +10,7 @@
       </div>
       <div>
         <h2 class="playerName">{{ currentUser?.nickname }}</h2>
-        <h4>elo : 1500</h4>
+        <h4>elo : {{ currentUser?.elo }}</h4>
       </div>
       <div>
         <div class="buttons" v-if="currentUser === store.user">
