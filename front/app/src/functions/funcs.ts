@@ -56,9 +56,8 @@ export async function fetchJSONDatas(path: string, method: "GET" | "PUT" | "POST
       return res.json();
     })
     .catch(async (err: Response) => {
-      let message = await getErrorMessage(err);
-      console.log(message);
-      return Promise.reject(message);
+      const message: string = await getErrorMessage(err);
+      addAlertMessage(message, 3); // 3 is error
     });
 }
 

@@ -10,7 +10,7 @@ interface State {
   socket: Socket | undefined;
   message: Alert[];
   token: string | undefined;
-  currentChat: Channel | Conversation | null;
+  currentChat: Channel | Conversation | undefined;
 }
 
 export const useStore = defineStore("default", {
@@ -20,7 +20,7 @@ export const useStore = defineStore("default", {
       socket: undefined,
       message: [],
       token: undefined,
-      currentChat: null,
+      currentChat: undefined,
     };
   },
 });

@@ -1,10 +1,14 @@
 <template>
   <div class="chat-menu">
     <CollapseList :toggleMode="true" title="Conversations" :data="convs" v-slot="{ element }: { element: Conversation }">
-      <ChatMenuItem @set-current-chat-area="setCurrentChatWindow(element)" :title="Conversation.getName(element)" :picture="Conversation.getAvatar(element)" />
+      <ChatMenuItem
+        @set-current-chat-window="setCurrentChatWindow(element)"
+        :title="Conversation.getName(element)"
+        :picture="Conversation.getAvatar(element)"
+      />
     </CollapseList>
     <CollapseList :toggleMode="true" title="Channels" :data="channels" v-slot="{ element }: { element: Channel }">
-      <ChatMenuItem @set-current-chat-area="setCurrentChatWindow(element)" :title="Channel.getName(element)" />
+      <ChatMenuItem @set-current-chat-window="setCurrentChatWindow(element)" :title="Channel.getName(element)" />
     </CollapseList>
     <hr />
     <CollapseList :toggleMode="false" title="Friends" :data="friends" v-slot="{ element }: { element: User }">
@@ -42,9 +46,8 @@ const emits = defineEmits<{
 const friends: Ref<User[] | undefined> = ref();
 
 const store = useStore();
-
-const setCurrentChatWindow = async (chatTarget: Channel | Conversation) => {
-  store.currentChat = chatTarget;
+const setCurrentChatWindow = (target: Channel | Conversation) => {
+  store.currentChat = target;
 };
 
 onMounted(() => {

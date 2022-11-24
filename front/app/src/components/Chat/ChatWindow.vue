@@ -1,5 +1,14 @@
 <template>
-  <div class="chat-window"></div>
+  <div class="chat-window">
+    <div v-if="store.currentChat !== undefined">
+      <div class="chat-window-header">
+        <h2></h2>
+      </div>
+    </div>
+    <div v-else class="default-chat-window">
+      <h2>Welcome to the chat</h2>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -10,8 +19,6 @@ import { User } from "@/types/User";
 import { onMounted, onUpdated, Ref, ref } from "vue";
 
 const store = useStore();
-
-store.$subscribe((mutation, state) => {});
 
 onMounted(() => {});
 </script>

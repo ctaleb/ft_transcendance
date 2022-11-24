@@ -1,13 +1,18 @@
 <template>
   <div id="chat">
-    <ChatMenu :channels="myChannels" :convs="privateConvs" :allChannels="allChannels" :invitations="channelInvitations" />
+    <ChatMenu
+      :channels="myChannels"
+      :convs="privateConvs"
+      :allChannels="allChannels"
+      :invitations="channelInvitations"
+    />
     <ChatWindow />
-    <div v-if="show == 0" class="lobbyChat">
+    <!-- <div v-if="show == 0" class="lobbyChat">
       <h2>Welcome on the chat</h2>
       <br />
       <h4>Chat with your friends with the contact list to the left</h4>
-    </div>
-    <div v-if="show == 1" class="lobbyChat allChannels">
+    </div> -->
+    <!-- <div v-if="show == 1" class="lobbyChat allChannels">
       <template v-for="channel in allChannels">
         <div class="channel">
           <h5 v-if="channel.type == ChannelType.PRIVATE">Channel invitation</h5>
@@ -23,8 +28,8 @@
           </div>
         </div>
       </template>
-    </div>
-    <div v-if="show == 2" class="conversation">
+    </div> -->
+    <!-- <div v-if="show == 2" class="conversation">
       <div class="upperChat">
         <div
           :class="{
@@ -82,8 +87,8 @@
           <i class="gg-slack"></i>
         </button>
       </div>
-    </div>
-    <div v-if="show == 3" class="channelCreationForm">
+    </div> -->
+    <!-- <div v-if="show == 3" class="channelCreationForm">
       <h2>Create channel</h2>
       <label for="channelName">Channel name:</label>
       <div class="searchBar">
@@ -108,7 +113,7 @@
         </div>
       </div>
       <button @click="createChannel()" class="joinChannel">Submit</button>
-    </div>
+    </div> -->
     <div v-if="showInvitationModal" class="overlay">
       <div class="modal">
         <button class="close" @click="closeInvitation()">&times;</button>
@@ -154,7 +159,7 @@ defineEmits(["notification"]);
 const myChannels: Ref<Array<Channel>> = ref([]);
 const allChannels: Ref<Array<Channel>> = ref([]);
 const channelInvitations: Ref<Array<Channel>> = ref([]);
-const thisChannel = ref<Channel | null>(null);
+const current: Ref<Channel | Conversation | null> = ref(null);
 const channelMembers: Ref<Array<ChannelUser>> = ref([]);
 const channelMessageSkip = ref(0);
 const show = ref(0);

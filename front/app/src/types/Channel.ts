@@ -1,5 +1,6 @@
 import { User } from "@/types/User";
 import { Message } from "@/types/Message";
+import { Conversation } from "@/types/Conversation";
 
 export enum ChannelType {
   PUBLIC = "public",
@@ -23,6 +24,10 @@ export interface Channel {
   type: ChannelType;
   members?: number[];
   messages?: Message[];
+}
+
+export function isChannel(chatEntity: Channel | Conversation) {
+  return (<Channel>chatEntity).name !== undefined;
 }
 
 export namespace Channel {

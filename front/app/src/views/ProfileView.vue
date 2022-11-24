@@ -57,6 +57,7 @@
 import FriendCard from "@/components/profile/FriendCard.vue";
 import InvitationCard from "@/components/profile/InvitationCard.vue";
 import SummaryCard from "@/components/profile/SummaryCard.vue";
+import { fetchJSONDatas } from "@/functions/funcs";
 import { useStore } from "@/store";
 import { History } from "@/types/GameSummary";
 import { getUserByNickname, User } from "@/types/User";
@@ -146,25 +147,10 @@ const logout = () => {
   socket?.close();
 };
 
-const invite = () => {
+const invite = async () => {
   if (searchFriend.value.length <= 0) return;
 
-  fetch("http://" + window.location.hostname + ":3000/api/friendship/invite", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + localStorage.getItem("token"),
-    },
-    body: JSON.stringify({
-      addressee: searchFriend.value,
-    }),
-  })
-    .then((res) => {
-      if (res.status !== 200) {
-        throw res.statusText;
-      }
-    })
-    .catch((err) => console.log(err));
+  await fetchJSONDatas("api/friendship/invite", "POST", { addressee: searchFriend.value });
   searchFriend.value = "";
 };
 </script>
