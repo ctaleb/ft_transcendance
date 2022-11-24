@@ -1,10 +1,7 @@
 <template>
   <div>
-    <nav>
-      <div
-        style="display: flex; position: relative; justify-content: center"
-        v-if="$route.path != '/' && $route.path != '/signup'"
-      >
+    <nav class="navbar">
+      <div style="display: flex; position: relative; justify-content: center" v-if="$route.path != '/' && $route.path != '/signup'">
         <router-link to="/profile"
           >Profile
           <div :class="'dot' + (profileNotificationBadge ? ' show' : '')"></div
@@ -13,23 +10,12 @@
         <router-link to="/chat">Chat</router-link>
       </div>
     </nav>
-    <router-view
-      :key="$route.fullPath"
-      @notification="changeNotificationValue"
-      :incoming-friend-request="incomingFriendRequest"
-    />
+    <router-view :key="$route.fullPath" @notification="changeNotificationValue" :incoming-friend-request="incomingFriendRequest" />
     <div v-if="gameConfirmation" class="overlay">
-      <GameConfirmation
-        @confirmGame="confirmGame()"
-        @denyGame="denyGame()"
-      ></GameConfirmation>
+      <GameConfirmation @confirmGame="confirmGame()" @denyGame="denyGame()"></GameConfirmation>
     </div>
     <div v-if="customInvitation" class="overlay">
-      <CustomInvitation
-        :inviter="invSender"
-        @acceptCustom="acceptCustom()"
-        @denyCustom="denyCustom()"
-      ></CustomInvitation>
+      <CustomInvitation :inviter="invSender" @acceptCustom="acceptCustom()" @denyCustom="denyCustom()"></CustomInvitation>
     </div>
     <div v-if="failedInvitation" class="overlay">
       <FailedInvitation @invFailure="invFailure()"></FailedInvitation>
@@ -43,12 +29,9 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from "vue";
 import { RouterLink, RouterView, useRoute, useRouter } from "vue-router";
-import {
-  getUserByNickname,
-  trySetupUser,
-  addAlertMessage,
-} from "@/functions/funcs";
-import { User, Message } from "@/types/GameSummary";
+import { User, getUserByNickname } from "@/types/User";
+import { trySetupUser } from "@/functions/funcs";
+import { Alert } from "@/types/GameSummary";
 import { useStore } from "@/store";
 import GameConfirmation from "./components/GameConfirmation/Modal.vue";
 import AlertCard from "./components/AlertCard.vue";
@@ -70,7 +53,7 @@ trySetupUser().catch((err) => {
 });
 
 let socket = store.socket;
-let alertMessages: Message[] = store.message;
+let alertMessages: Alert[] = store.message;
 
 store.$subscribe((mutation, state) => {
   if (!state.socket?.hasListeners("customInvite")) {
@@ -103,7 +86,7 @@ store.$subscribe((mutation, state) => {
       incomingFriendRequest.value = requester.nickname;
       profileNotificationBadge.value = true;
       getUserByNickname(requester.nickname).then((data) => {
-        state.invitations?.push(data!);
+        state.user?.invitations?.push(data!);
       });
     });
   }
@@ -128,9 +111,7 @@ store.$subscribe((mutation, state) => {
   }
 });
 
-
 window.addEventListener("keydown", (e) => {
-  console.log("keydown " + store.socket?.id);
   if (e.key === "ArrowLeft")
     store.socket?.emit("key", {
       key: "downLeft",
@@ -237,21 +218,13 @@ onMounted(() => {
     (currentValue, oldValue) => {
       if (currentValue != "/game") store.socket?.emit("watchPath");
 
-      if (
-        localStorage.getItem("token") &&
-        profileNotificationBadge.value === false
-      ) {
-        fetch(
-          "http://" +
-            window.location.hostname +
-            ":3000/api/friendship/has-invitations",
-          {
-            method: "GET",
-            headers: {
-              Authorization: "Bearer " + localStorage.getItem("token"),
-            },
-          }
-        )
+      if (localStorage.getItem("token") && profileNotificationBadge.value === false) {
+        fetch("http://" + window.location.hostname + ":3000/api/friendship/has-invitations", {
+          method: "GET",
+          headers: {
+            Authorization: "Bearer " + localStorage.getItem("token"),
+          },
+        })
           .then((res) => {
             return res.json();
           })
@@ -270,7 +243,6 @@ onMounted(() => {
 
 <style lang="scss">
 @import "styles/custom.scss";
-@import "styles/_alert.scss";
 
 body {
   background-color: #010b12;
@@ -284,10 +256,7 @@ body {
   color: #2c3e50;
 }
 
-nav {
-  padding: 30px;
-  height: 10vh;
-
+.navbar {
   a {
     font-weight: bold;
     color: #f0e68c;

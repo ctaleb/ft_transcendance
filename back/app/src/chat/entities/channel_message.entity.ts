@@ -19,7 +19,9 @@ export class ChannelMessageEntity extends AbstractEntity {
   @JoinColumn()
   public channel: ChannelEntity;
 
-  @ManyToOne((type) => ChannelMessageEntity, { onDelete: 'SET NULL' })
+  @ManyToOne((type) => ChannelMemberEntity, {
+    onDelete: 'SET NULL',
+  })
   @JoinColumn()
   public sender: ChannelMemberEntity;
 

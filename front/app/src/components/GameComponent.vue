@@ -1,10 +1,6 @@
 <template>
   <section class="lobby container">
-    <img
-      class="border-gold user-image michel"
-      :src="getUserAvatar(store.user)"
-      alt=""
-    />
+    <img class="border-gold user-image michel" :src="User.getAvatar(store.user!)" alt="" />
     <div :class="powers ? '' : ' hidden'">
       <power-slider-component v-model="power" id="powerSlider" />
     </div>
@@ -169,6 +165,8 @@
                 :disabled="readyButton == true"
               /><label for="powers">Toggle powers</label>
             </div>
+            <div><input v-model="effects" type="checkbox" id="switch" :disabled="readyButton == true" /><label for="effects">Toggle effects</label></div>
+            <div><input v-model="powers" type="checkbox" id="switch" :disabled="readyButton == true" /><label for="powers">Toggle powers</label></div>
           </div>
           <div>
             <button @click="readyUp()" :disabled="readyButton">
@@ -181,51 +179,28 @@
   </section>
 </template>
 
-<style lang="scss" scoped>
-@import "../styles/custom.scss";
-@import "../styles/_lobby.scss";
-</style>
-
 <script setup lang="ts">
+import { useStore } from "@/store";
+import { GameSummaryData } from "@/types/GameSummary";
+import { Socket } from "engine.io-client";
+import { onMounted, onUnmounted, reactive, ref } from "vue";
+import { GameOptions, GameRoom, GameState, IBar } from "../../../../back/app/src/server/entities/server.entity";
+import { User } from "@/types/User";
 import ballUrl from "../assets/ball.png";
-import paddleUrl from "../assets/paddle_grec.png";
-import powerChargeUrl from "../assets/powerCharge.png";
 import energyUrl from "../assets/energy.png";
 import paddleEnergyUrl from "../assets/energy_paddle_grec.png";
-import plateauUrl from "../assets/plateauV2.png";
-import energyRedUrl from "../assets/energy_red.png";
-import paddleRedUrl from "../assets/paddle_grec_red.png";
 import paddleEnergyRedUrl from "../assets/energy_paddle_red.png";
-import slotUrl from "../assets/slot.png";
+import energyRedUrl from "../assets/energy_red.png";
 import fillUrl from "../assets/fill_slot.png";
+import paddleUrl from "../assets/paddle_grec.png";
+import paddleRedUrl from "../assets/paddle_grec_red.png";
+import plateauUrl from "../assets/plateauV2.png";
+import powerChargeUrl from "../assets/powerCharge.png";
+import slotUrl from "../assets/slot.png";
 import fillRedUrl from "../assets/slot_fill_enemy.png";
-import {
-  ref,
-  reactive,
-  onMounted,
-  onBeforeMount,
-  watch,
-  onUnmounted,
-} from "vue";
-import { io } from "socket.io-client";
-import {
-  GameState,
-  GameRoom,
-  IBall,
-  IBar,
-  IPoint,
-  GameOptions,
-} from "../../../../back/app/src/server/entities/server.entity";
-//import config from "../config/config";
-import { title } from "process";
-import PowerSliderComponent from "./PowerSliderComponent.vue";
-import Summary from "./Summary.vue";
-import { GameSummaryData } from "@/types/GameSummary";
-import Modal from "./Summary/Modal.vue";
-import { useStore } from "@/store";
 import Denial from "./InviteDenied/Modal.vue";
-import { getUserAvatar, getUserByNickname } from "@/functions/funcs";
-import { Socket } from "engine.io-client";
+import PowerSliderComponent from "./PowerSliderComponent.vue";
+import Modal from "./Summary/Modal.vue";
 //import { SCOPABLE_TYPES } from "@babel/types";
 
 const store = useStore();
@@ -412,11 +387,7 @@ function kickoffLoading(ctx: any) {
   }
 }
 
-function drawSmashingEffect(
-  bar: IBar,
-  smashingPercent: number,
-  ctx: CanvasRenderingContext2D
-) {
+function drawSmashingEffect(bar: IBar, smashingPercent: number, ctx: CanvasRenderingContext2D) {
   if (bar.smashing) {
     ctx.drawImage(
       bar.pos.y < 250 ? energyPaddleRedImg : energyPaddleImg,
@@ -455,13 +426,7 @@ function drawScore(ctx: CanvasRenderingContext2D, gameState: GameState) {
   let slot = theRoom.options.scoreMax;
 
   for (let i = 0; i < slot; i++) {
-    ctx.drawImage(
-      slotImg,
-      cWidth * 0.25 + ((cWidth * 0.5) / (slot + 1)) * (i + 1) - 10 * scale,
-      cHeight * 0.148 - 25 * scale,
-      20 * scale,
-      20 * scale
-    );
+    ctx.drawImage(slotImg, cWidth * 0.25 + ((cWidth * 0.5) / (slot + 1)) * (i + 1) - 10 * scale, cHeight * 0.148 - 25 * scale, 20 * scale, 20 * scale);
     if (i < gameState.score.client)
       ctx.drawImage(
         fillRedImg,
@@ -472,13 +437,7 @@ function drawScore(ctx: CanvasRenderingContext2D, gameState: GameState) {
       );
   }
   for (let i = 0; i < slot; i++) {
-    ctx.drawImage(
-      slotImg,
-      cWidth * 0.25 + ((cWidth * 0.5) / (slot + 1)) * (i + 1) - 10 * scale,
-      cHeight * 0.894 - 25 * scale,
-      20 * scale,
-      20 * scale
-    );
+    ctx.drawImage(slotImg, cWidth * 0.25 + ((cWidth * 0.5) / (slot + 1)) * (i + 1) - 10 * scale, cHeight * 0.894 - 25 * scale, 20 * scale, 20 * scale);
     if (i < gameState.score.host)
       ctx.drawImage(
         fillImg,
@@ -518,10 +477,7 @@ function updateSummary(summary: GameSummaryData) {
 }
 
 let gState: GameState;
-function test(
-  ctx: CanvasRenderingContext2D | null | undefined,
-  gameState: GameState
-) {
+function test(ctx: CanvasRenderingContext2D | null | undefined, gameState: GameState) {
   if (theRoom && ctx) {
     let ball = gameState.ball;
     clientScore.value = gameState.score.client;
@@ -536,13 +492,7 @@ function test(
       drawPlayground(ctx);
       drawScore(ctx, gameState);
       kickoffLoading(ctx);
-      ctx.drawImage(
-        ballImg,
-        ball.pos.x - ball.size * scale,
-        ball.pos.y - ball.size * scale,
-        ball.size * 2 * scale,
-        ball.size * 2 * scale
-      );
+      ctx.drawImage(ballImg, ball.pos.x - ball.size * scale, ball.pos.y - ball.size * scale, ball.size * 2 * scale, ball.size * 2 * scale);
       ctx.fillStyle = "black";
       drawSmashingEffect(gameState.clientBar, cSmashingPercent, ctx);
       drawSmashingEffect(gameState.hostBar, hSmashingPercent, ctx);
@@ -620,23 +570,18 @@ onUnmounted(() => {
 });
 
 const registerSockets = (state: Socket) => {
-  !socket?.hasListeners("customInviter") &&
-    socket?.on("customInviter", customInviter);
-  !socket?.hasListeners("customInvitee") &&
-    socket?.on("customInvitee", customInvitee);
-  !socket?.hasListeners("foreverAlone") &&
-    socket?.on("foreverAlone", foreverAlone);
+  !socket?.hasListeners("customInviter") && socket?.on("customInviter", customInviter);
+  !socket?.hasListeners("customInvitee") && socket?.on("customInvitee", customInvitee);
+  !socket?.hasListeners("foreverAlone") && socket?.on("foreverAlone", foreverAlone);
   !socket?.hasListeners("spectating") && socket?.on("spectating", spectating);
   !socket?.hasListeners("reconnect") && socket?.on("reconnect", reconnect);
   !socket?.hasListeners("kickOff") && socket?.on("kickOff", kickOfff);
   !socket?.hasListeners("play") && socket?.on("play", play);
-  !socket?.hasListeners("ServerUpdate") &&
-    socket?.on("ServerUpdate", ServerUpdate);
+  !socket?.hasListeners("ServerUpdate") && socket?.on("ServerUpdate", ServerUpdate);
   !socket?.hasListeners("Win") && socket?.on("Win", Win);
   !socket?.hasListeners("Lose") && socket?.on("Lose", Lose);
   !socket?.hasListeners("startGame") && socket?.on("startGame", startGame);
-  !socket?.hasListeners("customInvitation") &&
-    socket?.on("customInvitation", customInvitation);
+  !socket?.hasListeners("customInvitation") && socket?.on("customInvitation", customInvitation);
 };
 
 const unregisterSockets = (state: Socket) => {
@@ -722,13 +667,7 @@ const ServerUpdate = (gameState: GameState) => {
       drawScore(ctx, gameState);
       drawPowerCharge(ctx, gameState);
       kickoffLoading(ctx);
-      ctx.drawImage(
-        ballImg,
-        ball.pos.x - ball.size * scale,
-        ball.pos.y - ball.size * scale,
-        ball.size * 2 * scale,
-        ball.size * 2 * scale
-      );
+      ctx.drawImage(ballImg, ball.pos.x - ball.size * scale, ball.pos.y - ball.size * scale, ball.size * 2 * scale, ball.size * 2 * scale);
       ctx.fillStyle = "black";
       drawSmashingEffect(gameState.clientBar, cSmashingPercent, ctx);
       drawSmashingEffect(gameState.hostBar, hSmashingPercent, ctx);
@@ -736,14 +675,9 @@ const ServerUpdate = (gameState: GameState) => {
   }
 };
 
-const Win = (
-  gameRoom: GameRoom,
-  elo_diff: number,
-  summary: GameSummaryData
-) => {
+const Win = (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) => {
   theRoom = gameRoom;
-  lobbyStatus.value =
-    "Defeat... You lost -" + elo_diff + " elo ! Return to lobby ?";
+  lobbyStatus.value = "Defeat... You lost -" + elo_diff + " elo ! Return to lobby ?";
   startButton.value = false;
   readyButton.value = false;
   customReady.value = "Ready ?";
@@ -757,14 +691,9 @@ const Win = (
   document.querySelector(".canvas")?.classList.add("hidden");
 };
 
-const Lose = (
-  gameRoom: GameRoom,
-  elo_diff: number,
-  summary: GameSummaryData
-) => {
+const Lose = (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) => {
   theRoom = gameRoom;
-  lobbyStatus.value =
-    "Victory ! You gained +" + elo_diff + " elo ! Return to lobby ?";
+  lobbyStatus.value = "Victory ! You gained +" + elo_diff + " elo ! Return to lobby ?";
   startButton.value = false;
   readyButton.value = false;
   customReady.value = "Ready ?";

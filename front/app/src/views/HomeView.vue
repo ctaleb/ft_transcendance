@@ -72,9 +72,7 @@
 <script lang="ts" setup>
 import * as funcs from "@/functions/funcs";
 import { useStore } from "@/store";
-import { User } from "@/types/GameSummary";
-import { log } from "console";
-import { storeToRefs } from "pinia";
+import { User } from "@/types/User";
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import twoFactorComponent from "../components/twoFactorComponent.vue";

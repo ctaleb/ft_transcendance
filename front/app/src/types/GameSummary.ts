@@ -1,3 +1,5 @@
+import { User } from "@/types/User";
+
 export interface GameSummaryData {
   host: PlayerInfoData;
   client: PlayerInfoData;
@@ -12,21 +14,10 @@ export interface PlayerInfoData {
   eloChange: number;
 }
 
-export interface Message {
+export interface Alert {
   type: number;
   message: string;
   time: number;
-}
-
-export interface User {
-  nickname: string;
-  phone: string;
-  avatar: string;
-  elo: number;
-  twoFactorAuth: boolean;
-  friends?: User[];
-  invitations?: User[];
-  history?: History[];
 }
 
 export interface History {

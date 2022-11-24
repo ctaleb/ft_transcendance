@@ -94,13 +94,6 @@ export class ServerService {
     this.userList.push(newUser);
   }
 
-  // async joinAllChannels(socket: Socket, userId: number) {
-  //   const channels = await this._chatService.getUserChannels(userId);
-  //   channels.forEach((ell) => {
-  //     socket.join(ell.id);
-  //   });
-  // }
-
   //   reloadUser(token: string, user: string, sock: Socket) {
   //     const player: Player = {
   //       token: token,
@@ -962,5 +955,41 @@ export class ServerService {
       this.goal(game);
       this.setPowerInfo(game);
     }
+  }
+
+  // GOAT
+  async joinAllChannels(socket: Socket, userId: number) {
+    const channels = await this._chatService.getUserChannels(userId);
+    channels.forEach((ell) => {
+      socket.join(`${ell.id}`);
+    });
+  }
+
+  async sendChannelMessage(channelId: number, content: string, userId: number) {
+    const message = await this._chatService.saveMessage(
+      { id: channelId, content: content },
+      userId,
+    );
+    if (message.author) {
+      this.server
+        .to(`${channelId}`)
+        .emit('messageReceived', channelId, message);
+    }
+    return message;
+  }
+
+  async joinChannelRoom(client: Socket, channelId: number) {
+    const channels = await this._chatService.getUserChannels(
+      client.handshake.auth.user.id,
+    );
+    if (channels.find((ell) => ell.id === channelId)) {
+      this.server.to(`${channelId}`).emit('updateChannelMembers', channelId);
+      client.join(`${channelId}`);
+    }
+  }
+  
+  async leaveChannelRoom(client: Socket, channelId: number) {
+    this.server.to(`${channelId}`).emit('updateChannelMembers', channelId);
+    client.leave(`${channelId}`);
   }
 }

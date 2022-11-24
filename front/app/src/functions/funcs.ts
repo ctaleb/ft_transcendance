@@ -1,20 +1,18 @@
 import config from "@/config/config";
 import { useStore } from "@/store";
-import { User, Message } from "@/types/GameSummary";
+import { Alert } from "@/types/GameSummary";
+import { User } from "@/types/User";
 import { io } from "socket.io-client";
 
 export async function isConnected(token: string): Promise<boolean> {
   if (token == "") return false;
 
-  let ret: boolean = await fetch(
-    "http://" + window.location.hostname + ":3000/api/user/profile",
-    {
-      method: "GET",
-      headers: {
-        Authorization: "Bearer " + token,
-      },
-    }
-  )
+  let ret: boolean = await fetch("http://" + window.location.hostname + ":3000/api/user/profile", {
+    method: "GET",
+    headers: {
+      Authorization: "Bearer " + token,
+    },
+  })
     .then((res) => res.json())
     .then((data) => {
       if (data.message) return false;
@@ -27,41 +25,55 @@ export async function isConnected(token: string): Promise<boolean> {
   return ret;
 }
 
-export function getUserById(id: number): Promise<User | undefined> {
-  return fetch("http://" + window.location.hostname + ":3000/api/user/" + id, {
-    method: "GET",
+export function getUserAvatar(avatar: String): Promise<Blob> {
+  return fetchBlobDatas(`api/user/profile-picture/${avatar}`, "GET");
+}
+
+async function fetchDatas(path: string, method: "GET" | "PUT" | "POST" | "DELETE", body?: object): Promise<any> {
+  return fetch(`http://${window.location.hostname}:3000/${path}`, {
+    method: method,
     headers: {
+      "Content-Type": "application/json",
       Authorization: "Bearer " + localStorage.getItem("token"),
     },
-  })
-    .then((res) => {
-      return res.json();
-    })
-    .catch((err) => console.log(err.message));
+    body: JSON.stringify(body),
+  });
 }
 
-export function getUserByNickname(name: string): Promise<User | undefined> {
-  return fetch(
-    "http://" + window.location.hostname + ":3000/api/user/bynickname/" + name,
-    {
-      method: "GET",
-      headers: {
-        Authorization: "Bearer " + localStorage.getItem("token"),
-      },
-    }
-  )
-    .then((res) => {
-      return res.json();
-    })
-    .catch((err) => console.log(err.message));
+async function getErrorMessage(response: Response): Promise<string> {
+  return await response
+    .json()
+    .then((d: { message: string }) => d.message)
+    .catch((e: string) => e);
 }
 
-export function getUserAvatar(user: User | undefined): string {
-  if (!user) {
-    return "";
-  }
+export async function fetchJSONDatas(path: string, method: "GET" | "PUT" | "POST" | "DELETE"): Promise<any>;
+export async function fetchJSONDatas(path: string, method: "GET" | "PUT" | "POST" | "DELETE", body: object): Promise<any>;
+export async function fetchJSONDatas(path: string, method: "GET" | "PUT" | "POST" | "DELETE", body?: object): Promise<any> {
+  return fetchDatas(path, method, body)
+    .then((res: Response) => {
+      if (!res.ok) return Promise.reject(res);
+      return res.json();
+    })
+    .catch(async (err: Response) => {
+      const message: string = await getErrorMessage(err);
+      addAlertMessage(message, 3); // 3 is error
+    });
+}
 
-  return `http://${window.location.hostname}:3000${user.avatar}`;
+export async function fetchBlobDatas(path: string, method: "GET" | "PUT" | "POST" | "DELETE"): Promise<any>;
+export async function fetchBlobDatas(path: string, method: "GET" | "PUT" | "POST" | "DELETE", body: object): Promise<any>;
+export async function fetchBlobDatas(path: string, method: "GET" | "PUT" | "POST" | "DELETE", body?: object): Promise<Blob> {
+  return fetchDatas(path, method, body)
+    .then((res: Response) => {
+      if (!res.ok) return Promise.reject(res);
+      return res.blob();
+    })
+    .catch(async (err: Response) => {
+      let message = await getErrorMessage(err);
+      console.log(message);
+      return Promise.reject(message);
+    });
 }
 
 export async function trySetupUser(): Promise<void> {
@@ -69,8 +81,8 @@ export async function trySetupUser(): Promise<void> {
     return Promise.resolve();
   }
 
-  let token = localStorage.getItem("token");
-  let user = localStorage.getItem("user");
+  const token = localStorage.getItem("token");
+  const user = localStorage.getItem("user");
 
   if (!token || !user) {
     return Promise.reject();
@@ -84,37 +96,8 @@ export async function trySetupUser(): Promise<void> {
 async function fetchUser(token: string): Promise<void> {
   const store = useStore();
 
-  let response = await fetch(
-    `http://${window.location.hostname}:3000/api/user/profile`,
-    {
-      method: "GET",
-      headers: {
-        Authorization: "Bearer " + token,
-      },
-    }
-  );
-  if (!response.ok) {
-    return Promise.reject();
-  }
-
-  let data = await response.json();
-  store.user = data;
-
-  let res = await fetch(
-    `http://${window.location.hostname}:3000/api/friendship`,
-    {
-      method: "GET",
-      headers: {
-        Authorization: "Bearer " + token,
-      },
-    }
-  );
-  if (!res.ok) {
-    return Promise.reject();
-  }
-  const resTyped: { friends: User[]; invitations: User[] } =
-    (await res.json()) as { friends: User[]; invitations: User[] };
-  store.invitations = resTyped.invitations;
+  const response = await fetchJSONDatas("api/user/profile", "GET");
+  store.user = response;
 }
 
 function connectSocket(token: string, user: any): void {
@@ -134,13 +117,9 @@ function connectSocket(token: string, user: any): void {
   console.log("store socket: " + store.socket.id);
 }
 
-export function addAlertMessage(
-  message: string,
-  type: number,
-  second: number = 5
-) {
+export function addAlertMessage(message: string, type: number, second: number = 5) {
   const store = useStore();
-  const x: Message = {
+  const x: Alert = {
     type: type,
     message: message,
     time: second,

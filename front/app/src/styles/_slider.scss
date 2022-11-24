@@ -1,5 +1,3 @@
-@import "custom.scss";
-
 .items {
   z-index: -2;
   display: flex;
@@ -58,6 +56,7 @@
     img {
       width: 40%;
     }
+
     .info {
       text-align: center;
       display: flex;
@@ -69,7 +68,7 @@
         font-size: x-large;
       }
 
-      & > {
+      & > * {
         height: 50%;
       }
     }

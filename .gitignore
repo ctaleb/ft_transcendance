@@ -2,3 +2,5 @@
 db
 cmd.txt
 node_modules
+package-lock.json
+package.json
