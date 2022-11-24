@@ -49,6 +49,7 @@
 
 <script lang="ts">
 import { getUserAvatar } from "@/functions/funcs";
+import { User, getUserById } from "@/types/User";
 import { useStore } from "@/store";
 import { defineComponent, ref } from "vue";
 import FriendAlert from "../components/FriendAlert.vue";
@@ -80,12 +81,10 @@ export default defineComponent({
     };
   },
   emits: ["notification"],
-  mounted() {
+  async mounted() {
     this.initTwoFactorToggle();
-    funcs.getUserById(this.user.id).then((data: any) => {
-      this.avatar = data.path;
-      this.image = funcs.getUserAvatar(this.avatar);
-    });
+    const _user = await getUserById(this.user.id);
+    this.avatar = _user.avatar;
   },
   components: { FriendAlert },
   methods: {
