@@ -5,52 +5,21 @@
     </video>
   </div>
   <div v-if="twofaFlag == false" class="main_container">
-    <img
-      src="https://findicons.com/files/icons/1275/naruto_vol_1/256/uzumaki_naruto.png"
-      width="80"
-      height="80"
-      alt=""
-    />
+    <img src="https://findicons.com/files/icons/1275/naruto_vol_1/256/uzumaki_naruto.png" width="80" height="80" alt="" />
     <div class="bounce">
       <p>SUPERPONG</p>
     </div>
     <form @submit.prevent="login" style="margin-bottom: 2em">
-      <input
-        class="input"
-        placeholder="Username"
-        v-model="username"
-        type="text"
-        id="username"
-        name="username"
-        required
-      /><br /><br />
-      <input
-        class="input"
-        placeholder="Password"
-        v-model="password"
-        type="password"
-        id="password"
-        name="password"
-        required
-      /><br /><br />
-      <button
-        type="submit"
-        value="Connexion"
-        class="button classic_login_btn pulse"
-      >
-        Connexion
-      </button>
+      <input class="input" placeholder="Username" v-model="username" type="text" id="username" name="username" required /><br /><br />
+      <input class="input" placeholder="Password" v-model="password" type="password" id="password" name="password" required /><br /><br />
+      <button type="submit" value="Connexion" class="button classic_login_btn pulse">Connexion</button>
     </form>
     <hr class="solid divider" />
-    <a class="button pulse" v-bind:href="intra_redirection">
-      Continue with 42
-    </a>
+    <a class="button pulse" v-bind:href="intra_redirection"> Continue with 42 </a>
     <a id="signup_link" href="/signup">New account</a>
   </div>
   <!--   <div :style="{ color: login_failed_color }" v-if="login_failed_msg"> -->
-  <div class="text-red" v-if="login_failed_msg">
-    Login failed. Please try again.
-  </div>
+  <div class="text-red" v-if="login_failed_msg">Login failed. Please try again.</div>
   <div class="twofaComponentDiv">
     <two-factor-component
       v-if="twofaFlag == true"
@@ -66,6 +35,9 @@
 import * as funcs from "@/functions/funcs";
 import { useStore } from "@/store";
 import { User } from "@/types/User";
+import { log } from "console";
+import { storeToRefs } from "pinia";
+import { hasUncaughtExceptionCaptureCallback } from "process";
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import twoFactorComponent from "../components/twoFactorComponent.vue";
@@ -76,11 +48,7 @@ let username = ref("");
 let password = ref("");
 let background_url = "../assets/stars.webm";
 let intra_redirection =
-  "https://api.intra.42.fr/oauth/authorize?client_id=" +
-  process.env.VUE_APP_42_ID +
-  "&redirect_uri=" +
-  process.env.VUE_APP_42_URI +
-  "&response_type=code";
+  "https://api.intra.42.fr/oauth/authorize?client_id=" + process.env.VUE_APP_42_ID + "&redirect_uri=" + process.env.VUE_APP_42_URI + "&response_type=code";
 let token = {
     access_token: null,
     token_type: null,
@@ -97,20 +65,13 @@ let twofaFlag = ref(false);
 //   },
 // },
 const props = defineProps(["incomingFriendRequest"]);
-const emit = defineEmits([
-  "notification",
-  "twofaSuccessClassicUser",
-  "twofaSuccessIntraUser",
-  "update:modelValue",
-]);
+const emit = defineEmits(["notification", "twofaSuccessClassicUser", "twofaSuccessIntraUser", "update:modelValue"]);
 
 onMounted(async () => {
-  let isConnected: boolean = await funcs
-    .isConnected(localStorage.getItem("token") || "")
-    .catch((err) => {
-      console.log(err);
-      return false;
-    });
+  let isConnected: boolean = await funcs.isConnected(localStorage.getItem("token") || "").catch((err) => {
+    console.log(err);
+    return false;
+  });
   if (isConnected) {
     router.push("/game");
   } else console.log("not connected");
@@ -123,26 +84,16 @@ onMounted(async () => {
 });
 
 async function login() {
-  console.log("CODEVALIDATED --> " + codeValidated.value);
-  let response = await fetch(
-    "http://" + window.location.hostname + ":3000/api/Authentication/login",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        username: username.value,
-        password: password.value,
-      }),
-    }
-  );
-  if (response.status != 201) {
-    login_failed_msg.value = true;
-    throw response.status;
-  }
-
-  let data = await response.json();
+  let data = await funcs
+    .fetchJSONDatas("api/Authentication/login", "POST", {
+      username: username.value,
+      password: password.value,
+    })
+    .catch((err) => {
+      return null;
+    });
+  if (data == null) return;
+  login_failed_msg.value = false;
   if (data.user.twoFactorAuth == true && codeValidated.value == false) {
     twofaFlag.value = true;
     localStorage.setItem("phoneTo2fa", data.user.phone);
@@ -164,28 +115,19 @@ function extractIntraCode(): string | null {
 }
 
 async function getIntraToken(code: string) {
-  let getIntraToken = await fetch(
-    "http://" + window.location.hostname + ":3000/api/oauth/" + code,
-    {
-      headers: {
-        "Content-Type": "application/json",
-      },
-      method: "POST",
-    }
-  );
+  let getIntraToken = await fetch("http://" + window.location.hostname + ":3000/api/oauth/" + code, {
+    headers: {
+      "Content-Type": "application/json",
+    },
+    method: "POST",
+  });
   return await getIntraToken.json();
 }
 
 async function getUserAndToken(intraToken: string) {
-  const userAndToken = await fetch(
-    "http://" +
-      window.location.hostname +
-      ":3000/api/oauth/login/" +
-      intraToken,
-    {
-      method: "POST",
-    }
-  );
+  const userAndToken = await fetch("http://" + window.location.hostname + ":3000/api/oauth/login/" + intraToken, {
+    method: "POST",
+  });
   return await userAndToken.json();
 }
 
@@ -206,17 +148,15 @@ async function studentLogin(code: string) {
       store.user = userAndToken.user;
       store.token = userAndToken.token;
     }
-    if (
-      userAndToken.user.twoFactorAuth == true &&
-      codeValidated.value == false
-    ) {
+    if (userAndToken.user.twoFactorAuth == true && codeValidated.value == false) {
       twofaFlag.value = true;
       localStorage.setItem("userType", "intra");
-      localStorage.setItem("phoneTo2fa", userAndToken.user.phone);
+      localStorage.setItem("phoneTo2fa", userAndToken.user.phone!);
 
       //  sendCode();
       return;
     }
+    login_failed_msg.value = false;
     localStorage.setItem("token", userAndToken.token);
     localStorage.setItem("user", JSON.stringify(userAndToken.user));
   } catch (error) {
@@ -228,15 +168,9 @@ async function studentLogin(code: string) {
   });
 
   async function sendCode() {
-    await fetch(
-      "http://" +
-        window.location.hostname +
-        ":3000/api/twofactor/sendCode/" +
-        localStorage.getItem("phoneTo2fa"),
-      {
-        method: "POST",
-      }
-    )
+    await fetch("http://" + window.location.hostname + ":3000/api/twofactor/sendCode/" + localStorage.getItem("phoneTo2fa"), {
+      method: "POST",
+    })
       .then((data) => data.json())
       .then((data) => {
         console.log(data.status);

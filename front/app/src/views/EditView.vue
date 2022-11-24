@@ -90,19 +90,15 @@ export default defineComponent({
   components: { FriendAlert },
   methods: {
     async updateNickname() {
-      let fetch_ret = await fetch("http://" + window.location.hostname + ":3000/api/user/nicknameEdit/" + this.nickname, {
-        headers: {
-          Authorization: "Bearer " + localStorage.getItem("token"),
-        },
-        method: "PUT",
-      })
-        .then((res) => {
-          return res.json();
-        })
-        .catch((err) => {
-          console.log(err);
-        });
-      console.log(JSON.stringify(fetch_ret));
+      if (this.nickname.length < 1) return;
+      let fetch_ret = await funcs.fetchJSONDatas("api/user/nicknameEdit/" + this.nickname, "PUT").catch(() => {
+        return null;
+      });
+      if (fetch_ret == null) {
+        this.nicknameUsed = true;
+        this.success = false;
+        return;
+      }
       if (fetch_ret.user) {
         localStorage.setItem("user", JSON.stringify(fetch_ret.user));
         localStorage.setItem("token", fetch_ret.token);

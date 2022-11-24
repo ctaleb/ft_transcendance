@@ -58,6 +58,7 @@ export async function fetchJSONDatas(path: string, method: "GET" | "PUT" | "POST
     .catch(async (err: Response) => {
       const message: string = await getErrorMessage(err);
       addAlertMessage(message, 3); // 3 is error
+      return Promise.reject(message);
     });
 }
 
