@@ -11,15 +11,9 @@
       height="80"
       alt=""
     />
-    <h1 class="main_title">
-      <marquee
-        direction="right"
-        behavior="alternate"
-        style="border-left: #aa9e7d 4px SOLID; border-right: #aa9e7d 4px SOLID"
-      >
-        SUP3RP0NG
-      </marquee>
-    </h1>
+    <div class="bounce">
+      <p>SUPERPONG</p>
+    </div>
     <form @submit.prevent="login" style="margin-bottom: 2em">
       <input
         class="input"
@@ -260,10 +254,64 @@ async function studentLogin(code: string) {
 <style lang="scss" scoped>
 @import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Press+Start+2P&display=swap");
+.bounce {
+  height: 50px;
+  overflow: hidden;
+  position: relative;
+  color: #aa9e7d;
+  margin: 1rem auto;
+  width: 20rem;
+  border-left: #aa9e7d 4px SOLID;
+  border-right: #aa9e7d 4px SOLID;
+  p {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    line-height: 50px;
+    text-align: center;
+    font-family: "Orbitron", sans-serif;
+    font-size: 25px;
+    -moz-transform: translateX(50%);
+    -webkit-transform: translateX(50%);
+    transform: translateX(50%);
+    -moz-animation: bouncing-text 1s linear infinite alternate;
+    -webkit-animation: bouncing-text 1s linear infinite alternate;
+    animation: bouncing-text 2s linear infinite alternate;
+  }
+}
 
+@-moz-keyframes bouncing-text {
+  0% {
+    -moz-transform: translateX(50%);
+  }
+  100% {
+    -moz-transform: translateX(-50%);
+  }
+}
+
+@-webkit-keyframes bouncing-text {
+  0% {
+    -webkit-transform: translateX(50%);
+  }
+  100% {
+    -webkit-transform: translateX(-50%);
+  }
+}
+
+@keyframes bouncing-text {
+  0% {
+    -moz-transform: translateX(22%);
+    -webkit-transform: translateX(22%);
+    transform: translateX(22%);
+  }
+  100% {
+    -moz-transform: translateX(-22%);
+    -webkit-transform: translateX(-22%);
+    transform: translateX(-22%);
+  }
+}
 .twofaComponentDiv {
-  width: 100vw;
-  height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -273,9 +321,13 @@ async function studentLogin(code: string) {
   position: fixed;
   right: 0;
   bottom: 0;
-  min-width: 100%;
-  min-height: 100%;
+  width: 100vw;
+  height: 100vh;
   z-index: -1;
+  .video {
+    width: 100%;
+    height: 100%;
+  }
 }
 
 .main_title {

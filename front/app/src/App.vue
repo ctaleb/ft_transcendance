@@ -128,7 +128,6 @@ store.$subscribe((mutation, state) => {
   }
 });
 
-
 window.addEventListener("keydown", (e) => {
   console.log("keydown " + store.socket?.id);
   if (e.key === "ArrowLeft")
@@ -275,6 +274,8 @@ onMounted(() => {
 body {
   background-color: #010b12;
   color: #aa9e7d;
+  margin: 0;
+  padding: 0;
 }
 
 #app {
