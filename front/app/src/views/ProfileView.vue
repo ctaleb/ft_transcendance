@@ -150,7 +150,9 @@ const logout = () => {
 const invite = async () => {
   if (searchFriend.value.length <= 0) return;
 
-  await fetchJSONDatas("api/friendship/invite", "POST", { addressee: searchFriend.value }).catch();
+  await fetchJSONDatas("api/friendship/invite", "POST", { addressee: searchFriend.value }).catch((err) => {
+    console.log(err);
+  });
   searchFriend.value = "";
 };
 </script>
