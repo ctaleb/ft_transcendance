@@ -51,7 +51,6 @@
     <a class="button pulse" v-bind:href="intra_redirection">
       Continue with 42
     </a>
-    <ButtonComponent :link="intra_redirection" />
     <a id="signup_link" href="/signup">New account</a>
   </div>
   <!--   <div :style="{ color: login_failed_color }" v-if="login_failed_msg"> -->
