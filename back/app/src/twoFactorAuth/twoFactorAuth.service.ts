@@ -1,24 +1,24 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-const accountSid = 'AC146354d5f0857602eb878547d2a21788';
-const authToken = '03d6ff2a5b98a495bbf68d963ab9e9fa';
-const client = require('twilio')(accountSid, authToken);
 
 @Injectable()
 export class TwoFactorService {
   constructor(private configService: ConfigService) {}
 
+  accountSid = this.configService.get<string>('TWILIO_SID');
+  authToken = this.configService.get<string>('TWILIO_TOKEN');
+  client = require('twilio')(this.accountSid, this.authToken);
   async sendCode(phone: string) {
-    return await client.verify.v2
-      .services('VA21523e68da34bdab3f32d5fd886939b4')
+    return await this.client.verify.v2
+      .services(this.configService.get<string>('TWILIO_SERVICE'))
       .verifications.create({ to: phone, channel: 'sms' })
       .then((verification) => {
         return { status: verification.status };
       });
   }
   async verifyCode(code: string, phone: string) {
-    //return await client.verify.v2
-    //  .services('VA21523e68da34bdab3f32d5fd886939b4')
+    //return await this.client.verify.v2
+    //  .services(this.configService.get<string>('TWILIO_SERVICE'))
     //  .verificationChecks.create({ to: phone, code: code })
     //  .then((verification_check) => {
     //    return { status: verification_check.status };
