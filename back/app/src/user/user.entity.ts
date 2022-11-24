@@ -1,7 +1,7 @@
-import { Exclude, Expose, Transform } from 'class-transformer';
+import { Exclude, Expose } from 'class-transformer';
 import { FriendshipEntity } from 'src/friendship/entities/friendship.entity';
 import { ImageEntity } from 'src/image/image.entity';
-import { Column, Entity, Generated, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { AbstractEntity } from '../database/abstract.entity';
 
 @Exclude()
@@ -78,6 +78,10 @@ export class UserEntity extends AbstractEntity {
   getAvatarUrl(): string {
     return this.avatar ? '/api/user/profile-picture/' + this.avatar.path : '';
   }
+
+  @Expose({ name: 'elo' })
+  @Column({ default: 1000 })
+  public elo: number;
 
   // We add the avatarId column above so that the entity of the user can hold
   // the id of the avatar without joining all of the data of the avatar.

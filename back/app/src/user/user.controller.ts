@@ -119,6 +119,7 @@ export class UserController {
   async editPassword(@Request() req, @Body() newPasswordDto: updatePasswordDto) {
     return this._userService.updatePassword(newPasswordDto.newPassword, req.user.payload.id);
   }
+
   @UseGuards(JwtAuthGuard)
   @Put('twoFactorAuthEdit')
   async twoFactorEdit(@Request() req) {

@@ -66,17 +66,21 @@ export class ServerService {
   ) {}
 
   //generic stuff
-  newUser(token: string, user: string, sock?: Socket) {
+  async newUser(token: string, user: string, sock?: Socket) {
+    const bdd_user: UserEntity = await this._userService.getUserByNickname(
+      user,
+    );
     const newUser: User = {
       token: token,
       socket: null,
       name: user,
+      id: bdd_user.id,
       status: 'idle',
       gameData: {
         input: [],
         left: false,
         right: false,
-        elo: 0,
+        elo: bdd_user.elo,
         smashLeft: 0,
         smashRight: 0,
         status: 'idle',
@@ -140,11 +144,12 @@ export class ServerService {
   }
 
   //game stuff
-  elo_calc(winner: User, loser: User) {
-    const diff = Math.round((winner.gameData.elo - loser.gameData.elo) / 10);
-    const elo = 10 - diff;
+  async elo_calc(winner: User, loser: User) {
+    const elo = 20;
     winner.gameData.elo += elo;
+    this._userService.updateElo(winner.gameData.elo, winner.id);
     loser.gameData.elo -= elo;
+    this._userService.updateElo(loser.gameData.elo, loser.id);
     return elo;
   }
 
@@ -181,7 +186,7 @@ export class ServerService {
     game.room.status = 'gameOver';
     let elo = 0;
     if (game.gameState.score.client >= game.room.options.scoreMax) {
-      elo = this.elo_calc(game.client, game.host);
+      elo = await this.elo_calc(game.client, game.host);
       await this.summarize(game, elo);
       const data: GameSummaryData = this.summarizeEntityToData(
         game.gameSummary,
@@ -190,7 +195,7 @@ export class ServerService {
       game.host.socket.emit('Lose', game.room, elo, data);
       game.client.socket.emit('Win', game.room, elo, revdata);
     } else if (game.gameState.score.host >= game.room.options.scoreMax) {
-      elo = this.elo_calc(game.host, game.client);
+      elo = await this.elo_calc(game.host, game.client);
       await this.summarize(game, elo);
       const data: GameSummaryData = this.summarizeEntityToData(
         game.gameSummary,
@@ -212,7 +217,7 @@ export class ServerService {
   }
 
   async forfeit_game(winner: User, loser: User, game: Game) {
-    const elo = this.elo_calc(winner, loser);
+    const elo = await this.elo_calc(winner, loser);
     await this.summarize(game, elo);
     const data: GameSummaryData = this.summarizeEntityToData(game.gameSummary);
     const revdata: GameSummaryData = this.inverseSummary(data);
