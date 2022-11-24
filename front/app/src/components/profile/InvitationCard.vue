@@ -6,11 +6,7 @@
         <div @click="block(invitation)" class="border-gold square right"></div>
       </div>
       <div class="user-invite border-gold">
-        <img
-          class="user-image border-gold"
-          :src="getUserAvatar(invitation)"
-          alt=""
-        />
+        <img class="user-image border-gold" :src="User.getAvatar(invitation)" alt="" />
         <h3>{{ invitation.nickname }}</h3>
         <!-- <p>{{ "status" }}</p> -->
       </div>
@@ -27,9 +23,8 @@
 </template>
 
 <script lang="ts" setup>
-import { getUserAvatar } from "@/functions/funcs";
 import { useStore } from "@/store";
-import { User } from "@/types/GameSummary";
+import { User } from "@/types/User";
 import { useRouter } from "vue-router";
 
 const props = defineProps<{
@@ -44,19 +39,16 @@ const watchProfile = () => {
 };
 
 const befriend = (invitation: User) => {
-  fetch(
-    "http://" + window.location.hostname + ":3000/api/friendship/befriend",
-    {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + localStorage.getItem("token"),
-      },
-      body: JSON.stringify({
-        addressee: invitation.nickname,
-      }),
-    }
-  )
+  fetch("http://" + window.location.hostname + ":3000/api/friendship/befriend", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + localStorage.getItem("token"),
+    },
+    body: JSON.stringify({
+      addressee: invitation.nickname,
+    }),
+  })
     .then((res) => {
       if (res.status !== 200) {
         throw res.statusText;
@@ -64,7 +56,7 @@ const befriend = (invitation: User) => {
       return res.json();
     })
     .then((data) => {
-      store.invitations?.splice(store.invitations?.indexOf(invitation), 1);
+      store.user?.invitations?.splice(store.user?.invitations?.indexOf(invitation), 1);
       store.user?.friends?.push(invitation);
       // checkNotificationBadge();
     })
@@ -89,7 +81,7 @@ const decline = (invitation: User) => {
       return res.json();
     })
     .then((data) => {
-      store.invitations?.splice(store.invitations?.indexOf(invitation), 1);
+      store.user?.invitations?.splice(store.user?.invitations?.indexOf(invitation), 1);
       // checkNotificationBadge();
     })
     .catch((err) => console.log(err));
@@ -113,7 +105,7 @@ const block = (invitation: User) => {
       return res.json();
     })
     .then((data) => {
-      store.invitations?.splice(store.invitations?.indexOf(invitation), 1);
+      store.user?.invitations?.splice(store.user?.invitations?.indexOf(invitation), 1);
       // checkNotificationBadge();
     })
     .catch((err) => console.log(err));

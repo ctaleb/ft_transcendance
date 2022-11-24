@@ -17,6 +17,8 @@
     "dotenv": "^16.0.3",
     "dotenv-webpack": "^8.0.1",
     "fireworks-canvas": "^2.6.2",
+    "moment": "^2.29.4",
+    "moment-timezone": "^0.5.39",
     "pinia": "^2.0.23",
     "socket.io-client": "^4.5.1",
     "swiper": "^6.8.4",

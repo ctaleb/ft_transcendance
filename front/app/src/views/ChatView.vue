@@ -1,125 +1,144 @@
 <template>
-  <div class="mainContainer">
-    <div class="convList">
-      <button class="privateMessagesHeader" @click="changeConvListStatus">
-        Private messages <i :class="iconConvList"></i>
-      </button>
-      <template v-for="conv in privateConvs" v-bind:key="conv.uuid">
-        <div class="fullPrivateConvButton">
-          <button
-            @click="displayMessages(conv, $event)"
-            :class="
-              conv.notif === true
-                ? 'notifPrivateConvButton'
-                : 'privateConvButton'
-            "
-          >
-            <img
-              :src="conv.avatarToDisplay"
-              alt=""
-              width="45"
-              height="45"
-              class="avatar"
-            />
-            <p v-if="conv.user1.nickname != clientNickname">
-              {{ conv.user1.nickname }}
-            </p>
-            <p v-else>{{ conv.user2.nickname }}</p>
-          </button>
-          <div
-            v-if="currentConv && currentConv.uuid == conv.uuid"
-            class="socialOptions"
-          >
-            <button @click="spectateGame()"><i class="gg-eye"></i></button>
-            <button @click="goToProfile()"><i class="gg-profile"></i></button>
-          </div>
-        </div>
-      </template>
-
-      <button class="friendsHeader" @click="changeFriendListStatus">
-        Friends <i :class="iconFriendList"></i>
-      </button>
-      <button
-        v-for="friend in friends"
-        class="friendButton"
-        @click="createConv(friend, $event)"
-        v-bind:key="friend.nickname"
-      >
-        <img
-          :src="getFriendAvatar(friend)"
-          alt=""
-          width="45"
-          height="45"
-          class="avatar"
-        />
-        <p>{{ friend.nickname }}</p>
-      </button>
-    </div>
-    <div class="lobbyChat">
+  <div id="chat">
+    <ChatMenu
+      :channels="myChannels"
+      :convs="privateConvs"
+      :allChannels="allChannels"
+      :invitations="channelInvitations"
+    />
+    <ChatWindow />
+    <!-- <div v-if="show == 0" class="lobbyChat">
       <h2>Welcome on the chat</h2>
       <br />
       <h4>Chat with your friends with the contact list to the left</h4>
-    </div>
-    <div class="conversation hidden">
-      <div class="messages">
-        <button class="loadMoreButton" @click="loadMoreMessages($event)">
-          Load more
-        </button>
-        <template v-for="message in messagesToDisplay">
-          <div
-            v-if="message.author == clientNickname"
-            class="clientMessage"
-            v-bind:key="message.text"
-          >
-            <h4 class="clientName">
-              {{ message.author }}
-            </h4>
-            <p>{{ message.text }}</p>
+    </div> -->
+    <!-- <div v-if="show == 1" class="lobbyChat allChannels">
+      <template v-for="channel in allChannels">
+        <div class="channel">
+          <h5 v-if="channel.type == ChannelType.PRIVATE">Channel invitation</h5>
+          <h3>{{ channel.name }}</h3>
+          <h5 class="textGrey">{{ channel.type }}</h5>
+          <div class="channelControl">
+            <div v-if="channel.type == ChannelType.PROTECTED" class="searchBar">
+              <input type="password" placeholder="password" class="searchField" v-model="channel.passwordField" />
+            </div>
+            <button v-if="channel.type == ChannelType.PRIVATE" class="joinChannel" @click="joinChannel(channel)">Accept</button>
+            <button v-else class="joinChannel" @click="joinChannel(channel)">Join</button>
+            <button v-if="channel.type == ChannelType.PRIVATE" class="joinChannel" @click="declineChannelInvitation(channel)">Decline</button>
           </div>
-          <div v-else class="friendMessage" v-bind:key="message.text">
-            <h4 class="friendName">
-              {{ message.author }}
-            </h4>
-            <p>{{ message.text }}</p>
+        </div>
+      </template>
+    </div> -->
+    <!-- <div v-if="show == 2" class="conversation">
+      <div class="upperChat">
+        <div
+          :class="{
+            messagesPrivate: thisChannel == null,
+            messages: thisChannel != null,
+          }"
+        >
+          <button class="loadMoreButton" @click="loadMoreMessages($event)">Load more</button>
+          <template v-for="message in messagesToDisplay">
+            <div v-if="message.author == clientNickname" class="clientMessage" v-bind:key="message.text">
+              <h4 class="clientName">
+                {{ message.author }}
+              </h4>
+              <p>{{ message.text }}</p>
+              <p>{{ message.date }}</p>
+            </div>
+            <div v-else class="friendMessage" v-bind:key="message.text">
+              <h4 class="friendName">
+                {{ message.author }}
+              </h4>
+              <p>{{ message.text }}</p>
+              <p>{{ message.date }}</p>
+            </div>
+          </template>
+          <div ref="messagesBoxRef"></div>
+        </div>
+        <div v-if="thisChannel != null" class="channelInfo">
+          <div class="channelHeader">
+            <h1>{{ thisChannel.name }}</h1>
+            <h3>{{ thisChannel.type }}</h3>
           </div>
-        </template>
-        <div ref="messagesBoxRef"></div>
+          <div v-for="member in channelMembers" class="channelMember">
+            <img :src="member.image" alt="" />
+            <p
+              :class="{
+                textColorRed: member.role == ChannelRole.OWNER,
+                textColorGold: member.role == ChannelRole.ADMIN,
+              }"
+            >
+              {{ member.nickname }}
+            </p>
+          </div>
+          <div class="actionBar">
+            <button @click="leaveChannel()" class="convListHeader">Leave channel</button>
+            <button v-if="thisChannel.type == ChannelType.PRIVATE" @click="showInvitation()" class="convListHeader">Invite</button>
+          </div>
+        </div>
       </div>
       <div class="input">
-        <input
-          type="text"
-          placeholder="Send message"
-          class="textInput"
-          v-model="messageInput"
-        />
-        <button class="sendButton" @click="sendPrivateMessage(friendNickname)">
+        <input type="text" placeholder="Send message" class="textInput" v-model="messageInput" />
+        <button v-if="thisChannel == null" class="sendButton" @click="sendPrivateMessage(friendNickname)">
+          <i class="gg-slack"></i>
+        </button>
+        <button v-else class="sendButton" @click="sendChannelMessage()">
           <i class="gg-slack"></i>
         </button>
       </div>
+    </div> -->
+    <!-- <div v-if="show == 3" class="channelCreationForm">
+      <h2>Create channel</h2>
+      <label for="channelName">Channel name:</label>
+      <div class="searchBar">
+        <input type="text" class="searchField" name="channelName" placeholder="Channel name" v-model="channelName" required />
+      </div>
+      <div>Channel type: {{ picked }}</div>
+
+      <div class="radioBundle">
+        <input type="radio" id="one" name="public" value="public" v-model="picked" checked />
+        <label for="public">public</label>
+
+        <input type="radio" id="two" name="protected" value="protected" v-model="picked" />
+        <label for="protected">protected</label>
+
+        <input type="radio" id="three" name="private" value="private" v-model="picked" />
+        <label for="private">private</label>
+      </div>
+      <div v-if="picked == 'protected'">
+        <label for="channelPassword">Password:</label>
+        <div class="searchBar">
+          <input type="password" class="searchField" name="channelPassword" placeholder="Password" v-model="channelPassword" required />
+        </div>
+      </div>
+      <button @click="createChannel()" class="joinChannel">Submit</button>
+    </div> -->
+    <div v-if="showInvitationModal" class="overlay">
+      <div class="modal">
+        <button class="close" @click="closeInvitation()">&times;</button>
+        <h2>Invite to channel</h2>
+        <div class="searchBar">
+          <input type="text" class="searchField" placeholder="Username" v-model="inviteUser" required />
+        </div>
+        <button class="modalBtn" @click="inviteToChannel()">Submit</button>
+      </div>
     </div>
   </div>
-  <friend-alert :requester-name="props.incomingFriendRequest" />
+  <friend-alert :requester-name="incomingFriendRequest" />
 </template>
 
 <script setup lang="ts">
-export interface privateConv {
-  user1: User;
-  user2: User;
-  avatarToDisplay: string;
-  uuid: string;
-  offset: number;
-  notif: boolean;
-}
-export interface message {
-  text: string;
-  author: string;
-}
-import FriendAlert from "../components/FriendAlert.vue";
-
-import { onMounted, onUpdated, ref, watch } from "vue";
+import ChatMenu from "@/components/chat/ChatMenu.vue";
+import ChatWindow from "@/components/chat/ChatWindow.vue";
+import FriendAlert from "@/components/FriendAlert.vue";
+import { fetchJSONDatas } from "@/functions/funcs";
 import { useStore } from "@/store";
-import { User } from "@/types/GameSummary";
-import { Private } from "@babel/types";
+import { Channel, ChannelRole, ChannelType, ChannelUser } from "@/types/Channel";
+import { Conversation } from "@/types/Conversation";
+import { Message } from "@/types/Message";
+import { User } from "@/types/User";
+import { onMounted, onUpdated, ref, Ref } from "vue";
 
 const store = useStore();
 let socket = store.socket;
@@ -128,102 +147,121 @@ store.$subscribe((mutation, state) => {
   socket = state.socket;
 });
 
-let funcs = require("../functions/funcs");
-const clientNickname = JSON.parse(
-  localStorage.getItem("user") || "{}"
-).nickname;
-let friendNickname = ref("");
-let imageUrl = ref("");
-let messageInput = ref("");
-let privateConvs = ref(Array<privateConv>());
-let messagesToDisplay = ref(Array<message>());
-const messagesBoxRef = ref(<HTMLDivElement | null>null);
-let convListFlag = ref(true);
-let friendListFlag = ref(true);
-let iconConvList = ref("gg-remove");
-let iconFriendList = ref("gg-remove");
-let friends = ref(Array<User>());
-let currentConv = ref<privateConv>();
+const privateConvs = ref(Array<Conversation>());
+const messagesToDisplay: Ref<Array<Message>> = ref([]);
+const messagesBoxRef = ref<HTMLDivElement | null>(null);
+let currentConv = ref<Conversation>();
 let isLoadMore = false;
 
-const props = defineProps(["incomingFriendRequest"]);
-const emit = defineEmits(["notification"]);
-const messageText = ref("");
-const joined = ref(false);
+defineProps(["incomingFriendRequest"]);
+defineEmits(["notification"]);
 
-enum ChannelType {
-  PUBLIC = "public",
-  PRIVATE = "private",
-  PROTECTED = "protected",
-}
-
-enum ChannelRole {
-  OWNER = "owner",
-  ADMIN = "administrator",
-  MEMBER = "member",
-}
+const myChannels: Ref<Array<Channel>> = ref([]);
+const allChannels: Ref<Array<Channel>> = ref([]);
+const channelInvitations: Ref<Array<Channel>> = ref([]);
+const current: Ref<Channel | Conversation | null> = ref(null);
+const channelMembers: Ref<Array<ChannelUser>> = ref([]);
+const channelMessageSkip = ref(0);
+const show = ref(0);
+const picked = ref("public");
+const channelName = ref("");
+const channelPassword = ref("");
+const showInvitationModal = ref(false);
+const inviteUser = ref("");
+const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 onUpdated(() => {
   if (isLoadMore == false) scrollDownMessages();
   isLoadMore = false;
 });
+
 onMounted(async () => {
+  getMyChannels();
+  getAllChannels();
+  getChannelInvitations();
   var audio = new Audio(require("../assets/adelsol.mp3"));
+  socket?.on("Message to the client", async (privateMessage: { author: string; text: string }) => {
+    if (privateMessage.author == friendNickname.value) messagesToDisplay.value.push(privateMessage);
+    else {
+      await getAllConvs();
+      organizeFriends();
+      notifConv(privateMessage.author);
+      audio.play();
+    }
+  });
+  socket?.on("messageReceived", (channelId: number, msg: Message) => {
+    if (thisChannel.value && channelId === thisChannel.value.id) {
+      msg.date = moment(msg.date).tz(timezone).add(1, "hours").format("MMMM Do YYYY, h:mm:ss a");
+      messagesToDisplay.value.push(msg);
+      channelMessageSkip.value++;
+    } else {
+      console.log("incoming message");
+    }
+  });
+  socket?.on("updateChannelMembers", async (channelId: number) => {
+    if (thisChannel.value && channelId === thisChannel.value.id) {
+      let data = await fetchJSONDatas("api/chat/members", "POST", {
+        id: thisChannel.value.id,
+      });
+      channelMembers.value.forEach(await fetchUserAvatarURL);
+      channelMembers.value = data;
+    }
+  });
+  socket?.on("Update conv list", (convData: { conv: privateConv }) => {
+    console.log("UPDATE");
+  });
 
   store.$subscribe((mutation, state) => {
     if (!state.socket?.hasListeners("Message to the client")) {
-      state.socket?.on(
-        "Message to the client",
-        async (privateMessage: { author: string; text: string }) => {
-          console.log(1);
+      state.socket?.on("Message to the client", async (privateMessage: { author: string; text: string }) => {
+        console.log(1);
 
-          if (privateMessage.author == friendNickname.value)
-            messagesToDisplay.value.push(privateMessage);
-          else {
-            await getAllConvs();
-            organizeFriends();
-            notifConv(privateMessage.author);
-            audio.play();
-          }
+        if (privateMessage.author == friendNickname.value) messagesToDisplay.value.push(privateMessage);
+        else {
+          await getAllConvs();
+          organizeFriends();
+          notifConv(privateMessage.author);
+          audio.play();
         }
-      );
+      });
     }
 
     if (!state.socket?.hasListeners("Update conv list")) {
-      state.socket?.on(
-        "Update conv list",
-        (convData: { conv: privateConv }) => {
-          console.log("UPDATE");
+      state.socket?.on("Update conv list", (convData: { conv: privateConv }) => {
+        console.log("UPDATE");
 
-          let convIndex = privateConvs.value.findIndex(
-            (conv) => conv.uuid === convData.conv.uuid
-          );
-          const convToTop = privateConvs.value.splice(convIndex, 1)[0];
-          privateConvs.value.splice(0, 0, convToTop);
-        }
-      );
+        let convIndex = privateConvs.value.findIndex((conv) => conv.uuid === convData.conv.uuid);
+        const convToTop = privateConvs.value.splice(convIndex, 1)[0];
+        privateConvs.value.splice(0, 0, convToTop);
+      });
     }
   });
 
   window.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
-      sendPrivateMessage(friendNickname.value);
+      if (thisChannel.value == null) sendPrivateMessage(friendNickname.value);
+      else sendChannelMessage();
     }
   });
   await getAllConvs();
-  if (store.user?.friends)
-    friends.value = JSON.parse(JSON.stringify(store.user?.friends));
-  organizeFriends();
+  // if (store.user?.friends) friends.value = JSON.parse(JSON.stringify(store.user?.friends)); what is this
+  // organizeFriends();
 });
 
-function getConvAvatar(conv: privateConv) {
-  if (clientNickname == conv.user1.nickname)
-    return `http://${window.location.hostname}:3000${conv.user2.avatar}`;
-  else return `http://${window.location.hostname}:3000${conv.user1.avatar}`;
-}
-function getFriendAvatar(friend: User) {
-  return `http://${window.location.hostname}:3000${friend.avatar}`;
-}
+const getMyChannels = async (): Promise<void> => {
+  myChannels.value = await fetchJSONDatas("api/chat", "GET");
+};
+
+const getAllChannels = async (): Promise<void> => {
+  const data: Channel[] = await fetchJSONDatas("api/chat/list", "POST", {
+    skip: allChannels.value.length,
+  });
+  allChannels.value = [...allChannels.value, ...data];
+};
+
+const getChannelInvitations = async (): Promise<void> => {
+  channelInvitations.value = await fetchJSONDatas("api/chat/invitations", "GET");
+};
 
 function initConv(convs: Array<privateConv>) {
   convs.forEach((conv) => {
@@ -231,508 +269,527 @@ function initConv(convs: Array<privateConv>) {
     conv.notif = false;
   });
 }
-function getChannels() {
-  fetch("http://" + window.location.hostname + ":3000/api/chat", {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + localStorage.getItem("token"),
-    },
-  })
-    .then((res) => {
-      return res.json();
-    })
-    .then((data) => {
-      console.log(data);
-    })
-    .catch((err) => console.log(err));
-}
 
-function createNewChannel() {
-  fetch(
-    "http://" + window.location.hostname + ":3000/api/chat/create-channel",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + localStorage.getItem("token"),
-      },
-      body: JSON.stringify({
-        name: "Nine",
-        type: ChannelType.PRIVATE,
-        password: "",
-      }),
-    }
-  )
-    .then((res) => {
-      return res.json();
-    })
-    .then((data) => {
-      console.log(data);
-    })
-    .catch((err) => console.log(err));
-}
+const loadDefaultPage = () => {
+  thisChannel.value = null;
+  const conversations = document.querySelectorAll(".channelButton");
+  conversations.forEach((conversation) => {
+    conversation.classList.remove("inactiveConv");
+  });
+  show.value = 0;
+};
 
-function updateChannel() {
-  fetch(
-    "http://" + window.location.hostname + ":3000/api/chat/update-channel",
-    {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + localStorage.getItem("token"),
-      },
-      body: JSON.stringify({
-        id: 22,
-        type: "protected",
-        password: "password",
-      }),
-    }
-  )
-    .then((res) => {
-      return res.json();
-    })
-    .then((data) => {
-      console.log(data);
-    })
-    .catch((err) => console.log(err));
-}
+const showInvitation = () => {
+  inviteUser.value = "";
+  showInvitationModal.value = true;
+};
 
-function joinChannel() {
-  fetch("http://" + window.location.hostname + ":3000/api/chat/join-channel", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + localStorage.getItem("token"),
-    },
-    body: JSON.stringify({
-      id: 23,
-      password: "password",
-    }),
-  })
-    .then((res) => {
-      return res.json();
-    })
-    .then((data) => {
-      console.log(data);
-    })
-    .catch((err) => console.log(err));
-}
+const closeInvitation = () => {
+  showInvitationModal.value = false;
+};
 
-function leaveChannel() {
-  fetch("http://" + window.location.hostname + ":3000/api/chat/leave-channel", {
-    method: "DELETE",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + localStorage.getItem("token"),
-    },
-    body: JSON.stringify({
-      id: 22,
-    }),
-  })
-    .then((res) => {
-      return res.json();
-    })
-    .then((data) => {
-      console.log(data);
-    })
-    .catch((err) => console.log(err));
-}
-
-function deleteChannel() {
-  fetch(
-    "http://" + window.location.hostname + ":3000/api/chat/delete-channel",
-    {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + localStorage.getItem("token"),
-      },
-      body: JSON.stringify({
-        id: 24,
-      }),
-    }
-  )
-    .then((res) => {
-      return res.json();
-    })
-    .then((data) => {
-      console.log(data);
-    })
-    .catch((err) => console.log(err));
-}
-
-function inviteToChannel() {
-  fetch(
-    "http://" + window.location.hostname + ":3000/api/chat/invite-to-channel",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + localStorage.getItem("token"),
-      },
-      body: JSON.stringify({
-        channelId: 24,
-        username: "Boss",
-      }),
-    }
-  )
-    .then((res) => {
-      return res.json();
-    })
-    .then((data) => {
-      console.log(data);
-    })
-    .catch((err) => console.log(err));
-}
-
-function giveAdmin() {
-  fetch("http://" + window.location.hostname + ":3000/api/chat/give-admin", {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + localStorage.getItem("token"),
-    },
-    body: JSON.stringify({
-      id: 22,
-      username: "Ah Sahm",
-    }),
-  })
-    .then((res) => {
-      return res.json();
-    })
-    .then((data) => {
-      console.log(data);
-    })
-    .catch((err) => console.log(err));
-}
-
-function takeAdmin() {
-  fetch("http://" + window.location.hostname + ":3000/api/chat/take-admin", {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + localStorage.getItem("token"),
-    },
-    body: JSON.stringify({
-      id: 22,
-      username: "Ah Sahm",
-    }),
-  })
-    .then((res) => {
-      return res.json();
-    })
-    .then((data) => {
-      console.log(data);
-    })
-    .catch((err) => console.log(err));
-}
-
-function ban() {
-  fetch("http://" + window.location.hostname + ":3000/api/chat/ban", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + localStorage.getItem("token"),
-    },
-    body: JSON.stringify({
-      id: 23,
-      username: "Ah Sahm",
-      minutes: 1500,
-    }),
-  })
-    .then((res) => {
-      return res.json();
-    })
-    .then((data) => {
-      console.log(data);
-    })
-    .catch((err) => console.log(err));
-}
-
-const channelsNum = ref(0);
-
-function getChannelsList() {
-  fetch("http://" + window.location.hostname + ":3000/api/chat/list", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + localStorage.getItem("token"),
-    },
-    body: JSON.stringify({
-      number: channelsNum.value,
-    }),
-  })
-    .then((res) => {
-      return res.json();
-    })
-    .then((data) => {
-      console.log(data);
-      channelsNum.value += data.length;
-    })
-    .catch((err) => console.log(err));
-}
-
-async function getAllConvs() {
-  await fetch(
-    "http://" + window.location.hostname + ":3000/api/privateConv/getAllConvs",
-    {
-      headers: {
-        Authorization: "Bearer " + localStorage.getItem("token"),
-      },
-    }
-  )
-    .then((data) => data.json())
-    .then(async (data) => {
-      privateConvs.value = data;
-      privateConvs.value.forEach(async (conv) => {
-        conv.avatarToDisplay = getConvAvatar(conv);
-      });
-      initConv(privateConvs.value);
-    })
-    .catch((err) => console.log(err));
-}
-
-function organizeFriends() {
-  console.log(privateConvs.value.length);
-  for (let i = 0; i < privateConvs.value.length; i++) {
-    for (let j = 0; j < friends.value.length; j++) {
-      if (
-        privateConvs.value[i].user1.nickname == friends.value[j].nickname ||
-        privateConvs.value[i].user2.nickname == friends.value[j].nickname
-      )
-        friends.value.splice(j, 1);
-    }
+const createChannel = async (): Promise<void> => {
+  if (channelName.value.length <= 0 || (picked.value == "protected" && channelPassword.value.length <= 0)) {
+    return;
   }
-}
+  let channelType = <ChannelType>picked.value;
+  let data: Channel = await fetchJSONDatas("api/chat/create-channel", "POST", {
+    name: channelName.value,
+    type: channelType,
+    password: channelPassword.value,
+  });
+  myChannels.value.push(data);
+  socket?.emit("joinChannelRoom", { id: data.id });
+  channelCreationForm();
+};
 
-function scrollDownMessages() {
+const channelCreationForm = () => {
+  thisChannel.value = null;
+  channelName.value = "";
+  channelPassword.value = "";
+  const conversations = document.querySelectorAll(".channelButton");
+  conversations.forEach((conversation) => {
+    conversation.classList.remove("inactiveConv");
+  });
+  show.value = 3;
+};
+
+const updateChannel = async (): Promise<void> => {
+  await fetchJSONDatas("api/chat/update-channel", "PUT", {
+    id: 22,
+    type: "protected",
+    password: "password",
+  });
+};
+
+const joinChannel = async (channel: Channel): Promise<void> => {
+  let password = channel.passwordField;
+  channel.passwordField = "";
+
+  let data: Channel = await fetchJSONDatas("api/chat/join-channel", "POST", {
+    id: channel.id,
+    password: password,
+  });
+  myChannels.value.push(data);
+  allChannels.value.splice(allChannels.value.indexOf(channel), 1);
+  socket.emit("joinChannelRoom", { id: data.id });
+};
+
+const loadAllChannels = () => {
+  thisChannel.value = null;
+  channelsNum.value = 0;
+  allChannels.value = [];
+  const conversations = document.querySelectorAll(".channelButton");
+  conversations.forEach((conversation) => {
+    conversation.classList.remove("inactiveConv");
+  });
+  getAllChannels();
+  show.value = 1;
+};
+
+const getAllConvs = async (): Promise<void> => {
+  let data: Conversation[] = await fetchJSONDatas("api/privateConv/getAllConvs", "GET");
+  privateConvs.value = data;
+  console.log(privateConvs.value);
+  initConv(privateConvs.value);
+};
+
+const leaveChannel = async (): Promise<void> => {
+  let data: Channel = await fetchJSONDatas("api/chat/leave-channel", "DELETE", {
+    id: thisChannel.value!.id,
+  });
+  myChannels.value = myChannels.value.filter((elem) => elem.id != data.id);
+  socket.emit("leaveChannelRoom", { id: data.id });
+  loadDefaultPage();
+};
+
+const inviteToChannel = async (): Promise<void> => {
+  if (inviteUser.value.length > 0) {
+    let username = inviteUser.value;
+    inviteUser.value = "";
+    await fetchJSONDatas("api/chat/invite-to-channel", "POST", {
+      channelId: thisChannel.value!.id,
+      username: username,
+    });
+  }
+};
+
+const declineChannelInvitation = async (channel: Channel): Promise<void> => {
+  await fetchJSONDatas("api/chat/decline-invitation", "DELETE", {
+    id: channel.id,
+  }).then(() => {
+    allChannels.value = allChannels.value.filter((x) => x.id != channel.id);
+    if (channelsNum.value > 0) channelsNum.value--;
+  });
+};
+
+const giveAdmin = async (): Promise<void> => {
+  await fetchJSONDatas("api/chat/give-admin", "PUT", {
+    id: 22,
+    username: "Ah Sahm",
+  });
+};
+
+const takeAdmin = async (): Promise<void> => {
+  await fetchJSONDatas("api/chat/take-admin", "PUT", {
+    id: 22,
+    username: "Ah Sahm",
+  });
+};
+
+const ban = async (): Promise<void> => {
+  await fetchJSONDatas("api/chat/ban", "POST", {
+    id: 23,
+    username: "Ah Sahm",
+    minutes: 1500,
+  });
+};
+
+// const organizeFriends = () => {
+//   for (let i = 0; i < privateConvs.value.length; i++) {
+//     for (let j = 0; j < friends.value.length; j++) {
+//       if (privateConvs.value[i].user1.nickname == friends.value[j].nickname || privateConvs.value[i].user2.nickname == friends.value[j].nickname)
+//         friends.value.splice(j, 1);
+//     }
+//   }
+// };
+
+const scrollDownMessages = () => {
   messagesBoxRef.value?.scrollIntoView({ behavior: "smooth", block: "end" });
-}
+};
 
-function displayMessages(conv: privateConv, event: any) {
-  conv.notif = false;
-  if (isLoadMore == false) {
-    const conversations = document.querySelectorAll(".privateConvButton");
-    conversations.forEach((conversation) => {
-      conversation.classList.add("inactiveConv");
-    });
-    event.target.classList.remove("inactiveConv");
+const displayMessages = async (conv: Conversation, event: any): Promise<void> => {
+  thisChannel.value = null;
+  const conversations = document.querySelectorAll(".channelButton");
+  conversations.forEach((conversation) => {
+    conversation.classList.add("inactiveConv");
+  });
+  event.target.classList.remove("inactiveConv");
+  conv.user1.nickname == clientNickname ? (friendNickname.value = conv.user2.nickname) : (friendNickname.value = conv.user1.nickname);
+  let data: Message[] = await fetchJSONDatas(`api/privateConv/getMessages/${conv.uuid}/${conv.offset}`, "GET");
+  //if currentConv == conv, the user clicked on load more, so we just need to append older messages at the beginning of the array
+  if (conv == currentConv.value && isLoadMore) messagesToDisplay.value.splice(0, 0, ...data);
+  else {
+    //Otherwise, the user is changing conversation so we need to replace our array of messages with the new array, and finally set the offset of the previous conv to 0
+    messagesToDisplay.value = data;
+    if (currentConv.value) currentConv.value.offset = 0;
+    currentConv.value = conv;
   }
-  document.getElementsByClassName("conversation")[0].classList.remove("hidden");
-  document.getElementsByClassName("lobbyChat")[0].classList.add("hidden");
-  conv.user1.nickname == clientNickname
-    ? (friendNickname.value = conv.user2.nickname)
-    : (friendNickname.value = conv.user1.nickname);
+  show.value = 2;
+};
 
-  fetch(
-    "http://" +
-      window.location.hostname +
-      ":3000/api/privateConv/getMessages/" +
-      conv.uuid +
-      "/" +
-      conv.offset,
-    {
-      headers: {
-        Authorization: "Bearer " + localStorage.getItem("token"),
-      },
-    }
-  )
-    .then((data) => data.json())
-    .then((data) => {
-      //if currentConv == conv, the user clicked on load more, so we just need to append older messages at the beginning of the array
-      if (conv == currentConv.value && isLoadMore)
-        messagesToDisplay.value.splice(0, 0, ...data);
-      else {
-        //Otherwise, the user is changing conversation so we need to replace our array of messages with the new array, and finally set the offset of the previous conv to 0
-        messagesToDisplay.value = data;
-        if (currentConv.value) currentConv.value.offset = 0;
-        currentConv.value = conv;
-      }
-    })
-    .catch((err) => {
-      console.log(err);
-    });
-}
+const loadChannel = async (channel: Channel, event: any): Promise<void> => {
+  const conversations = document.querySelectorAll(".channelButton");
+  conversations.forEach((conversation) => {
+    conversation.classList.add("inactiveConv");
+  });
+  event.target.classList.remove("inactiveConv");
+  channelMessageSkip.value = 0;
+  channelMembers.value = [];
+  thisChannel.value = null;
+  show.value = 2;
+  let data = await fetchJSONDatas("api/chat/load-channel", "POST", {
+    id: channel.id,
+  });
+  thisChannel.value = channel;
+  channelMembers.value = data.members;
+  messagesToDisplay.value = data.messages;
+  messagesToDisplay.value.forEach((elem) => {
+    elem.date = moment(elem.date).tz(timezone).add(1, "hours").format("MMMM Do YYYY, h:mm:ss a");
+  });
+  channelMessageSkip.value = data.messages.length;
+  channelMembers.value.forEach(await fetchUserAvatarURL);
+};
 
-function sendPrivateMessage(nickname: string): void {
+const loadChannelMessages = async (channel: Channel): Promise<void> => {
+  let data = await fetchJSONDatas("api/chat/messages", "POST", {
+    id: channel.id,
+    skip: channelMessageSkip.value,
+  });
+  data.date = moment(data.date).tz(timezone).add(1, "hours").format("MMMM Do YYYY, h:mm:ss a");
+  messagesToDisplay.value.push(data);
+  channelMessageSkip.value += data.length;
+};
+
+const sendChannelMessage = () => {
   if (messageInput.value != "") {
-    console.log(socket?.id);
+    socket.emit(
+      "sendChannelMessage",
+      {
+        channelId: thisChannel.value!.id,
+        content: messageInput.value,
+      },
+      (response: Message) => {
+        if (!response.author) {
+          // TODO new notification message
+        }
+      }
+    );
+    messageInput.value = "";
+  }
+};
 
-    socket?.emit("deliverMessage", {
+const sendPrivateMessage = (nickname: string): void => {
+  if (messageInput.value != "") {
+    socket.emit("deliverMessage", {
       message: messageInput.value,
       friendNickname: nickname,
     });
     messagesToDisplay.value.push({
       author: clientNickname,
       text: messageInput.value,
+      date: moment(new Date()).tz(timezone).format("MMMM Do YYYY, h:mm:ss a"),
     });
     messageInput.value = "";
   }
-}
-
-function changeConvListStatus() {
-  if (convListFlag.value == true) {
-    const el = document.querySelectorAll(".fullPrivateConvButton");
-    el.forEach((element) => {
-      element.classList.add("hidden");
-    });
-    iconConvList.value = "gg-add";
-    convListFlag.value = false;
-  } else {
-    const el = document.querySelectorAll(".fullPrivateConvButton");
-    el.forEach((element) => {
-      element.classList.remove("hidden");
-    });
-    convListFlag.value = true;
-    iconConvList.value = "gg-remove";
-  }
-}
-function changeFriendListStatus() {
-  if (friendListFlag.value == true) {
-    const el = document.querySelectorAll(".friendButton");
-    el.forEach((element) => {
-      element.classList.add("hidden");
-    });
-    iconFriendList.value = "gg-add";
-    friendListFlag.value = false;
-  } else {
-    const el = document.querySelectorAll(".friendButton");
-    el.forEach((element) => {
-      element.classList.remove("hidden");
-    });
-    friendListFlag.value = true;
-    iconFriendList.value = "gg-remove";
-  }
-}
-function createConv(friend: User, event: any) {
-  friendNickname.value = friend.nickname;
-  fetch(
-    "http://" +
-      window.location.hostname +
-      ":3000/api/privateConv/createConv/" +
-      friend.nickname,
-    {
-      headers: {
-        Authorization: "Bearer " + localStorage.getItem("token"),
-      },
-    }
-  )
-    .then((data) => data.json())
-    .then(async (data) => {
-      data.conv.avatarToDisplay = getConvAvatar(data.conv);
-      data.conv.offset = 0;
-      data.conv.notif = false;
-      if (data.created == true) {
-        privateConvs.value.unshift(data.conv);
-        organizeFriends();
-      }
-      displayMessages(data.conv, event);
-    });
-}
-
-function loadMoreMessages(event: any) {
-  if (currentConv.value) {
-    currentConv.value.offset += 10;
-    isLoadMore = true;
-    displayMessages(currentConv.value, event);
-  }
-}
-
-function notifConv(author: string) {
-  let conv = privateConvs.value.find(
-    (conv) => conv.user1.nickname == author || conv.user2.nickname == author
-  );
-  if (conv) conv.notif = true;
-}
-
-function spectateGame() {
-  console.log("spectate");
-}
-function goToProfile() {
-  console.log("profile");
-}
+};
 </script>
 
 <style lang="scss" scoped>
-.convList {
-  height: 90vh;
-  width: 25%;
-  float: left;
-  background-color: #5b5a56;
-  overflow-y: scroll;
-
-  h4 {
-    color: white;
-  }
-  .privateMessagesHeader {
-    padding: 5px;
-    border: 3px solid;
-    border-image-slice: 1;
-    border-image-source: linear-gradient(to bottom, #c1a36b, #635e4f);
-    display: flex;
-    flex-direction: row;
-    justify-content: space-around;
-    align-items: center;
-  }
-  .fullPrivateConvButton {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+.overlay {
+  position: fixed;
+  height: 100vh;
+  width: 100vw;
+  background: rgba(0, 0, 0, 0.5);
+}
+.modal {
+  position: fixed;
+  width: 40vw;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 3px solid;
+  border-image-slice: 1;
+  border-image-source: linear-gradient(to bottom, #c1a36b, #635e4f);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-around;
+  gap: 1rem;
+  .close {
+    position: absolute;
+    top: 0;
+    right: 1rem;
+    font-size: 2em;
+    font-weight: 600;
+    color: #c1a36b;
+    background: none;
     height: 5%;
-
-    .privateConvButton {
-      display: flex;
-      align-items: center;
-      justify-content: flex-start;
-      background: #3b3c44;
-      height: 100%;
-      font-size: 25px;
-      padding: 0;
-      img {
-        margin-right: 20px;
-        pointer-events: none;
-      }
-      p {
-        pointer-events: none;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        overflow: hidden;
-      }
-    }
-
-    .notifPrivateConvButton {
-      @extend .privateConvButton;
-      background-color: #c1a36b;
-    }
-    .socialOptions {
-      display: flex;
-      align-items: center;
-      margin-left: auto;
-      height: 100%;
-      width: 20%;
-      button {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100%;
-      }
-    }
+    width: 5%;
   }
-
-  .friendsHeader {
-    padding: 5px;
+  .searchBar {
+    width: 30vw;
+  }
+  .modalBtn {
     border: 3px solid;
     border-image-slice: 1;
     border-image-source: linear-gradient(to bottom, #c1a36b, #635e4f);
+    width: auto;
+    padding: 0.5em;
+  }
+}
+
+.leftActionPannel {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  position: absolute;
+  bottom: 0;
+  width: inherit;
+  height: 3rem;
+  button {
+    height: 100%;
+  }
+}
+.convList h4 {
+  color: white;
+}
+.conversation {
+  float: right;
+  background-color: #3b3c44;
+  height: 85vh;
+  width: 85%;
+}
+.channelCreationForm {
+  background-color: #3b3c44;
+  color: white;
+  height: 90vh;
+  padding-top: 3%;
+  * {
+    margin: 1% auto;
+  }
+  .searchBar {
+    width: 20%;
+  }
+  .radioBundle {
+    input {
+      margin: 1%;
+    }
+  }
+  .joinChannel {
+    width: 20%;
+  }
+}
+.upperChat {
+  width: 100%;
+  height: 100%;
+}
+.channelInfo {
+  position: relative;
+  float: right;
+  width: 20%;
+  height: 100%;
+  .channelHeader {
+    position: relative;
+    text-align: left;
+    background-color: #5b5a56;
+    border-bottom: 3px solid black;
+    h1,
+    h3 {
+      margin-top: 0;
+      padding: 4% 0 0 4%;
+      color: white;
+    }
+  }
+  .actionBar {
     display: flex;
-    flex-direction: row;
-    justify-content: space-around;
     align-items: center;
+    justify-content: flex-start;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 3rem;
+    .convListHeader {
+      height: 100%;
+    }
   }
-  .friendButton {
-    @extend .privateConvButton;
+}
+.messages {
+  overflow-y: scroll;
+  float: left;
+  height: 100%;
+  width: 80%;
+  padding: 0 5%;
+
+  .friendName {
+    color: #fadba2;
+    margin-bottom: 0;
+    margin-top: 0;
   }
+  .clientName {
+    color: #85724e;
+    margin-bottom: 0;
+    margin-top: 0;
+  }
+  p {
+    margin-bottom: 0;
+  }
+
+  & > .clientMessage {
+    //border: #c1a36b;
+    //border-style: solid;
+    background-color: #ede4d3;
+    margin: 25px 0 25px auto;
+    text-align: left;
+    color: #453c2c;
+    border-radius: 1.125rem 1.125rem 0 1.125rem;
+    width: fit-content;
+    max-width: 66%;
+    overflow-wrap: break-word;
+    padding: 10px;
+    min-width: 30%;
+  }
+
+  & > .friendMessage {
+    background-color: #9c8356;
+    //border: #c1a36b;
+    //border-style: solid;
+    color: white;
+    margin: 25px auto 25px 0;
+    text-align: left;
+    border-radius: 1.125rem 1.125rem 1.125rem 0;
+    width: fit-content;
+    max-width: 66%;
+    overflow-wrap: break-word;
+    padding: 10px;
+    min-width: 30%;
+  }
+}
+.messagesPrivate {
+  overflow-y: scroll;
+  height: 100%;
+  width: 100%;
+  padding: 0 5%;
+
+  .friendName {
+    color: #fadba2;
+    margin-bottom: 0;
+    margin-top: 0;
+  }
+  .clientName {
+    color: #85724e;
+    margin-bottom: 0;
+    margin-top: 0;
+  }
+  p {
+    margin-bottom: 0;
+  }
+
+  & > .clientMessage {
+    //border: #c1a36b;
+    //border-style: solid;
+    background-color: #ede4d3;
+    margin: 25px 0 25px auto;
+    text-align: left;
+    color: #453c2c;
+    border-radius: 1.125rem 1.125rem 0 1.125rem;
+    width: fit-content;
+    max-width: 66%;
+    overflow-wrap: break-word;
+    padding: 10px;
+    min-width: 30%;
+  }
+
+  & > .friendMessage {
+    background-color: #9c8356;
+    //border: #c1a36b;
+    //border-style: solid;
+    color: white;
+    margin: 25px auto 25px 0;
+    text-align: left;
+    border-radius: 1.125rem 1.125rem 1.125rem 0;
+    width: fit-content;
+    max-width: 66%;
+    overflow-wrap: break-word;
+    padding: 10px;
+    min-width: 30%;
+  }
+}
+.input {
+  height: 5vh;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  border: 3px solid;
+  border-image-slice: 1;
+  border-image-source: linear-gradient(to bottom, #c1a36b, #635e4f);
+}
+.textInput {
+  width: 95%;
+  height: 100%;
+  border: 0px solid;
+  font-size: 21px;
+  padding-left: 20px;
+}
+.sendButton {
+  height: 100%;
+  background: #aa9e7d;
+  width: 5%;
+}
+.channelButton {
+  display: flex;
+  align-items: center;
+  background: #3b3c44;
+  font-size: 25px;
+  img {
+    height: 40px;
+  }
+  p {
+    padding: 0 8px;
+    margin: 0;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+}
+
+.channelMember {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  background: #453800;
+  border-bottom: 3px solid black;
+  font-size: 25px;
+  gap: 1em;
+  color: white;
+}
+.channelMember img {
+  height: 40px;
+  margin-right: 0.5em;
+  pointer-events: none;
+}
+.channelMember p {
+  pointer-events: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.textColorRed {
+  color: red;
+}
+.textColorGold {
+  color: gold;
 }
 
 .lobbyChat {
@@ -743,114 +800,85 @@ function goToProfile() {
   background-color: #1e2328;
   color: white;
   height: 90vh;
-  h4 {
-    margin-top: 0;
+}
+.lobbyChat h4 {
+  margin-top: 0;
+}
+.allChannels {
+  overflow-y: scroll;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: flex-start;
+  padding: 1%;
+  gap: 1%;
+}
+.channel {
+  position: relative;
+  padding: 5px;
+  border: 3px solid;
+  border-image-slice: 1;
+  border-image-source: linear-gradient(to bottom, #c1a36b, #635e4f);
+  width: 20%;
+  text-align: left;
+  h3 {
+    margin-bottom: 0;
   }
 }
-
-.conversation {
-  float: right;
-  background-color: #3b3c44;
-  height: 85vh;
-  width: 75%;
-  .messages {
-    overflow-y: scroll;
-    height: 100%;
-    padding: 0 20%;
-
-    .loadMoreButton {
-      width: 20%;
-      border-radius: 50px;
-      margin-top: 10px;
-      color: #616371;
-    }
-    .friendName {
-      color: #fadba2;
-      margin-bottom: 0;
-      margin-top: 0;
-    }
-    .clientName {
-      color: #85724e;
-      margin-bottom: 0;
-      margin-top: 0;
-    }
-    p {
-      margin-bottom: 0;
-    }
-
-    & > .clientMessage {
-      //border: #c1a36b;
-      //border-style: solid;
-      background-color: #ede4d3;
-      margin: 25px 0 25px auto;
-      text-align: left;
-      color: #453c2c;
-      border-radius: 1.125rem 1.125rem 0 1.125rem;
-      width: fit-content;
-      max-width: 66%;
-      overflow-wrap: break-word;
-      padding: 10px;
-      min-width: 30%;
-    }
-
-    & > .friendMessage {
-      background-color: #9c8356;
-      //border: #c1a36b;
-      //border-style: solid;
-      color: white;
-      margin: 25px auto 25px 0;
-      text-align: left;
-      border-radius: 1.125rem 1.125rem 1.125rem 0;
-      width: fit-content;
-      max-width: 66%;
-      overflow-wrap: break-word;
-      padding: 10px;
-      min-width: 30%;
-    }
-  }
-  .input {
-    height: 5vh;
-    display: flex;
-    justify-content: start;
-    align-items: center;
-    border: 3px solid;
-    border-image-slice: 1;
-    border-image-source: linear-gradient(to bottom, #c1a36b, #635e4f);
-  }
-  .textInput {
-    width: 95%;
-    height: 100%;
-    border: 0px solid;
-    font-size: 21px;
-    padding-left: 20px;
-  }
-  .sendButton {
-    height: 100%;
-    background: #aa9e7d;
-    width: 5%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    .gg-slack {
-      --ggs: 1.5;
-    }
-  }
+.channelControl {
+  display: flex;
+  margin-bottom: 1rem;
+  gap: 3%;
 }
-.avatar {
-  border-radius: 100%;
+.joinChannel {
+  @extend .convListHeader;
 }
-button {
-  border: none;
-  outline: 0;
-  display: inline-block;
-  color: white;
-  background-color: #000;
-  text-align: center;
-  cursor: pointer;
-  width: 100%;
-  font-size: 18px;
+.textGrey {
+  color: grey;
 }
+
 .inactiveConv {
   opacity: 0.3;
+}
+.convListHeader {
+  padding: 5px;
+  border: 3px solid;
+  border-image-slice: 1;
+  border-image-source: linear-gradient(to bottom, #c1a36b, #635e4f);
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+}
+
+//searchbar ,need to move it in a component
+
+.searchBar {
+  position: relative;
+  display: flex;
+  justify-content: flex-start;
+  border: 3px solid;
+  border-image-slice: 1;
+  border-image-source: linear-gradient(to bottom, #242218, #c1a36b);
+  background: linear-gradient(to bottom, #071018, #151d23);
+  font-size: 10px;
+  align-items: center;
+  .searchField {
+    width: 100%;
+    border: unset;
+    background: inherit;
+    font-size: 2em;
+    height: auto;
+    color: grey;
+  }
+  .searchField:focus {
+    outline: none;
+    caret-color: grey;
+  }
+  .searchIcon {
+    position: relative;
+    color: grey;
+    margin: 1em;
+  }
 }
 </style>

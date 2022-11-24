@@ -45,7 +45,7 @@ export class UserService {
     if (user) {
       return user;
     }
-    throw new HttpException('User not found' + nickname, HttpStatus.NOT_FOUND);
+    throw new HttpException('User not found ' + nickname, HttpStatus.NOT_FOUND);
   }
 
   async createUser(createUserDto: CreateUserDto): Promise<UserEntity> {

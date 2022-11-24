@@ -9,6 +9,7 @@ import { ChannelRestrictionsEntity } from './entities/channel_restrictions.entit
 import { ChannelInvitationEntity } from './entities/channel_invitation.entity';
 import { UserModule } from 'src/user/user.module';
 import { PassportModule } from '@nestjs/passport';
+import { ServerModule } from 'src/server/server.module';
 
 @Module({
   imports: [

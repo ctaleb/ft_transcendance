@@ -65,9 +65,7 @@
 <script lang="ts" setup>
 import * as funcs from "@/functions/funcs";
 import { useStore } from "@/store";
-import { User } from "@/types/GameSummary";
-import { log } from "console";
-import { storeToRefs } from "pinia";
+import { User } from "@/types/User";
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import twoFactorComponent from "../components/twoFactorComponent.vue";
@@ -216,7 +214,7 @@ async function studentLogin(code: string) {
       localStorage.setItem("userType", "intra");
       localStorage.setItem("phoneTo2fa", userAndToken.user.phone);
 
-      //sendCode();
+      //  sendCode();
       return;
     }
     localStorage.setItem("token", userAndToken.token);

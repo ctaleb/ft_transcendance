@@ -2,11 +2,7 @@
   <section v-if="currentUser !== undefined" id="profile" class="container">
     <div class="current-user border-gold">
       <div>
-        <img
-          class="border-gold user-image"
-          :src="getUserAvatar(currentUser)"
-          alt=""
-        />
+        <img class="border-gold user-image" :src="User.getAvatar(currentUser)" alt="" />
       </div>
       <div>
         <h2 class="playerName">{{ currentUser?.nickname }}</h2>
@@ -30,32 +26,17 @@
     <div class="search" :style="toogleMenu ? 'display: none' : ''">
       <div class="searchBar">
         <div class="searchIcon"><i class="gg-search"></i></div>
-        <input
-          type="text"
-          class="searchField"
-          name="searchFriend"
-          v-model="searchFriend"
-          placeholder="Player name"
-        />
+        <input type="text" class="searchField" name="searchFriend" v-model="searchFriend" placeholder="Player name" />
       </div>
       <button @click="invite()">Add Friend</button>
     </div>
-    <div
-      v-if="currentUser === store.user"
-      class="invitations"
-      :style="toogleMenu ? 'display: none' : ''"
-    >
-      <h2 v-if="store.invitations?.length">Invitations</h2>
+    <div v-if="currentUser === store.user" class="invitations" :style="toogleMenu ? 'display: none' : ''">
+      <h2 v-if="store.user?.invitations?.length">Invitations</h2>
       <ul>
-        <InvitationCard
-          v-for="invitation of store.invitations"
-          :invitation="invitation"
-        />
+        <InvitationCard v-for="invitation of store.user?.invitations" :invitation="invitation" />
       </ul>
     </div>
-    <h2 style="margin: 1rem" :style="toogleMenu ? 'display: none' : ''">
-      Friends
-    </h2>
+    <h2 style="margin: 1rem" :style="toogleMenu ? 'display: none' : ''">Friends</h2>
     <div class="friends" :style="toogleMenu ? 'display: none' : ''">
       <ul>
         <FriendCard v-for="friend of currentFriend" :friend="friend" />
@@ -73,18 +54,17 @@
 </template>
 
 <script lang="ts" setup>
-import FriendAlert from "@/components/FriendAlert.vue";
 import FriendCard from "@/components/profile/FriendCard.vue";
-import SummaryCard from "@/components/profile/SummaryCard.vue";
 import InvitationCard from "@/components/profile/InvitationCard.vue";
-import shutdownUrl from "../assets/shutdown.png";
-import editUrl from "../assets/edit.png";
-import { getUserAvatar, getUserByNickname } from "@/functions/funcs";
+import SummaryCard from "@/components/profile/SummaryCard.vue";
+import { fetchJSONDatas } from "@/functions/funcs";
 import { useStore } from "@/store";
-import { User, History, GameSummaryData } from "@/types/GameSummary";
+import { History } from "@/types/GameSummary";
+import { getUserByNickname, User } from "@/types/User";
 import { onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
-import config from "@/config/config";
+import editUrl from "../assets/edit.png";
+import shutdownUrl from "../assets/shutdown.png";
 
 const route = useRoute();
 
@@ -103,7 +83,7 @@ store.$subscribe((mutation, state) => {
 //   (e: "updateInvitations"): void;
 // }>();
 // const checkNotificationBadge = () => {
-//   if (store.invitations?.length === 0) emit("notification", false);
+//   if (store.user?.invitations?.length === 0) emit("notification", false);
 // };
 
 const searchFriend = ref("");
@@ -120,18 +100,12 @@ onMounted(async () => {
     currentUser.value = await getUserByNickname(nick);
 
     if (!currentUser.value) return;
-    await fetch(
-      "http://" +
-        window.location.hostname +
-        ":3000/api/friendship/profile/" +
-        nick,
-      {
-        method: "GET",
-        headers: {
-          Authorization: "Bearer " + localStorage.getItem("token"),
-        },
-      }
-    )
+    await fetch("http://" + window.location.hostname + ":3000/api/friendship/profile/" + nick, {
+      method: "GET",
+      headers: {
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+    })
       .then((data) => data.json())
       .then((data) => {
         currentFriend.value = data.friends;
@@ -145,18 +119,12 @@ onMounted(async () => {
     });
   }
 
-  await fetch(
-    "http://" +
-      window.location.hostname +
-      ":3000/api/profile/summary/" +
-      currentUser.value?.nickname,
-    {
-      method: "GET",
-      headers: {
-        Authorization: "Bearer " + localStorage.getItem("token"),
-      },
-    }
-  )
+  await fetch("http://" + window.location.hostname + ":3000/api/profile/summary/" + currentUser.value?.nickname, {
+    method: "GET",
+    headers: {
+      Authorization: "Bearer " + localStorage.getItem("token"),
+    },
+  })
     .then((data) => data.json())
     .then((data) => {
       console.log(data);
@@ -179,29 +147,10 @@ const logout = () => {
   socket?.close();
 };
 
-const invite = () => {
+const invite = async () => {
   if (searchFriend.value.length <= 0) return;
 
-  fetch("http://" + window.location.hostname + ":3000/api/friendship/invite", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + localStorage.getItem("token"),
-    },
-    body: JSON.stringify({
-      addressee: searchFriend.value,
-    }),
-  })
-    .then((res) => {
-      if (res.status !== 200) {
-        throw res.statusText;
-      }
-    })
-    .catch((err) => console.log(err));
+  await fetchJSONDatas("api/friendship/invite", "POST", { addressee: searchFriend.value });
   searchFriend.value = "";
 };
 </script>
-
-<style lang="scss">
-@import "../styles/_alert.scss";
-</style>

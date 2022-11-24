@@ -1,11 +1,7 @@
 <template>
   <div class="items">
     <div class="button" @click="gotoPrev()"></div>
-    <div
-      class="item"
-      id="exhaust"
-      :style="anim ? 'animation: ease 1.5s slide' + anim + ';' : ''"
-    >
+    <div class="item" id="exhaust" :style="anim ? 'animation: ease 1.5s slide' + anim + ';' : ''">
       <img class="user-image" :src="powers[current].image" />
       <div class="info">
         <h4>{{ powers[current].name }}</h4>
@@ -22,7 +18,6 @@ import teleportUrl from "../assets/powers/teleport.png";
 import flashUrl from "../assets/powers/flash.jpeg";
 import ghostUrl from "../assets/powers/ghost.png";
 import { onMounted, ref } from "vue";
-import "../styles/_slider.scss";
 
 const emit = defineEmits(["update:modelValue"]);
 const current = ref(0);
@@ -58,8 +53,7 @@ const powers: Power[] = [
   {
     name: "Ghost",
     image: ghostUrl,
-    power:
-      "Every 6 rounds, the ball becomes invisible for your opponent during 2 seconds",
+    power: "Every 6 rounds, the ball becomes invisible for your opponent during 2 seconds",
   },
 ];
 

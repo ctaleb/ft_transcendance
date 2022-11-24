@@ -3,7 +3,7 @@
     <div :class="'border-gold insideSummary ' + getGameResultClass()">
       <img
         class="border-gold user-image left"
-        :src="getUserAvatar(summary.host)"
+        :src="User.getAvatar(summary.host)"
         alt=""
       />
       <div class="playerName">
@@ -22,7 +22,7 @@
       </div>
       <img
         class="border-gold user-image right"
-        :src="getUserAvatar(summary.client)"
+        :src="User.getAvatar(summary.client)"
         alt=""
       />
     </div>
@@ -30,9 +30,9 @@
 </template>
 
 <script lang="ts" setup>
-import { getUserAvatar } from "@/functions/funcs";
 import { useStore } from "@/store";
-import { GameSummaryData, User, History } from "@/types/GameSummary";
+import { History } from "@/types/GameSummary";
+import { User } from "@/types/User";
 import { useRouter } from "vue-router";
 
 const props = defineProps<{

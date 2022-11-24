@@ -22,9 +22,7 @@ import { NamingStrategyNotFoundError } from 'typeorm';
     origin: '*',
   },
 })
-export class ServerGateway
-  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
-{
+export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
@@ -47,9 +45,7 @@ export class ServerGateway
       hsNick = client.handshake.auth.user.nickname;
     }
     console.log(hsNick + ' trying to connect to gateway server');
-    const user = this.serverService.userList.find(
-      (element) => element.name === hsNick,
-    );
+    const user = this.serverService.userList.find((element) => element.name === hsNick);
     if (user && user.token === hsToken) {
       user.socket = client;
       console.log(user.name + ' rejoining ' + user.status);
@@ -60,7 +56,7 @@ export class ServerGateway
     console.log('Socket ' + client.id + ' successfully connected');
 
     // New stuff
-    // this.serverService.joinAllChannels(client, client.handshake.auth.user.id);
+    this.serverService.joinAllChannels(client, client.handshake.auth.user.id);
   }
 
   @SubscribeMessage('debugging')
@@ -98,21 +94,11 @@ export class ServerGateway
   @SubscribeMessage('disco')
   disco(@ConnectedSocket() client: Socket) {
     let ingame = false;
-    const player = this.serverService.userList.find(
-      (element) => element.socket === client,
-    );
+    const player = this.serverService.userList.find((element) => element.socket === client);
     if (player) {
-      if (
-        this.serverService.playerQueue.find((element) => element === player)
-      ) {
-        this.serverService.playerQueue.splice(
-          this.serverService.playerQueue.indexOf(player),
-          1,
-        );
-        this.serverService.userList.splice(
-          this.serverService.userList.indexOf(player),
-          1,
-        );
+      if (this.serverService.playerQueue.find((element) => element === player)) {
+        this.serverService.playerQueue.splice(this.serverService.playerQueue.indexOf(player), 1);
+        this.serverService.userList.splice(this.serverService.userList.indexOf(player), 1);
       } else {
         this.serverService.games.forEach((element) => {
           if (
@@ -129,10 +115,7 @@ export class ServerGateway
           }
         });
         // if (!ingame) {
-        this.serverService.userList.splice(
-          this.serverService.userList.indexOf(player),
-          1,
-        );
+        this.serverService.userList.splice(this.serverService.userList.indexOf(player), 1);
         // }
       }
     }
@@ -142,9 +125,7 @@ export class ServerGateway
   @SubscribeMessage('watchPath')
   switchPath(@ConnectedSocket() client: Socket) {
     let ingame = false;
-    const player = this.serverService.userList.find(
-      (element) => element.socket === client,
-    );
+    const player = this.serverService.userList.find((element) => element.socket === client);
     this.serverService.games.forEach((element) => {
       if (
         element.room.status === 'launching' /*||
@@ -166,16 +147,8 @@ export class ServerGateway
   }
 
   @SubscribeMessage('createMessage')
-  async create(
-    @MessageBody() createMessageDto: CreateMessageDto,
-    @MessageBody('room') room: string,
-    @ConnectedSocket() client: Socket,
-  ) {
-    const message = await this.serverService.create(
-      createMessageDto,
-      client.id,
-      room,
-    );
+  async create(@MessageBody() createMessageDto: CreateMessageDto, @MessageBody('room') room: string, @ConnectedSocket() client: Socket) {
+    const message = await this.serverService.create(createMessageDto, client.id, room);
 
     this.server.to(room).emit('message', message);
     // client.to(room).emit('message', message);
@@ -205,24 +178,13 @@ export class ServerGateway
 
   gameLoop = (game: Game) => {
     // this.server.to(game.room.name).emit('ServerUpdate', game.gameState);
-    game.client.socket.emit(
-      'ServerUpdate',
-      this.serverService.inverseState(game.gameState, game),
-    );
-    game.host.socket.emit(
-      'ServerUpdate',
-      this.serverService.sendState(game.gameState, game),
-    );
-    this.server
-      .to(game.theatre.name)
-      .emit('ServerUpdate', this.serverService.sendState(game.gameState, game));
+    game.client.socket.emit('ServerUpdate', this.serverService.inverseState(game.gameState, game));
+    game.host.socket.emit('ServerUpdate', this.serverService.sendState(game.gameState, game));
+    this.server.to(game.theatre.name).emit('ServerUpdate', this.serverService.sendState(game.gameState, game));
     // this.server.to(game.room.name).emit('gameConfirmation', game.room);
 
     const loopTimer = setTimeout(() => {
-      if (
-        game.gameState.score.client >= game.room.options.scoreMax ||
-        game.gameState.score.host >= game.room.options.scoreMax
-      ) {
+      if (game.gameState.score.client >= game.room.options.scoreMax || game.gameState.score.host >= game.room.options.scoreMax) {
         clearTimeout(loopTimer);
         this.serverService.end_game(game);
         return;
@@ -255,10 +217,7 @@ export class ServerGateway
   // Game Core
   //@body() powerString as additional arg
   @SubscribeMessage('joinQueue')
-  joinQueue(
-    @ConnectedSocket() client: Socket,
-    @MessageBody('power') power: string,
-  ) {
+  joinQueue(@ConnectedSocket() client: Socket, @MessageBody('power') power: string) {
     const player = this.serverService.SocketToPlayer(client);
     if (!player || !(player.status === 'idle')) return;
     const game = this.serverService.joinQueue(client, power);
@@ -291,10 +250,7 @@ export class ServerGateway
             game.client.status = 'idle';
             this.server.to(game.room.name).emit('gameConfirmationTimeout');
           }
-          this.serverService.games.splice(
-            this.serverService.games.indexOf(game),
-            1,
-          );
+          this.serverService.games.splice(this.serverService.games.indexOf(game), 1);
         }
       }, 5000);
     }
@@ -302,46 +258,32 @@ export class ServerGateway
 
   @SubscribeMessage('playerReady')
   playerReady(@ConnectedSocket() client: Socket) {
-    const player = this.serverService.userList.find(
-      (element) => element.socket === client,
-    );
+    const player = this.serverService.userList.find((element) => element.socket === client);
     if (player) player.status = 'ready';
   }
 
   @SubscribeMessage('playerNotReady')
   playerNotReady(@ConnectedSocket() client: Socket) {
-    const player = this.serverService.userList.find(
-      (element) => element.socket === client,
-    );
+    const player = this.serverService.userList.find((element) => element.socket === client);
     if (player) player.status = 'idle';
   }
 
   //spectate
   @SubscribeMessage('spectate')
-  spectate(
-    @MessageBody('friend') friend: string,
-    @ConnectedSocket() client: Socket,
-  ) {
+  spectate(@MessageBody('friend') friend: string, @ConnectedSocket() client: Socket) {
     let response = 'na';
     this.serverService.games.forEach((element) => {
       console.log(element.host.name);
       console.log(element.client.name);
       console.log(friend);
-      if (element.client.name == friend || element.host.name == friend)
-        response = 'ingame';
+      if (element.client.name == friend || element.host.name == friend) response = 'ingame';
     });
     return response;
   }
 
   @SubscribeMessage('readySpectate')
-  readySpectate(
-    @MessageBody('friend') friend: string,
-    @ConnectedSocket() client: Socket,
-  ) {
-    const game = this.serverService.games.find(
-      (element) =>
-        element.client.name === friend || element.host.name === friend,
-    );
+  readySpectate(@MessageBody('friend') friend: string, @ConnectedSocket() client: Socket) {
+    const game = this.serverService.games.find((element) => element.client.name === friend || element.host.name === friend);
     if (game) {
       client.emit('spectating', game.room);
       client.join(game.theatre.name);
@@ -351,18 +293,11 @@ export class ServerGateway
 
   //customInvite
   @SubscribeMessage('customInvite')
-  customInvite(
-    @MessageBody('friend') friend: string,
-    @ConnectedSocket() client: Socket,
-  ) {
+  customInvite(@MessageBody('friend') friend: string, @ConnectedSocket() client: Socket) {
     let response = 'failure';
     let game: Game;
-    const inviter = this.serverService.userList.find(
-      (element) => element.socket === client,
-    );
-    const usr = this.serverService.userList.find(
-      (element) => element.name === friend,
-    );
+    const inviter = this.serverService.userList.find((element) => element.socket === client);
+    const usr = this.serverService.userList.find((element) => element.name === friend);
     if (usr && usr.status === 'idle') {
       response = 'accepted';
       game = this.serverService.newGame(usr, inviter);
@@ -381,24 +316,15 @@ export class ServerGateway
 
   //inviter logic
   @SubscribeMessage('settingsInviter')
-  settingsInviter(
-    @MessageBody('friend') friend: string,
-    @ConnectedSocket() client: Socket,
-  ) {
+  settingsInviter(@MessageBody('friend') friend: string, @ConnectedSocket() client: Socket) {
     client.emit('customInviter', friend);
   }
   @SubscribeMessage('readyInviter')
-  readyInviter(
-    @MessageBody('gameOpts') gameOpts: GameOptions,
-    @MessageBody('power') power: string,
-    @ConnectedSocket() client: Socket,
-  ) {
+  readyInviter(@MessageBody('gameOpts') gameOpts: GameOptions, @MessageBody('power') power: string, @ConnectedSocket() client: Socket) {
     console.log('inviter is ready');
     const usr = this.serverService.SocketToPlayer(client);
     if (!usr) return;
-    const game = this.serverService.games.find(
-      (element) => element.host === usr,
-    );
+    const game = this.serverService.games.find((element) => element.host === usr);
     if (!game) return;
     if (game.room.options.powers) usr.gameData.power = new IPower(power);
     usr.status = 'ready';
@@ -412,43 +338,31 @@ export class ServerGateway
   @SubscribeMessage('declineCustom')
   declineCustom(@ConnectedSocket() client: Socket) {
     const usr = this.serverService.SocketToPlayer(client);
-    const game = this.serverService.games.find(
-      (element) => element.client === usr,
-    );
+    const game = this.serverService.games.find((element) => element.client === usr);
     if (game) {
       game.host.status = 'idle';
       game.host.socket.leave(game.room.name);
       game.client.status = 'idle';
       game.host.socket.emit('foreverAlone');
-      this.serverService.games.splice(
-        this.serverService.games.indexOf(game),
-        1,
-      );
+      this.serverService.games.splice(this.serverService.games.indexOf(game), 1);
     }
     //emit to host
   }
   @SubscribeMessage('settingsInvitee')
   settingsInvitee(@ConnectedSocket() client: Socket) {
     const usr = this.serverService.SocketToPlayer(client);
-    const game = this.serverService.games.find(
-      (element) => element.client === usr,
-    );
+    const game = this.serverService.games.find((element) => element.client === usr);
     if (game) {
       game.client.socket.join(game.room.name);
       client.emit('customInvitee', game.host.name);
     } else usr.status = 'idle';
   }
   @SubscribeMessage('readyInvitee')
-  readyInvitee(
-    @MessageBody('power') power: string,
-    @ConnectedSocket() client: Socket,
-  ) {
+  readyInvitee(@MessageBody('power') power: string, @ConnectedSocket() client: Socket) {
     console.log('invitee is ready');
     const usr = this.serverService.SocketToPlayer(client);
     if (!usr) return;
-    const game = this.serverService.games.find(
-      (element) => element.client === usr,
-    );
+    const game = this.serverService.games.find((element) => element.client === usr);
     if (!game) return;
     if (game.room.options.powers) usr.gameData.power = new IPower(power);
     usr.status = 'ready';
@@ -460,18 +374,8 @@ export class ServerGateway
   launchCustomGame(game: Game) {
     this.serverService.initGameValues(game);
     if (game.room.options.powers) {
-      this.serverService.initPower(
-        game.client,
-        game.gameState,
-        game.gameState.clientBar,
-        game.gameState.hostBar,
-      );
-      this.serverService.initPower(
-        game.host,
-        game.gameState,
-        game.gameState.hostBar,
-        game.gameState.clientBar,
-      );
+      this.serverService.initPower(game.client, game.gameState, game.gameState.clientBar, game.gameState.hostBar);
+      this.serverService.initPower(game.host, game.gameState, game.gameState.hostBar, game.gameState.clientBar);
     }
     game.room.status = 'playing';
     game.room.hostName = game.host.name;
@@ -490,9 +394,7 @@ export class ServerGateway
   ): Promise<void> {
     let requester: UserEntity;
     const getAuthor = this.serverService.SocketToPlayer(client);
-    const receiver = this.serverService.userList.find(
-      (element) => element.name === friendNickname,
-    );
+    const receiver = this.serverService.userList.find((element) => element.name === friendNickname);
     if (receiver) {
       this.server.to(receiver.socket.id).emit('Message to the client', {
         author: getAuthor.name,
@@ -503,15 +405,11 @@ export class ServerGateway
       requester = await this.userService.getUserByNickname(friendNickname);
     }
 
-    const author: UserEntity = await this.userService.getUserByNickname(
-      getAuthor.name,
-    );
+    const author: UserEntity = await this.userService.getUserByNickname(getAuthor.name);
 
-    const conv = await this.privateMessageService
-      .getConv(author, requester)
-      .catch(async () => {
-        return await this.privateMessageService.createConv(author, requester);
-      });
+    const conv = await this.privateMessageService.getConv(author.id, requester.id).catch(async () => {
+      return await this.privateMessageService.createConv(author.id, requester.id);
+    });
     await this.privateMessageService.updateLastMessageDate(conv);
     if (receiver)
       this.server.to(receiver.socket.id).emit('Update conv list', {
@@ -525,5 +423,22 @@ export class ServerGateway
       author: author,
       text: messageToDeliver,
     });
+  }
+
+  // Channel messages by the GOAT
+  @SubscribeMessage('sendChannelMessage')
+  async sendChannelMessage(@ConnectedSocket() client: Socket, @MessageBody('channelId') channelId: number, @MessageBody('content') content: string) {
+    return await this.serverService.sendChannelMessage(channelId, content, client.handshake.auth.user.id);
+  }
+
+  @SubscribeMessage('joinChannelRoom')
+  async joinChannelRoom(@ConnectedSocket() client: Socket, @MessageBody('id') channelId: number) {
+    await this.serverService.joinChannelRoom(client, channelId);
+    // update channel members
+  }
+
+  @SubscribeMessage('leaveChannelRoom')
+  async leaveChannelRoom(@ConnectedSocket() client: Socket, @MessageBody('id') channelId: number) {
+    await this.serverService.leaveChannelRoom(client, channelId);
   }
 }

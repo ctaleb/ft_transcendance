@@ -1,19 +1,11 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Post,
-  Put,
-  Request,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Post, Put, Request, UseGuards } from '@nestjs/common';
 import { request } from 'http';
 import { JwtAuthGuard } from 'src/authentication/jwt-auth.guard';
 import { ChatService } from './chat.service';
 import { ChangeRoleDto } from './dtos/change-role.dto';
 import { CreateChannelDto } from './dtos/create-channel.dto';
 import { DeclineInvitationDto } from './dtos/decline-invitation.dto';
+import { GetChannelMessagesDto } from './dtos/get-channel-messages.dto';
 import { GetChannelsListDto } from './dtos/get-channels-list.dto';
 import { InviteToChannelDto } from './dtos/invite-to-channel.dto';
 import { JoinChannelDto } from './dtos/join-channel.dto';
@@ -31,23 +23,29 @@ export class ChatController {
     return this.chatService.getUserChannels(req.user.payload.id);
   }
 
+  @Get('invitations')
+  getInvitations(@Request() req) {
+    return this.chatService.getChannelInvitations(req.user.payload.id);
+  }
+
   @Post('list')
-  getChannelsList(
-    @Request() req,
-    @Body() getChannelsListDto: GetChannelsListDto,
-  ) {
-    return this.chatService.getChannelsList(
-      getChannelsListDto,
-      req.user.payload.id,
-    );
+  getChannelsList(@Request() req, @Body() getChannelsListDto: GetChannelsListDto) {
+    return this.chatService.getChannelsList(getChannelsListDto, req.user.payload.id);
+  }
+
+  @Post('load-channel')
+  loadChannel(@Request() req, @Body() loadChannelDto: LeaveChannelDto) {
+    return this.chatService.loadChannel(loadChannelDto, req.user.payload.id);
+  }
+
+  @Post('messages')
+  getChannelMessages(@Request() req, @Body() getChannelMessagesDto: GetChannelMessagesDto) {
+    return this.chatService.getChannelMessages(getChannelMessagesDto);
   }
 
   @Post('create-channel')
   createChannel(@Request() req, @Body() channelDto: CreateChannelDto) {
-    return this.chatService.createChannel(
-      channelDto,
-      req.user.payload.nickname,
-    );
+    return this.chatService.createChannel(channelDto, req.user.payload.nickname);
   }
 
   @Put('update-channel')
@@ -61,14 +59,8 @@ export class ChatController {
   }
 
   @Post('invite-to-channel')
-  inviteToChannel(
-    @Request() req,
-    @Body() inviteToChannelDto: InviteToChannelDto,
-  ) {
-    return this.chatService.inviteToChannel(
-      inviteToChannelDto,
-      req.user.payload.id,
-    );
+  inviteToChannel(@Request() req, @Body() inviteToChannelDto: InviteToChannelDto) {
+    return this.chatService.inviteToChannel(inviteToChannelDto, req.user.payload.id);
   }
 
   @Put('give-admin')
@@ -82,14 +74,8 @@ export class ChatController {
   }
 
   @Delete('decline-invitation')
-  declineInvitation(
-    @Request() req,
-    @Body() declineInvitationDto: DeclineInvitationDto,
-  ) {
-    return this.chatService.declineInvitation(
-      declineInvitationDto,
-      req.user.payload.id,
-    );
+  declineInvitation(@Request() req, @Body() declineInvitationDto: DeclineInvitationDto) {
+    return this.chatService.declineInvitation(declineInvitationDto, req.user.payload.id);
   }
 
   @Delete('leave-channel')
@@ -99,10 +85,7 @@ export class ChatController {
 
   @Delete('delete-channel')
   deleteChannel(@Request() req, @Body() leaveChannelDto: LeaveChannelDto) {
-    return this.chatService.deleteChannel(
-      leaveChannelDto.id,
-      req.user.payload.id,
-    );
+    return this.chatService.deleteChannel(leaveChannelDto.id, req.user.payload.id);
   }
 
   @Post('ban')
@@ -113,5 +96,10 @@ export class ChatController {
   @Post('mute')
   muteUser(@Request() req, @Body() restrictionDto: RestrictionDto) {
     return this.chatService.mute(restrictionDto, req.user.payload.id);
+  }
+
+  @Post('members')
+  getChannelMembers(@Request() req, @Body() getChannelMembersDto: LeaveChannelDto) {
+    return this.chatService.getChannelMembers(getChannelMembersDto, req.user.payload.id);
   }
 }
