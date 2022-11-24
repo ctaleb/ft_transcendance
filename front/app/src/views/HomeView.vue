@@ -223,7 +223,7 @@ async function studentLogin(code: string) {
       localStorage.setItem("userType", "intra");
       localStorage.setItem("phoneTo2fa", userAndToken.user.phone);
 
-      //sendCode();
+      //  sendCode();
       return;
     }
     localStorage.setItem("token", userAndToken.token);
