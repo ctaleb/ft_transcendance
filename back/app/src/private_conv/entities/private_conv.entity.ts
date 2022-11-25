@@ -22,7 +22,6 @@ export class PrivateConvEntity extends AbstractEntity {
   @JoinColumn()
   user2: UserEntity;
 
-  @Expose()
   @OneToMany(() => PrivateMessageEntity, (message) => message.conv, {
     lazy: true,
   })
@@ -32,4 +31,20 @@ export class PrivateConvEntity extends AbstractEntity {
   @Expose()
   @CreateDateColumn()
   lastMessage: Date;
+
+  @Expose({
+    name: 'messages',
+  })
+  firstsMessages: PrivateMessageEntity[];
+
+  async loadMessages(offset: number = 0, limit: number = 50) {
+    this.firstsMessages = await PrivateMessageEntity.find({
+      where: {
+        conv: { id: this.id },
+      },
+      take: limit,
+      skip: offset,
+    });
+    return this.firstsMessages;
+  }
 }

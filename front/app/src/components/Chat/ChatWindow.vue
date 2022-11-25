@@ -1,24 +1,29 @@
 <template>
-  <div class="chat-window">
-    <div v-if="store.currentChat !== undefined">
-      <div class="chat-window-header">
-        <h2></h2>
-      </div>
+  <div v-if="store.currentChat !== undefined" class="chat-window">
+    <ChatWindowHeader @toggle-channel-info="toggleChannelInfo()" />
+    <div class="chat-body">
+      <ChatArea />
+      <ChannelInfo v-if="showChannelInfo && isChannel(store.currentChat)" />
     </div>
-    <div v-else class="default-chat-window">
-      <h2>Welcome to the chat</h2>
-    </div>
+  </div>
+  <div v-else class="default-chat-window">
+    <h2>Welcome to the chat</h2>
   </div>
 </template>
 
 <script setup lang="ts">
+import ChatWindowHeader from "@/components/chat/ChatWindowHeader.vue";
+import ChannelInfo from "@/components/chat/ChannelInfo.vue";
+import ChatArea from "@/components/chat/ChatArea.vue";
 import { useStore } from "@/store";
-import { Channel } from "@/types/Channel";
-import { Conversation } from "@/types/Conversation";
-import { User } from "@/types/User";
-import { onMounted, onUpdated, Ref, ref } from "vue";
+import { isChannel } from "@/types/Channel";
+import { ref } from "vue";
 
 const store = useStore();
 
-onMounted(() => {});
+const showChannelInfo = ref(false);
+
+const toggleChannelInfo = () => {
+  showChannelInfo.value = !showChannelInfo.value;
+};
 </script>

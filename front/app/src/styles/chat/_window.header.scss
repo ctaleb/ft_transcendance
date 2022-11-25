@@ -1,0 +1,30 @@
+@import "../variables";
+
+.chat-window-header {
+  display: flex;
+  position: relative;
+  height: 10%;
+  width: 100%;
+  color: $chat-primary-color;
+  border-bottom: solid $chat-secondary-color;
+  align-items: center;
+
+  button {
+    background: none;
+    border: solid $chat-secondary-color;
+    color: $chat-secondary-color;
+    margin: 0 2%;
+  }
+
+  .chat-window-header-info {
+    border-left: solid $chat-secondary-color;
+    padding: 0 5%;
+    width: 80%;
+    & > * {
+      margin: 5px 0;
+    }
+    p {
+      color: darken($chat-primary-color, 40%);
+    }
+  }
+}

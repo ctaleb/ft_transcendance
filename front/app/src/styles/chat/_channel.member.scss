@@ -1,0 +1,14 @@
+@import "../variables";
+
+.channel-members {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  margin: 5%;
+
+  div {
+    border: solid $chat-secondary-color;
+    margin-bottom: 5%;
+  }
+}

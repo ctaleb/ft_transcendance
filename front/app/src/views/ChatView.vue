@@ -1,11 +1,6 @@
 <template>
   <div id="chat">
-    <ChatMenu
-      :channels="myChannels"
-      :convs="privateConvs"
-      :allChannels="allChannels"
-      :invitations="channelInvitations"
-    />
+    <ChatMenu :channels="myChannels" :convs="privateConvs" :allChannels="allChannels" :invitations="channelInvitations" />
     <ChatWindow />
     <!-- <div v-if="show == 0" class="lobbyChat">
       <h2>Welcome on the chat</h2>
@@ -147,7 +142,7 @@ store.$subscribe((mutation, state) => {
   socket = state.socket;
 });
 
-const privateConvs = ref(Array<Conversation>());
+const privateConvs: Ref<Array<Conversation>> = ref([]);
 const messagesToDisplay: Ref<Array<Message>> = ref([]);
 const messagesBoxRef = ref<HTMLDivElement | null>(null);
 let currentConv = ref<Conversation>();
@@ -159,7 +154,6 @@ defineEmits(["notification"]);
 const myChannels: Ref<Array<Channel>> = ref([]);
 const allChannels: Ref<Array<Channel>> = ref([]);
 const channelInvitations: Ref<Array<Channel>> = ref([]);
-const current: Ref<Channel | Conversation | null> = ref(null);
 const channelMembers: Ref<Array<ChannelUser>> = ref([]);
 const channelMessageSkip = ref(0);
 const show = ref(0);
@@ -263,9 +257,8 @@ const getChannelInvitations = async (): Promise<void> => {
   channelInvitations.value = await fetchJSONDatas("api/chat/invitations", "GET");
 };
 
-function initConv(convs: Array<privateConv>) {
+function initConv(convs: Array<Conversation>) {
   convs.forEach((conv) => {
-    conv.offset = 0;
     conv.notif = false;
   });
 }
@@ -348,9 +341,7 @@ const loadAllChannels = () => {
 };
 
 const getAllConvs = async (): Promise<void> => {
-  let data: Conversation[] = await fetchJSONDatas("api/privateConv/getAllConvs", "GET");
-  privateConvs.value = data;
-  console.log(privateConvs.value);
+  privateConvs.value = await fetchJSONDatas("api/privateConv/getAllConvs", "GET");
   initConv(privateConvs.value);
 };
 

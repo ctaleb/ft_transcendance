@@ -1,8 +1,15 @@
 <template>
-	<div class="ChannelInfo"></div>
+  <div class="channel-info">
+    <div class="channel-options">
+      <button class="primary-btn">Leave channel</button>
+      <button class="primary-btn">Invite new member</button>
+    </div>
+    <ChannelMembers />
+  </div>
 </template>
 
 <script setup lang="ts">
+import ChannelMembers from "@/components/chat/ChannelMembers.vue";
 import { useStore } from "@/store";
 import { Channel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";

@@ -3,6 +3,9 @@
 @import "variables";
 @import "chat/menu";
 @import "chat/global";
+@import "chat/window.header";
+@import "chat/channel.member";
+@import "chat/chat";
 @import "profile";
 @import "alert";
 @import "lobby";
@@ -18,6 +21,22 @@ h3 {
 
 .border-gold {
   border: $standard-border-size solid $primary;
+}
+
+.primary-btn {
+  height: 3em;
+  width: 10em;
+  margin: 10px;
+  border: 0px;
+  color: $primary;
+  background-color: $background;
+  border: 1px solid lighten($background, 10%);
+  border-radius: 5px;
+  transition: border 0.5s ease;
+
+  &:hover {
+    border: 1px solid $primary;
+  }
 }
 
 .square {

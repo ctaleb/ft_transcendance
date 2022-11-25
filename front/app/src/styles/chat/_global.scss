@@ -2,7 +2,7 @@
 
 #chat {
   display: flex;
-  height: 100%;
+  height: 90vh;
   .chat-window {
     width: 100%;
     background-color: $chat-background;
@@ -10,12 +10,13 @@
       height: 10%;
       width: 100%;
     }
-    .default-chat-window {
-      display: flex;
-      height: 100%;
-      justify-content: center;
-      align-items: center;
-      color: $chat-secondary-color;
-    }
+  }
+  .default-chat-window {
+    display: flex;
+    width: 100%;
+    background-color: $chat-background;
+    justify-content: center;
+    align-items: center;
+    color: $chat-secondary-color;
   }
 }

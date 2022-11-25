@@ -1,0 +1,23 @@
+@import "../variables";
+
+.chat-body {
+  display: flex;
+  justify-content: space-between;
+  height: 90%;
+  width: 100%;
+  .chat-area {
+    width: 100%;
+    background-color: lighten($chat-background, 40%);
+  }
+  .channel-info {
+    width: 20%;
+    border-left: solid $chat-secondary-color;
+    .channel-options {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      height: 10%;
+      border-bottom: solid $chat-secondary-color;
+    }
+  }
+}

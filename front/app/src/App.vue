@@ -216,6 +216,9 @@ onMounted(() => {
   watch(
     () => route.path,
     (currentValue, oldValue) => {
+      store.$patch({
+        currentChat: undefined,
+      });
       if (currentValue != "/game") store.socket?.emit("watchPath");
 
       if (localStorage.getItem("token") && profileNotificationBadge.value === false) {

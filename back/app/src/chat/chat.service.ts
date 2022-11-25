@@ -385,15 +385,16 @@ export class ChatService {
       if (ban.ban.getTime() < Date.now()) await ChannelRestrictionsEntity.remove(ban);
       else throw new BadRequestException(`You are banned till ${ban.ban}`);
     }
-    const members: { nickname: string; path: string; role: ChannelRole }[] = [];
+    const members: { id: number; nickname: string; avatar: string; role: ChannelRole }[] = [];
     await ChannelMemberEntity.find({
       where: { channel: { id: channel.id } },
       order: { role: 'ASC' },
     }).then((data) => {
       data.forEach((entry) => {
         members.push({
+          id: entry.user.id,
           nickname: entry.user.nickname,
-          path: entry.user.avatar.path,
+          avatar: entry.user.getAvatarUrl(),
           role: entry.role,
         });
       });
