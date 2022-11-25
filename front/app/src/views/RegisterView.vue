@@ -41,7 +41,7 @@ import { defineComponent, ref, reactive, computed } from "vue";
 import { useRouter } from "vue-router";
 import useVuelidate from "@vuelidate/core";
 import { required, minLength, maxLength, sameAs, helpers } from "@vuelidate/validators";
-import { fetchJSONDatas } from "@/functions/funcs";
+import { addAlertMessage, fetchJSONDatas, getErrorMessage } from "@/functions/funcs";
 
 export default defineComponent({
   name: "RegisterView",
@@ -57,7 +57,6 @@ export default defineComponent({
         firstTry: "",
         confirmation: "",
       },
-      phone: "",
       avatar: File.prototype,
     });
 
@@ -93,7 +92,6 @@ export default defineComponent({
           sameAs: helpers.withMessage("Passwords don't match", sameAs(state.password.firstTry)),
         },
       },
-      phone: { minLength: minLength(9), maxLength: maxLength(13) },
       avatar: {},
     }));
 
@@ -109,16 +107,26 @@ export default defineComponent({
       let formData = new FormData();
 
       formData.append("nickname", state.nickname);
-      if (state.phone != "") formData.append("phone", state.phone);
-
       formData.append("password", state.password.firstTry);
+      console.log(formData.getAll("nickname"));
       if (state.avatar != File.prototype) {
         formData.append("avatar", state.avatar, state.avatar.name);
       }
-      let data = await fetchJSONDatas("api/authentication/registration", "POST", formData).catch((err) => {
-        return null;
-      });
-      if (data) router.push("/");
+      let data = await fetch("http://" + window.location.hostname + ":3000/api/authentication/registration", {
+        method: "POST",
+        body: formData,
+      })
+        .then((response) => {
+          if (!response.ok) return Promise.reject();
+          return response.json();
+        })
+        .catch(async (err) => {
+          addAlertMessage("Can't register the user", 3); // 3 is error
+          return null;
+        });
+      if (data) {
+        router.push("/");
+      }
     }
 
     const submitForm = async () => {

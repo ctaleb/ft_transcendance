@@ -32,7 +32,7 @@ async function fetchDatas(path: string, method: "GET" | "PUT" | "POST" | "DELETE
   });
 }
 
-async function getErrorMessage(response: Response): Promise<string> {
+export async function getErrorMessage(response: Response): Promise<string> {
   return await response
     .json()
     .then((d: { message: string }) => d.message)

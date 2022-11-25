@@ -37,10 +37,7 @@ export class AuthenticationController {
       fileFilter: imageFileFilter,
     }),
   )
-  async registration(
-    @UploadedFile() avatar: Express.Multer.File,
-    @Body() registrationDto: RegistrationDto,
-  ): Promise<UserEntity> {
+  async registration(@UploadedFile() avatar: Express.Multer.File, @Body() registrationDto: RegistrationDto): Promise<UserEntity> {
     return this._authenticationService.registration(
       registrationDto,
       avatar
