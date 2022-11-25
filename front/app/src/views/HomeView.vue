@@ -79,7 +79,7 @@ onMounted(async () => {
   //get back intra code, if exists
   let code = extractIntraCode();
   if (code != null) {
-    studentLogin(code);
+    await studentLogin(code);
   }
 });
 
@@ -132,7 +132,8 @@ async function getUserAndToken(intraToken: string) {
 }
 
 async function studentLogin(code: string) {
-  console.log("stuent login");
+  console.log("student login");
+
   let userAndToken: { user: User; token: string } = {
     user: <User>{},
     token: "",
@@ -260,6 +261,14 @@ async function studentLogin(code: string) {
     width: 100%;
     height: 100%;
   }
+}
+
+.loadingGif {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .main_title {

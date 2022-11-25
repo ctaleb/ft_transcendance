@@ -5,7 +5,8 @@
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "lint": "vue-cli-service lint",
+    "storybook": "NODE_ENV=development start-storybook -p 6006 -s public"
   },
   "dependencies": {
     "@vuelidate/core": "^2.0.0-alpha.44",
@@ -16,19 +17,15 @@
     "dayjs": "^1.11.5",
     "dotenv": "^16.0.3",
     "dotenv-webpack": "^8.0.1",
-    "fireworks-canvas": "^2.6.2",
     "moment": "^2.29.4",
     "moment-timezone": "^0.5.39",
     "pinia": "^2.0.23",
     "socket.io-client": "^4.5.1",
-    "swiper": "^6.8.4",
-    "tsparticles-engine": "^2.3.1",
     "vue": "^3.2.39",
     "vue-router": "^4.0.3",
     "vuelidate": "^0.7.7"
   },
   "devDependencies": {
-    "@types/hapi__joi": "^17.1.8",
     "@types/node": "^18.7.23",
     "@typescript-eslint/eslint-plugin": "^5.4.0",
     "@typescript-eslint/parser": "^5.4.0",
