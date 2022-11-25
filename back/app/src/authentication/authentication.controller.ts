@@ -46,7 +46,11 @@ export class AuthenticationController {
             filename: avatar.originalname,
             mimetype: avatar.mimetype,
           }
-        : null,
+        : {
+            path: 'assets/pizz.jpeg',
+            filename: 'pizz.jpeg',
+            mimetype: 'image/jpeg',
+          },
     );
   }
 
