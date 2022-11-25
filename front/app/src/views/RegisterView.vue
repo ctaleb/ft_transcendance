@@ -41,7 +41,7 @@ import { defineComponent, ref, reactive, computed } from "vue";
 import { useRouter } from "vue-router";
 import useVuelidate from "@vuelidate/core";
 import { required, minLength, maxLength, sameAs, helpers } from "@vuelidate/validators";
-import { addAlertMessage, fetchJSONDatas, getErrorMessage } from "@/functions/funcs";
+import { addAlertMessage } from "@/functions/funcs";
 
 export default defineComponent({
   name: "RegisterView",
