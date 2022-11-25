@@ -5,8 +5,7 @@
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint",
-    "storybook": "NODE_ENV=development start-storybook -p 6006 -s public"
+    "lint": "vue-cli-service lint"
   },
   "dependencies": {
     "@vuelidate/core": "^2.0.0-alpha.44",
