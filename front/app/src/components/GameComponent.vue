@@ -338,7 +338,7 @@ function drawPlayground(ctx: CanvasRenderingContext2D) {
 }
 
 function addParticle(ctx: CanvasRenderingContext2D, gameState: GameState) {
-  const hit: particleSet = { particles: [] };
+  const hit: particleSet = { particles: [], reach: false };
   let ab: IPoint = { x: gameState.ball.pos.x - gameState.hit.x, y: gameState.ball.pos.y - gameState.hit.y };
   let end1: IPoint = { x: gameState.hit.x < 250 ? 10 : 490, y: ab.x };
   let end2: IPoint = { x: gameState.hit.x < 250 ? 10 : 490, y: -ab.x };
@@ -350,43 +350,43 @@ function addParticle(ctx: CanvasRenderingContext2D, gameState: GameState) {
 
   //left
   hit.particles.push({
-    start: { x: gameState.hit.x < 250 ? 10 : 500 * scale - 10, y: gameState.hit.y },
+    start: { x: gameState.hit.x < 250 ? 5 * scale : (500 - 7) * scale, y: gameState.hit.y },
     end: { x: 0, y: end1.y },
     trail: [],
   });
   hit.particles.push({
-    start: { x: gameState.hit.x < 250 ? 10 : 500 * scale - 10, y: gameState.hit.y },
+    start: { x: gameState.hit.x < 250 ? 5 * scale : (500 - 7) * scale, y: gameState.hit.y },
     end: { x: 0 + (gameState.hit.x < 250 ? Math.random() * 10 : -(Math.random() * 5)), y: end1.y + Math.random() * 10 },
     trail: [],
   });
   hit.particles.push({
-    start: { x: gameState.hit.x < 250 ? 10 : 500 * scale - 10, y: gameState.hit.y },
+    start: { x: gameState.hit.x < 250 ? 5 * scale : (500 - 7) * scale, y: gameState.hit.y },
     end: { x: 0 + (gameState.hit.x < 250 ? Math.random() * 10 : -(Math.random() * 5)), y: end1.y + Math.random() * 10 },
     trail: [],
   });
   hit.particles.push({
-    start: { x: gameState.hit.x < 250 ? 10 : 500 * scale - 10, y: gameState.hit.y },
+    start: { x: gameState.hit.x < 250 ? 5 * scale : (500 - 7) * scale, y: gameState.hit.y },
     end: { x: 0 + (gameState.hit.x < 250 ? Math.random() * 10 : -(Math.random() * 5)), y: end1.y + Math.random() * 10 },
     trail: [],
   });
   //right
   hit.particles.push({
-    start: { x: gameState.hit.x < 250 ? 10 : 500 * scale - 10, y: gameState.hit.y },
+    start: { x: gameState.hit.x < 250 ? 5 * scale : (500 - 7) * scale, y: gameState.hit.y },
     end: { x: 0 + (gameState.hit.x < 250 ? Math.random() * 10 : -(Math.random() * 5)), y: end2.y + Math.random() * 10 },
     trail: [],
   });
   hit.particles.push({
-    start: { x: gameState.hit.x < 250 ? 10 : 500 * scale - 10, y: gameState.hit.y },
+    start: { x: gameState.hit.x < 250 ? 5 * scale : (500 - 7) * scale, y: gameState.hit.y },
     end: { x: 0 + (gameState.hit.x < 250 ? Math.random() * 10 : -(Math.random() * 5)), y: end2.y + Math.random() * 10 },
     trail: [],
   });
   hit.particles.push({
-    start: { x: gameState.hit.x < 250 ? 10 : 500 * scale - 10, y: gameState.hit.y },
+    start: { x: gameState.hit.x < 250 ? 5 * scale : (500 - 7) * scale, y: gameState.hit.y },
     end: { x: 0 + (gameState.hit.x < 250 ? Math.random() * 10 : -(Math.random() * 5)), y: end2.y + Math.random() * 10 },
     trail: [],
   });
   hit.particles.push({
-    start: { x: gameState.hit.x < 250 ? 10 : 500 * scale - 10, y: gameState.hit.y },
+    start: { x: gameState.hit.x < 250 ? 5 * scale : (500 - 7) * scale, y: gameState.hit.y },
     end: { x: 0 + (gameState.hit.x < 250 ? Math.random() * 10 : -(Math.random() * 5)), y: end2.y + Math.random() * 10 },
     trail: [],
   });
@@ -394,27 +394,31 @@ function addParticle(ctx: CanvasRenderingContext2D, gameState: GameState) {
 }
 
 function drawParticle(ctx: CanvasRenderingContext2D, gameState: GameState) {
-  particles.forEach((element) =>
-    element.particles.forEach((element, index, tab) => {
+  particles.forEach((elemento) => {
+    if (elemento.particles[0].trail.length == 10) elemento.reach = true;
+    elemento.particles.forEach((element, index, tab) => {
       let i: number;
 
       i = element.trail.length;
-      if (!element.reach) {
-        element.trail.push({ x: element.start.x + (element.end.x / 10) * i, y: element.start.y + (element.end.y / 10) * i });
-      } else if (i == 10) {
-        element.reach = true;
-      } else if (i == 0) {
-        tab.splice(index, 1);
-      } else if (element.reach) {
-        element.trail.splice(0, 1);
+      if (elemento.reach == false) {
+        if (i < 10) {
+          element.trail.push({ x: element.start.x + (element.end.x / 10) * i, y: element.start.y + (element.end.y / 10) * i });
+        }
+      } else {
+        if (i > 0) element.trail.splice(0, 1);
+        else tab.splice(1, 0);
       }
       element.trail.forEach((element, index) => {
         ctx.globalAlpha = 0.1 * index;
-        ctx.drawImage(ballImg, element.x, element.y, 3, 3);
+        ctx.beginPath();
+        ctx.fillStyle = "#edd199";
+        ctx.arc(element.x, element.y, 1, 0, 2 * Math.PI);
+        ctx.fill();
+        // ctx.drawImage(ballImg, element.x, element.y, 3, 3);
         ctx.globalAlpha = 1;
       });
-    })
-  );
+    });
+  });
 }
 
 function drawScore(ctx: CanvasRenderingContext2D, gameState: GameState) {
