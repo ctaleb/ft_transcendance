@@ -27,13 +27,7 @@
 		  <button @click="confirmGame()">Yes</button>
 		  <button @click="denyGame()">No</button>
 		</div> -->
-        <Modal
-          :title="sumTitle"
-          :data="gameSummary"
-          :start="start"
-          :end="end"
-          @close="showSummary(false)"
-        ></Modal>
+        <Modal :title="sumTitle" :data="gameSummary" :start="start" :end="end" @close="showSummary(false)"></Modal>
       </div>
       <div v-if="noFriends" class="overlay">
         <Denial :inviter="friendName" @sadStory="showDenial(false)"></Denial>
@@ -49,94 +43,27 @@
             <label for="score">Max Score: {{ score }}</label>
             <div>
               <label for="score">Max Score: {{ score }}</label>
-              <div>
-                1<input
-                  v-model="score"
-                  type="range"
-                  id="score"
-                  name="score"
-                  min="1"
-                  max="100"
-                  :disabled="readyButton == true"
-                />100
-              </div>
+              <div>1<input v-model="score" type="range" id="score" name="score" min="1" max="100" :disabled="readyButton == true" />100</div>
             </div>
             <div>
-              <label for="ballSpeed"
-                >Initial Ball Speed (0 for half speed): {{ ballSpeed }}</label
-              >
-              <div>
-                0<input
-                  v-model="ballSpeed"
-                  type="range"
-                  id="ballSpeed"
-                  name="ballSpeed"
-                  min="0"
-                  max="5"
-                  :disabled="readyButton == true"
-                />5
-              </div>
+              <label for="ballSpeed">Initial Ball Speed (0 for half speed): {{ ballSpeed }}</label>
+              <div>0<input v-model="ballSpeed" type="range" id="ballSpeed" name="ballSpeed" min="0" max="5" :disabled="readyButton == true" />5</div>
             </div>
             <div>
-              <label for="ballSize"
-                >Ball Size Factor (0 for half size): {{ ballSize }}</label
-              >
-              <div>
-                0<input
-                  v-model="ballSize"
-                  type="range"
-                  id="ballSize"
-                  name="ballSize"
-                  min="0"
-                  max="3"
-                  :disabled="readyButton == true"
-                />3
-              </div>
+              <label for="ballSize">Ball Size Factor (0 for half size): {{ ballSize }}</label>
+              <div>0<input v-model="ballSize" type="range" id="ballSize" name="ballSize" min="0" max="3" :disabled="readyButton == true" />3</div>
             </div>
             <div>
-              <label for="barSpeed"
-                >Bar Speed Factor (0 for half speed): {{ barSpeed }}</label
-              >
-              <div>
-                0<input
-                  v-model="barSpeed"
-                  type="range"
-                  id="barSpeed"
-                  name="barSpeed"
-                  min="0"
-                  max="5"
-                  :disabled="readyButton == true"
-                />5
-              </div>
+              <label for="barSpeed">Bar Speed Factor (0 for half speed): {{ barSpeed }}</label>
+              <div>0<input v-model="barSpeed" type="range" id="barSpeed" name="barSpeed" min="0" max="5" :disabled="readyButton == true" />5</div>
             </div>
             <div>
-              <label for="barSize"
-                >Bar Size Factor (0 for half size): {{ barSize }}</label
-              >
-              <div>
-                0<input
-                  v-model="barSize"
-                  type="range"
-                  id="barSize"
-                  name="barSize"
-                  min="0"
-                  max="2"
-                  :disabled="readyButton == true"
-                />2
-              </div>
+              <label for="barSize">Bar Size Factor (0 for half size): {{ barSize }}</label>
+              <div>0<input v-model="barSize" type="range" id="barSize" name="barSize" min="0" max="2" :disabled="readyButton == true" />2</div>
             </div>
+            <div><input v-model="smashes" type="checkbox" id="switch" :disabled="readyButton == true" /><label for="smashes">Toggle smashes</label></div>
             <div>
-              <input
-                v-model="smashes"
-                type="checkbox"
-                id="switch"
-                :disabled="readyButton == true"
-              /><label for="smashes">Toggle smashes</label>
-            </div>
-            <div>
-              <label for="smashStrength"
-                >Smash Strength Factor: {{ smashStrength }}</label
-              >
+              <label for="smashStrength">Smash Strength Factor: {{ smashStrength }}</label>
               <div>
                 1<input
                   v-model="smashStrength"
@@ -149,22 +76,8 @@
                 />10
               </div>
             </div>
-            <div>
-              <input
-                v-model="effects"
-                type="checkbox"
-                id="switch"
-                :disabled="readyButton == true"
-              /><label for="effects">Toggle effects</label>
-            </div>
-            <div>
-              <input
-                v-model="powers"
-                type="checkbox"
-                id="switch"
-                :disabled="readyButton == true"
-              /><label for="powers">Toggle powers</label>
-            </div>
+            <div><input v-model="effects" type="checkbox" id="switch" :disabled="readyButton == true" /><label for="effects">Toggle effects</label></div>
+            <div><input v-model="powers" type="checkbox" id="switch" :disabled="readyButton == true" /><label for="powers">Toggle powers</label></div>
             <div><input v-model="effects" type="checkbox" id="switch" :disabled="readyButton == true" /><label for="effects">Toggle effects</label></div>
             <div><input v-model="powers" type="checkbox" id="switch" :disabled="readyButton == true" /><label for="powers">Toggle powers</label></div>
           </div>
@@ -184,7 +97,7 @@ import { useStore } from "@/store";
 import { GameSummaryData } from "@/types/GameSummary";
 import { Socket } from "engine.io-client";
 import { onMounted, onUnmounted, reactive, ref } from "vue";
-import { GameOptions, GameRoom, GameState, IBar } from "../../../../back/app/src/server/entities/server.entity";
+import { GameOptions, GameRoom, GameState, IBar, particleSet, particle, IPoint } from "@/types/Game";
 import { User } from "@/types/User";
 import ballUrl from "../assets/ball.png";
 import energyUrl from "../assets/energy.png";
@@ -282,6 +195,7 @@ let loadPercent = 120;
 let kickOff = false;
 let cSmashingPercent = 0;
 let hSmashingPercent = 0;
+const particles: particleSet[] = [];
 
 let start: Date;
 let end: Date;
@@ -422,6 +336,45 @@ function drawPlayground(ctx: CanvasRenderingContext2D) {
   ctx.drawImage(plateauImg, 0, 0, cWidth, cHeight);
 }
 
+function addParticle(ctx: CanvasRenderingContext2D, gameState: GameState) {
+  const hit: particleSet = { particles: [] };
+  let ab: IPoint = { x: gameState.ball.pos.x - gameState.hit.x, y: gameState.ball.pos.y - gameState.hit.y };
+  let end1: IPoint = { x: -ab.y, y: ab.x };
+  let end2: IPoint = { x: ab.y, y: -ab.x };
+
+  hit.particles.push({
+    start: { x: gameState.hit.x, y: gameState.hit.y },
+    end: end1,
+    trail: [],
+  });
+  hit.particles.push({
+    start: { x: gameState.hit.x, y: gameState.hit.y },
+    end: end2,
+    trail: [],
+  });
+  particles.push(hit);
+}
+
+function drawParticle(ctx: CanvasRenderingContext2D, gameState: GameState) {
+  particles.forEach((element) =>
+    element.particles.forEach((element) => {
+      let i: number;
+
+      i = element.trail.length;
+      if (i != 10) {
+        element.trail.push({ x: element.start.x + (element.end.x / 10) * i, y: element.start.y + (element.end.y / 10) * i });
+      }
+      element.trail.forEach((element) => {
+        let i: number = 0;
+
+        ctx.globalAlpha = 1;
+        ctx.drawImage(ballImg, element.x, element.y, 3, 3);
+        ctx.globalAlpha = 1;
+      });
+    })
+  );
+}
+
 function drawScore(ctx: CanvasRenderingContext2D, gameState: GameState) {
   let slot = theRoom.options.scoreMax;
 
@@ -528,6 +481,9 @@ function scalePosition(gameState: GameState) {
   gameState.clientBar.pos.x *= scale;
   gameState.clientBar.pos.y *= scale;
   gameState.clientBar.pos.y += offset;
+  gameState.hit.x *= scale;
+  gameState.hit.y *= scale;
+  gameState.hit.y += offset;
 }
 
 function resizeCanvas() {
@@ -663,6 +619,7 @@ const ServerUpdate = (gameState: GameState) => {
       hSmashingPercent += 2;
     } else if (!gameState.hostBar.smashing || kickOff) hSmashingPercent = 0;
     if (ctx) {
+      if (gameState.hit.x) addParticle(ctx, gameState);
       drawPlayground(ctx);
       drawScore(ctx, gameState);
       drawPowerCharge(ctx, gameState);

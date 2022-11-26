@@ -8,7 +8,7 @@
       <button @click="inviteCustom(friend.nickname)">Invite</button>
     </div>
     <h3 style="margin: 10px">{{ friend.nickname }}</h3>
-    <h4 style="color: greenyellow; text-align: center">{{ "en ligne" }}</h4>
+    <h4 style="color: greenyellow; text-align: center">{{ friend.status }}</h4>
   </li>
 </template>
 

@@ -37,6 +37,7 @@ import GameConfirmation from "./components/GameConfirmation/Modal.vue";
 import AlertCard from "./components/AlertCard.vue";
 import CustomInvitation from "./components/CustomInvitation/Modal.vue";
 import FailedInvitation from "./components/FailedInvitation/Modal.vue";
+import { updateStatus } from "@/functions/funcs";
 
 const store = useStore();
 const route = useRoute();
@@ -56,6 +57,11 @@ let socket = store.socket;
 let alertMessages: Alert[] = store.message;
 
 store.$subscribe((mutation, state) => {
+  if (!state.socket?.hasListeners("updateOneUserStatus")) {
+    state.socket?.on("updateOneUserStatus", (info: any) => {
+      updateStatus(info.id, info.status);
+    });
+  }
   if (!state.socket?.hasListeners("customInvite")) {
     state.socket?.on("customInvite", (inviter: string) => {
       // theRoom = gameRoom;

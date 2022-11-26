@@ -1,10 +1,4 @@
-import {
-  Injectable,
-  HttpStatus,
-  HttpException,
-  forwardRef,
-  Inject,
-} from '@nestjs/common';
+import { Injectable, HttpStatus, HttpException, forwardRef, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from 'src/user/user.entity';
 import { CreateUserDto } from 'src/user/user.dto';
@@ -15,6 +9,7 @@ import { unlink } from 'fs';
 import { JwtService } from '@nestjs/jwt';
 import { FriendshipService } from 'src/friendship/friendship.service';
 import { FriendshipEntity } from 'src/friendship/entities/friendship.entity';
+import { ServerService } from 'src/server/server.service';
 
 @Injectable()
 export class UserService {
@@ -118,9 +113,7 @@ export class UserService {
     const userUpdated = await this._usersRepository.findOneBy({ id: userId });
     const avatar = await this._imageService.getImageById(userUpdated.avatarId);
 
-    const user_with_password = await this.getUserByNickname(
-      userUpdated.nickname,
-    );
+    const user_with_password = await this.getUserByNickname(userUpdated.nickname);
     const { password, ...user_without_password } = user_with_password;
     const token = this._jwtService.sign(user_without_password);
     return { user: user_without_password, avatar: avatar, token: token };
@@ -133,6 +126,11 @@ export class UserService {
 
   async updateElo(newElo: number, userId: number) {
     await this._usersRepository.update(userId, { elo: newElo });
+    return { success: true };
+  }
+
+  async updateStatus(userId: number, newStatus: string) {
+    await this._usersRepository.update(userId, { status: newStatus });
     return { success: true };
   }
 

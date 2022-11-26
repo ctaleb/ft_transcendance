@@ -32,6 +32,7 @@ export interface GameState {
   hostBar: IBar;
   clientBar: IBar;
   score: Score;
+  hit: IPoint;
 }
 
 export class GameOptions {
@@ -72,6 +73,11 @@ export class Message {
 export class Theatre {
   name: string;
   viewers: Socket[];
+}
+
+export interface Status {
+  id: number;
+  status: string;
 }
 
 export class Game {
