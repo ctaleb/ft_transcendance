@@ -114,6 +114,7 @@ import fillRedUrl from "../assets/slot_fill_enemy.png";
 import Denial from "./InviteDenied/Modal.vue";
 import PowerSliderComponent from "./PowerSliderComponent.vue";
 import Modal from "./Summary/Modal.vue";
+import { ElementTypes } from "@vue/compiler-core";
 //import { SCOPABLE_TYPES } from "@babel/types";
 
 const store = useStore();
@@ -339,17 +340,54 @@ function drawPlayground(ctx: CanvasRenderingContext2D) {
 function addParticle(ctx: CanvasRenderingContext2D, gameState: GameState) {
   const hit: particleSet = { particles: [] };
   let ab: IPoint = { x: gameState.ball.pos.x - gameState.hit.x, y: gameState.ball.pos.y - gameState.hit.y };
-  let end1: IPoint = { x: -ab.y, y: ab.x };
-  let end2: IPoint = { x: ab.y, y: -ab.x };
+  let end1: IPoint = { x: gameState.hit.x < 250 ? 10 : 490, y: ab.x };
+  let end2: IPoint = { x: gameState.hit.x < 250 ? 10 : 490, y: -ab.x };
 
+  console.log("HIT");
+  console.log(end1);
+  console.log(end2);
+  console.log(gameState.hit);
+
+  //left
   hit.particles.push({
-    start: { x: gameState.hit.x, y: gameState.hit.y },
-    end: end1,
+    start: { x: gameState.hit.x < 250 ? 10 : 500 * scale - 10, y: gameState.hit.y },
+    end: { x: 0, y: end1.y },
     trail: [],
   });
   hit.particles.push({
-    start: { x: gameState.hit.x, y: gameState.hit.y },
-    end: end2,
+    start: { x: gameState.hit.x < 250 ? 10 : 500 * scale - 10, y: gameState.hit.y },
+    end: { x: 0 + (gameState.hit.x < 250 ? Math.random() * 10 : -(Math.random() * 5)), y: end1.y + Math.random() * 10 },
+    trail: [],
+  });
+  hit.particles.push({
+    start: { x: gameState.hit.x < 250 ? 10 : 500 * scale - 10, y: gameState.hit.y },
+    end: { x: 0 + (gameState.hit.x < 250 ? Math.random() * 10 : -(Math.random() * 5)), y: end1.y + Math.random() * 10 },
+    trail: [],
+  });
+  hit.particles.push({
+    start: { x: gameState.hit.x < 250 ? 10 : 500 * scale - 10, y: gameState.hit.y },
+    end: { x: 0 + (gameState.hit.x < 250 ? Math.random() * 10 : -(Math.random() * 5)), y: end1.y + Math.random() * 10 },
+    trail: [],
+  });
+  //right
+  hit.particles.push({
+    start: { x: gameState.hit.x < 250 ? 10 : 500 * scale - 10, y: gameState.hit.y },
+    end: { x: 0 + (gameState.hit.x < 250 ? Math.random() * 10 : -(Math.random() * 5)), y: end2.y + Math.random() * 10 },
+    trail: [],
+  });
+  hit.particles.push({
+    start: { x: gameState.hit.x < 250 ? 10 : 500 * scale - 10, y: gameState.hit.y },
+    end: { x: 0 + (gameState.hit.x < 250 ? Math.random() * 10 : -(Math.random() * 5)), y: end2.y + Math.random() * 10 },
+    trail: [],
+  });
+  hit.particles.push({
+    start: { x: gameState.hit.x < 250 ? 10 : 500 * scale - 10, y: gameState.hit.y },
+    end: { x: 0 + (gameState.hit.x < 250 ? Math.random() * 10 : -(Math.random() * 5)), y: end2.y + Math.random() * 10 },
+    trail: [],
+  });
+  hit.particles.push({
+    start: { x: gameState.hit.x < 250 ? 10 : 500 * scale - 10, y: gameState.hit.y },
+    end: { x: 0 + (gameState.hit.x < 250 ? Math.random() * 10 : -(Math.random() * 5)), y: end2.y + Math.random() * 10 },
     trail: [],
   });
   particles.push(hit);
@@ -357,17 +395,21 @@ function addParticle(ctx: CanvasRenderingContext2D, gameState: GameState) {
 
 function drawParticle(ctx: CanvasRenderingContext2D, gameState: GameState) {
   particles.forEach((element) =>
-    element.particles.forEach((element) => {
+    element.particles.forEach((element, index, tab) => {
       let i: number;
 
       i = element.trail.length;
-      if (i != 10) {
+      if (!element.reach) {
         element.trail.push({ x: element.start.x + (element.end.x / 10) * i, y: element.start.y + (element.end.y / 10) * i });
+      } else if (i == 10) {
+        element.reach = true;
+      } else if (i == 0) {
+        tab.splice(index, 1);
+      } else if (element.reach) {
+        element.trail.splice(0, 1);
       }
-      element.trail.forEach((element) => {
-        let i: number = 0;
-
-        ctx.globalAlpha = 1;
+      element.trail.forEach((element, index) => {
+        ctx.globalAlpha = 0.1 * index;
         ctx.drawImage(ballImg, element.x, element.y, 3, 3);
         ctx.globalAlpha = 1;
       });
@@ -619,7 +661,7 @@ const ServerUpdate = (gameState: GameState) => {
       hSmashingPercent += 2;
     } else if (!gameState.hostBar.smashing || kickOff) hSmashingPercent = 0;
     if (ctx) {
-      if (gameState.hit.x) addParticle(ctx, gameState);
+      if (gameState.hit.hit === true) addParticle(ctx, gameState);
       drawPlayground(ctx);
       drawScore(ctx, gameState);
       drawPowerCharge(ctx, gameState);
@@ -628,6 +670,7 @@ const ServerUpdate = (gameState: GameState) => {
       ctx.fillStyle = "black";
       drawSmashingEffect(gameState.clientBar, cSmashingPercent, ctx);
       drawSmashingEffect(gameState.hostBar, hSmashingPercent, ctx);
+      drawParticle(ctx, gameState);
     }
   }
 };

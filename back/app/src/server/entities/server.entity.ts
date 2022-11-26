@@ -25,6 +25,12 @@ export interface Score {
   host: number;
 }
 
+export interface IHit {
+  x: number;
+  y: number;
+  hit: boolean;
+}
+
 export interface GameState {
   ball: IBall;
   hostPower: IPowerInfo;
@@ -32,7 +38,7 @@ export interface GameState {
   hostBar: IBar;
   clientBar: IBar;
   score: Score;
-  hit: IPoint;
+  hit: IHit;
 }
 
 export class GameOptions {

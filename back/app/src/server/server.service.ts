@@ -281,7 +281,7 @@ export class ServerService {
           client: 0,
           host: 0,
         },
-        hit: { x: 0, y: 0 },
+        hit: { x: 0, y: 0, hit: false },
       },
       host: undefined,
       client: client,
@@ -574,15 +574,17 @@ export class ServerService {
   wallBallCollision(state: GameState, room: GameRoom) {
     if (state.ball.pos.x - 16 <= 0) {
       state.ball.speed.x *= -1;
-      state.hit.x = 1;
+      state.hit.x = 0;
       state.hit.y = state.ball.pos.y;
+      state.hit.hit = true;
       state.ball.pos.x = 0 + 16;
       if (room.options.effects) this.applyEffect(room);
     }
     if (state.ball.pos.x + 16 > 500) {
       state.ball.speed.x *= -1;
-      state.hit.x = 499;
+      state.hit.x = 500;
       state.hit.y = state.ball.pos.y;
+      state.hit.hit = true;
       state.ball.pos.x = 500 - 16;
       if (room.options.effects) this.applyEffect(room);
     }
@@ -641,7 +643,7 @@ export class ServerService {
         maxSpeed: gameState.clientBar.maxSpeed,
       },
       score: { host: gameState.score.client, client: gameState.score.host },
-      hit: { x: 500 - gameState.hit.x, y: 500 - gameState.hit.y },
+      hit: { x: 500 - gameState.hit.x, y: 500 - gameState.hit.y, hit: gameState.hit.hit },
     };
     if (game.host.gameData.power.name == 'invisibility' && game.host.gameData.power.trigger == true) {
       inverseState.ball.pos.x = -50;
@@ -691,7 +693,7 @@ export class ServerService {
         maxSpeed: gameState.clientBar.maxSpeed,
       },
       score: { host: gameState.score.client, client: gameState.score.host },
-      hit: { x: gameState.hit.x, y: gameState.hit.y },
+      hit: { x: gameState.hit.x, y: gameState.hit.y, hit: gameState.hit.hit },
     };
     if (game.client.gameData.power.name == 'invisibility' && game.client.gameData.power.trigger == true) {
       console.log('invis client');
@@ -786,6 +788,7 @@ export class ServerService {
   resetHit(state: GameState) {
     state.hit.x = 0;
     state.hit.y = 0;
+    state.hit.hit = false;
   }
 
   chargeUp(game: Game) {
