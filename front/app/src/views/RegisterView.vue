@@ -5,63 +5,27 @@
       <label for="nickname">Nickname:</label><br />
       <input type="text" v-model="v$.nickname.$model" id="nick" name="nickname" class="input" />
       <br /><br />
-      <span
-        v-for="error in v$.nickname.$errors"
-        :key="error.$uid"
-        class="text-red"
-      >
+      <span v-for="error in v$.nickname.$errors" :key="error.$uid" class="text-red">
         {{ error.$message }}
         <br /><br />
       </span>
 
       <label for="password">Password:</label><br />
-      <input
-        :type="passwordFieldType"
-        v-model="v$.password.firstTry.$model"
-        id="password"
-        name="password"
-        class="input"
-      />
-      <button
-        class="right"
-        type="button"
-        @click.prevent="hidePassword = !hidePassword"
-      >
-        show / hide
-      </button>
+      <input :type="passwordFieldType" v-model="v$.password.firstTry.$model" id="password" name="password" class="input" />
+      <button class="right" type="button" @click.prevent="hidePassword = !hidePassword">show / hide</button>
       <br /><br />
-      <span
-        v-for="error in v$.password.firstTry.$errors"
-        :key="error.$uid"
-        class="text-red"
-      >
+      <span v-for="error in v$.password.firstTry.$errors" :key="error.$uid" class="text-red">
         {{ error.$message }}
         <br /><br />
       </span>
       <label for="confirm password">Confirm password:</label><br />
-      <input
-        type="password"
-        v-model="v$.password.confirmation.$model"
-        placeholder="Confirm password"
-        autocomplete="off"
-        class="input"
-      /><br /><br />
-      <span
-        v-for="error in v$.password.confirmation.$errors"
-        :key="error.$uid"
-        class="text-red"
-      >
+      <input type="password" v-model="v$.password.confirmation.$model" placeholder="Confirm password" autocomplete="off" class="input" /><br /><br />
+      <span v-for="error in v$.password.confirmation.$errors" :key="error.$uid" class="text-red">
         {{ error.$message }}
         <br /><br />
       </span>
       <label for="avatar">Choose a profile picture:</label><br />
-      <input
-        type="file"
-        id="avatar"
-        name="avatar"
-        accept="image/*"
-        @change="updateAvatar"
-      /><br /><br />
+      <input type="file" id="avatar" name="avatar" accept="image/*" @change="updateAvatar" /><br /><br />
       <span v-for="error in v$.avatar.$errors" :key="error.$uid" class="text-red">
         {{ error.$message }}
         <br /><br />
@@ -76,13 +40,8 @@
 import { defineComponent, ref, reactive, computed } from "vue";
 import { useRouter } from "vue-router";
 import useVuelidate from "@vuelidate/core";
-import {
-  required,
-  minLength,
-  maxLength,
-  sameAs,
-  helpers,
-} from "@vuelidate/validators";
+import { required, minLength, maxLength, sameAs, helpers } from "@vuelidate/validators";
+import { addAlertMessage } from "@/functions/funcs";
 
 export default defineComponent({
   name: "RegisterView",
@@ -90,9 +49,7 @@ export default defineComponent({
   props: ["incomingFriendRequest"],
   setup() {
     const hidePassword = ref(true);
-    const passwordFieldType = computed(() =>
-      hidePassword.value ? "password" : "text"
-    );
+    const passwordFieldType = computed(() => (hidePassword.value ? "password" : "text"));
 
     const state = reactive({
       nickname: "",
@@ -100,7 +57,6 @@ export default defineComponent({
         firstTry: "",
         confirmation: "",
       },
-      phone: "",
       avatar: File.prototype,
     });
 
@@ -126,32 +82,16 @@ export default defineComponent({
         firstTry: {
           required,
           minLength: minLength(6),
-          containsUppercase: helpers.withMessage(
-            "Password must contain at least one uppercase",
-            containsUppercase
-          ),
-          containsLowercase: helpers.withMessage(
-            "Password must contain at least one lowercase",
-            containsLowercase
-          ),
-          containsSpecial: helpers.withMessage(
-            "Password must contain at least one of '#?!@$%^&*-'",
-            containsSpecial
-          ),
-          containsNumber: helpers.withMessage(
-            "Password must contain at least one digit",
-            containsNumber
-          ),
+          containsUppercase: helpers.withMessage("Password must contain at least one uppercase", containsUppercase),
+          containsLowercase: helpers.withMessage("Password must contain at least one lowercase", containsLowercase),
+          containsSpecial: helpers.withMessage("Password must contain at least one of '#?!@$%^&*-'", containsSpecial),
+          containsNumber: helpers.withMessage("Password must contain at least one digit", containsNumber),
         },
         confirmation: {
           required,
-          sameAs: helpers.withMessage(
-            "Passwords don't match",
-            sameAs(state.password.firstTry)
-          ),
+          sameAs: helpers.withMessage("Passwords don't match", sameAs(state.password.firstTry)),
         },
       },
-      phone: { minLength: minLength(9), maxLength: maxLength(13) },
       avatar: {},
     }));
 
@@ -167,29 +107,26 @@ export default defineComponent({
       let formData = new FormData();
 
       formData.append("nickname", state.nickname);
-      if (state.phone != "") formData.append("phone", state.phone);
-
       formData.append("password", state.password.firstTry);
+      console.log(formData.getAll("nickname"));
       if (state.avatar != File.prototype) {
         formData.append("avatar", state.avatar, state.avatar.name);
       }
-
-      fetch(
-        "http://" +
-          window.location.hostname +
-          ":3000/api/authentication/registration",
-        {
-          method: "POST",
-          body: formData,
-        }
-      )
-        .then((response) => response.json())
-        .then((data) => {
-          router.push("/");
+      let data = await fetch("http://" + window.location.hostname + ":3000/api/authentication/registration", {
+        method: "POST",
+        body: formData,
+      })
+        .then((response) => {
+          if (!response.ok) return Promise.reject();
+          return response.json();
         })
-        .catch((err) => {
-          console.log(err);
+        .catch(async (err) => {
+          addAlertMessage("Can't register the user", 3); // 3 is error
+          return null;
         });
+      if (data) {
+        router.push("/");
+      }
     }
 
     const submitForm = async () => {
@@ -213,7 +150,6 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-
 .mainContainer {
   height: auto;
   margin: auto;

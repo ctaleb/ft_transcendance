@@ -5,21 +5,13 @@ import { User } from "@/types/User";
 import { io } from "socket.io-client";
 
 export async function isConnected(token: string): Promise<boolean> {
-  if (token == "") return false;
-
-  let ret: boolean = await fetch("http://" + window.location.hostname + ":3000/api/user/profile", {
-    method: "GET",
-    headers: {
-      Authorization: "Bearer " + token,
-    },
-  })
-    .then((res) => res.json())
-    .then((data) => {
-      if (data.message) return false;
-      else return true;
+  console.log(token);
+  if (token == "" || token == null) return false;
+  let ret = await fetchJSONDatas("api/user/profile", "GET")
+    .then(() => {
+      return true;
     })
     .catch((err) => {
-      console.log(err.message);
       return false;
     });
   return ret;

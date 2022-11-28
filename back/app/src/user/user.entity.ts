@@ -11,6 +11,7 @@ export class UserEntity extends AbstractEntity {
   @Column({ unique: true })
   public nickname: string;
 
+  @Expose()
   @Column({ unique: false, nullable: true })
   public phone: string;
 

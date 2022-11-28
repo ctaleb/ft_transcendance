@@ -5,7 +5,7 @@ import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 @Entity({ name: 'match_history' })
 export class MatchHistoryEntity extends AbstractEntity {
   @JoinColumn({ name: 'hostName', referencedColumnName: 'nickname' })
-  @ManyToOne((type) => UserEntity, { eager: true })
+  @ManyToOne((type) => UserEntity, { eager: true, onUpdate: 'CASCADE' })
   public host: UserEntity;
 
   @Column()
@@ -18,7 +18,7 @@ export class MatchHistoryEntity extends AbstractEntity {
   public hostElo: number;
 
   @JoinColumn({ name: 'clientName', referencedColumnName: 'nickname' })
-  @ManyToOne((type) => UserEntity, { eager: true })
+  @ManyToOne((type) => UserEntity, { eager: true, onUpdate: 'CASCADE' })
   public client: UserEntity;
 
   @Column()

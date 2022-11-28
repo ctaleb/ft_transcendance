@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
 import { PostgresErrorCode } from 'src/database/errors.constraint';
 import { UserService } from 'src/user/user.service';
 import { DataSource } from 'typeorm';
@@ -13,16 +13,10 @@ import { unlink } from 'fs';
 
 @Injectable()
 export class AuthenticationService {
-  constructor(
-    private readonly _userService: UserService,
-    private readonly _dataSource: DataSource,
-    private jwtService: JwtService,
-  ) {}
+  constructor(private readonly _userService: UserService, private readonly _dataSource: DataSource, private jwtService: JwtService) {}
 
-  async registration(
-    registrationDto: RegistrationDto,
-    imageDto: ImageDto,
-  ): Promise<UserEntity> {
+  async registration(registrationDto: RegistrationDto, imageDto: ImageDto): Promise<UserEntity> {
+    console.log(imageDto);
     let user: UserEntity;
     const queryRunner = this._dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -51,7 +45,9 @@ export class AuthenticationService {
   }
 
   async validateUser(username: string, plainPassword: string): Promise<any> {
-    const user = await this._userService.getUserByNickname(username);
+    const user = await this._userService.getUserByNickname(username).catch(() => {
+      return null;
+    });
     if (user) {
       if (bcrypt.compareSync(plainPassword, user.password)) {
         const { password, ...ret } = user;
@@ -62,7 +58,6 @@ export class AuthenticationService {
   }
 
   async login(user: any) {
-    //const payload = { username: user.nickname, sub: user.id };
     return {
       access_token: this.jwtService.sign(user),
     };
