@@ -125,11 +125,14 @@ export default defineComponent({
         body: formData,
       })
         .then((res) => {
+          if (!res.ok) return Promise.reject();
           return res.json();
         })
         .catch((err) => {
-          console.log(err);
+          funcs.addAlertMessage("Unauthorized", 3);
+          return null;
         });
+      if (fetch_ret == null) return;
       localStorage.setItem("user", JSON.stringify(fetch_ret.user));
       localStorage.setItem("token", fetch_ret.token);
       await trySetupUser();
