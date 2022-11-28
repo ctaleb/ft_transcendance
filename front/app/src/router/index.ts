@@ -48,14 +48,14 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from) => {
-  // let isConnected = funcs.isConnected(localStorage.getItem("token"));
-  // if (to.fullPath != "/" && from.fullPath != "/") {
-  //   if (isConnected) return true;
-  //   else return { name: "home" };
-  // } else if (to.query.code) return true;
-  // else if (to.fullPath == "/" || to.fullPath == "/signup") return true;
-  // else if (from.fullPath == "/" && localStorage.getItem("token")) return true;
-  // return { name: "home" };
+  let isConnected = funcs.isConnected(localStorage.getItem("token"));
+  if (to.fullPath != "/" && from.fullPath != "/") {
+    if (isConnected) return true;
+    else return { name: "home" };
+  } else if (to.query.code) return true;
+  else if (to.fullPath == "/" || to.fullPath == "/signup") return true;
+  else if (from.fullPath == "/" && localStorage.getItem("token")) return true;
+  return { name: "home" };
 });
 
 export default router;

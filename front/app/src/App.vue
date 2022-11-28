@@ -250,6 +250,8 @@ onMounted(() => {
 body {
   background-color: #010b12;
   color: #aa9e7d;
+  margin: 0;
+  padding: 0;
 }
 
 #app {

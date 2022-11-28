@@ -1,10 +1,4 @@
-import {
-  Injectable,
-  HttpStatus,
-  HttpException,
-  forwardRef,
-  Inject,
-} from '@nestjs/common';
+import { Injectable, HttpStatus, HttpException, forwardRef, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from 'src/user/user.entity';
 import { CreateUserDto } from 'src/user/user.dto';
@@ -109,18 +103,18 @@ export class UserService {
   async updateAvatar(imageDto: ImageDto, userId: number) {
     const user = await this._usersRepository.findOneBy({ id: userId });
     const oldAvatar = await this._imageService.getImageById(user.avatarId);
-    unlink(oldAvatar.path, (err) => {
-      if (err) throw err;
-    });
+    if (oldAvatar.filename != 'pizz.jpeg') {
+      unlink(oldAvatar.path, (err) => {
+        if (err) throw err;
+      });
+    }
 
     await this.setAvatar(user.id, imageDto);
     await this._imageService.deleteImage(user.avatarId);
     const userUpdated = await this._usersRepository.findOneBy({ id: userId });
     const avatar = await this._imageService.getImageById(userUpdated.avatarId);
 
-    const user_with_password = await this.getUserByNickname(
-      userUpdated.nickname,
-    );
+    const user_with_password = await this.getUserByNickname(userUpdated.nickname);
     const { password, ...user_without_password } = user_with_password;
     const token = this._jwtService.sign(user_without_password);
     return { user: user_without_password, avatar: avatar, token: token };

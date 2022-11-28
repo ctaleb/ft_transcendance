@@ -37,10 +37,7 @@ export class AuthenticationController {
       fileFilter: imageFileFilter,
     }),
   )
-  async registration(
-    @UploadedFile() avatar: Express.Multer.File,
-    @Body() registrationDto: RegistrationDto,
-  ): Promise<UserEntity> {
+  async registration(@UploadedFile() avatar: Express.Multer.File, @Body() registrationDto: RegistrationDto): Promise<UserEntity> {
     return this._authenticationService.registration(
       registrationDto,
       avatar
@@ -49,13 +46,18 @@ export class AuthenticationController {
             filename: avatar.originalname,
             mimetype: avatar.mimetype,
           }
-        : null,
+        : {
+            path: 'assets/pizz.jpeg',
+            filename: 'pizz.jpeg',
+            mimetype: 'image/jpeg',
+          },
     );
   }
 
   @UseGuards(LocalAuthGuard)
   @Post('login')
-  async login(@Request() req, @Response({ passthrough: true }) res) {
+  async login(@Request() req) {
+    console.log('CONTROLLER CALLED');
     const token = this._authenticationService.login(req.user);
     this.serverService.newUser((await token).access_token, req.user.nickname);
     this.serverService.userList.forEach((element) => {

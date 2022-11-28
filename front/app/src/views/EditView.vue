@@ -18,7 +18,7 @@
         <div v-if="success">Nickname successfully updated.</div>
       </div>
       <div class="edition-section">
-        <img :src="getUserAvatar()" alt="" class="image" /><br />
+        <img :src="avatarUrl" alt="" class="image" /><br />
         <label for="avatar">Update your profile picture:</label><br />
         <input type="file" id="avatar" name="avatar" accept="image/*" @change="updateAvatar" />
       </div>
@@ -48,7 +48,7 @@
 </template>
 
 <script lang="ts">
-import { getUserAvatar } from "@/functions/funcs";
+import { getUserAvatar, trySetupUser } from "@/functions/funcs";
 import { User, getUserById } from "@/types/User";
 import { useStore } from "@/store";
 import { defineComponent, ref } from "vue";
@@ -63,7 +63,6 @@ export default defineComponent({
       user: JSON.parse(localStorage.getItem("user") || "{}"),
       avatar: "{}",
       phone: JSON.parse(localStorage.getItem("user") || "{}").phone,
-      image: ref(""),
       nickname: JSON.parse(localStorage.getItem("user") || "{}").nickname,
       nicknameUsed: ref(false),
       success: ref(false),
@@ -78,6 +77,7 @@ export default defineComponent({
       twoFactorEnabled: ref(false),
       toggleClicked: ref(false),
       phoneFormatError: ref(""),
+      avatarUrl: ref(""),
     };
   },
   emits: ["notification"],
@@ -85,23 +85,20 @@ export default defineComponent({
     this.initTwoFactorToggle();
     const _user = await getUserById(this.user.id);
     this.avatar = _user.avatar;
+    this.avatarUrl = this.getUserAvatar();
   },
   components: { FriendAlert },
   methods: {
     async updateNickname() {
-      let fetch_ret = await fetch("http://" + window.location.hostname + ":3000/api/user/nicknameEdit/" + this.nickname, {
-        headers: {
-          Authorization: "Bearer " + localStorage.getItem("token"),
-        },
-        method: "PUT",
-      })
-        .then((res) => {
-          return res.json();
-        })
-        .catch((err) => {
-          console.log(err);
-        });
-      console.log(JSON.stringify(fetch_ret));
+      if (this.nickname.length < 1) return;
+      let fetch_ret = await funcs.fetchJSONDatas("api/user/nicknameEdit/" + this.nickname, "PUT").catch(() => {
+        return null;
+      });
+      if (fetch_ret == null) {
+        this.nicknameUsed = true;
+        this.success = false;
+        return;
+      }
       if (fetch_ret.user) {
         localStorage.setItem("user", JSON.stringify(fetch_ret.user));
         localStorage.setItem("token", fetch_ret.token);
@@ -133,9 +130,10 @@ export default defineComponent({
         .catch((err) => {
           console.log(err);
         });
-      this.image = funcs.getUserAvatar(fetch_ret.avatar.path);
       localStorage.setItem("user", JSON.stringify(fetch_ret.user));
       localStorage.setItem("token", fetch_ret.token);
+      await trySetupUser();
+      this.avatarUrl = this.getUserAvatar();
     },
 
     containsUppercase(value: string) {
