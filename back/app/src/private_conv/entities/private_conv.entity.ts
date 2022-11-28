@@ -37,13 +37,14 @@ export class PrivateConvEntity extends AbstractEntity {
   })
   firstsMessages: PrivateMessageEntity[];
 
-  async loadMessages(offset: number = 0, limit: number = 50) {
+  async loadMessages(offset: number = 0, limit: number = 20) {
     this.firstsMessages = await PrivateMessageEntity.find({
       where: {
         conv: { id: this.id },
       },
-      take: limit,
+      order: { createdAt: 'DESC' },
       skip: offset,
+      take: limit,
     });
     return this.firstsMessages;
   }

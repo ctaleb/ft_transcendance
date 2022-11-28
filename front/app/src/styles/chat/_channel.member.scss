@@ -3,12 +3,18 @@
 .channel-members {
   display: flex;
   flex-direction: column;
-  height: 100%;
 
   margin: 5%;
 
   div {
+    display: flex;
+    align-items: center;
     border: solid $chat-secondary-color;
+    height: $chat-menu-item-height;
     margin-bottom: 5%;
+    img {
+      height: 100%;
+      margin-right: 18px;
+    }
   }
 }

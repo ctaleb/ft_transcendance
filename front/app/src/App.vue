@@ -30,13 +30,16 @@
 import { onMounted, ref, watch } from "vue";
 import { RouterLink, RouterView, useRoute, useRouter } from "vue-router";
 import { User, getUserByNickname } from "@/types/User";
-import { trySetupUser } from "@/functions/funcs";
+import { addAlertMessage, trySetupUser } from "@/functions/funcs";
 import { Alert } from "@/types/GameSummary";
 import { useStore } from "@/store";
 import GameConfirmation from "./components/GameConfirmation/Modal.vue";
 import AlertCard from "./components/AlertCard.vue";
 import CustomInvitation from "./components/CustomInvitation/Modal.vue";
 import FailedInvitation from "./components/FailedInvitation/Modal.vue";
+import { Message } from "@/types/Message";
+import { Conversation } from "@/types/Conversation";
+import { Channel, isChannel } from "@/types/Channel";
 
 const store = useStore();
 const route = useRoute();
@@ -110,6 +113,28 @@ store.$subscribe((mutation, state) => {
     });
   }
 });
+
+// //chat listeners
+// if (!store.socket?.hasListeners("Message to the client")) {
+//   store.socket?.on("Message to the client", async (privateMessage: Message) => {
+//     console.log(store.currentChat);
+//     if (privateMessage.author === (<Conversation>store.currentChat)?.other.nickname) {
+//       store.currentChat?.messages?.push(privateMessage);
+//     } else {
+//       console.log("received");
+//       addAlertMessage(`New message from ${privateMessage.author}`, 1);
+//     }
+//   });
+// }
+// if (!store.socket?.hasListeners("messageRecieved")) {
+//   store.socket?.on("messageReceived", (channelId: number, msg: Message) => {
+//     if (isChannel(store.currentChat!) && channelId === store.currentChat!.id) {
+//       store.currentChat?.messages?.push(msg);
+//     } else {
+//       addAlertMessage(`New message from ${msg.author} in channel`, 1);
+//     }
+//   });
+// }
 
 window.addEventListener("keydown", (e) => {
   if (e.key === "ArrowLeft")
@@ -241,6 +266,31 @@ onMounted(() => {
       }
     }
   );
+
+  watch(
+    () => store.socket,
+    (oldValue, currentValue) => {
+      //chat listeners
+      if (!store.socket?.hasListeners("Message to the client")) {
+        store.socket?.on("Message to the client", async (privateMessage: Message) => {
+          if (!isChannel(store.currentChat!) && privateMessage.author === (<Conversation>store.currentChat)?.other.nickname) {
+            store.currentChat?.messages?.push(privateMessage);
+          } else {
+            addAlertMessage(`New message from ${privateMessage.author}`, 1);
+          }
+        });
+      }
+      if (!store.socket?.hasListeners("messageRecieved")) {
+        store.socket?.on("messageReceived", (channelId: number, msg: Message) => {
+          if (isChannel(store.currentChat!) && channelId === store.currentChat!.id) {
+            store.currentChat?.messages?.push(msg);
+          } else {
+            addAlertMessage(`New message from ${msg.author} in channel`, 1);
+          }
+        });
+      }
+    }
+  );
 });
 </script>
 
@@ -262,6 +312,7 @@ body {
 }
 
 .navbar {
+  height: 5vh;
   a {
     font-weight: bold;
     color: #f0e68c;

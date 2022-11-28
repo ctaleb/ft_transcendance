@@ -8,16 +8,28 @@
 </template>
 
 <script setup lang="ts">
+import { fetchJSONDatas } from "@/functions/funcs";
 import { useStore } from "@/store";
-import { Channel } from "@/types/Channel";
+import { Channel, isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
 import { User } from "@/types/User";
 import { onMounted, onUpdated, Ref, ref } from "vue";
 
 const store = useStore();
 
+let socket = store.socket;
+
+store.$subscribe((mutation, state) => {
+  socket = state.socket;
+});
+
 onMounted(() => {
-  console.log((<Channel>store.currentChat).members);
-  console.log(store.user);
+  socket?.on("updateChannelMembers", async (channelId: number) => {
+    if (isChannel(store.currentChat!) && channelId === store.currentChat!.id) {
+      let data = await fetchJSONDatas("api/chat/members", "POST", {
+        id: store.currentChat!.id,
+      });
+    }
+  });
 });
 </script>

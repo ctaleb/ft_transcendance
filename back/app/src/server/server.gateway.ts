@@ -391,15 +391,11 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     @ConnectedSocket() client: Socket,
     @MessageBody('message') messageToDeliver: string,
     @MessageBody('friendNickname') friendNickname: string,
-  ): Promise<void> {
+  ) {
     let requester: UserEntity;
     const getAuthor = this.serverService.SocketToPlayer(client);
     const receiver = this.serverService.userList.find((element) => element.name === friendNickname);
     if (receiver) {
-      this.server.to(receiver.socket.id).emit('Message to the client', {
-        author: getAuthor.name,
-        text: messageToDeliver,
-      });
       requester = await this.userService.getUserByNickname(receiver.name);
     } else {
       requester = await this.userService.getUserByNickname(friendNickname);
@@ -418,11 +414,18 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     this.server.to(client.id).emit('Update conv list', {
       conv: conv,
     });
-    this.privateMessageService.createMessage({
+    const message = await this.privateMessageService.createMessage({
       conv: conv,
       author: author,
       text: messageToDeliver,
     });
+    if (receiver)
+      this.server.to(receiver.socket.id).emit('Message to the client', {
+        author: getAuthor.name,
+        text: messageToDeliver,
+        date: message.date,
+      });
+    return { author: getAuthor.name, text: messageToDeliver, date: message.date };
   }
 
   // Channel messages by the GOAT

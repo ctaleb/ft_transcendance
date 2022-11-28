@@ -5,7 +5,7 @@ import { User } from "@/types/User";
 import { io } from "socket.io-client";
 
 export async function isConnected(token: string): Promise<boolean> {
-  console.log(token);
+  // console.log(token);
   if (token == "" || token == null) return false;
   let ret = await fetchJSONDatas("api/user/profile", "GET")
     .then(() => {
@@ -105,9 +105,9 @@ function connectSocket(token: string, user: any): void {
   //    auth: { token: token, user: user },
   //    transports: ["websocket"],
   //  });
-  console.log(store.socket);
+  // console.log(store.socket);
   //  debugger;
-  console.log("store socket: " + store.socket.id);
+  // console.log("store socket: " + store.socket.id);
 }
 
 export function addAlertMessage(message: string, type: number, second: number = 5) {
@@ -119,7 +119,7 @@ export function addAlertMessage(message: string, type: number, second: number = 
   };
   store.message?.push(x);
 
-  console.log(x);
+  // console.log(x);
 
   setTimeout(() => {
     store.message?.splice(store.message?.indexOf(x), 1);

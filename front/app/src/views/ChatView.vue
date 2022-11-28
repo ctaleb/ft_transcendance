@@ -127,9 +127,9 @@
 import ChatMenu from "@/components/chat/ChatMenu.vue";
 import ChatWindow from "@/components/chat/ChatWindow.vue";
 import FriendAlert from "@/components/FriendAlert.vue";
-import { fetchJSONDatas } from "@/functions/funcs";
+import { addAlertMessage, fetchJSONDatas } from "@/functions/funcs";
 import { useStore } from "@/store";
-import { Channel, ChannelRole, ChannelType, ChannelUser } from "@/types/Channel";
+import { Channel, ChannelRole, ChannelType, ChannelUser, isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
 import { Message } from "@/types/Message";
 import { User } from "@/types/User";
@@ -173,70 +173,63 @@ onMounted(async () => {
   getMyChannels();
   getAllChannels();
   getChannelInvitations();
-  var audio = new Audio(require("../assets/adelsol.mp3"));
-  socket?.on("Message to the client", async (privateMessage: { author: string; text: string }) => {
-    if (privateMessage.author == friendNickname.value) messagesToDisplay.value.push(privateMessage);
-    else {
-      await getAllConvs();
-      organizeFriends();
-      notifConv(privateMessage.author);
-      audio.play();
-    }
-  });
-  socket?.on("messageReceived", (channelId: number, msg: Message) => {
-    if (thisChannel.value && channelId === thisChannel.value.id) {
-      msg.date = moment(msg.date).tz(timezone).add(1, "hours").format("MMMM Do YYYY, h:mm:ss a");
-      messagesToDisplay.value.push(msg);
-      channelMessageSkip.value++;
-    } else {
-      console.log("incoming message");
-    }
-  });
-  socket?.on("updateChannelMembers", async (channelId: number) => {
-    if (thisChannel.value && channelId === thisChannel.value.id) {
-      let data = await fetchJSONDatas("api/chat/members", "POST", {
-        id: thisChannel.value.id,
-      });
-      channelMembers.value.forEach(await fetchUserAvatarURL);
-      channelMembers.value = data;
-    }
-  });
-  socket?.on("Update conv list", (convData: { conv: privateConv }) => {
-    console.log("UPDATE");
-  });
+  // var audio = new Audio(require("../assets/adelsol.mp3"));
+  // socket?.on("Message to the client", async (privateMessage: { author: string; text: string }) => {
+  //   if (privateMessage.author == friendNickname.value) messagesToDisplay.value.push(privateMessage);
+  //   else {
+  //     await getAllConvs();
+  //     organizeFriends();
+  //     notifConv(privateMessage.author);
+  //     audio.play();
+  //   }
+  // });
+  // socket?.on("messageReceived", (channelId: number, msg: Message) => {
+  //   if (thisChannel.value && channelId === thisChannel.value.id) {
+  //     msg.date = moment(msg.date).tz(timezone).add(1, "hours").format("MMMM Do YYYY, h:mm:ss a");
+  //     messagesToDisplay.value.push(msg);
+  //     channelMessageSkip.value++;
+  //   } else {
+  //     console.log("incoming message");
+  //   }
+  // });
+  // socket?.on("updateChannelMembers", async (channelId: number) => {
+  //   if (thisChannel.value && channelId === thisChannel.value.id) {
+  //     let data = await fetchJSONDatas("api/chat/members", "POST", {
+  //       id: thisChannel.value.id,
+  //     });
+  //     channelMembers.value.forEach(await fetchUserAvatarURL);
+  //     channelMembers.value = data;
+  //   }
+  // });
+  // socket?.on("Update conv list", (convData: { conv: privateConv }) => {
+  //   console.log("UPDATE");
+  // });
 
-  store.$subscribe((mutation, state) => {
-    if (!state.socket?.hasListeners("Message to the client")) {
-      state.socket?.on("Message to the client", async (privateMessage: { author: string; text: string }) => {
-        console.log(1);
+  // store.$subscribe((mutation, state) => {
+  //   if (!state.socket?.hasListeners("Message to the client")) {
+  //     state.socket?.on("Message to the client", async (privateMessage: { author: string; text: string }) => {
+  //       console.log(1);
 
-        if (privateMessage.author == friendNickname.value) messagesToDisplay.value.push(privateMessage);
-        else {
-          await getAllConvs();
-          organizeFriends();
-          notifConv(privateMessage.author);
-          audio.play();
-        }
-      });
-    }
+  //       if (privateMessage.author == friendNickname.value) messagesToDisplay.value.push(privateMessage);
+  //       else {
+  //         await getAllConvs();
+  //         organizeFriends();
+  //         notifConv(privateMessage.author);
+  //         audio.play();
+  //       }
+  //     });
+  //   }
 
-    if (!state.socket?.hasListeners("Update conv list")) {
-      state.socket?.on("Update conv list", (convData: { conv: privateConv }) => {
-        console.log("UPDATE");
+  //   if (!state.socket?.hasListeners("Update conv list")) {
+  //     state.socket?.on("Update conv list", (convData: { conv: privateConv }) => {
+  //       console.log("UPDATE");
 
-        let convIndex = privateConvs.value.findIndex((conv) => conv.uuid === convData.conv.uuid);
-        const convToTop = privateConvs.value.splice(convIndex, 1)[0];
-        privateConvs.value.splice(0, 0, convToTop);
-      });
-    }
-  });
-
-  window.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      if (thisChannel.value == null) sendPrivateMessage(friendNickname.value);
-      else sendChannelMessage();
-    }
-  });
+  //       let convIndex = privateConvs.value.findIndex((conv) => conv.uuid === convData.conv.uuid);
+  //       const convToTop = privateConvs.value.splice(convIndex, 1)[0];
+  //       privateConvs.value.splice(0, 0, convToTop);
+  //     });
+  //   }
+  // });
   await getAllConvs();
   // if (store.user?.friends) friends.value = JSON.parse(JSON.stringify(store.user?.friends)); what is this
   // organizeFriends();

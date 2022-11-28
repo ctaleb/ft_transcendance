@@ -19,7 +19,7 @@ export class PrivateConvController {
   @Get('getMessages/:id/:offset')
   async getMessages(@Request() req, @Param('id') id, @Param('offset') offset: number) {
     const conv = await this.privateConvService.getJoinedConv(req.user.payload.id, id);
-    return await conv.loadMessages(offset);
+    return await (await conv.loadMessages(offset)).reverse();
   }
 
   @UseGuards(JwtAuthGuard)

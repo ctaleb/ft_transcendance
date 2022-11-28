@@ -1,10 +1,11 @@
 @import "mixins/sizes";
 @import "mixins/border";
 @import "variables";
-@import "chat/menu";
-@import "chat/global";
-@import "chat/window.header";
 @import "chat/channel.member";
+@import "chat/global";
+@import "chat/menu";
+@import "chat/window.header";
+@import "chat/messages";
 @import "chat/chat";
 @import "profile";
 @import "alert";
