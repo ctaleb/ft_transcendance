@@ -83,6 +83,19 @@ onMounted(async () => {
   }
 });
 
+async function sendCode() {
+  await fetch("http://" + window.location.hostname + ":3000/api/twofactor/sendCode/" + localStorage.getItem("phoneTo2fa"), {
+    method: "POST",
+  })
+    .then((data) => data.json())
+    .then((data) => {
+      console.log(data.status);
+      //error in the console(unexpected json input) because i don't return jsons format in the service and the controller. Need to add return before the send function, and make a json return int eh last then
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+}
 async function login() {
   let data = await funcs
     .fetchJSONDatas("api/Authentication/login", "POST", {
@@ -167,20 +180,6 @@ async function studentLogin(code: string) {
   funcs.trySetupUser().then(() => {
     router.push("/game");
   });
-
-  async function sendCode() {
-    await fetch("http://" + window.location.hostname + ":3000/api/twofactor/sendCode/" + localStorage.getItem("phoneTo2fa"), {
-      method: "POST",
-    })
-      .then((data) => data.json())
-      .then((data) => {
-        console.log(data.status);
-        //error in the console(unexpected json input) because i don't return jsons format in the service and the controller. Need to add return before the send function, and make a json return int eh last then
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  }
 }
 </script>
 
