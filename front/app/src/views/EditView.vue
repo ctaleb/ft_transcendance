@@ -1,37 +1,61 @@
 <template>
-  <div style="margin: 3rem">
-    <h2>{{ user.nickname }} profile edition</h2>
-    <label class="switch">
-      <input type="checkbox" id="2faSwitch" @change="twoFactorSwitch($event)" />
-      <span class="slider round"></span>
-    </label>
-    <div>
+  <h2>{{ user.nickname }} profile edition</h2>
+  <div class="mainContainer">
+    <div class="textInputs">
+      <h4>Personnal informations</h4>
       <div class="edition-section">
-        <input class="text-input" type="text" v-model="nickname" />
-        <input class="submit-input" type="submit" value="update nickname" @click.stop.prevent="updateNickname()" />
+        <label for="nick" class="label">Nickname</label>
+        <hr class="solid" />
+        <div class="inputAndButton">
+          <input id="nick" class="text-input" type="text" v-model="nickname" />
+          <input class="submit-input" type="submit" value="update nickname" @click.stop.prevent="updateNickname()" />
+        </div>
       </div>
       <div class="edition-section">
-        <img :src="avatarUrl" alt="" class="image" /><br />
-        <label for="avatar">Update your profile picture:</label><br />
-        <input type="file" id="avatar" name="avatar" accept="image/*" @change="updateAvatar" />
-      </div>
-      <div class="edition-section">
-        <input class="text-input" type="text" placeholder="+33 6 11 22 33 44" v-model="phone" @input="formatPhone" />
-        <input class="submit-input" type="submit" value="update phone" :disabled="phoneFormatError.length ? true : false" @click.stop.prevent="updatePhone()" />
+        <label for="phone" class="label">Phone</label>
+        <hr class="solid" />
+
+        <div class="inputAndButton">
+          <input id="phone" class="text-input" type="text" placeholder="+33 6 11 22 33 44" v-model="phone" @input="formatPhone" />
+          <input
+            class="submit-input"
+            type="submit"
+            value="update phone"
+            :disabled="phoneFormatError.length ? true : false"
+            @click.stop.prevent="updatePhone()"
+          />
+        </div>
         <div v-if="phoneFormatError.length">
           {{ phoneFormatError }}
         </div>
       </div>
       <div v-if="!user.intraId" class="edition-section">
-        <input class="text-input" type="password" placeholder="new password" v-model="password" /><br />
-        <br />
-        <input class="text-input" type="password" placeholder="please confirm new password" v-model="confirmPassword" />
-        <input class="submit-input" type="submit" value="confirm password" @click.stop.prevent="updatePassword()" />
+        <label for="password">Password</label>
+        <hr class="solid" />
+
+        <input id="password" class="text-input" type="password" placeholder="new password" v-model="password" /><br />
+        <div class="inputAndButton">
+          <input class="text-input" type="password" placeholder="please confirm new password" v-model="confirmPassword" />
+          <input class="submit-input" type="submit" value="confirm password" @click.stop.prevent="updatePassword()" />
+        </div>
       </div>
     </div>
-    <button type="button" id="deleteAccountButton" @click.stop.prevent="deleteAccount()">DELETE MY ACCOUNT</button>
+    <div class="avatarAndTwofa">
+      <h4>Avatar</h4>
+      <div class="edition-section">
+        <img :src="avatarUrl" alt="" class="image" /><br />
+        <label for="avatar"
+          >Select picture <i class="gg-image"></i><input type="file" id="avatar" name="avatar" accept="image/*" @change="updateAvatar" /></label
+        ><br />
+      </div>
+      <h4>2fa</h4>
+      <label class="switch">
+        <input type="checkbox" id="2faSwitch" @change="twoFactorSwitch($event)" />
+        <span class="slider round"></span>
+      </label>
+    </div>
+    <friend-alert :requester-name="incomingFriendRequest" />
   </div>
-  <friend-alert :requester-name="incomingFriendRequest" />
 </template>
 
 <script lang="ts">
@@ -270,31 +294,108 @@ export default defineComponent({
 });
 </script>
 
-<style scoped>
-.edition-section {
-  border: 0.2rem solid black;
-  border-radius: 10px;
-  margin-top: 0.5rem;
-  padding: 0.5rem;
-}
-.text-input {
-  padding: 0.7rem;
-  width: 50%;
-  box-sizing: border-box;
-}
-.submit-input {
-  padding: 0.7rem;
-  background-color: #5aff75;
-}
-#deleteAccountButton {
-  background-color: #e13511;
-  border-radius: 20px;
-  width: 15rem;
-  box-sizing: border-box;
-  padding: 1rem;
-  margin-top: 2rem;
+<style lang="scss" scoped>
+@import "../styles/variables";
+
+.mainContainer {
+  width: 100vw;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
 }
 
+.textInputs {
+  padding: 2rem;
+  font-size: 25px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid $primary;
+  border-radius: 10px;
+  width: 40vw;
+  align-items: flex-start;
+  label {
+    color: $primary;
+  }
+  .edition-section {
+    margin-top: 1em;
+    margin-bottom: 1em;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    hr {
+      border-color: #c1a36b;
+      text-align: left;
+      height: 1px;
+      width: 75%;
+      margin-inline: 0;
+      margin-top: 1px;
+    }
+    #password {
+      width: 75%;
+      border-top-right-radius: 6px;
+      border-bottom-right-radius: 6px;
+    }
+    .inputAndButton {
+      display: flex;
+      flex-direction: row;
+      input[type*="text"],
+      input[type*="password"] {
+        width: 60%;
+      }
+      input[type*="submit"] {
+        width: 15%;
+        border: 1px solid yellow;
+        border-top-right-radius: 6px;
+        border-bottom-right-radius: 6px;
+        border-left-style: hidden;
+      }
+    }
+  }
+  .text-input {
+    padding: 0.8rem;
+    border: 1px solid yellow;
+    border-right-style: hidden;
+    border-top-left-radius: 6px;
+    border-bottom-left-radius: 6px;
+  }
+}
+.avatarAndTwofa {
+  padding: 2rem;
+  font-size: 25px;
+  border: 1px solid $primary;
+  border-radius: 10px;
+  width: 40vw;
+  .edition-section {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    img {
+      width: 250px;
+      height: 250px;
+      border: 1px solid $primary;
+      border-radius: 10000px;
+    }
+    label {
+      input {
+        display: none;
+      }
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      padding: 1rem;
+      border: 1px solid $primary;
+      i {
+        margin-left: 10px;
+      }
+    }
+    label:hover {
+      background: #c1a36b;
+      cursor: pointer;
+    }
+  }
+}
 .switch {
   position: relative;
   display: inline-block;
@@ -359,5 +460,41 @@ input:checked + .slider:before {
   width: 15%;
   height: 15rem;
   object-fit: cover;
+}
+
+//css icon
+.gg-image {
+  box-sizing: border-box;
+  position: relative;
+  display: block;
+  transform: scale(var(--ggs, 1));
+  width: 20px;
+  height: 16px;
+  overflow: hidden;
+  box-shadow: 0 0 0 2px;
+  border-radius: 2px;
+}
+.gg-image::after,
+.gg-image::before {
+  content: "";
+  display: block;
+  box-sizing: border-box;
+  position: absolute;
+  border: 2px solid;
+}
+.gg-image::after {
+  transform: rotate(45deg);
+  border-radius: 3px;
+  width: 16px;
+  height: 16px;
+  top: 9px;
+  left: 6px;
+}
+.gg-image::before {
+  width: 6px;
+  height: 6px;
+  border-radius: 100%;
+  top: 2px;
+  left: 2px;
 }
 </style>
