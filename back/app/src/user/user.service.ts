@@ -1,4 +1,4 @@
-import { Injectable, HttpStatus, HttpException, forwardRef, Inject } from '@nestjs/common';
+import { Injectable, HttpStatus, HttpException, forwardRef, Inject, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from 'src/user/user.entity';
 import { CreateUserDto } from 'src/user/user.dto';
@@ -78,7 +78,7 @@ export class UserService {
         nickname: newNickname,
       });
       if (userExists) {
-        throw new HttpException('User not Found', HttpStatus.NOT_FOUND);
+        throw new UnauthorizedException('User already exists');
       }
       await this._usersRepository.update(user.id, { nickname: newNickname });
       const user_with_password = await this.getUserByNickname(newNickname);

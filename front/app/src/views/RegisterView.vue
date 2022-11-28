@@ -42,6 +42,7 @@ import { useRouter } from "vue-router";
 import useVuelidate from "@vuelidate/core";
 import { required, minLength, maxLength, sameAs, helpers } from "@vuelidate/validators";
 import { addAlertMessage } from "@/functions/funcs";
+let funcs = require("../functions/funcs");
 
 export default defineComponent({
   name: "RegisterView",
@@ -50,7 +51,7 @@ export default defineComponent({
   setup() {
     const hidePassword = ref(true);
     const passwordFieldType = computed(() => (hidePassword.value ? "password" : "text"));
-
+    let fileTooBig: boolean = false;
     const state = reactive({
       nickname: "",
       password: {
@@ -81,7 +82,7 @@ export default defineComponent({
       password: {
         firstTry: {
           required,
-          minLength: minLength(6),
+          minLength: minLength(9),
           containsUppercase: helpers.withMessage("Password must contain at least one uppercase", containsUppercase),
           containsLowercase: helpers.withMessage("Password must contain at least one lowercase", containsLowercase),
           containsSpecial: helpers.withMessage("Password must contain at least one of '#?!@$%^&*-'", containsSpecial),
@@ -100,7 +101,13 @@ export default defineComponent({
     const router = useRouter();
 
     function updateAvatar(event: Event) {
-      state.avatar = (event.target as HTMLInputElement).files?.[0]!;
+      if ((event.target as HTMLInputElement).files?.[0].size! < 2097152) {
+        state.avatar = (event.target as HTMLInputElement).files?.[0]!;
+        fileTooBig = false;
+      } else {
+        fileTooBig = true;
+        funcs.addAlertMessage("File too big, should be less than 2Mb", 1);
+      }
     }
 
     async function createPost() {
@@ -108,7 +115,6 @@ export default defineComponent({
 
       formData.append("nickname", state.nickname);
       formData.append("password", state.password.firstTry);
-      console.log(formData.getAll("nickname"));
       if (state.avatar != File.prototype) {
         formData.append("avatar", state.avatar, state.avatar.name);
       }
@@ -120,8 +126,8 @@ export default defineComponent({
           if (!response.ok) return Promise.reject();
           return response.json();
         })
-        .catch(async (err) => {
-          addAlertMessage("Can't register the user", 3); // 3 is error
+        .catch(async () => {
+          addAlertMessage("Nickname already in use", 3);
           return null;
         });
       if (data) {
@@ -130,6 +136,7 @@ export default defineComponent({
     }
 
     const submitForm = async () => {
+      if (fileTooBig) return;
       const isFormValid = await v$.value.$validate();
       if (isFormValid) {
         createPost();
