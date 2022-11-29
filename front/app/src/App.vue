@@ -245,7 +245,7 @@ onMounted(() => {
 @import "styles/custom.scss";
 
 body {
-  background-color: #010b12;
+  background-color: #181a1c;
   color: #aa9e7d;
   margin: 0;
   padding: 0;

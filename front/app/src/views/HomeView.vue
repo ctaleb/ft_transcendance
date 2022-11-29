@@ -1,14 +1,20 @@
 <template>
-  <div id="backgroundVideo">
-    <video class="video" ref="video" autoplay loop muted>
-      <source src="../assets/stars.webm" type="video/mp4" />
-    </video>
-  </div>
+  <!--<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" class="topSvg" preserveAspectRatio="none">
+    <path
+      fill="#C1A36B"
+      fill-opacity="1"
+      d="M0,224L0,96L205.7,96L205.7,32L411.4,32L411.4,96L617.1,96L617.1,160L822.9,160L822.9,288L1028.6,288L1028.6,64L1234.3,64L1234.3,224L1440,224L1440,0L1234.3,0L1234.3,0L1028.6,0L1028.6,0L822.9,0L822.9,0L617.1,0L617.1,0L411.4,0L411.4,0L205.7,0L205.7,0L0,0L0,0Z"
+    ></path>
+  </svg>-->
+  <svg preserveAspectRatio="none" class="topSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
+    <path
+      fill="#C1A36B"
+      fill-opacity="1"
+      d="M0,288L24,277.3C48,267,96,245,144,202.7C192,160,240,96,288,101.3C336,107,384,181,432,181.3C480,181,528,107,576,90.7C624,75,672,117,720,144C768,171,816,181,864,154.7C912,128,960,64,1008,74.7C1056,85,1104,171,1152,208C1200,245,1248,235,1296,240C1344,245,1392,267,1416,277.3L1440,288L1440,0L1416,0C1392,0,1344,0,1296,0C1248,0,1200,0,1152,0C1104,0,1056,0,1008,0C960,0,912,0,864,0C816,0,768,0,720,0C672,0,624,0,576,0C528,0,480,0,432,0C384,0,336,0,288,0C240,0,192,0,144,0C96,0,48,0,24,0L0,0Z"
+    ></path>
+  </svg>
   <div v-if="twofaFlag == false" class="main_container">
     <img src="https://findicons.com/files/icons/1275/naruto_vol_1/256/uzumaki_naruto.png" width="80" height="80" alt="" />
-    <div class="bounce">
-      <p>SUPERPONG</p>
-    </div>
     <form @submit.prevent="login" style="margin-bottom: 2em">
       <input class="input" placeholder="Username" v-model="username" type="text" id="username" name="username" required /><br /><br />
       <input class="input" placeholder="Password" v-model="password" type="password" id="password" name="password" required /><br /><br />
@@ -28,6 +34,20 @@
       @twofaSuccessClassicUser="login"
       @twofaSuccessIntraUser="studentLogin"
     />
+  </div>
+  <div class="howToPlay">
+    <div class="howToPlaySection">
+      <i class="gg-log-in"></i>
+      <h4>Register</h4>
+    </div>
+    <div class="howToPlaySection">
+      <i class="gg-games"></i>
+      <h4>Play</h4>
+    </div>
+    <div class="howToPlaySection">
+      <i class="gg-comment"></i>
+      <h4>Chat with your friends</h4>
+    </div>
   </div>
 </template>
 
@@ -186,95 +206,20 @@ async function studentLogin(code: string) {
 <style lang="scss" scoped>
 @import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Press+Start+2P&display=swap");
-.bounce {
-  height: 50px;
-  overflow: hidden;
-  position: relative;
-  color: #aa9e7d;
-  margin: 1rem auto;
-  width: 20rem;
-  border-left: #aa9e7d 4px SOLID;
-  border-right: #aa9e7d 4px SOLID;
-  p {
-    position: absolute;
+
+.topSvg {
+  position: absolute;
+  top: 0;
+  height: 20vh;
+  width: 100vw;
+  path {
     width: 100%;
-    height: 100%;
-    margin: 0;
-    line-height: 50px;
-    text-align: center;
-    font-family: "Orbitron", sans-serif;
-    font-size: 25px;
-    -moz-transform: translateX(50%);
-    -webkit-transform: translateX(50%);
-    transform: translateX(50%);
-    -moz-animation: bouncing-text 1s linear infinite alternate;
-    -webkit-animation: bouncing-text 1s linear infinite alternate;
-    animation: bouncing-text 2s linear infinite alternate;
-  }
-}
-
-@-moz-keyframes bouncing-text {
-  0% {
-    -moz-transform: translateX(50%);
-  }
-  100% {
-    -moz-transform: translateX(-50%);
-  }
-}
-
-@-webkit-keyframes bouncing-text {
-  0% {
-    -webkit-transform: translateX(50%);
-  }
-  100% {
-    -webkit-transform: translateX(-50%);
-  }
-}
-
-@keyframes bouncing-text {
-  0% {
-    -moz-transform: translateX(22%);
-    -webkit-transform: translateX(22%);
-    transform: translateX(22%);
-  }
-  100% {
-    -moz-transform: translateX(-22%);
-    -webkit-transform: translateX(-22%);
-    transform: translateX(-22%);
   }
 }
 .twofaComponentDiv {
   display: flex;
   justify-content: center;
   align-items: center;
-}
-
-#backgroundVideo {
-  position: fixed;
-  right: 0;
-  bottom: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: -1;
-  .video {
-    width: 100%;
-    height: 100%;
-  }
-}
-
-.loadingGif {
-  width: 100vw;
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.main_title {
-  //  font-family: "Press Start 2P", cursive;
-  font-family: "Orbitron", sans-serif;
-  margin: 1rem auto;
-  width: 20rem;
 }
 .button {
   position: relative;
@@ -288,18 +233,33 @@ async function studentLogin(code: string) {
 }
 
 .main_container {
-  //  https://i.gifer.com/QgxJ.gif
-  background-image: url("https://cdna.artstation.com/p/assets/images/images/015/582/594/4k/artur-sadlos-leg-never-sh270-background-as-v001.jpg?1548866512&dl=1");
-  background-size: cover;
+  z-index: 11;
+  background: rgb(47, 42, 44);
+  background: linear-gradient(165deg, rgba(47, 42, 44, 1) 50%, rgba(31, 31, 24, 1) 100%);
   border: 2px solid;
   border-image-slice: 1;
-  border-image-source: linear-gradient(to bottom, #c1a36b, #635e4f);
-  border-radius: 10px;
   box-shadow: 5px 5px 5px #5c5b58;
+  border-radius: 10px;
   color: #aa9e7d;
   margin: 20rem auto;
-  width: 60rem;
+  width: 30vw;
   text-align: center;
+  img {
+    margin-top: 2rem;
+  }
+}
+.howToPlay {
+  width: 100vw;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  .howToPlaySection {
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
 }
 .input {
   padding: 8px;
