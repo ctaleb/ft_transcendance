@@ -1,0 +1,14 @@
+@import "variables";
+input {
+  color: white;
+  font-size: 20px;
+  padding: 15px;
+  width: 60%;
+  border-bottom: $primary;
+  background: transparent;
+  border: none;
+  border-bottom: solid 2px $primary;
+}
+input:focus {
+  outline: none;
+}

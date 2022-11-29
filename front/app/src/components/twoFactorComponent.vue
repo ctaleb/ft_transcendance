@@ -70,27 +70,12 @@ async function sendCode() {
 }
 </script>
 <style lang="scss" scoped>
+@import "../styles/inputsAndButtons.scss";
 .mainContainer {
-  .codeInput {
-    height: 50px;
-    font-size: 20px;
-    margin-bottom: 10px;
+  text-align: center;
+  input {
     text-align: center;
-    letter-spacing: 5px;
-    border: 1px solid white;
-    border-radius: 10px;
   }
-  .sendCodeButton {
-    width: 20%;
-    color: white;
-    height: 5%;
-    margin-top: 15px;
-  }
-  .validateCodeButton {
-    width: 20%;
-    color: white;
-    height: 7%;
-    margin-top: 15px;
-  }
+  margin-bottom: auto;
 }
 </style>

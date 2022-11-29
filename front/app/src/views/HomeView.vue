@@ -229,6 +229,7 @@ async function studentLogin(code: string) {
 @import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Press+Start+2P&display=swap");
 @import "../styles/variables";
+@import "../styles/inputsAndButtons";
 @import "../styles/mixins/sizes";
 .bottomSvg {
   position: absolute;
@@ -257,7 +258,6 @@ async function studentLogin(code: string) {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: space-around;
     z-index: 11;
     background: rgb(47, 42, 44);
     background: linear-gradient(165deg, rgba(47, 42, 44, 1) 50%, rgba(31, 31, 24, 1) 100%);
@@ -272,19 +272,6 @@ async function studentLogin(code: string) {
 
     .classicLogin {
       width: 100%;
-      input {
-        color: white;
-        font-size: 20px;
-        padding: 15px;
-        width: 60%;
-        border-bottom: $primary;
-        background: #2f2a2c;
-        border: none;
-        border-bottom: solid 2px $primary;
-      }
-      input:focus {
-        outline: none;
-      }
     }
     .intraLogin {
       width: 100%;
@@ -303,6 +290,8 @@ async function studentLogin(code: string) {
       align-items: center;
       justify-content: center;
       width: 100%;
+      margin-top: auto;
+      margin-bottom: 15px;
       a {
         display: block;
         text-decoration: none;
