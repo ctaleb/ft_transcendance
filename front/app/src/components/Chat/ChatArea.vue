@@ -12,7 +12,7 @@
           <img class="user-image" :src="User.getAvatar(store.user)" alt="" />
         </div>
         <div v-else class="msg-in">
-          <img class="user-image" :src="User.getAvatarByNickname(message.author, store.currentChat!)" alt="" />
+          <img class="user-image" :src="message.author != 'UNKNOWN' ? User.getAvatarByNickname(message.author, store.currentChat!) : defaultAvatarUrl" alt="" />
           <div class="chat-message chat-message-in">
             <h4>{{ message.author }}</h4>
             <p>{{ message.text }}</p>
@@ -39,6 +39,10 @@ import { Conversation } from "@/types/Conversation";
 import { Message } from "@/types/Message";
 import { User } from "@/types/User";
 import { nextTick, onMounted, ref, watch } from "vue";
+import defaultAvatarUrl from "../../assets/defaultAvatar.png";
+
+const defaultAvatarImg = new Image();
+defaultAvatarImg.src = defaultAvatarUrl;
 
 const store = useStore();
 
