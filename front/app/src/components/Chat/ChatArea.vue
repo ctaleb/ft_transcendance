@@ -48,7 +48,6 @@ const store = useStore();
 
 let currentChannelId = store.currentChat?.id;
 let socket = store.socket;
-let loadMore = false;
 
 const messageField = ref("");
 const disableLoadMore = ref(false);
@@ -84,7 +83,6 @@ const sendMessage = () => {
 };
 
 const loadMoreMessages = () => {
-  loadMore = true;
   if (isChannel(store.currentChat!)) {
     loadChannelMessages(<Channel>store.currentChat);
   } else {
@@ -137,24 +135,17 @@ store.$subscribe((mutation, state) => {
     scrollDownMessages("smooth");
   }
   currentChannelId = state.currentChat?.id;
-  // watch(
-  //   () => state.currentChat?.id,
-  //   () => {
-  //     disableLoadMore.value = false;
-  //     if (state.currentChat && state.currentChat!.messages!.length < 20) disableLoadMore.value = true;
-  //   }
-  // );
 });
 
 onMounted(() => {
-  watch(
-    () => currentChannelId,
-    () => {
-      disableLoadMore.value = false;
-      if (store.currentChat!.id && store.currentChat!.messages!.length < 20) disableLoadMore.value = true;
-    }
-  );
   scrollDownMessages("auto");
   if (store.currentChat!.messages!.length < 20) disableLoadMore.value = true;
+  watch(
+    () => store.currentChat?.id,
+    () => {
+      disableLoadMore.value = false;
+      if (store.currentChat && store.currentChat!.messages!.length < 20) disableLoadMore.value = true;
+    }
+  );
 });
 </script>
