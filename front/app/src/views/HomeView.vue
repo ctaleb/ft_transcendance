@@ -8,15 +8,28 @@
   </svg>-->
   <div class="principalSection">
     <div v-if="twofaFlag == false" class="main_container">
-      <img src="https://findicons.com/files/icons/1275/naruto_vol_1/256/uzumaki_naruto.png" width="80" height="80" alt="" />
-      <form @submit.prevent="login" style="margin-bottom: 2em">
-        <input class="input" placeholder="Username" v-model="username" type="text" id="username" name="username" required /><br /><br />
-        <input class="input" placeholder="Password" v-model="password" type="password" id="password" name="password" required /><br /><br />
-        <button type="submit" value="Connexion" class="button classic_login_btn pulse">Connexion</button>
-      </form>
-      <hr class="solid divider" />
-      <a class="button pulse" v-bind:href="intra_redirection"> Continue with 42 </a>
-      <a id="signup_link" href="/signup">New account</a>
+      <img src="../assets/logo.gif" width="270" height="270" alt="" />
+      <div style="width: 100%">
+        <div class="classicLogin">
+          <form @submit.prevent="login" style="margin-bottom: 2em">
+            <input class="input" placeholder="Username" v-model="username" type="text" id="username" name="username" required /><br /><br />
+            <input class="input" placeholder="Password" v-model="password" type="password" id="password" name="password" required /><br /><br />
+            <button type="submit" value="Connexion" class="button classic_login_btn pulse">Login</button>
+          </form>
+        </div>
+        <div class="sectionDivider">
+          <hr class="solid divider" />
+          <h4>Or</h4>
+          <hr class="solid divider" />
+        </div>
+        <div class="intraLogin">
+          <a class="button pulse" v-bind:href="intra_redirection"> Continue with 42 </a>
+        </div>
+      </div>
+      <div class="register">
+        <p>Don't have an account yet ?</p>
+        <a href="/signup" class="button pulse">New account</a>
+      </div>
     </div>
     <div class="svgSection">
       <img src="../assets/taken.svg" alt="" />
@@ -34,7 +47,7 @@
     />
   </div>
   <div class="footer">
-    <h2>How to play ?</h2>
+    <h2>Welcome to Superpong</h2>
     <div class="howToPlay">
       <div class="howToPlaySection">
         <i class="gg-log-in gg-icon"></i>
@@ -215,6 +228,7 @@ async function studentLogin(code: string) {
 <style lang="scss" scoped>
 @import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Press+Start+2P&display=swap");
+@import "../styles/variables";
 .bottomSvg {
   position: absolute;
   bottom: 0;
@@ -230,16 +244,6 @@ async function studentLogin(code: string) {
   justify-content: center;
   align-items: center;
 }
-.button {
-  position: relative;
-  height: auto;
-  padding: 5px;
-  color: #aa9e7d;
-  border: 3px solid;
-  border-image-slice: 1;
-  border-image-source: linear-gradient(to bottom, #c1a36b, #635e4f);
-  background: linear-gradient(to bottom right, #191e2a, #182121);
-}
 .principalSection {
   display: flex;
   flex-direction: row;
@@ -251,8 +255,8 @@ async function studentLogin(code: string) {
     margin-top: 5rem;
     display: flex;
     flex-direction: column;
-    justify-content: center;
     align-items: center;
+    justify-content: space-around;
     z-index: 11;
     background: rgb(47, 42, 44);
     background: linear-gradient(165deg, rgba(47, 42, 44, 1) 50%, rgba(31, 31, 24, 1) 100%);
@@ -264,15 +268,81 @@ async function studentLogin(code: string) {
     width: 30%;
     height: 65vh;
     text-align: center;
+
+    .classicLogin {
+      width: 100%;
+      input {
+        color: white;
+        font-size: 20px;
+        padding: 15px;
+        width: 60%;
+        border-bottom: $primary;
+        background: #2f2a2c;
+        border: none;
+        border-bottom: solid 2px $primary;
+      }
+      input:focus {
+        outline: none;
+      }
+    }
+    .intraLogin {
+      width: 100%;
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      a {
+        display: block;
+        text-decoration: none;
+        color: $primary;
+      }
+    }
+    .register {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      a {
+        display: block;
+        text-decoration: none;
+        color: $primary;
+      }
+    }
     img {
       margin-top: 2rem;
     }
-  }
-  .svgSection {
-    width: 30%;
-    img {
-      width: 100%;
+    .sectionDivider {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-around;
+      align-items: center;
+
+      h4 {
+        margin: 0 15px 0 15px;
+      }
+      .divider {
+        margin: 2rem auto;
+        border-color: #aa9e7d;
+        width: 10rem;
+      }
     }
+    .button {
+      width: 60%;
+      padding: 10px;
+      background: transparent;
+      border: 1px solid $primary;
+      cursor: pointer;
+    }
+    .button:hover {
+      background: $primary;
+      color: white;
+    }
+  }
+}
+.svgSection {
+  width: 30%;
+  img {
+    width: 100%;
   }
 }
 
@@ -301,13 +371,7 @@ async function studentLogin(code: string) {
     color: white;
   }
 }
-.input {
-  padding: 8px;
-  border-radius: 60px;
-  border: solid 3px #aa9e7d;
-  border-radius: 10px;
-  width: 12rem;
-}
+
 #signup_link {
   color: white;
   display: block;
@@ -316,15 +380,7 @@ async function studentLogin(code: string) {
   font-size: 20px;
   text-decoration: underline;
 }
-.classic_login_btn {
-  width: 12rem;
-  margin-left: 0;
-}
-.divider {
-  margin: 2rem auto;
-  border-color: #aa9e7d;
-  width: 12rem;
-}
+
 // Animate the size, outside
 .pulse:hover,
 .pulse:focus {
