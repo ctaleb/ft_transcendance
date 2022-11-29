@@ -43,12 +43,12 @@ const toggleMemberAction = () => {
   toggleMode.value = !toggleMode.value;
 };
 
-const giveTakeAdmin = () => {
+const giveTakeAdmin = async () => {
   if (props.me.role === ChannelRole.OWNER) {
     if (props.member.role === ChannelRole.MEMBER) {
-      giveAdmin(props.member);
+      await giveAdmin(props.member);
     } else {
-      takeAdmin(props.member);
+      await takeAdmin(props.member);
     }
     socket?.emit("updateChannelMembers", { id: store.currentChat!.id });
   } else {

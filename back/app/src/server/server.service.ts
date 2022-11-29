@@ -20,11 +20,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { UserEntity } from 'src/user/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import {
-  MatchHistoryEntity,
-  GameSummaryData,
-  PlayerInfoData,
-} from './entities/match_history.entity';
+import { MatchHistoryEntity, GameSummaryData, PlayerInfoData } from './entities/match_history.entity';
 import { DeepPartial, Repository } from 'typeorm';
 import { UserService } from 'src/user/user.service';
 import { Channel } from './entities/channel';
@@ -67,9 +63,7 @@ export class ServerService {
 
   //generic stuff
   async newUser(token: string, user: string, sock?: Socket) {
-    const bdd_user: UserEntity = await this._userService.getUserByNickname(
-      user,
-    );
+    const bdd_user: UserEntity = await this._userService.getUserByNickname(user);
     const newUser: User = {
       token: token,
       socket: null,
@@ -114,8 +108,7 @@ export class ServerService {
   //chat stuff
   identify(name: string, clientId: string, room: string) {
     this.clientToUser[clientId] = name;
-    if (this.rooms.find((element) => element.name === room) === undefined)
-      this.rooms.push({ name: room, messages: [], userList: [] });
+    if (this.rooms.find((element) => element.name === room) === undefined) this.rooms.push({ name: room, messages: [], userList: [] });
     this.rooms.find((element) => element.name === room).userList.push(name);
     return Object.values(this.clientToUser);
   }
@@ -188,25 +181,16 @@ export class ServerService {
     if (game.gameState.score.client >= game.room.options.scoreMax) {
       elo = await this.elo_calc(game.client, game.host);
       await this.summarize(game, elo);
-      const data: GameSummaryData = this.summarizeEntityToData(
-        game.gameSummary,
-      );
+      const data: GameSummaryData = this.summarizeEntityToData(game.gameSummary);
       const revdata: GameSummaryData = this.inverseSummary(data);
       game.host.socket.emit('Lose', game.room, elo, data);
       game.client.socket.emit('Win', game.room, elo, revdata);
     } else if (game.gameState.score.host >= game.room.options.scoreMax) {
       elo = await this.elo_calc(game.host, game.client);
       await this.summarize(game, elo);
-      const data: GameSummaryData = this.summarizeEntityToData(
-        game.gameSummary,
-      );
+      const data: GameSummaryData = this.summarizeEntityToData(game.gameSummary);
       game.host.socket.emit('Win', game.room, elo, data);
-      game.client.socket.emit(
-        'Lose',
-        game.room,
-        elo,
-        this.inverseSummary(data),
-      );
+      game.client.socket.emit('Lose', game.room, elo, this.inverseSummary(data));
     }
     game.host.status = 'idle';
     game.host.socket.leave(game.room.name);
@@ -235,8 +219,7 @@ export class ServerService {
 
   reconnect(player: User) {
     let game = this.games.find((element) => element.host.name === player.name);
-    if (!game)
-      game = this.games.find((element) => element.client.name === player.name);
+    if (!game) game = this.games.find((element) => element.client.name === player.name);
     if (game) {
       player.socket.emit('reconnect', game.room);
       player.socket.join(game.room.name);
@@ -293,34 +276,18 @@ export class ServerService {
     };
     if (host) newGame.host = host;
     else newGame.host = this.playerQueue.shift();
-    this.initPower(
-      newGame.client,
-      newGame.gameState,
-      newGame.gameState.clientBar,
-      newGame.gameState.hostBar,
-    );
-    this.initPower(
-      newGame.host,
-      newGame.gameState,
-      newGame.gameState.hostBar,
-      newGame.gameState.clientBar,
-    );
+    this.initPower(newGame.client, newGame.gameState, newGame.gameState.clientBar, newGame.gameState.hostBar);
+    this.initPower(newGame.host, newGame.gameState, newGame.gameState.hostBar, newGame.gameState.clientBar);
     return newGame;
   }
 
   initGameValues(game: Game) {
-    game.gameState.ball.speed.x *=
-      game.room.options.ballSpeed == 0 ? 0.5 : game.room.options.ballSpeed;
-    game.gameState.ball.speed.y *=
-      game.room.options.ballSpeed == 0 ? 0.5 : game.room.options.ballSpeed;
-    game.gameState.ball.size *=
-      game.room.options.ballSize == 0 ? 0.5 : game.room.options.ballSize;
-    game.gameState.clientBar.maxSpeed *=
-      game.room.options.barSpeed == 0 ? 0.5 : game.room.options.barSpeed;
-    game.gameState.clientBar.size.x *=
-      game.room.options.barSize == 0 ? 0.5 : game.room.options.barSize;
-    game.gameState.clientBar.size.y *=
-      game.room.options.barSize == 0 ? 0.5 : game.room.options.barSize;
+    game.gameState.ball.speed.x *= game.room.options.ballSpeed == 0 ? 0.5 : game.room.options.ballSpeed;
+    game.gameState.ball.speed.y *= game.room.options.ballSpeed == 0 ? 0.5 : game.room.options.ballSpeed;
+    game.gameState.ball.size *= game.room.options.ballSize == 0 ? 0.5 : game.room.options.ballSize;
+    game.gameState.clientBar.maxSpeed *= game.room.options.barSpeed == 0 ? 0.5 : game.room.options.barSpeed;
+    game.gameState.clientBar.size.x *= game.room.options.barSize == 0 ? 0.5 : game.room.options.barSize;
+    game.gameState.clientBar.size.y *= game.room.options.barSize == 0 ? 0.5 : game.room.options.barSize;
     game.gameState.hostBar.maxSpeed = game.gameState.clientBar.maxSpeed;
     game.gameState.hostBar.size.x = game.gameState.clientBar.size.x;
     game.gameState.hostBar.size.y = game.gameState.clientBar.size.y;
@@ -344,20 +311,10 @@ export class ServerService {
   }
 
   initPower(user: User, gameState: GameState, myBar: IBar, opponentBar: IBar) {
-    if (user.gameData.power.name == 'elastico')
-      user.gameData.power = new PowerElastico(myBar, user.gameData.power.name);
-    else if (user.gameData.power.name == 'exhaust')
-      user.gameData.power = new PowerExhaust(
-        opponentBar,
-        user.gameData.power.name,
-      );
-    else if (user.gameData.power.name == 'minimo')
-      user.gameData.power = new PowerMinimo(
-        opponentBar,
-        user.gameData.power.name,
-      );
-    else if (user.gameData.power.name == 'invisibility')
-      user.gameData.power = new PowerInvisibility(user.gameData.power.name);
+    if (user.gameData.power.name == 'elastico') user.gameData.power = new PowerElastico(myBar, user.gameData.power.name);
+    else if (user.gameData.power.name == 'exhaust') user.gameData.power = new PowerExhaust(opponentBar, user.gameData.power.name);
+    else if (user.gameData.power.name == 'minimo') user.gameData.power = new PowerMinimo(opponentBar, user.gameData.power.name);
+    else if (user.gameData.power.name == 'invisibility') user.gameData.power = new PowerInvisibility(user.gameData.power.name);
   }
 
   handlePower(game: Game) {
@@ -379,12 +336,8 @@ export class ServerService {
 
   async summarize(game: Game, elo: number) {
     try {
-      const host: UserEntity = await this._userService.getUserByNickname(
-        game.host.name,
-      );
-      const client: UserEntity = await this._userService.getUserByNickname(
-        game.client.name,
-      );
+      const host: UserEntity = await this._userService.getUserByNickname(game.host.name);
+      const client: UserEntity = await this._userService.getUserByNickname(game.client.name);
       const match = this._matchHistoryRepository.create({
         host,
         client,
@@ -441,8 +394,7 @@ export class ServerService {
     const player = this.userList.find((element) => element.socket === socket);
     if (!player) return;
     player.gameData.power = new IPower(powerName);
-    if (this.playerQueue.find((element) => element === player))
-      this.playerQueue.splice(this.playerQueue.indexOf(player), 1);
+    if (this.playerQueue.find((element) => element === player)) this.playerQueue.splice(this.playerQueue.indexOf(player), 1);
     if (this.playerQueue.length < 1) {
       this.playerQueue.push(player);
       player.status = 'inQueue';
@@ -466,30 +418,13 @@ export class ServerService {
     if (player) player.gameData.input.push(key);
   }
 
-  updateMoveStatus(
-    player: User,
-    bar: IBar,
-    playerType: string,
-    gameOptions: GameOptions,
-  ) {
+  updateMoveStatus(player: User, bar: IBar, playerType: string, gameOptions: GameOptions) {
     player.gameData.input.forEach((input) => {
       if (input === 'downSpace') player.gameData.power.active();
-      else if (input === 'downRight')
-        playerType === 'host'
-          ? (player.gameData.right = true)
-          : (player.gameData.left = true);
-      else if (input === 'downLeft')
-        playerType === 'host'
-          ? (player.gameData.left = true)
-          : (player.gameData.right = true);
-      else if (input === 'upRight')
-        playerType === 'host'
-          ? (player.gameData.right = false)
-          : (player.gameData.left = false);
-      else if (input === 'upLeft')
-        playerType === 'host'
-          ? (player.gameData.left = false)
-          : (player.gameData.right = false);
+      else if (input === 'downRight') playerType === 'host' ? (player.gameData.right = true) : (player.gameData.left = true);
+      else if (input === 'downLeft') playerType === 'host' ? (player.gameData.left = true) : (player.gameData.right = true);
+      else if (input === 'upRight') playerType === 'host' ? (player.gameData.right = false) : (player.gameData.left = false);
+      else if (input === 'upLeft') playerType === 'host' ? (player.gameData.left = false) : (player.gameData.right = false);
       else if (input === 'downA' && gameOptions.smashes) {
         player.gameData.smashLeft = 0.01;
         player.gameData.smashRight = 0;
@@ -510,26 +445,15 @@ export class ServerService {
   }
 
   moveBar(bar: IBar, player: User, factor: number) {
-    const speedLimit =
-      player.gameData.smashLeft > 0 || player.gameData.smashRight > 0
-        ? 2 * bar.maxSpeed
-        : 7 * bar.maxSpeed;
-    if (
-      (player.gameData.left && player.gameData.right) ||
-      (!player.gameData.left && !player.gameData.right)
-    )
-      bar.speed = 0;
+    const speedLimit = player.gameData.smashLeft > 0 || player.gameData.smashRight > 0 ? 2 * bar.maxSpeed : 7 * bar.maxSpeed;
+    if ((player.gameData.left && player.gameData.right) || (!player.gameData.left && !player.gameData.right)) bar.speed = 0;
     else if (player.gameData.left && !player.gameData.right) {
       if (bar.speed > -speedLimit) bar.speed -= factor == 0 ? 0.5 : 1 * factor;
     } else if (!player.gameData.left && player.gameData.right) {
       if (bar.speed < speedLimit) bar.speed += factor == 0 ? 0.5 : 1 * factor;
     }
 
-    if (
-      (bar.pos.x + bar.speed > 0 && bar.speed < 0) ||
-      (bar.pos.x + bar.speed < 500 && bar.speed > 0)
-    )
-      bar.pos.x += bar.speed;
+    if ((bar.pos.x + bar.speed > 0 && bar.speed < 0) || (bar.pos.x + bar.speed < 500 && bar.speed > 0)) bar.pos.x += bar.speed;
   }
 
   rotateVector = function (vec: IPoint, ang: number) {
@@ -546,26 +470,11 @@ export class ServerService {
     else room.effect = 'null';
   }
 
-  barBallCollision(
-    hostBar: IBar,
-    clientBar: IBar,
-    ball: IBall,
-    room: GameRoom,
-    host: User,
-    client: User,
-  ) {
-    const M =
-      Math.sqrt(Math.pow(ball.speed.x, 2) + Math.pow(ball.speed.y, 2)) /
-      Math.sqrt(2);
+  barBallCollision(hostBar: IBar, clientBar: IBar, ball: IBall, room: GameRoom, host: User, client: User) {
+    const M = Math.sqrt(Math.pow(ball.speed.x, 2) + Math.pow(ball.speed.y, 2)) / Math.sqrt(2);
     if (!room.barCollide) {
-      if (
-        ball.pos.y - ball.size <= clientBar.pos.y + clientBar.size.y &&
-        ball.pos.y > clientBar.pos.y + clientBar.size.y
-      ) {
-        if (
-          ball.pos.x < clientBar.pos.x + clientBar.size.x + ball.size &&
-          ball.pos.x > clientBar.pos.x - clientBar.size.x - ball.size
-        ) {
+      if (ball.pos.y - ball.size <= clientBar.pos.y + clientBar.size.y && ball.pos.y > clientBar.pos.y + clientBar.size.y) {
+        if (ball.pos.x < clientBar.pos.x + clientBar.size.x + ball.size && ball.pos.x > clientBar.pos.x - clientBar.size.x - ball.size) {
           if (client.gameData.power.isActive) {
             client.gameData.power.handle();
           } else if (room.options.smashes) client.gameData.power.chargeUp();
@@ -585,14 +494,8 @@ export class ServerService {
           this.storeEffect(clientBar, room);
         }
       }
-      if (
-        ball.pos.y + ball.size >= hostBar.pos.y - hostBar.size.y &&
-        ball.pos.y < hostBar.pos.y - hostBar.size.y
-      ) {
-        if (
-          ball.pos.x < hostBar.pos.x + hostBar.size.x + ball.size &&
-          ball.pos.x > hostBar.pos.x - hostBar.size.x - ball.size
-        ) {
+      if (ball.pos.y + ball.size >= hostBar.pos.y - hostBar.size.y && ball.pos.y < hostBar.pos.y - hostBar.size.y) {
+        if (ball.pos.x < hostBar.pos.x + hostBar.size.x + ball.size && ball.pos.x > hostBar.pos.x - hostBar.size.x - ball.size) {
           if (host.gameData.power.isActive) {
             host.gameData.power.handle();
           } else if (room.options.smashes) client.gameData.power.chargeUp();
@@ -614,20 +517,14 @@ export class ServerService {
       }
     }
     if (!room.sideCollide) {
-      if (
-        ball.pos.x > clientBar.pos.x + clientBar.size.x &&
-        ball.pos.x - ball.size < clientBar.pos.x + clientBar.size.x
-      ) {
+      if (ball.pos.x > clientBar.pos.x + clientBar.size.x && ball.pos.x - ball.size < clientBar.pos.x + clientBar.size.x) {
         if (ball.pos.y - ball.size < clientBar.pos.y) {
           if (!ball.speed.x) ball.speed.x *= -1;
           ball.pos.y += ball.speed.y;
           ball.pos.x += ball.speed.x;
           room.sideCollide = true;
         }
-      } else if (
-        ball.pos.x < clientBar.pos.x - clientBar.size.x &&
-        ball.pos.x + ball.size > clientBar.pos.x - clientBar.size.x
-      ) {
+      } else if (ball.pos.x < clientBar.pos.x - clientBar.size.x && ball.pos.x + ball.size > clientBar.pos.x - clientBar.size.x) {
         if (ball.pos.y - ball.size < clientBar.pos.y) {
           if (ball.speed.x) ball.speed.x *= -1;
           ball.pos.y += ball.speed.y;
@@ -635,20 +532,14 @@ export class ServerService {
           room.sideCollide = true;
         }
       }
-      if (
-        ball.pos.x > hostBar.pos.x + hostBar.size.x &&
-        ball.pos.x - ball.size < hostBar.pos.x + hostBar.size.x
-      ) {
+      if (ball.pos.x > hostBar.pos.x + hostBar.size.x && ball.pos.x - ball.size < hostBar.pos.x + hostBar.size.x) {
         if (ball.pos.y + ball.size > hostBar.pos.y) {
           if (!ball.speed.x) ball.speed.x *= -1;
           ball.pos.y += ball.speed.y;
           ball.pos.x += ball.speed.x;
           room.sideCollide = true;
         }
-      } else if (
-        ball.pos.x < hostBar.pos.x - hostBar.size.x &&
-        ball.pos.x + ball.size > hostBar.pos.x - hostBar.size.x
-      ) {
+      } else if (ball.pos.x < hostBar.pos.x - hostBar.size.x && ball.pos.x + ball.size > hostBar.pos.x - hostBar.size.x) {
         if (ball.pos.y + ball.size > hostBar.pos.y) {
           if (ball.speed.x) ball.speed.x *= -1;
           ball.pos.y += ball.speed.y;
@@ -731,10 +622,7 @@ export class ServerService {
       },
       score: { host: gameState.score.client, client: gameState.score.host },
     };
-    if (
-      game.host.gameData.power.name == 'invisibility' &&
-      game.host.gameData.power.trigger == true
-    ) {
+    if (game.host.gameData.power.name == 'invisibility' && game.host.gameData.power.trigger == true) {
       inverseState.ball.pos.x = -50;
       inverseState.ball.pos.y = -50;
     }
@@ -783,10 +671,7 @@ export class ServerService {
       },
       score: { host: gameState.score.client, client: gameState.score.host },
     };
-    if (
-      game.client.gameData.power.name == 'invisibility' &&
-      game.client.gameData.power.trigger == true
-    ) {
+    if (game.client.gameData.power.name == 'invisibility' && game.client.gameData.power.trigger == true) {
       console.log('invis client');
       State.ball.pos.x = -5000;
       State.ball.pos.y = 250;
@@ -807,8 +692,7 @@ export class ServerService {
   }
 
   resetGameState(game: Game) {
-    const factor =
-      game.room.options.ballSpeed == 0 ? 0.5 : game.room.options.ballSpeed;
+    const factor = game.room.options.ballSpeed == 0 ? 0.5 : game.room.options.ballSpeed;
     game.gameState.ball.pos = { x: 250, y: 250 };
     game.gameState.ball.speed = this.getRandomStart();
     game.gameState.ball.speed.x *= factor;
@@ -864,19 +748,11 @@ export class ServerService {
     if (room.barCollide && ball.speed.y > 0 && ball.pos.y > 250) {
       room.barCollide = false;
       room.sideCollide = false;
-      if (
-        game.client.gameData.power.name == 'invisibility' &&
-        game.client.gameData.power.trigger
-      )
-        game.client.gameData.power.reset();
+      if (game.client.gameData.power.name == 'invisibility' && game.client.gameData.power.trigger) game.client.gameData.power.reset();
     } else if (room.barCollide && ball.speed.y < 0 && ball.pos.y < 250) {
       room.barCollide = false;
       room.sideCollide = false;
-      if (
-        game.host.gameData.power.name == 'invisibility' &&
-        game.host.gameData.power.trigger
-      )
-        game.host.gameData.power.reset();
+      if (game.host.gameData.power.name == 'invisibility' && game.host.gameData.power.trigger) game.host.gameData.power.reset();
     }
   }
 
@@ -886,29 +762,14 @@ export class ServerService {
   }
 
   chargeUp(game: Game) {
-    if (
-      game.client.gameData.smashLeft > 0 &&
-      game.client.gameData.smashLeft <
-        chargeMax * game.room.options.smashStrength
-    ) {
+    if (game.client.gameData.smashLeft > 0 && game.client.gameData.smashLeft < chargeMax * game.room.options.smashStrength) {
       game.client.gameData.smashLeft += 0.01 * game.room.options.smashStrength;
-    } else if (
-      game.client.gameData.smashRight > 0 &&
-      game.client.gameData.smashRight <
-        chargeMax * game.room.options.smashStrength
-    ) {
+    } else if (game.client.gameData.smashRight > 0 && game.client.gameData.smashRight < chargeMax * game.room.options.smashStrength) {
       game.client.gameData.smashRight += 0.01 * game.room.options.smashStrength;
     }
-    if (
-      game.host.gameData.smashLeft > 0 &&
-      game.host.gameData.smashLeft < chargeMax * game.room.options.smashStrength
-    ) {
+    if (game.host.gameData.smashLeft > 0 && game.host.gameData.smashLeft < chargeMax * game.room.options.smashStrength) {
       game.host.gameData.smashLeft += 0.01 * game.room.options.smashStrength;
-    } else if (
-      game.host.gameData.smashRight > 0 &&
-      game.host.gameData.smashRight <
-        chargeMax * game.room.options.smashStrength
-    ) {
+    } else if (game.host.gameData.smashRight > 0 && game.host.gameData.smashRight < chargeMax * game.room.options.smashStrength) {
       game.host.gameData.smashRight += 0.01 * game.room.options.smashStrength;
     }
   }
@@ -916,35 +777,14 @@ export class ServerService {
   loop(game: Game) {
     if (!game.room.kickOff) {
       const gameState = game.gameState;
-      this.updateMoveStatus(
-        game.host,
-        gameState.hostBar,
-        'host',
-        game.room.options,
-      );
-      this.updateMoveStatus(
-        game.client,
-        gameState.clientBar,
-        'client',
-        game.room.options,
-      );
+      this.updateMoveStatus(game.host, gameState.hostBar, 'host', game.room.options);
+      this.updateMoveStatus(game.client, gameState.clientBar, 'client', game.room.options);
       if (game.room.options.smashes) this.chargeUp(game);
       //this.handlePower(game);
       this.moveBar(gameState.hostBar, game.host, game.room.options.barSpeed);
-      this.moveBar(
-        gameState.clientBar,
-        game.client,
-        game.room.options.barSpeed,
-      );
+      this.moveBar(gameState.clientBar, game.client, game.room.options.barSpeed);
 
-      this.barBallCollision(
-        gameState.hostBar,
-        gameState.clientBar,
-        gameState.ball,
-        game.room,
-        game.host,
-        game.client,
-      );
+      this.barBallCollision(gameState.hostBar, gameState.clientBar, gameState.ball, game.room, game.host, game.client);
       this.wallBallCollision(gameState.ball, game.room);
 
       this.nadal(gameState.ball, game.room.effect);
@@ -966,37 +806,29 @@ export class ServerService {
   }
 
   async sendChannelMessage(channelId: number, content: string, userId: number) {
-    const message = await this._chatService.saveMessage(
-      { id: channelId, content: content },
-      userId,
-    );
+    const message = await this._chatService.saveMessage({ id: channelId, content: content }, userId);
     if (message.author) {
-      this.server
-        .to(`${channelId}`)
-        .emit('messageReceived', channelId, message);
+      this.server.to(`${channelId}`).emit('messageReceived', channelId, message);
     }
     return message;
   }
 
   async updateChannelMembers(channelId: number, client: Socket) {
-    const channels = await this._chatService.getUserChannels(
-      client.handshake.auth.user.id,
-    );
+    const channels = await this._chatService.getUserChannels(client.handshake.auth.user.id);
     if (channels.find((ell) => ell.id === channelId)) {
+      console.log('');
       this.server.to(`${channelId}`).emit('updateChannelMembers', channelId);
     }
   }
 
   async joinChannelRoom(client: Socket, channelId: number) {
-    const channels = await this._chatService.getUserChannels(
-      client.handshake.auth.user.id,
-    );
+    const channels = await this._chatService.getUserChannels(client.handshake.auth.user.id);
     if (channels.find((ell) => ell.id === channelId)) {
       this.server.to(`${channelId}`).emit('updateChannelMembers', channelId);
       client.join(`${channelId}`);
     }
   }
-  
+
   async leaveChannelRoom(client: Socket, channelId: number) {
     this.server.to(`${channelId}`).emit('updateChannelMembers', channelId);
     client.leave(`${channelId}`);

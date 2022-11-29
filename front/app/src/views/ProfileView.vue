@@ -6,7 +6,7 @@
       </div>
       <div>
         <h2 class="playerName">{{ currentUser?.nickname }}</h2>
-        <h4>elo : {{ currentUser?.elo }}</h4>
+        <h4 style="text-align: center">elo : {{ currentUser?.elo }}</h4>
       </div>
       <div>
         <div class="buttons" v-if="currentUser === store.user">
@@ -16,6 +16,11 @@
           <router-link class="test" to="/edit">
             <img :src="editUrl" alt="shutdown" />
           </router-link>
+        </div>
+        <div v-else class="buttonProfile">
+          <button class="invite" @click="invite(currentUser)">Friend Request</button>
+          <button class="block" @click="block(currentUser)">Block</button>
+          <button class="play" @click="">Invite/spectate</button>
         </div>
       </div>
     </div>
@@ -28,7 +33,7 @@
         <div class="searchIcon"><i class="gg-search"></i></div>
         <input type="text" class="searchField" name="searchFriend" v-model="searchFriend" placeholder="Player name" />
       </div>
-      <button @click="invite()">Add Friend</button>
+      <button @click="router.push('/profile/' + searchFriend)">Search Profile</button>
     </div>
     <div v-if="currentUser === store.user" class="invitations" :style="toogleMenu ? 'display: none' : ''">
       <h2 v-if="store.user?.invitations?.length">Invitations</h2>
@@ -65,7 +70,9 @@ import { onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import editUrl from "../assets/edit.png";
 import shutdownUrl from "../assets/shutdown.png";
+import { useRouter } from "vue-router";
 
+const router = useRouter();
 const route = useRoute();
 
 const store = useStore();
@@ -147,12 +154,17 @@ const logout = () => {
   socket?.close();
 };
 
-const invite = async () => {
-  if (searchFriend.value.length <= 0) return;
+const invite = async (user: User | undefined) => {
+  if (user)
+    await fetchJSONDatas("api/friendship/invite", "POST", { addressee: user?.nickname }).catch((err) => {
+      console.log(err);
+    });
+};
 
-  await fetchJSONDatas("api/friendship/invite", "POST", { addressee: searchFriend.value }).catch((err) => {
-    console.log(err);
-  });
-  searchFriend.value = "";
+const block = async (user: User | undefined) => {
+  if (user)
+    await fetchJSONDatas("api/friendship/block", "PUT", { addressee: user.nickname }).catch((err) => {
+      console.log(err);
+    });
 };
 </script>

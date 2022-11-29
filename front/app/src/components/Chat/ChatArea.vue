@@ -9,10 +9,20 @@
             <p>{{ message.text }}</p>
             <p class="date">{{ message.date }}</p>
           </div>
-          <img class="user-image" :src="User.getAvatar(store.user)" alt="" />
+          <img
+            v-if="index < 1 || store.currentChat?.messages![index - 1].author != message.author"
+            class="user-image"
+            :src="User.getAvatar(store.user)"
+            alt=""
+          />
         </div>
         <div v-else class="msg-in">
-          <img class="user-image" :src="message.author != 'UNKNOWN' ? User.getAvatarByNickname(message.author, store.currentChat!) : defaultAvatarUrl" alt="" />
+          <img
+            v-if="index < 1 || store.currentChat?.messages![index - 1].author != message.author"
+            class="user-image"
+            :src="message.author != 'UNKNOWN' ? User.getAvatarByNickname(message.author, store.currentChat!) : defaultAvatarUrl"
+            alt=""
+          />
           <div class="chat-message chat-message-in">
             <h4>{{ message.author }}</h4>
             <p>{{ message.text }}</p>
@@ -50,13 +60,16 @@ let currentChannelId = store.currentChat?.id;
 let socket = store.socket;
 
 const messageField = ref("");
+const blockScroll = ref(false);
 const disableLoadMore = ref(false);
 const messagesBoxRef = ref<HTMLDivElement | null>(null);
 
 const scrollDownMessages = (behavior: ScrollBehavior | undefined) => {
-  nextTick(() => {
-    messagesBoxRef.value?.scrollIntoView({ behavior, block: "end" });
-  });
+  if (!blockScroll.value) {
+    nextTick(() => {
+      messagesBoxRef.value?.scrollIntoView({ behavior, block: "end" });
+    });
+  }
 };
 
 const sendMessage = () => {
@@ -83,6 +96,7 @@ const sendMessage = () => {
 };
 
 const loadMoreMessages = () => {
+  blockScroll.value = true;
   if (isChannel(store.currentChat!)) {
     loadChannelMessages(<Channel>store.currentChat);
   } else {
@@ -134,6 +148,7 @@ store.$subscribe((mutation, state) => {
   } else {
     scrollDownMessages("smooth");
   }
+  blockScroll.value = false;
   currentChannelId = state.currentChat?.id;
 });
 
@@ -144,7 +159,7 @@ onMounted(() => {
     () => store.currentChat?.id,
     () => {
       disableLoadMore.value = false;
-      if (store.currentChat && store.currentChat!.messages!.length < 20) disableLoadMore.value = true;
+      if (store.currentChat && store.currentChat!.messages && store.currentChat!.messages!.length < 20) disableLoadMore.value = true;
     }
   );
 });

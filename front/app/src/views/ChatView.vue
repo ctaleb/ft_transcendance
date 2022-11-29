@@ -133,7 +133,7 @@ import { Channel, ChannelRole, ChannelType, ChannelUser, isChannel } from "@/typ
 import { Conversation } from "@/types/Conversation";
 import { Message } from "@/types/Message";
 import { User } from "@/types/User";
-import { onMounted, onUpdated, ref, Ref } from "vue";
+import { onMounted, onUpdated, ref, Ref, watch } from "vue";
 
 const store = useStore();
 let socket = store.socket;
@@ -177,14 +177,7 @@ onMounted(async () => {
   getMyChannels();
   getAllChannels();
   getChannelInvitations();
-  socket?.on("updateChannelMembers", async (channelId: number) => {
-    console.log("updateChannelMembers");
-    if (store.currentChat && isChannel(store.currentChat) && channelId === store.currentChat.id) {
-      let data = await fetchJSONDatas("api/chat/members", "POST", {
-        id: store.currentChat!.id,
-      });
-    }
-  });
+
   // var audio = new Audio(require("../assets/adelsol.mp3"));
   // socket?.on("Message to the client", async (privateMessage: { author: string; text: string }) => {
   //   if (privateMessage.author == friendNickname.value) messagesToDisplay.value.push(privateMessage);
@@ -248,7 +241,7 @@ onMounted(async () => {
 });
 
 const getMyChannels = async (): Promise<void> => {
-  myChannels.value = await fetchJSONDatas("api/chat", "GET");
+  myChannels.value = await fetchJSONDatas("api/chat", "GET").catch(() => {});
 };
 
 const getAllChannels = async (): Promise<void> => {

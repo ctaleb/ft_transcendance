@@ -24,6 +24,7 @@ export class PrivateConvEntity extends AbstractEntity {
 
   @OneToMany(() => PrivateMessageEntity, (message) => message.conv, {
     lazy: true,
+    
   })
   @JoinColumn()
   messages: Promise<PrivateMessageEntity[]>;

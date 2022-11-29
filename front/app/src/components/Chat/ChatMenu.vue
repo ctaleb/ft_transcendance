@@ -99,12 +99,6 @@ const setCurrentChatWindow = async (target: Channel | Conversation) => {
 };
 
 onMounted(() => {
-  watch(
-    () => props.convs,
-    () => {
-      friends.value = store.user?.friends?.filter((user) => !props.convs.find((conv) => conv.other.id === user.id));
-    }
-  );
   socket?.on("Update conv list", (convData: { conv: Conversation }) => {
     console.log("Conv");
     console.log(convData);

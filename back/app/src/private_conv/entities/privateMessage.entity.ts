@@ -7,7 +7,7 @@ import { PrivateConvEntity } from './private_conv.entity';
 @Exclude()
 @Entity({ name: 'PrivateMessage' })
 export class PrivateMessageEntity extends AbstractEntity {
-  @ManyToOne(() => PrivateConvEntity, (conv) => conv.messages, { eager: true })
+  @ManyToOne(() => PrivateConvEntity, (conv) => conv.messages, { eager: true, onDelete: 'CASCADE' })
   conv: PrivateConvEntity;
 
   @Expose()
