@@ -1,15 +1,24 @@
 <template>
   <!--<svg preserveAspectRatio="none" class="topSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
     <path
-      fill="#C1A36B"
-      fill-opacity="1"
-      d="M0,288L24,277.3C48,267,96,245,144,202.7C192,160,240,96,288,101.3C336,107,384,181,432,181.3C480,181,528,107,576,90.7C624,75,672,117,720,144C768,171,816,181,864,154.7C912,128,960,64,1008,74.7C1056,85,1104,171,1152,208C1200,245,1248,235,1296,240C1344,245,1392,267,1416,277.3L1440,288L1440,0L1416,0C1392,0,1344,0,1296,0C1248,0,1200,0,1152,0C1104,0,1056,0,1008,0C960,0,912,0,864,0C816,0,768,0,720,0C672,0,624,0,576,0C528,0,480,0,432,0C384,0,336,0,288,0C240,0,192,0,144,0C96,0,48,0,24,0L0,0Z"
+	fill="#C1A36B"
+	fill-opacity="1"
+	d="M0,288L24,277.3C48,267,96,245,144,202.7C192,160,240,96,288,101.3C336,107,384,181,432,181.3C480,181,528,107,576,90.7C624,75,672,117,720,144C768,171,816,181,864,154.7C912,128,960,64,1008,74.7C1056,85,1104,171,1152,208C1200,245,1248,235,1296,240C1344,245,1392,267,1416,277.3L1440,288L1440,0L1416,0C1392,0,1344,0,1296,0C1248,0,1200,0,1152,0C1104,0,1056,0,1008,0C960,0,912,0,864,0C816,0,768,0,720,0C672,0,624,0,576,0C528,0,480,0,432,0C384,0,336,0,288,0C240,0,192,0,144,0C96,0,48,0,24,0L0,0Z"
     ></path>
-  </svg>-->
+</svg>-->
   <div class="principalSection">
-    <div v-if="twofaFlag == false" class="main_container">
+    <div class="main_container">
       <img src="../assets/logo.gif" width="270" height="270" alt="" />
-      <div style="width: 100%">
+      <div class="twofaComponentDiv" v-if="twofaFlag == true">
+        <two-factor-component
+          v-if="twofaFlag == true"
+          class="twoFactorComponent"
+          v-model="codeValidated"
+          @twofaSuccessClassicUser="login"
+          @twofaSuccessIntraUser="studentLogin"
+        />
+      </div>
+      <div v-if="twofaFlag == false" style="width: 100%">
         <div class="classicLogin">
           <form @submit.prevent="login" style="margin-bottom: 2em">
             <input class="input" placeholder="Username" v-model="username" type="text" id="username" name="username" required /><br /><br />
@@ -26,7 +35,7 @@
           <a class="button pulse" v-bind:href="intra_redirection"> Continue with 42 </a>
         </div>
       </div>
-      <div class="register">
+      <div class="register" v-if="twofaFlag == false">
         <p>Don't have an account yet ?</p>
         <a href="/signup" class="button pulse">New account</a>
       </div>
@@ -37,15 +46,6 @@
   </div>
   <!--   <div :style="{ color: login_failed_color }" v-if="login_failed_msg"> -->
   <div class="text-red" v-if="login_failed_msg">Login failed. Please try again.</div>
-  <div class="twofaComponentDiv">
-    <two-factor-component
-      v-if="twofaFlag == true"
-      class="twoFactorComponent"
-      v-model="codeValidated"
-      @twofaSuccessClassicUser="login"
-      @twofaSuccessIntraUser="studentLogin"
-    />
-  </div>
   <div class="footer">
     <h2>Welcome to Superpong</h2>
     <div class="howToPlay">
@@ -229,6 +229,7 @@ async function studentLogin(code: string) {
 @import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Press+Start+2P&display=swap");
 @import "../styles/variables";
+@import "../styles/mixins/sizes";
 .bottomSvg {
   position: absolute;
   bottom: 0;
@@ -348,6 +349,8 @@ async function studentLogin(code: string) {
 
 .footer {
   margin-top: 4rem;
+  position: absolute;
+  bottom: 0;
   .howToPlay {
     width: 100vw;
     display: flex;

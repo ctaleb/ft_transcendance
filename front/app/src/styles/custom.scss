@@ -45,23 +45,31 @@ h3 {
   width: 1320px;
   padding: 0 20px;
 
+  &.large {
+    width: 1800px;
+
+    @include screen-xxl {
+      width: 1320px;
+    }
+  }
+
   @include screen-xl {
-    width: 1140px;
+    width: 1140px !important;
   }
 
   @include screen-lg {
-    width: 960px;
+    width: 960px !important;
   }
 
   @include screen-md {
-    width: 720px;
+    width: 720px !important;
   }
 
   @include screen-sm {
-    width: 540px;
+    width: 540px !important;
   }
 
   @include screen-xs {
-    width: 100%;
+    width: 100% !important;
   }
 }
