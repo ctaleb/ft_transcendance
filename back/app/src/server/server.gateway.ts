@@ -434,6 +434,11 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     return await this.serverService.sendChannelMessage(channelId, content, client.handshake.auth.user.id);
   }
 
+  @SubscribeMessage('updateChannelMembers')
+  async updateChannelMembers(@ConnectedSocket() client: Socket, @MessageBody('id') channelId: number) {
+    await this.serverService.updateChannelMembers(channelId, client);
+  }
+
   @SubscribeMessage('joinChannelRoom')
   async joinChannelRoom(@ConnectedSocket() client: Socket, @MessageBody('id') channelId: number) {
     await this.serverService.joinChannelRoom(client, channelId);

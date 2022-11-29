@@ -1,7 +1,7 @@
 <template>
   <div id="chat">
     <ChatMenu :channels="myChannels" :convs="privateConvs" :allChannels="allChannels" :invitations="channelInvitations" />
-    <ChatWindow />
+    <ChatWindow @update-channels-list="updateChannelsList()" />
     <!-- <div v-if="show == 0" class="lobbyChat">
       <h2>Welcome on the chat</h2>
       <br />
@@ -149,7 +149,7 @@ let currentConv = ref<Conversation>();
 let isLoadMore = false;
 
 defineProps(["incomingFriendRequest"]);
-defineEmits(["notification"]);
+defineEmits(["notification", "updateChannelsList"]);
 
 const myChannels: Ref<Array<Channel>> = ref([]);
 const allChannels: Ref<Array<Channel>> = ref([]);
@@ -164,15 +164,27 @@ const showInvitationModal = ref(false);
 const inviteUser = ref("");
 const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
+const updateChannelsList = () => {
+  getMyChannels();
+};
+
 onUpdated(() => {
-  if (isLoadMore == false) scrollDownMessages();
-  isLoadMore = false;
+  // if (isLoadMore == false) scrollDownMessages();
+  // isLoadMore = false;
 });
 
 onMounted(async () => {
   getMyChannels();
   getAllChannels();
   getChannelInvitations();
+  socket?.on("updateChannelMembers", async (channelId: number) => {
+    console.log("updateChannelMembers");
+    if (store.currentChat && isChannel(store.currentChat) && channelId === store.currentChat.id) {
+      let data = await fetchJSONDatas("api/chat/members", "POST", {
+        id: store.currentChat!.id,
+      });
+    }
+  });
   // var audio = new Audio(require("../assets/adelsol.mp3"));
   // socket?.on("Message to the client", async (privateMessage: { author: string; text: string }) => {
   //   if (privateMessage.author == friendNickname.value) messagesToDisplay.value.push(privateMessage);
@@ -364,20 +376,6 @@ const declineChannelInvitation = async (channel: Channel): Promise<void> => {
   }).then(() => {
     allChannels.value = allChannels.value.filter((x) => x.id != channel.id);
     if (channelsNum.value > 0) channelsNum.value--;
-  });
-};
-
-const giveAdmin = async (): Promise<void> => {
-  await fetchJSONDatas("api/chat/give-admin", "PUT", {
-    id: 22,
-    username: "Ah Sahm",
-  });
-};
-
-const takeAdmin = async (): Promise<void> => {
-  await fetchJSONDatas("api/chat/take-admin", "PUT", {
-    id: 22,
-    username: "Ah Sahm",
   });
 };
 

@@ -4,6 +4,7 @@ import { defineStore } from "pinia";
 import { Socket } from "socket.io-client";
 import { Conversation } from "@/types/Conversation";
 import { Channel } from "@/types/Channel";
+import { ShallowReactive, shallowReactive } from "vue";
 
 export interface State {
   user?: User;

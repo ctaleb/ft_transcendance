@@ -2,7 +2,8 @@ import config from "@/config/config";
 import { useStore } from "@/store";
 import { Alert } from "@/types/GameSummary";
 import { User } from "@/types/User";
-import { io } from "socket.io-client";
+import { io, Socket } from "socket.io-client";
+import { markRaw, shallowReactive } from "vue";
 
 export async function isConnected(token: string): Promise<boolean> {
   // console.log(token);
@@ -96,10 +97,12 @@ async function fetchUser(token: string): Promise<void> {
 function connectSocket(token: string, user: any): void {
   const store = useStore();
 
-  store.socket = io("http://" + window.location.hostname + ":3500", {
-    auth: { token: token, user: user },
-    transports: ["websocket"],
-  });
+  store.socket = markRaw<Socket>(
+    io("http://" + window.location.hostname + ":3500", {
+      auth: { token: token, user: user },
+      transports: ["websocket"],
+    })
+  );
 
   //  config.socket = io("http://" + window.location.hostname + ":3500", {
   //    auth: { token: token, user: user },

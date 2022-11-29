@@ -1,22 +1,23 @@
 <template>
   <div class="channel-members">
-    <div v-for="member in (<Channel>store.currentChat).members">
-      <img class="user-image" :src="User.getAvatar(member)" alt="" />
-      <h4>{{ member.nickname }}</h4>
-    </div>
+    <template v-for="member in (<Channel>store.currentChat).members">
+      <MemberVue :member="member" :me="me" />
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
 import { fetchJSONDatas } from "@/functions/funcs";
 import { useStore } from "@/store";
-import { Channel, isChannel } from "@/types/Channel";
+import { Channel, ChannelUser, isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
 import { User } from "@/types/User";
-import { onMounted, onUpdated, Ref, ref } from "vue";
+import MemberVue from "@/components/chat/Member.vue";
+import { onMounted, onUpdated, Ref, ref, watch } from "vue";
+import { userInfo } from "os";
 
 const store = useStore();
-
+const me: Ref<ChannelUser> = ref((<Channel>store.currentChat!).members!.find((member) => member.id === store.user!.id)!);
 let socket = store.socket;
 
 store.$subscribe((mutation, state) => {
@@ -24,12 +25,11 @@ store.$subscribe((mutation, state) => {
 });
 
 onMounted(() => {
-  socket?.on("updateChannelMembers", async (channelId: number) => {
-    if (isChannel(store.currentChat!) && channelId === store.currentChat!.id) {
-      let data = await fetchJSONDatas("api/chat/members", "POST", {
-        id: store.currentChat!.id,
-      });
+  watch(
+    () => store.currentChat!.id,
+    () => {
+      me.value = (<Channel>store.currentChat!).members!.find((member) => member.id === store.user!.id)!;
     }
-  });
+  );
 });
 </script>

@@ -3,7 +3,7 @@
     <ChatWindowHeader @toggle-channel-info="toggleChannelInfo()" />
     <div class="chat-body">
       <ChatArea />
-      <ChannelInfo v-if="showChannelInfo && isChannel(store.currentChat)" />
+      <ChannelInfo v-if="showChannelInfo && isChannel(store.currentChat)" @update-channels-list="$emit('updateChannelsList')" />
     </div>
   </div>
   <div v-else class="default-chat-window">
@@ -20,6 +20,10 @@ import { isChannel } from "@/types/Channel";
 import { ref } from "vue";
 
 const store = useStore();
+
+const emits = defineEmits<{
+  (e: "updateChannelsList"): void;
+}>();
 
 const showChannelInfo = ref(false);
 

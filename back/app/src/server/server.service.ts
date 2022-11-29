@@ -978,6 +978,15 @@ export class ServerService {
     return message;
   }
 
+  async updateChannelMembers(channelId: number, client: Socket) {
+    const channels = await this._chatService.getUserChannels(
+      client.handshake.auth.user.id,
+    );
+    if (channels.find((ell) => ell.id === channelId)) {
+      this.server.to(`${channelId}`).emit('updateChannelMembers', channelId);
+    }
+  }
+
   async joinChannelRoom(client: Socket, channelId: number) {
     const channels = await this._chatService.getUserChannels(
       client.handshake.auth.user.id,

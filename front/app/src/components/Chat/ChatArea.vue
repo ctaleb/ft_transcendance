@@ -1,7 +1,7 @@
 <template>
   <div class="chat-area">
     <div class="chat-messages">
-      <button class="loadMoreButton" @click="loadMoreMessages()">Load more</button>
+      <button v-if="!disableLoadMore" class="loadMoreButton" @click="loadMoreMessages()">Load more</button>
       <template v-for="(message, index) in store.currentChat?.messages">
         <div v-if="store.user?.nickname === message.author" class="msg-out">
           <div class="chat-message chat-message-out">
@@ -32,25 +32,28 @@
 </template>
 
 <script setup lang="ts">
-import { addAlertMessage, fetchJSONDatas } from "@/functions/funcs";
+import { fetchJSONDatas } from "@/functions/funcs";
 import { useStore } from "@/store";
 import { Channel, isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
 import { Message } from "@/types/Message";
 import { User } from "@/types/User";
-import { findDir } from "@vue/compiler-core";
-import { onMounted, onUpdated, Ref, ref } from "vue";
+import { nextTick, onMounted, ref, watch } from "vue";
 
 const store = useStore();
 
+let currentChannelId = store.currentChat?.id;
 let socket = store.socket;
 let loadMore = false;
 
 const messageField = ref("");
+const disableLoadMore = ref(false);
 const messagesBoxRef = ref<HTMLDivElement | null>(null);
 
 const scrollDownMessages = (behavior: ScrollBehavior | undefined) => {
-  messagesBoxRef.value?.scrollIntoView({ behavior, block: "end" });
+  nextTick(() => {
+    messagesBoxRef.value?.scrollIntoView({ behavior, block: "end" });
+  });
 };
 
 const sendMessage = () => {
@@ -90,13 +93,29 @@ const loadChannelMessages = async (channel: Channel): Promise<void> => {
     id: channel.id,
     skip: channel.messages?.length ? channel.messages?.length : 0,
   });
-  store.currentChat!.messages = [...data, ...store.currentChat?.messages!];
+  if (data.length === 0) {
+    disableLoadMore.value = true;
+    return;
+  }
+  store.$patch({
+    currentChat: {
+      messages: [...data, ...store.currentChat?.messages!],
+    },
+  });
 };
 
 const loadPrivateMessages = async (conv: Conversation): Promise<void> => {
   const offset: number = conv.messages?.length ? conv.messages?.length : 0;
   const data: Message[] = await fetchJSONDatas(`api/privateConv/getMessages/${conv.id}/${offset}`, "GET");
-  store.currentChat!.messages = [...data, ...store.currentChat?.messages!];
+  if (data.length === 0) {
+    disableLoadMore.value = true;
+    return;
+  }
+  store.$patch({
+    currentChat: {
+      messages: [...data, ...store.currentChat?.messages!],
+    },
+  });
 };
 
 window.addEventListener("keydown", (e) => {
@@ -107,16 +126,31 @@ window.addEventListener("keydown", (e) => {
 
 store.$subscribe((mutation, state) => {
   socket = state.socket;
-});
 
-onUpdated(() => {
-  if (loadMore === false) {
+  if (currentChannelId != state.currentChat?.id) {
+    scrollDownMessages("auto");
+  } else {
     scrollDownMessages("smooth");
   }
-  loadMore = false;
+  currentChannelId = state.currentChat?.id;
+  // watch(
+  //   () => state.currentChat?.id,
+  //   () => {
+  //     disableLoadMore.value = false;
+  //     if (state.currentChat && state.currentChat!.messages!.length < 20) disableLoadMore.value = true;
+  //   }
+  // );
 });
 
 onMounted(() => {
+  watch(
+    () => currentChannelId,
+    () => {
+      disableLoadMore.value = false;
+      if (store.currentChat!.id && store.currentChat!.messages!.length < 20) disableLoadMore.value = true;
+    }
+  );
   scrollDownMessages("auto");
+  if (store.currentChat!.messages!.length < 20) disableLoadMore.value = true;
 });
 </script>

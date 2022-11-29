@@ -59,7 +59,6 @@ const createConversation = async (element: User) => {
     let newConv: Conversation = { id: conv.conv.id, other: element, notif: false, messages: [] };
     friends.value = friends.value?.splice(friends.value.indexOf(element), 1);
     props.convs.unshift(newConv);
-    console.log(props.convs);
   }
 };
 
