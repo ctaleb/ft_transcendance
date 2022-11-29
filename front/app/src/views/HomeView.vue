@@ -1,28 +1,26 @@
 <template>
-  <!--<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" class="topSvg" preserveAspectRatio="none">
-    <path
-      fill="#C1A36B"
-      fill-opacity="1"
-      d="M0,224L0,96L205.7,96L205.7,32L411.4,32L411.4,96L617.1,96L617.1,160L822.9,160L822.9,288L1028.6,288L1028.6,64L1234.3,64L1234.3,224L1440,224L1440,0L1234.3,0L1234.3,0L1028.6,0L1028.6,0L822.9,0L822.9,0L617.1,0L617.1,0L411.4,0L411.4,0L205.7,0L205.7,0L0,0L0,0Z"
-    ></path>
-  </svg>-->
-  <svg preserveAspectRatio="none" class="topSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
+  <!--<svg preserveAspectRatio="none" class="topSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
     <path
       fill="#C1A36B"
       fill-opacity="1"
       d="M0,288L24,277.3C48,267,96,245,144,202.7C192,160,240,96,288,101.3C336,107,384,181,432,181.3C480,181,528,107,576,90.7C624,75,672,117,720,144C768,171,816,181,864,154.7C912,128,960,64,1008,74.7C1056,85,1104,171,1152,208C1200,245,1248,235,1296,240C1344,245,1392,267,1416,277.3L1440,288L1440,0L1416,0C1392,0,1344,0,1296,0C1248,0,1200,0,1152,0C1104,0,1056,0,1008,0C960,0,912,0,864,0C816,0,768,0,720,0C672,0,624,0,576,0C528,0,480,0,432,0C384,0,336,0,288,0C240,0,192,0,144,0C96,0,48,0,24,0L0,0Z"
     ></path>
-  </svg>
-  <div v-if="twofaFlag == false" class="main_container">
-    <img src="https://findicons.com/files/icons/1275/naruto_vol_1/256/uzumaki_naruto.png" width="80" height="80" alt="" />
-    <form @submit.prevent="login" style="margin-bottom: 2em">
-      <input class="input" placeholder="Username" v-model="username" type="text" id="username" name="username" required /><br /><br />
-      <input class="input" placeholder="Password" v-model="password" type="password" id="password" name="password" required /><br /><br />
-      <button type="submit" value="Connexion" class="button classic_login_btn pulse">Connexion</button>
-    </form>
-    <hr class="solid divider" />
-    <a class="button pulse" v-bind:href="intra_redirection"> Continue with 42 </a>
-    <a id="signup_link" href="/signup">New account</a>
+  </svg>-->
+  <div class="principalSection">
+    <div v-if="twofaFlag == false" class="main_container">
+      <img src="https://findicons.com/files/icons/1275/naruto_vol_1/256/uzumaki_naruto.png" width="80" height="80" alt="" />
+      <form @submit.prevent="login" style="margin-bottom: 2em">
+        <input class="input" placeholder="Username" v-model="username" type="text" id="username" name="username" required /><br /><br />
+        <input class="input" placeholder="Password" v-model="password" type="password" id="password" name="password" required /><br /><br />
+        <button type="submit" value="Connexion" class="button classic_login_btn pulse">Connexion</button>
+      </form>
+      <hr class="solid divider" />
+      <a class="button pulse" v-bind:href="intra_redirection"> Continue with 42 </a>
+      <a id="signup_link" href="/signup">New account</a>
+    </div>
+    <div class="svgSection">
+      <img src="../assets/taken.svg" alt="" />
+    </div>
   </div>
   <!--   <div :style="{ color: login_failed_color }" v-if="login_failed_msg"> -->
   <div class="text-red" v-if="login_failed_msg">Login failed. Please try again.</div>
@@ -35,20 +33,31 @@
       @twofaSuccessIntraUser="studentLogin"
     />
   </div>
-  <div class="howToPlay">
-    <div class="howToPlaySection">
-      <i class="gg-log-in"></i>
-      <h4>Register</h4>
-    </div>
-    <div class="howToPlaySection">
-      <i class="gg-games"></i>
-      <h4>Play</h4>
-    </div>
-    <div class="howToPlaySection">
-      <i class="gg-comment"></i>
-      <h4>Chat with your friends</h4>
+  <div class="footer">
+    <h2>How to play ?</h2>
+    <div class="howToPlay">
+      <div class="howToPlaySection">
+        <i class="gg-log-in gg-icon"></i>
+        <h4>Register</h4>
+      </div>
+      <div class="howToPlaySection">
+        <i class="gg-games gg-icon"></i>
+        <h4>Play</h4>
+      </div>
+      <div class="howToPlaySection">
+        <i class="gg-comment gg-icon"></i>
+        <h4>Chat with your friends</h4>
+      </div>
     </div>
   </div>
+
+  <svg class="bottomSvg" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
+    <path
+      fill="#C1A36B"
+      fill-opacity="1"
+      d="M0,64L80,58.7C160,53,320,43,480,48C640,53,800,75,960,74.7C1120,75,1280,53,1360,42.7L1440,32L1440,320L1360,320C1280,320,1120,320,960,320C800,320,640,320,480,320C320,320,160,320,80,320L0,320Z"
+    ></path>
+  </svg>
 </template>
 
 <script lang="ts" setup>
@@ -206,11 +215,11 @@ async function studentLogin(code: string) {
 <style lang="scss" scoped>
 @import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Press+Start+2P&display=swap");
-
-.topSvg {
+.bottomSvg {
   position: absolute;
-  top: 0;
-  height: 20vh;
+  bottom: 0;
+  z-index: -5;
+  height: 39vh;
   width: 100vw;
   path {
     width: 100%;
@@ -231,34 +240,65 @@ async function studentLogin(code: string) {
   border-image-source: linear-gradient(to bottom, #c1a36b, #635e4f);
   background: linear-gradient(to bottom right, #191e2a, #182121);
 }
-
-.main_container {
-  z-index: 11;
-  background: rgb(47, 42, 44);
-  background: linear-gradient(165deg, rgba(47, 42, 44, 1) 50%, rgba(31, 31, 24, 1) 100%);
-  border: 2px solid;
-  border-image-slice: 1;
-  box-shadow: 5px 5px 5px #5c5b58;
-  border-radius: 10px;
-  color: #aa9e7d;
-  margin: 20rem auto;
-  width: 30vw;
-  text-align: center;
-  img {
-    margin-top: 2rem;
-  }
-}
-.howToPlay {
-  width: 100vw;
+.principalSection {
   display: flex;
   flex-direction: row;
   justify-content: space-around;
-  .howToPlaySection {
-    color: white;
+  align-items: center;
+  width: 100vw;
+  height: 75vh;
+  .main_container {
+    margin-top: 5rem;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    z-index: 11;
+    background: rgb(47, 42, 44);
+    background: linear-gradient(165deg, rgba(47, 42, 44, 1) 50%, rgba(31, 31, 24, 1) 100%);
+    border: 2px solid;
+    border-image-slice: 1;
+    box-shadow: 5px 5px 5px #5c5b58;
+    border-radius: 10px;
+    color: #aa9e7d;
+    width: 30%;
+    height: 65vh;
+    text-align: center;
+    img {
+      margin-top: 2rem;
+    }
+  }
+  .svgSection {
+    width: 30%;
+    img {
+      width: 100%;
+    }
+  }
+}
+
+.footer {
+  margin-top: 4rem;
+  .howToPlay {
+    width: 100vw;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    font-size: 25px;
+    .howToPlaySection {
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      width: 20%;
+      .gg-icon {
+        --ggs: 1.5;
+      }
+    }
+  }
+  h2 {
+    text-align: center;
+    color: white;
   }
 }
 .input {
