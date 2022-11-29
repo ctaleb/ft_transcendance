@@ -30,7 +30,7 @@ export class OauthService {
       throw new UnauthorizedException();
     }
     const user: intraUser = await this.fetchUserFromIntra(token.access_token);
-    await this.userService.getIntraUserById(user.id).catch(async (err) => {
+    await this.userService.getIntraUserById(user.id).catch(async () => {
       this.registerNewStudentUser(user);
     });
     return token;
@@ -96,8 +96,7 @@ export class OauthService {
       nickname: user.login,
       intraId: user.id,
     };
-    const filename: string =
-      user.login + '.' + getUrlExtension(user.image.link);
+    const filename: string = user.login + '.' + getUrlExtension(user.image.link);
     const file_path: string = './assets/' + filename;
     download(user.image.link, file_path, function () {
       console.log('done');

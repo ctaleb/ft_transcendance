@@ -7,7 +7,7 @@
         <label for="nick" class="label">Nickname</label>
         <hr class="solid" />
         <div class="inputAndButton">
-          <input id="nick" class="text-input" type="text" v-model="nickname" />
+          <input id="nick" class="text-input" type="text" v-model="nickname" maxlength="15" minlength="3" />
           <input class="submit-input" type="submit" value="update nickname" @click.stop.prevent="updateNickname()" />
         </div>
       </div>
@@ -48,11 +48,14 @@
           >Select picture <i class="gg-image"></i><input type="file" id="avatar" name="avatar" accept="image/*" @change="updateAvatar" /></label
         ><br />
       </div>
-      <h4>2fa</h4>
-      <label class="switch">
-        <input type="checkbox" id="2faSwitch" @change="twoFactorSwitch($event)" />
-        <span class="slider round"></span>
-      </label>
+      <h4>Two factor authentication</h4>
+      <h6 :class="{ twoFaTitleActive: twoFactorEnabled }">You will receive an sms code during your future connections</h6>
+      <div class="twoFaSwitchDiv">
+        <label class="switch">
+          <input type="checkbox" id="2faSwitch" @change="twoFactorSwitch($event)" />
+          <span class="slider round"></span>
+        </label>
+      </div>
     </div>
     <friend-alert :requester-name="incomingFriendRequest" />
   </div>
@@ -80,7 +83,7 @@ export default defineComponent({
       password: ref(""),
       confirmPassword: ref(""),
       ValidPasswordFlag: ref(true),
-      missingPhoneNumber: ref(false), //addAlert
+      missingPhoneNumber: ref(false),
       twoFactorEnabled: ref(false),
       toggleClicked: ref(false),
       phoneFormatError: ref(""),
@@ -102,6 +105,7 @@ export default defineComponent({
         return null;
       });
       if (fetch_ret == null) {
+        funcs.addAlertMessage("Nickname must stay between 3 and 15 chars.", 1);
         return;
       }
       if (fetch_ret.user) {
@@ -225,6 +229,7 @@ export default defineComponent({
 
     initTwoFactorToggle() {
       if (this.user.twoFactorAuth == true) {
+        this.twoFactorEnabled = true;
         document.getElementById("2faSwitch")?.setAttribute("checked", "true");
       } else {
         console.log("2fa disabled");
@@ -250,12 +255,14 @@ export default defineComponent({
         method: "PUT",
       })
         .then((res) => {
+          if (!res.ok) return Promise.reject();
           return res.json();
         })
         .catch((err) => {
-          console.log(err);
+          funcs.addAlertMessage("Bad format. Need to be +336XXXXXXXX", 3);
+          return null;
         });
-      if (fetch_ret.user) {
+      if (fetch_ret && fetch_ret.user) {
         localStorage.setItem("user", JSON.stringify(fetch_ret.user));
         localStorage.setItem("token", fetch_ret.token);
         this.user = fetch_ret.user;
@@ -281,8 +288,13 @@ export default defineComponent({
         localStorage.setItem("user", JSON.stringify(fetch_ret.user));
         localStorage.setItem("token", fetch_ret.token);
         this.user = fetch_ret.user;
-        if (fetch_ret.newValue == true) funcs.addAlertMessage("2fa enabled !", 2);
-        else funcs.addAlertMessage("2fa Disabled", 2);
+        if (fetch_ret.newValue == true) {
+          funcs.addAlertMessage("2fa enabled !", 2);
+          this.twoFactorEnabled = true;
+        } else {
+          this.twoFactorEnabled = false;
+          funcs.addAlertMessage("2fa Disabled", 2);
+        }
       }
     },
     formatPhone() {
@@ -344,16 +356,22 @@ export default defineComponent({
       }
       input[type*="submit"] {
         width: 15%;
-        border: 1px solid yellow;
+        border: 1px solid $primary;
         border-top-right-radius: 6px;
         border-bottom-right-radius: 6px;
         border-left-style: hidden;
+        background: $background;
+        color: white;
+      }
+      input[type*="submit"]:hover {
+        background: rgb(13, 35, 53);
+        cursor: pointer;
       }
     }
   }
   .text-input {
     padding: 0.8rem;
-    border: 1px solid yellow;
+    border: 1px solid $primary;
     border-right-style: hidden;
     border-top-left-radius: 6px;
     border-bottom-left-radius: 6px;
@@ -386,6 +404,7 @@ export default defineComponent({
       align-items: center;
       padding: 1rem;
       border: 1px solid $primary;
+      border-radius: 10px;
       i {
         margin-left: 10px;
       }
@@ -395,65 +414,73 @@ export default defineComponent({
       cursor: pointer;
     }
   }
-}
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 60px;
-  height: 34px;
-}
+  .twoFaTitleActive {
+    color: $primary;
+  }
+  .twoFaSwitchDiv {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 90px;
+      height: 51px;
+    }
 
-.switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
 
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #ccc;
-  -webkit-transition: 0.4s;
-  transition: 0.4s;
-}
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      -webkit-transition: 0.4s;
+      transition: 0.4s;
+    }
 
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 26px;
-  width: 26px;
-  left: 4px;
-  bottom: 4px;
-  background-color: white;
-  -webkit-transition: 0.4s;
-  transition: 0.4s;
-}
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 39px;
+      width: 39px;
+      left: 6px;
+      bottom: 6px;
+      background-color: white;
+      -webkit-transition: 0.4s;
+      transition: 0.4s;
+    }
 
-input:checked + .slider {
-  background-color: #c1a36b;
-}
+    input:checked + .slider {
+      background-color: #c1a36b;
+    }
 
-input:focus + .slider {
-  box-shadow: 0 0 1px #c1a36b;
-}
+    input:focus + .slider {
+      box-shadow: 0 0 1px #c1a36b;
+    }
 
-input:checked + .slider:before {
-  -webkit-transform: translateX(26px);
-  -ms-transform: translateX(26px);
-  transform: translateX(26px);
-}
+    input:checked + .slider:before {
+      -webkit-transform: translateX(39px);
+      -ms-transform: translateX(39px);
+      transform: translateX(39px);
+    }
 
-/* Rounded sliders */
-.slider.round {
-  border-radius: 34px;
-}
+    /* Rounded sliders */
+    .slider.round {
+      border-radius: 51px;
+    }
 
-.slider.round:before {
-  border-radius: 50%;
+    .slider.round:before {
+      border-radius: 50%;
+    }
+  }
 }
 
 .image {

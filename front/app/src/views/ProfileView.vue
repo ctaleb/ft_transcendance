@@ -61,10 +61,12 @@ import { fetchJSONDatas } from "@/functions/funcs";
 import { useStore } from "@/store";
 import { History } from "@/types/GameSummary";
 import { getUserByNickname, User } from "@/types/User";
+import { functionExpression } from "@babel/types";
 import { onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import editUrl from "../assets/edit.png";
 import shutdownUrl from "../assets/shutdown.png";
+let funcs = require("../functions/funcs");
 
 const route = useRoute();
 
@@ -97,7 +99,10 @@ onMounted(async () => {
   let nick = <string | undefined>route.params.nickname;
 
   if (nick) {
-    currentUser.value = await getUserByNickname(nick);
+    currentUser.value = await getUserByNickname(nick).catch((err) => {
+      return undefined;
+    });
+    console.log(currentUser.value);
 
     if (!currentUser.value) return;
     await fetch("http://" + window.location.hostname + ":3000/api/friendship/profile/" + nick, {
@@ -106,7 +111,9 @@ onMounted(async () => {
         Authorization: "Bearer " + localStorage.getItem("token"),
       },
     })
-      .then((data) => data.json())
+      .then((data) => {
+        return data.json();
+      })
       .then((data) => {
         currentFriend.value = data.friends;
       });
