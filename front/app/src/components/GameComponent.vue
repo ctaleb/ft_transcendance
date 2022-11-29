@@ -1,6 +1,6 @@
 <template>
   <section class="lobby container">
-    <img class="border-gold user-image michel" :src="User.getAvatar(store.user!)" alt="" />
+    <!-- <img class="border-gold user-image michel" :src="User.getAvatar(store.user)" alt="" /> -->
     <div :class="powers ? '' : ' hidden'">
       <power-slider-component v-model="power" id="powerSlider" />
     </div>
@@ -27,13 +27,7 @@
 		  <button @click="confirmGame()">Yes</button>
 		  <button @click="denyGame()">No</button>
 		</div> -->
-        <Modal
-          :title="sumTitle"
-          :data="gameSummary"
-          :start="start"
-          :end="end"
-          @close="showSummary(false)"
-        ></Modal>
+        <Modal :title="sumTitle" :data="gameSummary" :start="start" :end="end" @close="showSummary(false)"></Modal>
       </div>
       <div v-if="noFriends" class="overlay">
         <Denial :inviter="friendName" @sadStory="showDenial(false)"></Denial>
@@ -49,94 +43,27 @@
             <label for="score">Max Score: {{ score }}</label>
             <div>
               <label for="score">Max Score: {{ score }}</label>
-              <div>
-                1<input
-                  v-model="score"
-                  type="range"
-                  id="score"
-                  name="score"
-                  min="1"
-                  max="100"
-                  :disabled="readyButton == true"
-                />100
-              </div>
+              <div>1<input v-model="score" type="range" id="score" name="score" min="1" max="100" :disabled="readyButton == true" />100</div>
             </div>
             <div>
-              <label for="ballSpeed"
-                >Initial Ball Speed (0 for half speed): {{ ballSpeed }}</label
-              >
-              <div>
-                0<input
-                  v-model="ballSpeed"
-                  type="range"
-                  id="ballSpeed"
-                  name="ballSpeed"
-                  min="0"
-                  max="5"
-                  :disabled="readyButton == true"
-                />5
-              </div>
+              <label for="ballSpeed">Initial Ball Speed (0 for half speed): {{ ballSpeed }}</label>
+              <div>0<input v-model="ballSpeed" type="range" id="ballSpeed" name="ballSpeed" min="0" max="5" :disabled="readyButton == true" />5</div>
             </div>
             <div>
-              <label for="ballSize"
-                >Ball Size Factor (0 for half size): {{ ballSize }}</label
-              >
-              <div>
-                0<input
-                  v-model="ballSize"
-                  type="range"
-                  id="ballSize"
-                  name="ballSize"
-                  min="0"
-                  max="3"
-                  :disabled="readyButton == true"
-                />3
-              </div>
+              <label for="ballSize">Ball Size Factor (0 for half size): {{ ballSize }}</label>
+              <div>0<input v-model="ballSize" type="range" id="ballSize" name="ballSize" min="0" max="3" :disabled="readyButton == true" />3</div>
             </div>
             <div>
-              <label for="barSpeed"
-                >Bar Speed Factor (0 for half speed): {{ barSpeed }}</label
-              >
-              <div>
-                0<input
-                  v-model="barSpeed"
-                  type="range"
-                  id="barSpeed"
-                  name="barSpeed"
-                  min="0"
-                  max="5"
-                  :disabled="readyButton == true"
-                />5
-              </div>
+              <label for="barSpeed">Bar Speed Factor (0 for half speed): {{ barSpeed }}</label>
+              <div>0<input v-model="barSpeed" type="range" id="barSpeed" name="barSpeed" min="0" max="5" :disabled="readyButton == true" />5</div>
             </div>
             <div>
-              <label for="barSize"
-                >Bar Size Factor (0 for half size): {{ barSize }}</label
-              >
-              <div>
-                0<input
-                  v-model="barSize"
-                  type="range"
-                  id="barSize"
-                  name="barSize"
-                  min="0"
-                  max="2"
-                  :disabled="readyButton == true"
-                />2
-              </div>
+              <label for="barSize">Bar Size Factor (0 for half size): {{ barSize }}</label>
+              <div>0<input v-model="barSize" type="range" id="barSize" name="barSize" min="0" max="2" :disabled="readyButton == true" />2</div>
             </div>
+            <div><input v-model="smashes" type="checkbox" id="switch" :disabled="readyButton == true" /><label for="smashes">Toggle smashes</label></div>
             <div>
-              <input
-                v-model="smashes"
-                type="checkbox"
-                id="switch"
-                :disabled="readyButton == true"
-              /><label for="smashes">Toggle smashes</label>
-            </div>
-            <div>
-              <label for="smashStrength"
-                >Smash Strength Factor: {{ smashStrength }}</label
-              >
+              <label for="smashStrength">Smash Strength Factor: {{ smashStrength }}</label>
               <div>
                 1<input
                   v-model="smashStrength"
@@ -149,22 +76,8 @@
                 />10
               </div>
             </div>
-            <div>
-              <input
-                v-model="effects"
-                type="checkbox"
-                id="switch"
-                :disabled="readyButton == true"
-              /><label for="effects">Toggle effects</label>
-            </div>
-            <div>
-              <input
-                v-model="powers"
-                type="checkbox"
-                id="switch"
-                :disabled="readyButton == true"
-              /><label for="powers">Toggle powers</label>
-            </div>
+            <div><input v-model="effects" type="checkbox" id="switch" :disabled="readyButton == true" /><label for="effects">Toggle effects</label></div>
+            <div><input v-model="powers" type="checkbox" id="switch" :disabled="readyButton == true" /><label for="powers">Toggle powers</label></div>
             <div><input v-model="effects" type="checkbox" id="switch" :disabled="readyButton == true" /><label for="effects">Toggle effects</label></div>
             <div><input v-model="powers" type="checkbox" id="switch" :disabled="readyButton == true" /><label for="powers">Toggle powers</label></div>
           </div>
@@ -180,9 +93,8 @@
 </template>
 
 <script setup lang="ts">
-import { useStore } from "@/store";
+import { socketLocal, useStore } from "@/store";
 import { GameSummaryData } from "@/types/GameSummary";
-import { Socket } from "engine.io-client";
 import { onMounted, onUnmounted, reactive, ref } from "vue";
 import { GameOptions, GameRoom, GameState, IBar } from "../../../../back/app/src/server/entities/server.entity";
 import { User } from "@/types/User";
@@ -201,16 +113,12 @@ import fillRedUrl from "../assets/slot_fill_enemy.png";
 import Denial from "./InviteDenied/Modal.vue";
 import PowerSliderComponent from "./PowerSliderComponent.vue";
 import Modal from "./Summary/Modal.vue";
+import { watch } from "fs";
 //import { SCOPABLE_TYPES } from "@babel/types";
 
 const store = useStore();
-let socket = store.socket;
 
-store.$subscribe((mutation, state) => {
-  socket = state.socket;
-});
-
-console.log("config " + socket?.id);
+console.log("config " + socketLocal?.value?.id);
 const ballImg = new Image();
 ballImg.src = ballUrl;
 const powerChargeImg = new Image();
@@ -321,7 +229,7 @@ function findMatch() {
   startButton.value = true;
   lobbyStatus.value = "Looking for an opponent...";
   powers.value = false;
-  socket?.emit("joinQueue", {
+  socketLocal?.value?.emit("joinQueue", {
     power: power.value,
   });
 }
@@ -329,12 +237,12 @@ function readyUp() {
   readyButton.value = true;
   customReady.value = "Waiting for " + friendName.value;
   if (toggleInvited.value) {
-    socket?.emit("readyInvitee", {
+    socketLocal?.value?.emit("readyInvitee", {
       power: power.value,
     });
   } else {
     updateOpts();
-    socket?.emit("readyInviter", {
+    socketLocal?.value?.emit("readyInviter", {
       gameOpts,
       power: power.value,
     });
@@ -362,17 +270,6 @@ function toggleGameQueue() {
 function toggleInvitedMode() {
   toggleInvited.value = toggleInvited.value ? false : true;
 }
-
-// function confirmGame() {
-//   socket.emit("playerReady", {}, () => {});
-//   document.getElementById("powerSlider")?.classList.add("hidden");
-//   showModal(false);
-// }
-
-// function denyGame() {
-//   socket.emit("playerNotReady", {}, () => {});
-//   showModal(false);
-// }
 
 function kickoffLoading(ctx: any) {
   if (kickOff) {
@@ -539,64 +436,46 @@ onMounted(() => {
   ctx = canvas.value?.getContext("2d");
   console.log("ctx " + ctx);
   ctx?.drawImage(plateauImg, 0, 0, cWidth, cHeight);
-
   scaling(ctx);
 
-  registerSockets(store.socket as any);
-  store.$subscribe((mutation, state) => {
-    //   socket.on("gameConfirmation", (gameRoom: GameRoom) => {
-    //     theRoom = gameRoom;
-    //     showModal(true);
-    //   });
-
-    //   socket.on("gameConfirmationTimeout", () => {
-    //     showModal(false);
-    //     startButton.value = true;
-    //     lobbyStatus.value = "Find Match";
-    //   });
-
-    if (state.socket) {
-      registerSockets(state.socket as any);
-    }
-  });
-
+  registerSockets(socketLocal);
   //needs to be moved
   //window.removeEventListener("resize", resizeCanvas);
   window.addEventListener("resize", resizeCanvas);
 });
 
 onUnmounted(() => {
-  unregisterSockets(store.socket as any);
+  unregisterSockets(socketLocal);
 });
 
-const registerSockets = (state: Socket) => {
-  !socket?.hasListeners("customInviter") && socket?.on("customInviter", customInviter);
-  !socket?.hasListeners("customInvitee") && socket?.on("customInvitee", customInvitee);
-  !socket?.hasListeners("foreverAlone") && socket?.on("foreverAlone", foreverAlone);
-  !socket?.hasListeners("spectating") && socket?.on("spectating", spectating);
-  !socket?.hasListeners("reconnect") && socket?.on("reconnect", reconnect);
-  !socket?.hasListeners("kickOff") && socket?.on("kickOff", kickOfff);
-  !socket?.hasListeners("play") && socket?.on("play", play);
-  !socket?.hasListeners("ServerUpdate") && socket?.on("ServerUpdate", ServerUpdate);
-  !socket?.hasListeners("Win") && socket?.on("Win", Win);
-  !socket?.hasListeners("Lose") && socket?.on("Lose", Lose);
-  !socket?.hasListeners("startGame") && socket?.on("startGame", startGame);
-  !socket?.hasListeners("customInvitation") && socket?.on("customInvitation", customInvitation);
+const registerSockets = (socket: any) => {
+  !socket?.value?.hasListeners("customInviter") && socket?.value?.on("customInviter", customInviter);
+  !socket?.value?.hasListeners("customInvitee") && socket?.value?.on("customInvitee", customInvitee);
+  !socket?.value?.hasListeners("foreverAlone") && socket?.value?.on("foreverAlone", foreverAlone);
+  !socket?.value?.hasListeners("spectating") && socket?.value?.on("spectating", spectating);
+  !socket?.value?.hasListeners("reconnect") && socket?.value?.on("reconnect", reconnect);
+  !socket?.value?.hasListeners("kickOff") && socket?.value?.on("kickOff", kickOfff);
+  !socket?.value?.hasListeners("play") && socket?.value?.on("play", play);
+  !socket?.value?.hasListeners("ServerUpdate") && socket?.value?.on("ServerUpdate", ServerUpdate);
+  !socket?.value?.hasListeners("Win") && socket?.value?.on("Win", Win);
+  !socket?.value?.hasListeners("Lose") && socket?.value?.on("Lose", Lose);
+  !socket?.value?.hasListeners("startGame") && socket?.value?.on("startGame", startGame);
+  !socket?.value?.hasListeners("customInvitation") && socket?.value?.on("customInvitation", customInvitation);
 };
 
-const unregisterSockets = (state: Socket) => {
-  socket?.removeListener("customInviter");
-  socket?.removeListener("customInvitee");
-  socket?.removeListener("foreverAlone");
-  socket?.removeListener("spectating");
-  socket?.removeListener("reconnect");
-  socket?.removeListener("kickOff");
-  socket?.removeListener("play");
-  socket?.removeListener("ServerUpdate");
-  socket?.removeListener("Win");
-  socket?.removeListener("Lose");
-  socket?.removeListener("startGame");
-  socket?.removeListener("customInvitation");
+const unregisterSockets = (socket: any) => {
+  socket?.value?.removeListener("customInviter");
+  socket?.value?.removeListener("customInvitee");
+  socket?.value?.removeListener("foreverAlone");
+  socket?.value?.removeListener("spectating");
+  socket?.value?.removeListener("reconnect");
+  socket?.value?.removeListener("kickOff");
+  socket?.value?.removeListener("play");
+  socket?.value?.removeListener("ServerUpdate");
+  socket?.value?.removeListener("Win");
+  socket?.value?.removeListener("Lose");
+  socket?.value?.removeListener("startGame");
+  socket?.value?.removeListener("customInvitation");
 };
 
 const customInviter = (friend: string) => {

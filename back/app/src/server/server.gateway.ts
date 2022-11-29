@@ -49,7 +49,7 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     if (user && user.token === hsToken) {
       user.socket = client;
       console.log(user.name + ' rejoining ' + user.status);
-      if (user.status === 'ready') this.serverService.reconnect(user);
+      this.serverService.reconnect(user);
     } else {
       this.serverService.newUser(hsToken, hsNick, client);
     }

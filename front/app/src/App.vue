@@ -32,7 +32,7 @@ import { RouterLink, RouterView, useRoute, useRouter } from "vue-router";
 import { User, getUserByNickname } from "@/types/User";
 import { trySetupUser } from "@/functions/funcs";
 import { Alert } from "@/types/GameSummary";
-import { useStore } from "@/store";
+import { socketLocal, useStore } from "@/store";
 import GameConfirmation from "./components/GameConfirmation/Modal.vue";
 import AlertCard from "./components/AlertCard.vue";
 import CustomInvitation from "./components/CustomInvitation/Modal.vue";
@@ -52,129 +52,73 @@ trySetupUser().catch((err) => {
   console.log("Cant't set up user for now");
 });
 
-let socket = store.socket;
+let socket = socketLocal;
 let alertMessages: Alert[] = store.message;
-
-store.$subscribe((mutation, state) => {
-  if (!state.socket?.hasListeners("customInvite")) {
-    state.socket?.on("customInvite", (inviter: string) => {
-      // theRoom = gameRoom;
-      showInvite(true);
-    });
-  }
-  if (!state.socket?.hasListeners("gameConfirmation")) {
-    state.socket?.on("gameConfirmation", (gameRoom: any) => {
-      // theRoom = gameRoom;
-      showConfirmation(true);
-    });
-  }
-  if (!state.socket?.hasListeners("invitation")) {
-    state.socket?.on("invitation", (requester: string) => {
-      invSender.value = requester;
-      showInvite(true);
-    });
-  }
-  if (!state.socket?.hasListeners("gameConfirmationTimeout")) {
-    state.socket?.on("gameConfirmationTimeout", () => {
-      showConfirmation(false);
-      // startButton.value = true;
-      // lobbyStatus.value = "Find Match";
-    });
-  }
-  if (!state.socket?.hasListeners("friendshipInvite")) {
-    state.socket?.on("friendshipInvite", (requester: User) => {
-      incomingFriendRequest.value = requester.nickname;
-      profileNotificationBadge.value = true;
-      getUserByNickname(requester.nickname).then((data) => {
-        state.user?.invitations?.push(data!);
-      });
-    });
-  }
-  if (!state.socket?.hasListeners("acceptInvite")) {
-    state.socket?.on("acceptInvite", (requester: User) => {
-      getUserByNickname(requester.nickname).then((data) => {
-        state.user?.friends?.push(data!);
-      });
-    });
-  }
-  if (!state.socket?.hasListeners("removeFriend")) {
-    state.socket?.on("removeFriend", (requester: User) => {
-      getUserByNickname(requester.nickname).then((data) => {
-        state.user?.friends?.splice(state.user?.friends?.indexOf(data!), 1);
-      });
-    });
-  }
-  if (!state.socket?.hasListeners("inviteFailure")) {
-    state.socket?.on("inviteFailure", () => {
-      showFailure(true);
-    });
-  }
-});
 
 window.addEventListener("keydown", (e) => {
   if (e.key === "ArrowLeft")
-    store.socket?.emit("key", {
+    socket?.value?.emit("key", {
       key: "downLeft",
     });
   else if (e.key === "ArrowRight")
-    store.socket?.emit("key", {
+    socket?.value?.emit("key", {
       key: "downRight",
     });
   if (e.key === "a" || e.key === "A")
-    store.socket?.emit("key", {
+    socket?.value?.emit("key", {
       key: "downA",
     });
   else if (e.key === "d" || e.key === "D")
-    store.socket?.emit("key", {
+    socket?.value?.emit("key", {
       key: "downD",
     });
   else if (e.key === " ") {
-    store.socket?.emit("key", {
+    socket?.value?.emit("key", {
       key: "downSpace",
     });
   }
-  if (e.key === "o") store.socket?.emit("debugging");
-  if (e.key === "i") store.socket?.emit("chatting");
+  if (e.key === "o") socket?.value?.emit("debugging");
+  if (e.key === "i") socket?.value?.emit("chatting");
 });
 
 window.addEventListener("keyup", (e) => {
   if (e.key === "ArrowLeft")
-    store.socket?.emit("key", {
+    socket?.value?.emit("key", {
       key: "upLeft",
     });
   else if (e.key === "ArrowRight")
-    store.socket?.emit("key", {
+    socket?.value?.emit("key", {
       key: "upRight",
     });
   if (e.key === "a")
-    store.socket?.emit("key", {
+    socket?.value?.emit("key", {
       key: "upA",
     });
   else if (e.key === "d")
-    store.socket?.emit("key", {
+    socket?.value?.emit("key", {
       key: "upD",
     });
 });
 
 const confirmGame = () => {
-  store.socket?.emit("playerReady", {}, () => {});
+  socket?.value?.emit("playerReady", {}, () => {});
   showConfirmation(false);
   router.push("/game");
 };
 
 const denyGame = () => {
-  store.socket?.emit("playerNotReady");
+  socket?.value?.emit("playerNotReady");
   showConfirmation(false);
 };
 
 const acceptCustom = () => {
   showInvite(false);
   router.push("/game");
-  store.socket?.emit("settingsInvitee");
+  socket?.value?.emit("settingsInvitee");
 };
 
 const denyCustom = () => {
-  store.socket?.emit("declineCustom");
+  socket?.value?.emit("declineCustom");
   showInvite(false);
 };
 
@@ -188,8 +132,8 @@ const logout = () => {
   store.$reset();
   // map through that list and use the **$reset** fn to reset the state
   //  socket? = io("http://" + window.location.hostname + ":3500", {
-  store.socket?.emit("disco", {});
-  //  store.socket? = io("http://" + window.location.hostname + ":3500", {
+  socketLocal.value?.emit("disco", {});
+  //  socket?.value? = io("http://" + window.location.hostname + ":3500", {
   //    transports: ["websocket"],
   //    // path: "/api/socket.io/",
   //    autoConnect: false,
@@ -216,7 +160,7 @@ onMounted(() => {
   watch(
     () => route.path,
     (currentValue, oldValue) => {
-      if (currentValue != "/game") store.socket?.emit("watchPath");
+      if (currentValue != "/game") socket?.value?.emit("watchPath");
 
       if (localStorage.getItem("token") && profileNotificationBadge.value === false) {
         fetch("http://" + window.location.hostname + ":3000/api/friendship/has-invitations", {
@@ -235,6 +179,64 @@ onMounted(() => {
             console.log(err);
             profileNotificationBadge.value = false;
           });
+      }
+    }
+  );
+  watch(
+    () => socketLocal.value,
+    (currentValue, oldValue) => {
+      if (!socket.value?.hasListeners("customInvite")) {
+        socket.value?.on("customInvite", (inviter: string) => {
+          // theRoom = gameRoom;
+          showInvite(true);
+        });
+      }
+      if (!socket.value?.hasListeners("gameConfirmation")) {
+        socket.value?.on("gameConfirmation", (gameRoom: any) => {
+          // theRoom = gameRoom;
+          showConfirmation(true);
+        });
+      }
+      if (!socket.value?.hasListeners("invitation")) {
+        socket.value?.on("invitation", (requester: string) => {
+          invSender.value = requester;
+          showInvite(true);
+        });
+      }
+      if (!socket.value?.hasListeners("gameConfirmationTimeout")) {
+        socket.value?.on("gameConfirmationTimeout", () => {
+          showConfirmation(false);
+          // startButton.value = true;
+          // lobbyStatus.value = "Find Match";
+        });
+      }
+      if (!socket.value?.hasListeners("friendshipInvite")) {
+        socket.value?.on("friendshipInvite", (requester: User) => {
+          incomingFriendRequest.value = requester.nickname;
+          profileNotificationBadge.value = true;
+          getUserByNickname(requester.nickname).then((data) => {
+            store.user?.invitations?.push(data!);
+          });
+        });
+      }
+      if (!socket.value?.hasListeners("acceptInvite")) {
+        socket.value?.on("acceptInvite", (requester: User) => {
+          getUserByNickname(requester.nickname).then((data) => {
+            store.user?.friends?.push(data!);
+          });
+        });
+      }
+      if (!socket.value?.hasListeners("removeFriend")) {
+        socket.value?.on("removeFriend", (requester: User) => {
+          getUserByNickname(requester.nickname).then((data) => {
+            store.user?.friends?.splice(store.user?.friends?.indexOf(data!), 1);
+          });
+        });
+      }
+      if (!socket.value?.hasListeners("inviteFailure")) {
+        socket.value?.on("inviteFailure", () => {
+          showFailure(true);
+        });
       }
     }
   );

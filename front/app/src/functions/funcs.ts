@@ -1,5 +1,5 @@
 import config from "@/config/config";
-import { useStore } from "@/store";
+import { socketLocal, useStore } from "@/store";
 import { Alert } from "@/types/GameSummary";
 import { User } from "@/types/User";
 import { io } from "socket.io-client";
@@ -96,7 +96,7 @@ async function fetchUser(token: string): Promise<void> {
 function connectSocket(token: string, user: any): void {
   const store = useStore();
 
-  store.socket = io("http://" + window.location.hostname + ":3500", {
+  socketLocal.value = io("http://" + window.location.hostname + ":3500", {
     auth: { token: token, user: user },
     transports: ["websocket"],
   });
@@ -105,9 +105,9 @@ function connectSocket(token: string, user: any): void {
   //    auth: { token: token, user: user },
   //    transports: ["websocket"],
   //  });
-  console.log(store.socket);
+  console.log(socketLocal.value);
   //  debugger;
-  console.log("store socket: " + store.socket.id);
+  console.log("store socket: " + socketLocal.value.id);
 }
 
 export function addAlertMessage(message: string, type: number, second: number = 5) {
