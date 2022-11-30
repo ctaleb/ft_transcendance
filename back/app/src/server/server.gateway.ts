@@ -447,6 +447,12 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     return await this.serverService.sendChannelMessage(channelId, content, client.handshake.auth.user.id);
   }
 
+  @SubscribeMessage('friendToConv')
+  friendToConv(@ConnectedSocket() client: Socket, @MessageBody('target') nickname: string) {
+    console.log('GOOOOOOO');
+    this.serverService.PlayerToSocket(nickname).emit('friendTooConv', client.handshake.auth.user.nickname);
+  }
+
   @SubscribeMessage('updateChannelMembers')
   async updateChannelMembers(@ConnectedSocket() client: Socket, @MessageBody('id') channelId: number) {
     await this.serverService.updateChannelMembers(channelId, client);
@@ -460,6 +466,11 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
 
   @SubscribeMessage('leaveChannelRoom')
   async leaveChannelRoom(@ConnectedSocket() client: Socket, @MessageBody('id') channelId: number) {
+    await this.serverService.leaveChannelRoom(client, channelId);
+  }
+
+  @SubscribeMessage('privateChannelInvite')
+  async privateChannelInvite(@ConnectedSocket() client: Socket, @MessageBody('id') channelId: number) {
     await this.serverService.leaveChannelRoom(client, channelId);
   }
 }
