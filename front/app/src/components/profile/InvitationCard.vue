@@ -8,6 +8,7 @@
       <div class="user-invite border-gold">
         <img class="user-image border-gold" :src="User.getAvatar(invitation)" alt="" />
         <h3>{{ invitation.nickname }}</h3>
+        <h3>{{ invitation.status }}</h3>
         <!-- <p>{{ "status" }}</p> -->
       </div>
       <div class="bot-buttons">

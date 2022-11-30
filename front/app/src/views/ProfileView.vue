@@ -7,6 +7,7 @@
       <div>
         <h2 class="playerName">{{ currentUser?.nickname }}</h2>
         <h4 style="text-align: center">elo : {{ currentUser?.elo }}</h4>
+        <h4 style="text-align: center">status : {{ currentUser?.status }}</h4>
       </div>
       <div>
         <div class="buttons" v-if="currentUser === store.user">

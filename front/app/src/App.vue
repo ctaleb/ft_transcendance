@@ -27,19 +27,19 @@
 </template>
 
 <script setup lang="ts">
+import { addAlertMessage, trySetupUser, updateStatus } from "@/functions/funcs";
+import { useStore } from "@/store";
+import { isChannel } from "@/types/Channel";
+import { Conversation } from "@/types/Conversation";
+import { Alert } from "@/types/GameSummary";
+import { Message } from "@/types/Message";
+import { getUserByNickname, User } from "@/types/User";
 import { onMounted, ref, watch } from "vue";
 import { RouterLink, RouterView, useRoute, useRouter } from "vue-router";
-import { User, getUserByNickname } from "@/types/User";
-import { addAlertMessage, trySetupUser } from "@/functions/funcs";
-import { Alert } from "@/types/GameSummary";
-import { useStore } from "@/store";
-import GameConfirmation from "./components/GameConfirmation/Modal.vue";
 import AlertCard from "./components/AlertCard.vue";
 import CustomInvitation from "./components/CustomInvitation/Modal.vue";
 import FailedInvitation from "./components/FailedInvitation/Modal.vue";
-import { Message } from "@/types/Message";
-import { Conversation } from "@/types/Conversation";
-import { Channel, isChannel } from "@/types/Channel";
+import GameConfirmation from "./components/GameConfirmation/Modal.vue";
 
 const store = useStore();
 const route = useRoute();
@@ -59,6 +59,11 @@ let socket = store.socket;
 let alertMessages: Alert[] = store.message;
 
 store.$subscribe((mutation, state) => {
+  if (!state.socket?.hasListeners("updateOneUserStatus")) {
+    state.socket?.on("updateOneUserStatus", (info: any) => {
+      updateStatus(info.id, info.status);
+    });
+  }
   if (!state.socket?.hasListeners("customInvite")) {
     state.socket?.on("customInvite", (inviter: string) => {
       // theRoom = gameRoom;

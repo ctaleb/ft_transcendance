@@ -16,6 +16,7 @@ import {
   IPowerInfo,
   PowerInvisibility,
   PowerMinimo,
+  Status,
 } from './entities/server.entity';
 import { Server, Socket } from 'socket.io';
 import { UserEntity } from 'src/user/user.entity';
@@ -25,6 +26,7 @@ import { DeepPartial, Repository } from 'typeorm';
 import { UserService } from 'src/user/user.service';
 import { Channel } from './entities/channel';
 import { ChatService } from 'src/chat/chat.service';
+import { emit } from 'process';
 
 const chargeMax = 1;
 const ballSize = 16;
@@ -56,7 +58,6 @@ export class ServerService {
   constructor(
     @InjectRepository(MatchHistoryEntity)
     private _matchHistoryRepository: Repository<MatchHistoryEntity>,
-    @Inject(forwardRef(() => UserService))
     private _userService: UserService,
     private _chatService: ChatService,
   ) {}
@@ -69,7 +70,7 @@ export class ServerService {
       socket: null,
       name: user,
       id: bdd_user.id,
-      status: 'idle',
+      status: 'online',
       gameData: {
         input: [],
         left: false,
@@ -86,6 +87,7 @@ export class ServerService {
     };
     if (sock) newUser.socket = sock;
     this.userList.push(newUser);
+    this.updateStatus(newUser.id, 'online');
   }
 
   //   reloadUser(token: string, user: string, sock: Socket) {
@@ -134,6 +136,12 @@ export class ServerService {
   findUsers(room: string) {
     // console.log(this.rooms.find((element) => element.name === room).userList);
     return this.rooms.find((element) => element.name === room).userList;
+  }
+
+  //status stuff
+  async updateStatus(id: number, status: string) {
+    await this._userService.updateStatus(id, status);
+    this.server.emit('updateOneUserStatus', { id, status });
   }
 
   //game stuff
@@ -192,9 +200,11 @@ export class ServerService {
       game.host.socket.emit('Win', game.room, elo, data);
       game.client.socket.emit('Lose', game.room, elo, this.inverseSummary(data));
     }
-    game.host.status = 'idle';
+    game.host.gameData.status = 'idle';
+    this.updateStatus(game.host.id, 'online');
     game.host.socket.leave(game.room.name);
-    game.client.status = 'idle';
+    game.client.gameData.status = 'idle';
+    this.updateStatus(game.client.id, 'online');
     game.client.socket.leave(game.room.name);
     game.theatre.viewers.forEach((element) => element.leave(game.theatre.name));
     this.games.splice(this.games.indexOf(game), 1);
@@ -208,9 +218,11 @@ export class ServerService {
     // this.summarize(game, elo);
     winner.socket.emit('Win', game.room, elo, data);
     loser.socket.emit('Lose', game.room, elo, revdata);
-    game.host.status = 'idle';
+    game.host.gameData.status = 'idle';
+    this.updateStatus(game.host.id, 'online');
     game.host.socket.leave(game.room.name);
-    game.client.status = 'idle';
+    game.client.gameData.status = 'idle';
+    this.updateStatus(game.client.id, 'online');
     game.client.socket.leave(game.room.name);
     game.theatre.viewers.forEach((element) => element.leave(game.theatre.name));
     this.games.splice(this.games.indexOf(game), 1);
@@ -269,6 +281,7 @@ export class ServerService {
           client: 0,
           host: 0,
         },
+        hit: { x: 0, y: 0, hit: false },
       },
       host: undefined,
       client: client,
@@ -398,14 +411,17 @@ export class ServerService {
     if (this.playerQueue.length < 1) {
       this.playerQueue.push(player);
       player.status = 'inQueue';
+      this.updateStatus(player.id, 'inQueue');
     } else {
       const game = this.newGame(player);
       this.games.push(game);
       game.room.name = 'game-' + game.host.name + '-' + game.client.name;
       game.theatre.name = 'spec-' + game.host.name + '-' + game.client.name;
-      game.host.status = 'inLobby';
+      game.host.gameData.status = 'inLobby';
+      this.updateStatus(game.host.id, 'inLobby');
       game.host.socket.join(game.room.name);
-      game.client.status = 'inLobby';
+      game.client.gameData.status = 'inLobby';
+      this.updateStatus(game.client.id, 'inLobby');
       game.client.socket.join(game.room.name);
       console.log(game.client.socket.id + ' ' + game.host.socket.id);
       return game;
@@ -555,15 +571,21 @@ export class ServerService {
     else if (room.effect === 'right') room.effect = 'doRight';
   }
 
-  wallBallCollision(ball: IBall, room: GameRoom) {
-    if (ball.pos.x - 16 <= 0) {
-      ball.speed.x *= -1;
-      ball.pos.x = 0 + 16;
+  wallBallCollision(state: GameState, room: GameRoom) {
+    if (state.ball.pos.x - 16 <= 0) {
+      state.ball.speed.x *= -1;
+      state.hit.x = 0;
+      state.hit.y = state.ball.pos.y;
+      state.hit.hit = true;
+      state.ball.pos.x = 0 + 16;
       if (room.options.effects) this.applyEffect(room);
     }
-    if (ball.pos.x + 16 > 500) {
-      ball.speed.x *= -1;
-      ball.pos.x = 500 - 16;
+    if (state.ball.pos.x + 16 > 500) {
+      state.ball.speed.x *= -1;
+      state.hit.x = 500;
+      state.hit.y = state.ball.pos.y;
+      state.hit.hit = true;
+      state.ball.pos.x = 500 - 16;
       if (room.options.effects) this.applyEffect(room);
     }
   }
@@ -621,6 +643,7 @@ export class ServerService {
         maxSpeed: gameState.clientBar.maxSpeed,
       },
       score: { host: gameState.score.client, client: gameState.score.host },
+      hit: { x: 500 - gameState.hit.x, y: 500 - gameState.hit.y, hit: gameState.hit.hit },
     };
     if (game.host.gameData.power.name == 'invisibility' && game.host.gameData.power.trigger == true) {
       inverseState.ball.pos.x = -50;
@@ -670,6 +693,7 @@ export class ServerService {
         maxSpeed: gameState.clientBar.maxSpeed,
       },
       score: { host: gameState.score.client, client: gameState.score.host },
+      hit: { x: gameState.hit.x, y: gameState.hit.y, hit: gameState.hit.hit },
     };
     if (game.client.gameData.power.name == 'invisibility' && game.client.gameData.power.trigger == true) {
       console.log('invis client');
@@ -761,6 +785,12 @@ export class ServerService {
     else if (effect === 'doRight') this.rotateVector(ball.speed, -0.2);
   }
 
+  resetHit(state: GameState) {
+    state.hit.x = 0;
+    state.hit.y = 0;
+    state.hit.hit = false;
+  }
+
   chargeUp(game: Game) {
     if (game.client.gameData.smashLeft > 0 && game.client.gameData.smashLeft < chargeMax * game.room.options.smashStrength) {
       game.client.gameData.smashLeft += 0.01 * game.room.options.smashStrength;
@@ -777,6 +807,8 @@ export class ServerService {
   loop(game: Game) {
     if (!game.room.kickOff) {
       const gameState = game.gameState;
+      this.resetHit(gameState);
+
       this.updateMoveStatus(game.host, gameState.hostBar, 'host', game.room.options);
       this.updateMoveStatus(game.client, gameState.clientBar, 'client', game.room.options);
       if (game.room.options.smashes) this.chargeUp(game);
@@ -785,10 +817,8 @@ export class ServerService {
       this.moveBar(gameState.clientBar, game.client, game.room.options.barSpeed);
 
       this.barBallCollision(gameState.hostBar, gameState.clientBar, gameState.ball, game.room, game.host, game.client);
-      this.wallBallCollision(gameState.ball, game.room);
-
+      this.wallBallCollision(gameState, game.room);
       this.nadal(gameState.ball, game.room.effect);
-      this.reset_collide(gameState.ball, game.room, game);
       gameState.ball.pos.x += gameState.ball.speed.x;
       gameState.ball.pos.y += gameState.ball.speed.y;
 

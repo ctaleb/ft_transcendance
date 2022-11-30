@@ -19,6 +19,7 @@ import { diskStorage } from 'multer';
 import { join } from 'path';
 import { Observable, of } from 'rxjs';
 import { JwtAuthGuard } from 'src/authentication/jwt-auth.guard';
+import { ServerService } from 'src/server/server.service';
 import { UserEntity } from 'src/user/user.entity';
 import { editFileName, imageFileFilter } from 'src/utils/file-uploading.utils';
 import { updatePasswordDto } from './dto/updatePassword';
