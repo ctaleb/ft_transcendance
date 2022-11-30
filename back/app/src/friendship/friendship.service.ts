@@ -19,8 +19,6 @@ export class FriendshipService {
   ) {}
 
   async invite(requester: string, addressee: string): Promise<FriendshipEntity> {
-    let result: FriendshipEntity;
-
     const req: UserEntity = await this._userService.getUserByNickname(requester);
     const adr: UserEntity = await this._userService.getUserByNickname(addressee);
     if (adr.id === req.id) throw new BadRequestException('Requester and addressee are the same person');
@@ -34,7 +32,7 @@ export class FriendshipService {
       addressee: adr,
       status: 'invitation',
     });
-    result = await this._friendshipRepository.save(invitation);
+    const result: FriendshipEntity = await this._friendshipRepository.save(invitation);
     const invited = this._serverService.userList.find((element) => element.name === addressee);
     invited?.socket.emit('friendshipInvite', req);
     return result;

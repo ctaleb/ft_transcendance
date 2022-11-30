@@ -66,7 +66,7 @@ export class ServerService {
     const bdd_user: UserEntity = await this._userService.getUserByNickname(user);
     const newUser: User = {
       token: token,
-      socket: null,
+      socket: sock,
       name: user,
       id: bdd_user.id,
       status: 'idle',
@@ -84,7 +84,6 @@ export class ServerService {
         RoomList: [],
       },
     };
-    if (sock) newUser.socket = sock;
     this.userList.push(newUser);
   }
 
