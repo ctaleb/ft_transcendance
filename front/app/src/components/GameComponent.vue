@@ -173,6 +173,8 @@ let loadPercent = 120;
 let kickOff = false;
 let cSmashingPercent = 0;
 let hSmashingPercent = 0;
+let ballBouncedSide = 0;
+let ballBouncedBar = 0;
 const particles: particleSet[] = [];
 
 let start: Date;
@@ -306,13 +308,8 @@ function drawPlayground(ctx: CanvasRenderingContext2D) {
 function addParticle(ctx: CanvasRenderingContext2D, gameState: GameState) {
   const hit: particleSet = { particles: [], reach: false };
   let ab: IPoint = { x: gameState.ball.pos.x - gameState.hit.x, y: gameState.ball.pos.y - gameState.hit.y };
-  let end1: IPoint = { x: gameState.hit.x < 250 ? 10 : 490, y: ab.x };
-  let end2: IPoint = { x: gameState.hit.x < 250 ? 10 : 490, y: -ab.x };
-
-  console.log("HIT");
-  console.log(end1);
-  console.log(end2);
-  console.log(gameState.hit);
+  let end1: IPoint = { x: gameState.hit.x < 250 ? 10 : 490, y: 1.3 * ab.x };
+  let end2: IPoint = { x: gameState.hit.x < 250 ? 10 : 490, y: 1.3 * -ab.x };
 
   //left
   hit.particles.push({
@@ -434,6 +431,54 @@ function drawPowerCharge(ctx: CanvasRenderingContext2D, gameState: GameState) {
   }
 }
 
+function drawBall(ctx: CanvasRenderingContext2D, gameState: GameState) {
+  if (gameState.hit.hit == 1) {
+    ballBouncedSide = 3;
+    ctx.drawImage(
+      ballImg,
+      gameState.ball.pos.x - gameState.ball.size * scale,
+      gameState.ball.pos.y - gameState.ball.size * scale,
+      gameState.ball.size * 2 * scale * 0.7,
+      gameState.ball.size * 2 * scale
+    );
+  } else if (ballBouncedSide > 0) {
+    ctx.drawImage(
+      ballImg,
+      gameState.ball.pos.x - gameState.ball.size * scale,
+      gameState.ball.pos.y - gameState.ball.size * scale,
+      gameState.ball.size * 2 * scale * 0.8 + 0.1 * (3 - ballBouncedSide),
+      gameState.ball.size * 2 * scale
+    );
+    ballBouncedSide--;
+  } else if (gameState.hit.hit == 2) {
+    ballBouncedBar = 3;
+    ctx.drawImage(
+      ballImg,
+      gameState.ball.pos.x - gameState.ball.size * scale,
+      gameState.ball.pos.y - gameState.ball.size * scale,
+      gameState.ball.size * 2 * scale * 0.7,
+      gameState.ball.size * 2 * scale
+    );
+  } else if (ballBouncedBar > 0) {
+    ctx.drawImage(
+      ballImg,
+      gameState.ball.pos.x - gameState.ball.size * scale,
+      gameState.ball.pos.y - gameState.ball.size * scale,
+      gameState.ball.size * 2 * scale * 0.8 + 0.1 * (3 - ballBouncedBar),
+      gameState.ball.size * 2 * scale
+    );
+    ballBouncedBar--;
+  } else {
+    ctx.drawImage(
+      ballImg,
+      gameState.ball.pos.x - gameState.ball.size * scale,
+      gameState.ball.pos.y - gameState.ball.size * scale,
+      gameState.ball.size * 2 * scale,
+      gameState.ball.size * 2 * scale
+    );
+  }
+}
+
 function updateSummary(summary: GameSummaryData) {
   gameSummary.host = summary.host;
   gameSummary.client = summary.client;
@@ -456,7 +501,7 @@ function test(ctx: CanvasRenderingContext2D | null | undefined, gameState: GameS
       drawPlayground(ctx);
       drawScore(ctx, gameState);
       kickoffLoading(ctx);
-      ctx.drawImage(ballImg, ball.pos.x - ball.size * scale, ball.pos.y - ball.size * scale, ball.size * 2 * scale, ball.size * 2 * scale);
+      drawBall(ctx, gameState);
       ctx.fillStyle = "black";
       drawSmashingEffect(gameState.clientBar, cSmashingPercent, ctx);
       drawSmashingEffect(gameState.hostBar, hSmashingPercent, ctx);
@@ -608,7 +653,6 @@ const ServerUpdate = (gameState: GameState) => {
   gState = gameState;
   scalePosition(gameState);
   if (theRoom) {
-    let ball = gameState.ball;
     clientScore.value = gameState.score.client;
     hostScore.value = gameState.score.host;
     if (gameState.clientBar.smashing && cSmashingPercent < 100 && !kickOff) {
@@ -623,7 +667,7 @@ const ServerUpdate = (gameState: GameState) => {
       drawScore(ctx, gameState);
       drawPowerCharge(ctx, gameState);
       kickoffLoading(ctx);
-      ctx.drawImage(ballImg, ball.pos.x - ball.size * scale, ball.pos.y - ball.size * scale, ball.size * 2 * scale, ball.size * 2 * scale);
+      drawBall(ctx, gameState);
       ctx.fillStyle = "black";
       drawSmashingEffect(gameState.clientBar, cSmashingPercent, ctx);
       drawSmashingEffect(gameState.hostBar, hSmashingPercent, ctx);

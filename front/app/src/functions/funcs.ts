@@ -100,10 +100,6 @@ function connectSocket(token: string, user: any) {
     auth: { token: token, user: user },
     transports: ["websocket"],
   });
-  console.log("store socket: " + socketLocal.value?.id);
-  setTimeout(() => {
-    console.log("store socket: " + socketLocal.value?.id);
-  }, 3000);
 }
 
 export function addAlertMessage(message: string, type: number, second: number = 5) {
