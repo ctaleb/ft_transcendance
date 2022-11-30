@@ -84,6 +84,10 @@ export class UserEntity extends AbstractEntity {
   @Column({ default: 1000 })
   public elo: number;
 
+  @Expose({ name: 'status' })
+  @Column({ default: 'disconnected' })
+  public status: string;
+
   // We add the avatarId column above so that the entity of the user can hold
   // the id of the avatar without joining all of the data of the avatar.
   @Column({ nullable: true })

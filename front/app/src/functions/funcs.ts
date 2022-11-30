@@ -125,3 +125,15 @@ export function addAlertMessage(message: string, type: number, second: number = 
     store.message?.splice(store.message?.indexOf(x), 1);
   }, second * 1000);
 }
+
+export function updateStatus(id: number, status: string) {
+  const store = useStore();
+
+  let user = store.user?.friends?.find((element) => element.id === id);
+  if (user) user.status = status;
+  user = store.user?.invitations?.find((element) => element.id === id);
+  if (user) user.status = status;
+  // To do Update currentChannel status of members (user[].id) or privChannelUser (other.id)
+  user = store.user;
+  if (user?.id == id) user.status = status;
+}

@@ -11,6 +11,8 @@ import { jwtConstants } from 'src/authentication/constants';
 import { FriendshipModule } from 'src/friendship/friendship.module';
 import { FriendshipService } from 'src/friendship/friendship.service';
 import { FriendshipEntity } from 'src/friendship/entities/friendship.entity';
+import { ServerModule } from 'src/server/server.module';
+import { ServerService } from 'src/server/server.service';
 
 @Module({
   imports: [
