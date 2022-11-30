@@ -65,13 +65,10 @@
 import * as funcs from "@/functions/funcs";
 import { useStore } from "@/store";
 import { User } from "@/types/User";
-import { log } from "console";
-import { storeToRefs } from "pinia";
-import { hasUncaughtExceptionCaptureCallback } from "process";
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
-import twoFactorComponent from "../components/twoFactorComponent.vue";
 import registerComponent from "../components/registerComponent.vue";
+import twoFactorComponent from "../components/twoFactorComponent.vue";
 
 const router = useRouter();
 const store = useStore();

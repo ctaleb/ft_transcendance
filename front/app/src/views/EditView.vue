@@ -26,14 +26,16 @@
         <input type="password" placeholder="please confirm new password" v-model="confirmPassword" />
         <button type="submit" class="button" @click.stop.prevent="updatePassword()">Update password</button>
       </div>
-      <label class="switch">
-        <input type="checkbox" id="2faSwitch" @change="twoFactorSwitch($event)" />
-        <span class="slider round"></span>
-      </label>
     </div>
     <div class="svgSection">
-      <h2 v-if="twoFactorEnabled == false">2FA diabled</h2>
       <img :class="{ lessOpacity: twoFactorEnabled == false }" src="../assets/twoFaDisabled.svg" alt="" />
+      <div class="content">
+        <h2 v-if="twoFactorEnabled == false">2FA disabled</h2>
+        <label class="switch">
+          <input type="checkbox" id="2faSwitch" @change="twoFactorSwitch($event)" />
+          <span class="slider round"></span>
+        </label>
+      </div>
     </div>
     <!--<div>
       <h4>Two factor authentication</h4>
@@ -52,9 +54,9 @@
 </template>
 
 <script lang="ts">
-import { getUserAvatar, trySetupUser } from "@/functions/funcs";
-import { User, getUserById } from "@/types/User";
+import { trySetupUser } from "@/functions/funcs";
 import { useStore } from "@/store";
+import { getUserById } from "@/types/User";
 import { defineComponent, ref } from "vue";
 import FriendAlert from "../components/FriendAlert.vue";
 let funcs = require("../functions/funcs");
@@ -317,15 +319,91 @@ export default defineComponent({
     justify-content: center;
     align-items: center;
     width: 35%;
+    color: white;
+    position: relative;
+
     img {
       width: 100%;
+      transition: opacity 0.4s ease;
     }
-    h2 {
-      z-index: 5;
+
+    & > .content {
+      // Self
       position: absolute;
-      color: white;
+      left: 0;
+      right: 0;
+      top: 0;
+      bottom: 0;
+
+      // Layout
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+
+      .switch {
+        z-index: 2;
+        position: relative;
+        display: inline-block;
+        width: 90px;
+        height: 51px;
+
+        & > input {
+          opacity: 0;
+          width: 0;
+          height: 0;
+
+          &:checked + .slider {
+            background-color: #c1a36b;
+
+            &:before {
+              -webkit-transform: translateX(39px);
+              -ms-transform: translateX(39px);
+              transform: translateX(39px);
+            }
+          }
+
+          &:focus + .slider {
+            box-shadow: 0 0 1px #c1a36b;
+          }
+
+          & + .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            -webkit-transition: 0.4s;
+            transition: 0.4s;
+
+            /* Rounded sliders */
+            &.round {
+              border-radius: 51px;
+
+              &:before {
+                border-radius: 50%;
+              }
+            }
+
+            &:before {
+              position: absolute;
+              content: "";
+              height: 39px;
+              width: 39px;
+              left: 6px;
+              bottom: 6px;
+              background-color: white;
+              -webkit-transition: 0.4s;
+              transition: 0.4s;
+            }
+          }
+        }
+      }
     }
   }
+
   .section {
     display: flex;
     width: 100%;
@@ -339,65 +417,6 @@ export default defineComponent({
       height: 200px;
       border-radius: 50%;
     }
-  }
-  .switch {
-    position: relative;
-    display: inline-block;
-    width: 90px;
-    height: 51px;
-  }
-
-  .switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-  }
-
-  .slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #ccc;
-    -webkit-transition: 0.4s;
-    transition: 0.4s;
-  }
-
-  .slider:before {
-    position: absolute;
-    content: "";
-    height: 39px;
-    width: 39px;
-    left: 6px;
-    bottom: 6px;
-    background-color: white;
-    -webkit-transition: 0.4s;
-    transition: 0.4s;
-  }
-
-  input:checked + .slider {
-    background-color: #c1a36b;
-  }
-
-  input:focus + .slider {
-    box-shadow: 0 0 1px #c1a36b;
-  }
-
-  input:checked + .slider:before {
-    -webkit-transform: translateX(39px);
-    -ms-transform: translateX(39px);
-    transform: translateX(39px);
-  }
-
-  /* Rounded sliders */
-  .slider.round {
-    border-radius: 51px;
-  }
-
-  .slider.round:before {
-    border-radius: 50%;
   }
 
   .button {
