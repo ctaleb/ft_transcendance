@@ -1,5 +1,5 @@
 <template>
-  <div class="mainContainer">
+  <div class="section">
     <h3>Two Factor Authentication</h3>
     <p>A code was sent to the {{ phone }}</p>
     <input class="codeInput" type="text" placeholder="X X X X X X" v-model="code" maxlength="6" @input="validateCode()" />
@@ -71,7 +71,7 @@ async function sendCode() {
 </script>
 <style lang="scss" scoped>
 @import "../styles/inputsAndButtons.scss";
-.mainContainer {
+.section {
   text-align: center;
   input {
     text-align: center;

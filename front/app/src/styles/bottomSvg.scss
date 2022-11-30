@@ -1,0 +1,10 @@
+.bottomSvg {
+  position: absolute;
+  bottom: 0;
+  z-index: -5;
+  height: 39vh;
+  width: 100vw;
+  path {
+    width: 100%;
+  }
+}

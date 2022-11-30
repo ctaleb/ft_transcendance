@@ -1,5 +1,7 @@
 @import "variables";
-input {
+input[type="text"],
+input[type="password"],
+input[type="phone"] {
   color: white;
   font-size: 20px;
   padding: 15px;
@@ -9,7 +11,9 @@ input {
   border: none;
   border-bottom: solid 2px $primary;
 }
-input:focus {
+input[type="text"],
+input[type="password"],
+input[type="phone"]:focus {
   outline: none;
 }
 
@@ -19,6 +23,7 @@ input:focus {
   background: transparent;
   border: 1px solid $primary;
   cursor: pointer;
+  color: $primary;
 }
 .button:hover {
   background: $primary;
@@ -53,6 +58,7 @@ $colors: (
   input {
     display: none;
   }
+  color: $primary;
   display: flex;
   flex-direction: row;
   justify-content: center;
@@ -60,6 +66,7 @@ $colors: (
   width: 60%;
   padding: 10px;
   border-radius: 10px;
+  margin-top: 15px;
   padding-inline: 0;
   border: 1px solid $primary;
   i {

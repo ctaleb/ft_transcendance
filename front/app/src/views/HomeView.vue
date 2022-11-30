@@ -1,13 +1,6 @@
 <template>
-  <!--<svg preserveAspectRatio="none" class="topSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
-    <path
-	fill="#C1A36B"
-	fill-opacity="1"
-	d="M0,288L24,277.3C48,267,96,245,144,202.7C192,160,240,96,288,101.3C336,107,384,181,432,181.3C480,181,528,107,576,90.7C624,75,672,117,720,144C768,171,816,181,864,154.7C912,128,960,64,1008,74.7C1056,85,1104,171,1152,208C1200,245,1248,235,1296,240C1344,245,1392,267,1416,277.3L1440,288L1440,0L1416,0C1392,0,1344,0,1296,0C1248,0,1200,0,1152,0C1104,0,1056,0,1008,0C960,0,912,0,864,0C816,0,768,0,720,0C672,0,624,0,576,0C528,0,480,0,432,0C384,0,336,0,288,0C240,0,192,0,144,0C96,0,48,0,24,0L0,0Z"
-    ></path>
-</svg>-->
   <div class="principalSection">
-    <div class="authContainer">
+    <div class="mainContainer">
       <img src="../assets/logo.gif" width="270" height="270" alt="" />
       <div class="twofaComponentDiv" v-if="twofaFlag == true">
         <two-factor-component class="twoFactorComponent" v-model="codeValidated" @twofaSuccessClassicUser="login" @twofaSuccessIntraUser="studentLogin" />
@@ -230,16 +223,8 @@ async function studentLogin(code: string) {
 @import "../styles/variables";
 @import "../styles/inputsAndButtons";
 @import "../styles/mixins/sizes";
-.bottomSvg {
-  position: absolute;
-  bottom: 0;
-  z-index: -5;
-  height: 39vh;
-  width: 100vw;
-  path {
-    width: 100%;
-  }
-}
+@import "../styles/bottomSvg";
+@import "../styles/containerStyle.scss";
 .twofaComponentDiv {
   display: flex;
   justify-content: center;
@@ -252,23 +237,7 @@ async function studentLogin(code: string) {
   align-items: center;
   width: 100vw;
   height: 75vh;
-  .authContainer {
-    margin-top: 5rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    z-index: 11;
-    background: rgb(47, 42, 44);
-    background: linear-gradient(165deg, rgba(47, 42, 44, 1) 50%, rgba(31, 31, 24, 1) 100%);
-    border: 2px solid;
-    border-image-slice: 1;
-    box-shadow: 5px 5px 5px #5c5b58;
-    border-radius: 10px;
-    color: #aa9e7d;
-    width: 30%;
-    height: 65vh;
-    text-align: center;
-
+  .mainContainer {
     .classicLogin {
       width: 100%;
     }

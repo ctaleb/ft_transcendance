@@ -1,64 +1,54 @@
 <template>
-  <h2>{{ user.nickname }} profile edition</h2>
-  <div class="mainContainer">
-    <div class="textInputs">
-      <h4>Personnal informations</h4>
-      <div class="edition-section">
-        <label for="nick" class="label">Nickname</label>
-        <hr class="solid" />
-        <div class="inputAndButton">
-          <input id="nick" class="text-input" type="text" v-model="nickname" maxlength="15" minlength="3" />
-          <input class="submit-input" type="submit" value="update nickname" @click.stop.prevent="updateNickname()" />
-        </div>
+  <!--<h2>{{ user.nickname }} profile edition</h2>-->
+  <div class="principalSection">
+    <div class="mainContainer">
+      <h3>Personnal informations</h3>
+      <div class="section">
+        <h4 style="margin-bottom: 10px; margin-top: 0">Avatar</h4>
+        <img :src="avatarUrl" alt="" class="image" />
+        <label for="avatar" class="fileInput"
+          >Select picture <i class="gg-image"></i><input type="file" id="avatar" name="avatar" accept="image/*" @change="updateAvatar"
+        /></label>
       </div>
-      <div class="edition-section">
-        <label for="phone" class="label">Phone</label>
-        <hr class="solid" />
-
-        <div class="inputAndButton">
-          <input id="phone" class="text-input" type="text" placeholder="+33 6 11 22 33 44" v-model="phone" @input="formatPhone" />
-          <input
-            class="submit-input"
-            type="submit"
-            value="update phone"
-            :disabled="phoneFormatError.length ? true : false"
-            @click.stop.prevent="updatePhone()"
-          />
-        </div>
+      <div class="section">
+        <input id="nick" type="text" v-model="nickname" maxlength="15" minlength="3" />
+        <button type="submit" class="button" @click.stop.prevent="updateNickname()">Update nickname</button>
+      </div>
+      <div class="section">
+        <input id="phone" type="text" placeholder="+33 6 11 22 33 44" v-model="phone" @input="formatPhone" />
+        <button type="submit" class="button" :disabled="phoneFormatError.length ? true : false" @click.stop.prevent="updatePhone()">Update phone</button>
         <div v-if="phoneFormatError.length">
           {{ phoneFormatError }}
         </div>
       </div>
-      <div v-if="!user.intraId" class="edition-section">
-        <label for="password">Password</label>
-        <hr class="solid" />
-
-        <input id="password" class="text-input" type="password" placeholder="new password" v-model="password" /><br />
-        <div class="inputAndButton">
-          <input class="text-input" type="password" placeholder="please confirm new password" v-model="confirmPassword" />
-          <input class="submit-input" type="submit" value="confirm password" @click.stop.prevent="updatePassword()" />
-        </div>
+      <div class="section">
+        <input id="password" type="password" placeholder="new password" v-model="password" />
+        <input type="password" placeholder="please confirm new password" v-model="confirmPassword" />
+        <button type="submit" class="button" @click.stop.prevent="updatePassword()">Update password</button>
       </div>
+      <label class="switch">
+        <input type="checkbox" id="2faSwitch" @change="twoFactorSwitch($event)" />
+        <span class="slider round"></span>
+      </label>
     </div>
-    <div class="avatarAndTwofa">
-      <h4>Avatar</h4>
-      <div class="edition-section">
-        <img :src="avatarUrl" alt="" class="image" /><br />
-        <label for="avatar"
-          >Select picture <i class="gg-image"></i><input type="file" id="avatar" name="avatar" accept="image/*" @change="updateAvatar" /></label
-        ><br />
-      </div>
+    <div class="svgSection">
+      <h2 v-if="twoFactorEnabled == false">2FA diabled</h2>
+      <img :class="{ lessOpacity: twoFactorEnabled == false }" src="../assets/twoFaDisabled.svg" alt="" />
+    </div>
+    <!--<div>
       <h4>Two factor authentication</h4>
       <h6 :class="{ twoFaTitleActive: twoFactorEnabled }">You will receive an sms code during your future connections</h6>
-      <div class="twoFaSwitchDiv">
-        <label class="switch">
-          <input type="checkbox" id="2faSwitch" @change="twoFactorSwitch($event)" />
-          <span class="slider round"></span>
-        </label>
-      </div>
-    </div>
-    <friend-alert :requester-name="incomingFriendRequest" />
+      <friend-alert :requester-name="incomingFriendRequest" />
+    </div>-->
   </div>
+
+  <svg class="bottomSvg" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
+    <path
+      fill="#C1A36B"
+      fill-opacity="1"
+      d="M0,64L80,58.7C160,53,320,43,480,48C640,53,800,75,960,74.7C1120,75,1280,53,1360,42.7L1440,32L1440,320L1360,320C1280,320,1120,320,960,320C800,320,640,320,480,320C320,320,160,320,80,320L0,320Z"
+    ></path>
+  </svg>
 </template>
 
 <script lang="ts">
@@ -308,220 +298,113 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 @import "../styles/variables";
-
-.mainContainer {
-  width: 100vw;
+@import "../styles/inputsAndButtons.scss";
+@import "../styles/bottomSvg.scss";
+@import "../styles/containerStyle.scss";
+.principalSection {
   display: flex;
   flex-direction: row;
   justify-content: space-around;
-}
+  align-items: center;
+  width: 100vw;
+  height: 75vh;
 
-.textInputs {
-  padding: 2rem;
-  font-size: 25px;
-  display: flex;
-  flex-direction: column;
-  border: 1px solid $primary;
-  border-radius: 10px;
-  width: 40vw;
-  align-items: flex-start;
-  label {
-    color: $primary;
+  .mainContainer {
+    justify-content: space-around;
   }
-  .edition-section {
-    margin-top: 1em;
-    margin-bottom: 1em;
+  .svgSection {
     display: flex;
-    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 35%;
+    img {
+      width: 100%;
+    }
+    h2 {
+      z-index: 5;
+      position: absolute;
+      color: white;
+    }
+  }
+  .section {
+    display: flex;
     width: 100%;
-    hr {
-      border-color: #c1a36b;
-      text-align: left;
-      height: 1px;
-      width: 75%;
-      margin-inline: 0;
-      margin-top: 1px;
-    }
-    #password {
-      width: 75%;
-      border-top-right-radius: 6px;
-      border-bottom-right-radius: 6px;
-    }
-    .inputAndButton {
-      display: flex;
-      flex-direction: row;
-      input[type*="text"],
-      input[type*="password"] {
-        width: 60%;
-      }
-      input[type*="submit"] {
-        width: 15%;
-        border: 1px solid $primary;
-        border-top-right-radius: 6px;
-        border-bottom-right-radius: 6px;
-        border-left-style: hidden;
-        background: $background;
-        color: white;
-      }
-      input[type*="submit"]:hover {
-        background: rgb(13, 35, 53);
-        cursor: pointer;
-      }
-    }
-  }
-  .text-input {
-    padding: 0.8rem;
-    border: 1px solid $primary;
-    border-right-style: hidden;
-    border-top-left-radius: 6px;
-    border-bottom-left-radius: 6px;
-  }
-}
-.avatarAndTwofa {
-  padding: 2rem;
-  font-size: 25px;
-  border: 1px solid $primary;
-  border-radius: 10px;
-  width: 40vw;
-  .edition-section {
-    display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    img {
-      width: 250px;
-      height: 250px;
-      border: 1px solid $primary;
-      border-radius: 10000px;
-    }
-    label {
-      input {
-        display: none;
-      }
-      display: flex;
-      flex-direction: row;
-      justify-content: center;
-      align-items: center;
-      padding: 1rem;
-      border: 1px solid $primary;
-      border-radius: 10px;
-      i {
-        margin-left: 10px;
-      }
-    }
-    label:hover {
-      background: #c1a36b;
-      cursor: pointer;
-    }
-  }
-  .twoFaTitleActive {
-    color: $primary;
-  }
-  .twoFaSwitchDiv {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    .switch {
-      position: relative;
-      display: inline-block;
-      width: 90px;
-      height: 51px;
-    }
 
-    .switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-
-    .slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: #ccc;
-      -webkit-transition: 0.4s;
-      transition: 0.4s;
-    }
-
-    .slider:before {
-      position: absolute;
-      content: "";
-      height: 39px;
-      width: 39px;
-      left: 6px;
-      bottom: 6px;
-      background-color: white;
-      -webkit-transition: 0.4s;
-      transition: 0.4s;
-    }
-
-    input:checked + .slider {
-      background-color: #c1a36b;
-    }
-
-    input:focus + .slider {
-      box-shadow: 0 0 1px #c1a36b;
-    }
-
-    input:checked + .slider:before {
-      -webkit-transform: translateX(39px);
-      -ms-transform: translateX(39px);
-      transform: translateX(39px);
-    }
-
-    /* Rounded sliders */
-    .slider.round {
-      border-radius: 51px;
-    }
-
-    .slider.round:before {
+    .image {
+      padding: 0;
+      width: 200px;
+      height: 200px;
       border-radius: 50%;
     }
   }
-}
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 90px;
+    height: 51px;
+  }
 
-.image {
-  width: 15%;
-  height: 15rem;
-  object-fit: cover;
-}
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
 
-//css icon
-.gg-image {
-  box-sizing: border-box;
-  position: relative;
-  display: block;
-  transform: scale(var(--ggs, 1));
-  width: 20px;
-  height: 16px;
-  overflow: hidden;
-  box-shadow: 0 0 0 2px;
-  border-radius: 2px;
-}
-.gg-image::after,
-.gg-image::before {
-  content: "";
-  display: block;
-  box-sizing: border-box;
-  position: absolute;
-  border: 2px solid;
-}
-.gg-image::after {
-  transform: rotate(45deg);
-  border-radius: 3px;
-  width: 16px;
-  height: 16px;
-  top: 9px;
-  left: 6px;
-}
-.gg-image::before {
-  width: 6px;
-  height: 6px;
-  border-radius: 100%;
-  top: 2px;
-  left: 2px;
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: 0.4s;
+    transition: 0.4s;
+  }
+
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 39px;
+    width: 39px;
+    left: 6px;
+    bottom: 6px;
+    background-color: white;
+    -webkit-transition: 0.4s;
+    transition: 0.4s;
+  }
+
+  input:checked + .slider {
+    background-color: #c1a36b;
+  }
+
+  input:focus + .slider {
+    box-shadow: 0 0 1px #c1a36b;
+  }
+
+  input:checked + .slider:before {
+    -webkit-transform: translateX(39px);
+    -ms-transform: translateX(39px);
+    transform: translateX(39px);
+  }
+
+  /* Rounded sliders */
+  .slider.round {
+    border-radius: 51px;
+  }
+
+  .slider.round:before {
+    border-radius: 50%;
+  }
+
+  .button {
+    margin-top: 15px;
+  }
+  .lessOpacity {
+    opacity: 0.5;
+  }
 }
 </style>
