@@ -81,7 +81,7 @@
 import { socketLocal, useStore } from "@/store";
 import { GameOptions, GameRoom, GameState, IBar, IPoint, particleSet } from "@/types/Game";
 import { GameSummaryData } from "@/types/GameSummary";
-import { onMounted, onUnmounted, reactive, ref } from "vue";
+import { onMounted, onUnmounted, reactive, ref, watch } from "vue";
 import ballUrl from "../assets/ball.png";
 import energyUrl from "../assets/energy.png";
 import paddleEnergyUrl from "../assets/energy_paddle_grec.png";
@@ -507,8 +507,14 @@ onMounted(() => {
   console.log("ctx " + ctx);
   ctx?.drawImage(plateauImg, 0, 0, cWidth, cHeight);
   scaling(ctx);
-
   registerSockets(socketLocal);
+
+  watch(
+    () => socketLocal.value,
+    () => {
+      registerSockets(socketLocal);
+    }
+  );
   //needs to be moved
   //window.removeEventListener("resize", resizeCanvas);
   window.addEventListener("resize", resizeCanvas);

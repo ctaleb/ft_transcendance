@@ -38,7 +38,6 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   handleConnection(@ConnectedSocket() client: Socket) {
     let hsToken: string;
     let hsNick: string;
-    console.log('%%%');
     if (client.handshake) {
       hsToken = client.handshake.auth.token;
       hsNick = client.handshake.auth.user.nickname;

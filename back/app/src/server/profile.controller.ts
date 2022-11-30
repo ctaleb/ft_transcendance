@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Get,
-  Body,
-  Post,
-  UseGuards,
-  Request,
-  Param,
-} from '@nestjs/common';
+import { Controller, Get, Body, Post, UseGuards, Request, Param } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/authentication/jwt-auth.guard';
 import { ServerService } from './server.service';
 
@@ -17,6 +9,9 @@ export class ProfileController {
 
   @Get('/summary/:name')
   async matchHistory(@Request() req, @Param('name') name: string) {
+    console.log(name);
+    console.log('^ c le user');
+
     return await this._serverService.getMatchHistory(name);
   }
 }

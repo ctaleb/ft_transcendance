@@ -90,16 +90,20 @@ export async function trySetupUser(): Promise<void> {
 async function fetchUser(token: string): Promise<void> {
   const store = useStore();
 
-  const response = await fetchJSONDatas("api/user/profile", "GET");
-  store.user = response;
+  fetchJSONDatas("api/user/profile", "GET")
+    .then((data) => (store.user = data))
+    .catch();
 }
 
-function connectSocket(token: string, user: any): void {
+function connectSocket(token: string, user: any) {
   socketLocal.value = io("http://" + window.location.hostname + ":3500", {
     auth: { token: token, user: user },
     transports: ["websocket"],
   });
-  console.log("store socket: " + socketLocal.value.id);
+  console.log("store socket: " + socketLocal.value?.id);
+  setTimeout(() => {
+    console.log("store socket: " + socketLocal.value?.id);
+  }, 3000);
 }
 
 export function addAlertMessage(message: string, type: number, second: number = 5) {

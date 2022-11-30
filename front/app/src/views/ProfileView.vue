@@ -67,11 +67,10 @@ import { fetchJSONDatas } from "@/functions/funcs";
 import { socketLocal, useStore } from "@/store";
 import { History } from "@/types/GameSummary";
 import { getUserByNickname, User } from "@/types/User";
-import { onMounted, ref } from "vue";
-import { useRoute } from "vue-router";
+import { onMounted, ref, watch } from "vue";
+import { RouterLink, useRoute, useRouter } from "vue-router";
 import editUrl from "../assets/edit.png";
 import shutdownUrl from "../assets/shutdown.png";
-import { useRouter } from "vue-router";
 
 const router = useRouter();
 const route = useRoute();
@@ -98,15 +97,28 @@ const currentSummary = ref<History[]>();
 onMounted(async () => {
   let nick = <string | undefined>route.params.nickname;
 
+  watch(
+    () => currentUser.value,
+    () => {
+      fetchJSONDatas("api/profile/summary/" + currentUser.value?.nickname, "GET")
+        .then((data) => {
+          currentSummary.value = data;
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    }
+  );
+
   if (nick) {
     currentUser.value = await getUserByNickname(nick);
 
     if (!currentUser.value) return;
-    await fetchJSONDatas("/api/friendship/profile/" + nick, "GET")
+    await fetchJSONDatas("api/friendship/profile/" + nick, "GET")
       .then((data) => {
         currentFriend.value = data.friends;
       })
-      .catch();
+      .catch(() => {});
   } else {
     currentUser.value = store.user;
     currentFriend.value = store.user?.friends;
@@ -115,12 +127,6 @@ onMounted(async () => {
       currentFriend.value = store.user?.friends;
     });
   }
-
-  await fetchJSONDatas("/api/profile/summary/" + currentUser.value?.nickname, "GET")
-    .then((data) => {
-      currentSummary.value = data;
-    })
-    .catch();
 });
 
 const watchFriend = () => {
