@@ -7,18 +7,13 @@
     ></path>
 </svg>-->
   <div class="principalSection">
-    <div class="main_container">
+    <div class="authContainer">
       <img src="../assets/logo.gif" width="270" height="270" alt="" />
       <div class="twofaComponentDiv" v-if="twofaFlag == true">
-        <two-factor-component
-          v-if="twofaFlag == true"
-          class="twoFactorComponent"
-          v-model="codeValidated"
-          @twofaSuccessClassicUser="login"
-          @twofaSuccessIntraUser="studentLogin"
-        />
+        <two-factor-component class="twoFactorComponent" v-model="codeValidated" @twofaSuccessClassicUser="login" @twofaSuccessIntraUser="studentLogin" />
       </div>
-      <div v-if="twofaFlag == false" style="width: 100%">
+      <register-component v-if="displayRegister == true" v-model="displayRegister" />
+      <div v-if="twofaFlag == false && displayRegister == false" style="width: 100%">
         <div class="classicLogin">
           <form @submit.prevent="login" style="margin-bottom: 2em">
             <input class="input" placeholder="Username" v-model="username" type="text" id="username" name="username" required /><br /><br />
@@ -32,12 +27,12 @@
           <hr class="solid divider" />
         </div>
         <div class="intraLogin">
-          <a class="button pulse" v-bind:href="intra_redirection"> Continue with 42 </a>
+          <button class="button pulse" @click="redirectTo(intra_redirection)">Continue with 42</button>
         </div>
       </div>
-      <div class="register" v-if="twofaFlag == false">
+      <div class="register" v-if="twofaFlag == false && displayRegister == false">
         <p>Don't have an account yet ?</p>
-        <a href="/signup" class="button pulse">New account</a>
+        <button class="button pulse" @click="displayRegister = true">New account</button>
       </div>
     </div>
     <div class="svgSection">
@@ -83,6 +78,7 @@ import { hasUncaughtExceptionCaptureCallback } from "process";
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import twoFactorComponent from "../components/twoFactorComponent.vue";
+import registerComponent from "../components/registerComponent.vue";
 
 const router = useRouter();
 const store = useStore();
@@ -101,6 +97,7 @@ let token = {
   login_failed_msg = ref(false);
 let codeValidated = ref(false);
 let twofaFlag = ref(false);
+let displayRegister = ref(false);
 // computed: {
 //   videoElement() {
 //     return this.$refs.video;
@@ -124,7 +121,9 @@ onMounted(async () => {
     await studentLogin(code);
   }
 });
-
+function redirectTo(url: string) {
+  location.href = url;
+}
 async function sendCode() {
   await fetch("http://" + window.location.hostname + ":3000/api/twofactor/sendCode/" + localStorage.getItem("phoneTo2fa"), {
     method: "POST",
@@ -253,7 +252,7 @@ async function studentLogin(code: string) {
   align-items: center;
   width: 100vw;
   height: 75vh;
-  .main_container {
+  .authContainer {
     margin-top: 5rem;
     display: flex;
     flex-direction: column;
@@ -278,11 +277,6 @@ async function studentLogin(code: string) {
       display: flex;
       flex-direction: row;
       justify-content: center;
-      a {
-        display: block;
-        text-decoration: none;
-        color: $primary;
-      }
     }
     .register {
       display: flex;
@@ -292,11 +286,9 @@ async function studentLogin(code: string) {
       width: 100%;
       margin-top: auto;
       margin-bottom: 15px;
-      a {
-        display: block;
-        text-decoration: none;
-        color: $primary;
-      }
+    }
+    register-component {
+      width: 100%;
     }
     img {
       margin-top: 2rem;
@@ -315,17 +307,6 @@ async function studentLogin(code: string) {
         border-color: #aa9e7d;
         width: 10rem;
       }
-    }
-    .button {
-      width: 60%;
-      padding: 10px;
-      background: transparent;
-      border: 1px solid $primary;
-      cursor: pointer;
-    }
-    .button:hover {
-      background: $primary;
-      color: white;
     }
   }
 }
@@ -361,40 +342,6 @@ async function studentLogin(code: string) {
   h2 {
     text-align: center;
     color: white;
-  }
-}
-
-#signup_link {
-  color: white;
-  display: block;
-  margin-top: 2rem;
-  margin-bottom: 3rem;
-  font-size: 20px;
-  text-decoration: underline;
-}
-
-// Animate the size, outside
-.pulse:hover,
-.pulse:focus {
-  animation: pulse 1s;
-  box-shadow: 0 0 0 0.5em transparent;
-}
-
-@keyframes pulse {
-  0% {
-    box-shadow: 0 0 0 0 var(--hover);
-  }
-}
-$colors: (
-  pulse: #aa9e7d,
-);
-
-// Sass variables compile to a static string; CSS variables are dynamic and inherited
-// Loop through the map and set CSS custom properties using Sass variables
-@each $button, $color in $colors {
-  .#{$button} {
-    --color: #{$color};
-    --hover: #{adjust-hue($color, 45deg)};
   }
 }
 

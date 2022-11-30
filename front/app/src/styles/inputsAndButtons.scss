@@ -12,3 +12,69 @@ input {
 input:focus {
   outline: none;
 }
+
+.button {
+  width: 60%;
+  padding: 10px;
+  background: transparent;
+  border: 1px solid $primary;
+  cursor: pointer;
+}
+.button:hover {
+  background: $primary;
+  color: white;
+}
+// Animate the size, outside
+.pulse:hover,
+.pulse:focus {
+  animation: pulse 1s;
+  box-shadow: 0 0 0 0.5em transparent;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 var(--hover);
+  }
+}
+$colors: (
+  pulse: #aa9e7d,
+);
+
+// Sass variables compile to a static string; CSS variables are dynamic and inherited
+// Loop through the map and set CSS custom properties using Sass variables
+@each $button, $color in $colors {
+  .#{$button} {
+    --color: #{$color};
+    --hover: #{adjust-hue($color, 45deg)};
+  }
+}
+
+.fileInput {
+  input {
+    display: none;
+  }
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  width: 60%;
+  padding: 10px;
+  border-radius: 10px;
+  padding-inline: 0;
+  border: 1px solid $primary;
+  i {
+    margin-left: 10px;
+  }
+  margin-bottom: 25px;
+  &.fileInputActive {
+    background: #c1a36b;
+    color: white;
+    cursor: pointer;
+  }
+}
+
+.fileInput:hover {
+  background: #c1a36b;
+  color: white;
+  cursor: pointer;
+}
