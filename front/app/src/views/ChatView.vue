@@ -127,20 +127,14 @@
 import ChatMenu from "@/components/chat/ChatMenu.vue";
 import ChatWindow from "@/components/chat/ChatWindow.vue";
 import FriendAlert from "@/components/FriendAlert.vue";
-import { addAlertMessage, fetchJSONDatas } from "@/functions/funcs";
-import { useStore } from "@/store";
-import { Channel, ChannelRole, ChannelType, ChannelUser, isChannel } from "@/types/Channel";
+import { fetchJSONDatas } from "@/functions/funcs";
+import { socketLocal, useStore } from "@/store";
+import { Channel, ChannelType, ChannelUser } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
 import { Message } from "@/types/Message";
-import { User } from "@/types/User";
-import { onMounted, onUpdated, ref, Ref, watch } from "vue";
+import { onMounted, onUpdated, ref, Ref } from "vue";
 
 const store = useStore();
-let socket = store.socket;
-
-store.$subscribe((mutation, state) => {
-  socket = state.socket;
-});
 
 const privateConvs: Ref<Array<Conversation>> = ref([]);
 const messagesToDisplay: Ref<Array<Message>> = ref([]);
@@ -181,7 +175,7 @@ onMounted(async () => {
   await getAllConvs();
 
   // var audio = new Audio(require("../assets/adelsol.mp3"));
-  // socket?.on("Message to the client", async (privateMessage: { author: string; text: string }) => {
+  // socketLocal.value?.on("Message to the client", async (privateMessage: { author: string; text: string }) => {
   //   if (privateMessage.author == friendNickname.value) messagesToDisplay.value.push(privateMessage);
   //   else {
   //     await getAllConvs();
@@ -190,7 +184,7 @@ onMounted(async () => {
   //     audio.play();
   //   }
   // });
-  // socket?.on("messageReceived", (channelId: number, msg: Message) => {
+  // socketLocal.value?.on("messageReceived", (channelId: number, msg: Message) => {
   //   if (thisChannel.value && channelId === thisChannel.value.id) {
   //     msg.date = moment(msg.date).tz(timezone).add(1, "hours").format("MMMM Do YYYY, h:mm:ss a");
   //     messagesToDisplay.value.push(msg);
@@ -199,7 +193,7 @@ onMounted(async () => {
   //     console.log("incoming message");
   //   }
   // });
-  // socket?.on("updateChannelMembers", async (channelId: number) => {
+  // socketLocal.value?.on("updateChannelMembers", async (channelId: number) => {
   //   if (thisChannel.value && channelId === thisChannel.value.id) {
   //     let data = await fetchJSONDatas("api/chat/members", "POST", {
   //       id: thisChannel.value.id,
@@ -208,13 +202,13 @@ onMounted(async () => {
   //     channelMembers.value = data;
   //   }
   // });
-  // socket?.on("Update conv list", (convData: { conv: privateConv }) => {
+  // socketLocal.value?.on("Update conv list", (convData: { conv: privateConv }) => {
   //   console.log("UPDATE");
   // });
 
   // store.$subscribe((mutation, state) => {
-  //   if (!state.socket?.hasListeners("Message to the client")) {
-  //     state.socket?.on("Message to the client", async (privateMessage: { author: string; text: string }) => {
+  //   if (!state.socketLocal.value?.hasListeners("Message to the client")) {
+  //     state.socketLocal.value?.on("Message to the client", async (privateMessage: { author: string; text: string }) => {
   //       console.log(1);
 
   //       if (privateMessage.author == friendNickname.value) messagesToDisplay.value.push(privateMessage);
@@ -227,8 +221,8 @@ onMounted(async () => {
   //     });
   //   }
 
-  //   if (!state.socket?.hasListeners("Update conv list")) {
-  //     state.socket?.on("Update conv list", (convData: { conv: privateConv }) => {
+  //   if (!state.socketLocal.value?.hasListeners("Update conv list")) {
+  //     state.socketLocal.value?.on("Update conv list", (convData: { conv: privateConv }) => {
   //       console.log("UPDATE");
 
   //       let convIndex = privateConvs.value.findIndex((conv) => conv.uuid === convData.conv.uuid);
@@ -289,7 +283,7 @@ const createChannel = async (): Promise<void> => {
     password: channelPassword.value,
   });
   myChannels.value.push(data);
-  socket?.emit("joinChannelRoom", { id: data.id });
+  socketLocal.value?.emit("joinChannelRoom", { id: data.id });
   channelCreationForm();
 };
 
@@ -322,7 +316,7 @@ const joinChannel = async (channel: Channel): Promise<void> => {
   });
   myChannels.value.push(data);
   allChannels.value.splice(allChannels.value.indexOf(channel), 1);
-  socket.emit("joinChannelRoom", { id: data.id });
+  socketLocal.value?.emit("joinChannelRoom", { id: data.id });
 };
 
 const loadAllChannels = () => {
@@ -347,7 +341,7 @@ const leaveChannel = async (): Promise<void> => {
     id: thisChannel.value!.id,
   });
   myChannels.value = myChannels.value.filter((elem) => elem.id != data.id);
-  socket.emit("leaveChannelRoom", { id: data.id });
+  socketLocal.value?.emit("leaveChannelRoom", { id: data.id });
   loadDefaultPage();
 };
 
@@ -447,7 +441,7 @@ const loadChannelMessages = async (channel: Channel): Promise<void> => {
 
 const sendChannelMessage = () => {
   if (messageInput.value != "") {
-    socket.emit(
+    socketLocal.value?.emit(
       "sendChannelMessage",
       {
         channelId: thisChannel.value!.id,
@@ -465,7 +459,7 @@ const sendChannelMessage = () => {
 
 const sendPrivateMessage = (nickname: string): void => {
   if (messageInput.value != "") {
-    socket.emit("deliverMessage", {
+    socketLocal.value?.emit("deliverMessage", {
       message: messageInput.value,
       friendNickname: nickname,
     });

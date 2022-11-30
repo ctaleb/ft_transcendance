@@ -95,18 +95,10 @@ async function fetchUser(token: string): Promise<void> {
 }
 
 function connectSocket(token: string, user: any): void {
-  const store = useStore();
-
   socketLocal.value = io("http://" + window.location.hostname + ":3500", {
     auth: { token: token, user: user },
     transports: ["websocket"],
   });
-
-  //  config.socket = io("http://" + window.location.hostname + ":3500", {
-  //    auth: { token: token, user: user },
-  //    transports: ["websocket"],
-  //  });
-  console.log(socketLocal.value);
   console.log("store socket: " + socketLocal.value.id);
 }
 

@@ -64,7 +64,7 @@ import FriendCard from "@/components/profile/FriendCard.vue";
 import InvitationCard from "@/components/profile/InvitationCard.vue";
 import SummaryCard from "@/components/profile/SummaryCard.vue";
 import { fetchJSONDatas } from "@/functions/funcs";
-import { useStore } from "@/store";
+import { socketLocal, useStore } from "@/store";
 import { History } from "@/types/GameSummary";
 import { getUserByNickname, User } from "@/types/User";
 import { onMounted, ref } from "vue";
@@ -77,12 +77,6 @@ const router = useRouter();
 const route = useRoute();
 
 const store = useStore();
-let socket = store.socket;
-
-store.$subscribe((mutation, state) => {
-  socket = state.socket;
-});
-
 // const prop = defineProps<{
 //   incomingFriendRequest: string;
 // }>();
@@ -108,16 +102,11 @@ onMounted(async () => {
     currentUser.value = await getUserByNickname(nick);
 
     if (!currentUser.value) return;
-    await fetch("http://" + window.location.hostname + ":3000/api/friendship/profile/" + nick, {
-      method: "GET",
-      headers: {
-        Authorization: "Bearer " + localStorage.getItem("token"),
-      },
-    })
-      .then((data) => data.json())
+    await fetchJSONDatas("/api/friendship/profile/" + nick, "GET")
       .then((data) => {
         currentFriend.value = data.friends;
-      });
+      })
+      .catch();
   } else {
     currentUser.value = store.user;
     currentFriend.value = store.user?.friends;
@@ -127,17 +116,11 @@ onMounted(async () => {
     });
   }
 
-  await fetch("http://" + window.location.hostname + ":3000/api/profile/summary/" + currentUser.value?.nickname, {
-    method: "GET",
-    headers: {
-      Authorization: "Bearer " + localStorage.getItem("token"),
-    },
-  })
-    .then((data) => data.json())
+  await fetchJSONDatas("/api/profile/summary/" + currentUser.value?.nickname, "GET")
     .then((data) => {
-      console.log(data);
       currentSummary.value = data;
-    });
+    })
+    .catch();
 });
 
 const watchFriend = () => {
@@ -151,21 +134,15 @@ const watchHistory = () => {
 const logout = () => {
   localStorage.removeItem("token");
   localStorage.removeItem("user");
-  socket?.emit("disco", {});
-  socket?.close();
+  socketLocal.value?.emit("disco", {});
+  socketLocal.value?.close();
 };
 
 const invite = async (user: User | undefined) => {
-  if (user)
-    await fetchJSONDatas("api/friendship/invite", "POST", { addressee: user?.nickname }).catch((err) => {
-      console.log(err);
-    });
+  if (user) await fetchJSONDatas("api/friendship/invite", "POST", { addressee: user.nickname }).catch();
 };
 
 const block = async (user: User | undefined) => {
-  if (user)
-    await fetchJSONDatas("api/friendship/block", "PUT", { addressee: user.nickname }).catch((err) => {
-      console.log(err);
-    });
+  if (user) await fetchJSONDatas("api/friendship/block", "PUT", { addressee: user.nickname }).catch();
 };
 </script>

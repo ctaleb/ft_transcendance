@@ -806,6 +806,7 @@ export class ServerService {
   loop(game: Game) {
     if (!game.room.kickOff) {
       const gameState = game.gameState;
+      this.resetHit(gameState);
       this.updateMoveStatus(game.host, gameState.hostBar, 'host', game.room.options);
       this.updateMoveStatus(game.client, gameState.clientBar, 'client', game.room.options);
       if (game.room.options.smashes) this.chargeUp(game);
