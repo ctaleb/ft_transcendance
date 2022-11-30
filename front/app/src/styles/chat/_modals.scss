@@ -1,0 +1,31 @@
+@import "../variables";
+
+.all-chan-modal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1%;
+  align-content: flex-start;
+  align-items: center;
+  overflow-y: auto;
+  height: 70vh;
+  .channel-in-modal {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border: 3px solid;
+    border-image-slice: 1;
+    border-image-source: linear-gradient(to bottom, #c1a36b, #635e4f);
+    padding: 2%;
+    div {
+      display: flex;
+      align-items: center;
+    }
+  }
+}
+
+.close-modal {
+  position: absolute;
+  top: 1%;
+  right: 1%;
+  cursor: pointer;
+}

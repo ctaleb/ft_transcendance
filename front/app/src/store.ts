@@ -7,10 +7,10 @@ import { Channel } from "@/types/Channel";
 import { shallowRef } from "vue";
 
 interface State {
-  user: User | undefined;
+  user?: User;
   message: Alert[];
-  token: string | undefined;
-  currentChat: Channel | Conversation | undefined;
+  token?: string;
+  currentChat?: Channel | Conversation;
 }
 
 export const useStore = defineStore("default", {

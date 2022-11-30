@@ -1,21 +1,20 @@
 import {
-  WebSocketGateway,
-  SubscribeMessage,
-  MessageBody,
-  WebSocketServer,
   ConnectedSocket,
-  OnGatewayInit,
+  MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
+  OnGatewayInit,
+  SubscribeMessage,
+  WebSocketGateway,
+  WebSocketServer,
 } from '@nestjs/websockets';
-import { ServerService } from './server.service';
-import { PrivateConvService } from '../private_conv/private_conv.service';
-import { CreateMessageDto } from './dto/create-message.dto';
 import { Server, Socket } from 'socket.io';
-import { Game, GameOptions, IPower } from './entities/server.entity';
 import { UserEntity } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
-import { NamingStrategyNotFoundError } from 'typeorm';
+import { PrivateConvService } from '../private_conv/private_conv.service';
+import { CreateMessageDto } from './dto/create-message.dto';
+import { Game, GameOptions, IPower } from './entities/server.entity';
+import { ServerService } from './server.service';
 
 @WebSocketGateway(3500, {
   cors: {
@@ -44,7 +43,6 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       hsToken = client.handshake.auth.token;
       hsNick = client.handshake.auth.user.nickname;
     }
-    console.log(hsNick + ' trying to connect to gateway server');
     const user = this.serverService.userList.find((element) => element.name === hsNick);
     if (user && user.token === hsToken) {
       user.socket = client;
@@ -54,7 +52,6 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       this.serverService.newUser(hsToken, hsNick, client);
     }
     console.log('Socket ' + client.id + ' successfully connected');
-
     // New stuff
     this.serverService.joinAllChannels(client, client.handshake.auth.user.id);
   }
@@ -80,7 +77,7 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     console.log('~~~~~~~~~~~ users + games ~~~~~~~~~~');
     console.log(this.serverService.userList.length);
     this.serverService.userList.forEach((element) => {
-      console.log(element.name + ' - ' + element.socket.id);
+      console.log(element.name + ' - ' + element.socket?.id);
     });
     console.log(this.serverService.games.length);
     this.serverService.games.forEach((element) => {
@@ -210,7 +207,7 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   ) {
     console.log('recieved ' + key + ' from ' + client.id);
     // const player = this.serverService.SocketToPlayer(client);
-    // if (player && player.status != 'idle')
+    // if (player && player.gameData.status != 'idle')
     this.serverService.storeInput(client, key);
   }
 
@@ -219,7 +216,7 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   @SubscribeMessage('joinQueue')
   joinQueue(@ConnectedSocket() client: Socket, @MessageBody('power') power: string) {
     const player = this.serverService.SocketToPlayer(client);
-    if (!player || !(player.status === 'idle')) return;
+    if (!player || !(player.gameData.status === 'idle')) return;
     const game = this.serverService.joinQueue(client, power);
     if (game) {
       console.log(game.host.socket.id + ' vs ' + game.client.socket.id);
@@ -227,27 +224,35 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       //   console.log(game.client.socket.id);
       //   console.log(game.host.socket.id);
       setTimeout(() => {
-        if (game.host.status === 'ready' && game.client.status === 'ready') {
+        if (game.host.gameData.status === 'ready' && game.client.gameData.status === 'ready') {
           game.room.status = 'playing';
           game.room.hostName = game.host.name;
           game.room.clientName = game.client.name;
           this.server.to(game.room.name).emit('startGame', game.room);
           this.serverService.startRound(game.room);
           this.gameLoop(game);
+          this.serverService.updateStatus(game.host.id, 'inGame');
+          this.serverService.updateStatus(game.client.id, 'inGame');
         } else {
-          if (game.host.status === 'ready') {
-            game.host.status = 'inQueue';
-            game.client.status = 'idle';
+          if (game.host.gameData.status === 'ready') {
+            game.host.gameData.status = 'inQueue';
+            this.serverService.updateStatus(game.host.id, 'inQueue');
+            game.client.gameData.status = 'idle';
+            this.serverService.updateStatus(game.client.id, 'online');
             game.client.socket.emit('gameConfirmationTimeout');
             this.serverService.playerQueue.push(game.host);
-          } else if (game.client.status === 'ready') {
-            game.client.status = 'inQueue';
-            game.host.status = 'idle';
+          } else if (game.client.gameData.status === 'ready') {
+            game.client.gameData.status = 'inQueue';
+            this.serverService.updateStatus(game.client.id, 'inQueue');
+            game.host.gameData.status = 'idle';
+            this.serverService.updateStatus(game.host.id, 'online');
             game.host.socket.emit('gameConfirmationTimeout');
             this.serverService.playerQueue.push(game.client);
           } else {
-            game.host.status = 'idle';
-            game.client.status = 'idle';
+            game.host.gameData.status = 'idle';
+            this.serverService.updateStatus(game.host.id, 'online');
+            game.client.gameData.status = 'idle';
+            this.serverService.updateStatus(game.client.id, 'online');
             this.server.to(game.room.name).emit('gameConfirmationTimeout');
           }
           this.serverService.games.splice(this.serverService.games.indexOf(game), 1);
@@ -259,13 +264,13 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   @SubscribeMessage('playerReady')
   playerReady(@ConnectedSocket() client: Socket) {
     const player = this.serverService.userList.find((element) => element.socket === client);
-    if (player) player.status = 'ready';
+    if (player) player.gameData.status = 'ready';
   }
 
   @SubscribeMessage('playerNotReady')
   playerNotReady(@ConnectedSocket() client: Socket) {
     const player = this.serverService.userList.find((element) => element.socket === client);
-    if (player) player.status = 'idle';
+    if (player) player.gameData.status = 'idle';
   }
 
   //spectate
@@ -298,13 +303,15 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     let game: Game;
     const inviter = this.serverService.userList.find((element) => element.socket === client);
     const usr = this.serverService.userList.find((element) => element.name === friend);
-    if (usr && usr.status === 'idle') {
+    if (usr && usr.gameData.status === 'idle') {
       response = 'accepted';
       game = this.serverService.newGame(usr, inviter);
       game.room.name = 'game-' + game.host.name + '-' + game.client.name;
       game.theatre.name = 'spec-' + game.host.name + '-' + game.client.name;
-      usr.status = 'inLobby';
-      inviter.status = 'inLobby';
+      usr.gameData.status = 'inLobby';
+      this.serverService.updateStatus(usr.id, 'inLobby');
+      inviter.gameData.status = 'inLobby';
+      this.serverService.updateStatus(inviter.id, 'inLobby');
       game.host.socket.join(game.room.name);
       usr.socket.emit('invitation', inviter.name);
       this.serverService.games.push(game);
@@ -327,9 +334,9 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     const game = this.serverService.games.find((element) => element.host === usr);
     if (!game) return;
     if (game.room.options.powers) usr.gameData.power = new IPower(power);
-    usr.status = 'ready';
+    usr.gameData.status = 'ready';
     game.room.options = gameOpts;
-    if (game.client.status === 'ready') {
+    if (game.client.gameData.status === 'ready') {
       this.launchCustomGame(game);
     }
   }
@@ -340,13 +347,14 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     const usr = this.serverService.SocketToPlayer(client);
     const game = this.serverService.games.find((element) => element.client === usr);
     if (game) {
-      game.host.status = 'idle';
+      game.host.gameData.status = 'idle';
+      this.serverService.updateStatus(game.host.id, 'online');
       game.host.socket.leave(game.room.name);
-      game.client.status = 'idle';
+      game.client.gameData.status = 'idle';
+      this.serverService.updateStatus(game.client.id, 'online');
       game.host.socket.emit('foreverAlone');
       this.serverService.games.splice(this.serverService.games.indexOf(game), 1);
     }
-    //emit to host
   }
   @SubscribeMessage('settingsInvitee')
   settingsInvitee(@ConnectedSocket() client: Socket) {
@@ -355,7 +363,10 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     if (game) {
       game.client.socket.join(game.room.name);
       client.emit('customInvitee', game.host.name);
-    } else usr.status = 'idle';
+    } else {
+      usr.gameData.status = 'idle';
+      this.serverService.updateStatus(usr.id, 'online');
+    }
   }
   @SubscribeMessage('readyInvitee')
   readyInvitee(@MessageBody('power') power: string, @ConnectedSocket() client: Socket) {
@@ -365,8 +376,8 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     const game = this.serverService.games.find((element) => element.client === usr);
     if (!game) return;
     if (game.room.options.powers) usr.gameData.power = new IPower(power);
-    usr.status = 'ready';
-    if (game.host.status === 'ready') {
+    usr.gameData.status = 'ready';
+    if (game.host.gameData.status === 'ready') {
       this.launchCustomGame(game);
     }
   }
@@ -380,6 +391,8 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     game.room.status = 'playing';
     game.room.hostName = game.host.name;
     game.room.clientName = game.client.name;
+    this.serverService.updateStatus(game.host.id, 'inGame');
+    this.serverService.updateStatus(game.client.id, 'inGame');
     this.server.to(game.room.name).emit('startGame', game.room);
     this.serverService.startRound(game.room);
     this.gameLoop(game);
@@ -391,15 +404,11 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     @ConnectedSocket() client: Socket,
     @MessageBody('message') messageToDeliver: string,
     @MessageBody('friendNickname') friendNickname: string,
-  ): Promise<void> {
+  ) {
     let requester: UserEntity;
     const getAuthor = this.serverService.SocketToPlayer(client);
     const receiver = this.serverService.userList.find((element) => element.name === friendNickname);
     if (receiver) {
-      this.server.to(receiver.socket.id).emit('Message to the client', {
-        author: getAuthor.name,
-        text: messageToDeliver,
-      });
       requester = await this.userService.getUserByNickname(receiver.name);
     } else {
       requester = await this.userService.getUserByNickname(friendNickname);
@@ -418,17 +427,29 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     this.server.to(client.id).emit('Update conv list', {
       conv: conv,
     });
-    this.privateMessageService.createMessage({
+    const message = await this.privateMessageService.createMessage({
       conv: conv,
       author: author,
       text: messageToDeliver,
     });
+    if (receiver)
+      this.server.to(receiver.socket.id).emit('Message to the client', {
+        author: getAuthor.name,
+        text: messageToDeliver,
+        date: message.date,
+      });
+    return { author: getAuthor.name, text: messageToDeliver, date: message.date };
   }
 
   // Channel messages by the GOAT
   @SubscribeMessage('sendChannelMessage')
   async sendChannelMessage(@ConnectedSocket() client: Socket, @MessageBody('channelId') channelId: number, @MessageBody('content') content: string) {
     return await this.serverService.sendChannelMessage(channelId, content, client.handshake.auth.user.id);
+  }
+
+  @SubscribeMessage('updateChannelMembers')
+  async updateChannelMembers(@ConnectedSocket() client: Socket, @MessageBody('id') channelId: number) {
+    await this.serverService.updateChannelMembers(channelId, client);
   }
 
   @SubscribeMessage('joinChannelRoom')

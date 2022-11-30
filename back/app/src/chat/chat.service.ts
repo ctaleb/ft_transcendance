@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
+import { channel } from 'diagnostics_channel';
 import { IChannel } from 'src/chat/chat.types';
 import { UserEntity } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
@@ -305,7 +306,7 @@ export class ChatService {
     return result;
   }
 
-  async getChannelsList(getChannelsListDto: GetChannelsListDto, userId: number): Promise<IChannel[]> {
+  async getChannelsList(userId: number): Promise<IChannel[]> {
     const userChannels: IChannel[] = await this.getUserChannels(userId);
     const result: IChannel[] = [];
 
@@ -315,8 +316,6 @@ export class ChatService {
         type: Not(ChannelType.PRIVATE),
       },
       order: { id: 'ASC' },
-      take: 20,
-      skip: getChannelsListDto.skip,
     }).then((data) => {
       data = data.filter((elem) => !userChannels.find((userChan) => userChan.id === elem.id));
       data.forEach((elem) => {
@@ -327,22 +326,26 @@ export class ChatService {
   }
 
   async getChannelMembers(getChannelMembersDto: LeaveChannelDto, userId: number) {
-    const query = ChannelMemberEntity.createQueryBuilder('member')
-      .select('member.channelId')
-      .where('member.userId = :id', { id: userId })
-      .andWhere('member.channelId = :chanId', {
-        chanId: getChannelMembersDto.id,
+    const member = await ChannelMemberEntity.findBy({
+      user: { id: userId },
+      channel: { id: getChannelMembersDto.id },
+    });
+    if (!member) throw new BadRequestException('You are not a channel member');
+    const members: { id: number; nickname: string; avatar: string; role: ChannelRole }[] = [];
+    await ChannelMemberEntity.find({
+      where: { channel: { id: getChannelMembersDto.id } },
+      order: { role: 'ASC' },
+    }).then((data) => {
+      data.forEach((entry) => {
+        members.push({
+          id: entry.user.id,
+          nickname: entry.user.nickname,
+          avatar: entry.user.getAvatarUrl(),
+          role: entry.role,
+        });
       });
-    const channel = await ChannelEntity.createQueryBuilder('channel')
-      .innerJoin('channel.members', 'members')
-      .innerJoin('members.user', 'user')
-      .innerJoin('user.avatar', 'avatar')
-      .select(['user.nickname AS nickname', 'avatar.path AS path', 'members.role AS role'])
-      .where('channel.id IN (' + query.getQuery() + ')')
-      .setParameters(query.getParameters())
-      .orderBy('members.role', 'ASC')
-      .execute();
-    return channel;
+    });
+    return members;
   }
 
   async getChannelMessages(getChannelMessagesDto: GetChannelMessagesDto) {
@@ -385,15 +388,16 @@ export class ChatService {
       if (ban.ban.getTime() < Date.now()) await ChannelRestrictionsEntity.remove(ban);
       else throw new BadRequestException(`You are banned till ${ban.ban}`);
     }
-    const members: { nickname: string; path: string; role: ChannelRole }[] = [];
+    const members: { id: number; nickname: string; avatar: string; role: ChannelRole }[] = [];
     await ChannelMemberEntity.find({
       where: { channel: { id: channel.id } },
       order: { role: 'ASC' },
     }).then((data) => {
       data.forEach((entry) => {
         members.push({
+          id: entry.user.id,
           nickname: entry.user.nickname,
-          path: entry.user.avatar.path,
+          avatar: entry.user.getAvatarUrl(),
           role: entry.role,
         });
       });

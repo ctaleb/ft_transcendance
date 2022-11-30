@@ -22,12 +22,12 @@ export interface Channel {
   id: number;
   name: string;
   type: ChannelType;
-  members?: number[];
+  members?: ChannelUser[];
   messages?: Message[];
 }
 
-export function isChannel(chatEntity: Channel | Conversation) {
-  return (<Channel>chatEntity).name !== undefined;
+export function isChannel(chatEntity: Channel | Conversation): boolean {
+  return (<Channel>chatEntity)?.name !== undefined;
 }
 
 export namespace Channel {

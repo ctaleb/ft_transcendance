@@ -57,6 +57,7 @@
               <label for="barSpeed">Bar Speed Factor (0 for half speed): {{ barSpeed }}</label>
               <div>0<input v-model="barSpeed" type="range" id="barSpeed" name="barSpeed" min="0" max="5" :disabled="readyButton == true" />5</div>
             </div>
+            <div><input v-model="smashes" type="checkbox" id="switch" :disabled="readyButton == true" /><label for="smashes">Toggle smashes</label></div>
             <div>
               <label for="barSize">Bar Size Factor (0 for half size): {{ barSize }}</label>
               <div>0<input v-model="barSize" type="range" id="barSize" name="barSize" min="0" max="2" :disabled="readyButton == true" />2</div>
@@ -94,10 +95,9 @@
 
 <script setup lang="ts">
 import { socketLocal, useStore } from "@/store";
+import { GameOptions, GameRoom, GameState, IBar, IPoint, particleSet } from "@/types/Game";
 import { GameSummaryData } from "@/types/GameSummary";
 import { onMounted, onUnmounted, reactive, ref } from "vue";
-import { GameOptions, GameRoom, GameState, IBar } from "../../../../back/app/src/server/entities/server.entity";
-import { User } from "@/types/User";
 import ballUrl from "../assets/ball.png";
 import energyUrl from "../assets/energy.png";
 import paddleEnergyUrl from "../assets/energy_paddle_grec.png";
@@ -113,7 +113,6 @@ import fillRedUrl from "../assets/slot_fill_enemy.png";
 import Denial from "./InviteDenied/Modal.vue";
 import PowerSliderComponent from "./PowerSliderComponent.vue";
 import Modal from "./Summary/Modal.vue";
-import { watch } from "fs";
 //import { SCOPABLE_TYPES } from "@babel/types";
 
 const store = useStore();
@@ -190,6 +189,7 @@ let loadPercent = 120;
 let kickOff = false;
 let cSmashingPercent = 0;
 let hSmashingPercent = 0;
+const particles: particleSet[] = [];
 
 let start: Date;
 let end: Date;
@@ -319,6 +319,90 @@ function drawPlayground(ctx: CanvasRenderingContext2D) {
   ctx.drawImage(plateauImg, 0, 0, cWidth, cHeight);
 }
 
+function addParticle(ctx: CanvasRenderingContext2D, gameState: GameState) {
+  const hit: particleSet = { particles: [], reach: false };
+  let ab: IPoint = { x: gameState.ball.pos.x - gameState.hit.x, y: gameState.ball.pos.y - gameState.hit.y };
+  let end1: IPoint = { x: gameState.hit.x < 250 ? 10 : 490, y: ab.x };
+  let end2: IPoint = { x: gameState.hit.x < 250 ? 10 : 490, y: -ab.x };
+
+  console.log("HIT");
+  console.log(end1);
+  console.log(end2);
+  console.log(gameState.hit);
+
+  //left
+  hit.particles.push({
+    start: { x: gameState.hit.x < 250 ? 5 * scale : (500 - 7) * scale, y: gameState.hit.y },
+    end: { x: 0, y: end1.y },
+    trail: [],
+  });
+  hit.particles.push({
+    start: { x: gameState.hit.x < 250 ? 5 * scale : (500 - 7) * scale, y: gameState.hit.y },
+    end: { x: 0 + (gameState.hit.x < 250 ? Math.random() * 10 : -(Math.random() * 5)), y: end1.y + Math.random() * 10 },
+    trail: [],
+  });
+  hit.particles.push({
+    start: { x: gameState.hit.x < 250 ? 5 * scale : (500 - 7) * scale, y: gameState.hit.y },
+    end: { x: 0 + (gameState.hit.x < 250 ? Math.random() * 10 : -(Math.random() * 5)), y: end1.y + Math.random() * 10 },
+    trail: [],
+  });
+  hit.particles.push({
+    start: { x: gameState.hit.x < 250 ? 5 * scale : (500 - 7) * scale, y: gameState.hit.y },
+    end: { x: 0 + (gameState.hit.x < 250 ? Math.random() * 10 : -(Math.random() * 5)), y: end1.y + Math.random() * 10 },
+    trail: [],
+  });
+  //right
+  hit.particles.push({
+    start: { x: gameState.hit.x < 250 ? 5 * scale : (500 - 7) * scale, y: gameState.hit.y },
+    end: { x: 0 + (gameState.hit.x < 250 ? Math.random() * 10 : -(Math.random() * 5)), y: end2.y + Math.random() * 10 },
+    trail: [],
+  });
+  hit.particles.push({
+    start: { x: gameState.hit.x < 250 ? 5 * scale : (500 - 7) * scale, y: gameState.hit.y },
+    end: { x: 0 + (gameState.hit.x < 250 ? Math.random() * 10 : -(Math.random() * 5)), y: end2.y + Math.random() * 10 },
+    trail: [],
+  });
+  hit.particles.push({
+    start: { x: gameState.hit.x < 250 ? 5 * scale : (500 - 7) * scale, y: gameState.hit.y },
+    end: { x: 0 + (gameState.hit.x < 250 ? Math.random() * 10 : -(Math.random() * 5)), y: end2.y + Math.random() * 10 },
+    trail: [],
+  });
+  hit.particles.push({
+    start: { x: gameState.hit.x < 250 ? 5 * scale : (500 - 7) * scale, y: gameState.hit.y },
+    end: { x: 0 + (gameState.hit.x < 250 ? Math.random() * 10 : -(Math.random() * 5)), y: end2.y + Math.random() * 10 },
+    trail: [],
+  });
+  particles.push(hit);
+}
+
+function drawParticle(ctx: CanvasRenderingContext2D, gameState: GameState) {
+  particles.forEach((elemento) => {
+    if (elemento.particles[0].trail.length == 10) elemento.reach = true;
+    elemento.particles.forEach((element, index, tab) => {
+      let i: number;
+
+      i = element.trail.length;
+      if (elemento.reach == false) {
+        if (i < 10) {
+          element.trail.push({ x: element.start.x + (element.end.x / 10) * i, y: element.start.y + (element.end.y / 10) * i });
+        }
+      } else {
+        if (i > 0) element.trail.splice(0, 1);
+        else tab.splice(1, 0);
+      }
+      element.trail.forEach((element, index) => {
+        ctx.globalAlpha = 0.1 * index;
+        ctx.beginPath();
+        ctx.fillStyle = "#edd199";
+        ctx.arc(element.x, element.y, 1, 0, 2 * Math.PI);
+        ctx.fill();
+        // ctx.drawImage(ballImg, element.x, element.y, 3, 3);
+        ctx.globalAlpha = 1;
+      });
+    });
+  });
+}
+
 function drawScore(ctx: CanvasRenderingContext2D, gameState: GameState) {
   let slot = theRoom.options.scoreMax;
 
@@ -425,6 +509,9 @@ function scalePosition(gameState: GameState) {
   gameState.clientBar.pos.x *= scale;
   gameState.clientBar.pos.y *= scale;
   gameState.clientBar.pos.y += offset;
+  gameState.hit.x *= scale;
+  gameState.hit.y *= scale;
+  gameState.hit.y += offset;
 }
 
 function resizeCanvas() {
@@ -542,6 +629,7 @@ const ServerUpdate = (gameState: GameState) => {
       hSmashingPercent += 2;
     } else if (!gameState.hostBar.smashing || kickOff) hSmashingPercent = 0;
     if (ctx) {
+      if (gameState.hit.hit === true) addParticle(ctx, gameState);
       drawPlayground(ctx);
       drawScore(ctx, gameState);
       drawPowerCharge(ctx, gameState);
@@ -550,6 +638,7 @@ const ServerUpdate = (gameState: GameState) => {
       ctx.fillStyle = "black";
       drawSmashingEffect(gameState.clientBar, cSmashingPercent, ctx);
       drawSmashingEffect(gameState.hostBar, hSmashingPercent, ctx);
+      drawParticle(ctx, gameState);
     }
   }
 };

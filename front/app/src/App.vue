@@ -27,16 +27,19 @@
 </template>
 
 <script setup lang="ts">
+import { addAlertMessage, trySetupUser } from "@/functions/funcs";
+import { socketLocal, useStore } from "@/store";
+import { isChannel } from "@/types/Channel";
+import { Conversation } from "@/types/Conversation";
+import { Alert } from "@/types/GameSummary";
+import { Message } from "@/types/Message";
+import { getUserByNickname, User } from "@/types/User";
 import { onMounted, ref, watch } from "vue";
 import { RouterLink, RouterView, useRoute, useRouter } from "vue-router";
-import { User, getUserByNickname } from "@/types/User";
-import { trySetupUser } from "@/functions/funcs";
-import { Alert } from "@/types/GameSummary";
-import { socketLocal, useStore } from "@/store";
-import GameConfirmation from "./components/GameConfirmation/Modal.vue";
 import AlertCard from "./components/AlertCard.vue";
 import CustomInvitation from "./components/CustomInvitation/Modal.vue";
 import FailedInvitation from "./components/FailedInvitation/Modal.vue";
+import GameConfirmation from "./components/GameConfirmation/Modal.vue";
 
 const store = useStore();
 const route = useRoute();
@@ -161,6 +164,9 @@ onMounted(() => {
     () => route.path,
     (currentValue, oldValue) => {
       if (currentValue != "/game") socket?.value?.emit("watchPath");
+      store.$patch({
+        currentChat: undefined,
+      });
 
       if (localStorage.getItem("token") && profileNotificationBadge.value === false) {
         fetch("http://" + window.location.hostname + ":3000/api/friendship/has-invitations", {
@@ -238,6 +244,24 @@ onMounted(() => {
           showFailure(true);
         });
       }
+      if (!socketLocal?.value?.hasListeners("Message to the client")) {
+        socketLocal?.value?.on("Message to the client", async (privateMessage: Message) => {
+          if (!isChannel(store.currentChat!) && privateMessage.author === (<Conversation>store.currentChat)?.other.nickname) {
+            store.currentChat?.messages?.push(privateMessage);
+          } else {
+            addAlertMessage(`New message from ${privateMessage.author}`, 1);
+          }
+        });
+      }
+      if (!socketLocal?.value?.hasListeners("messageRecieved")) {
+        socketLocal?.value?.on("messageReceived", (channelId: number, msg: Message) => {
+          if (isChannel(store.currentChat!) && channelId === store.currentChat!.id) {
+            store.currentChat?.messages?.push(msg);
+          } else {
+            addAlertMessage(`New message from ${msg.author} in channel`, 1);
+          }
+        });
+      }
     }
   );
 });
@@ -261,6 +285,7 @@ body {
 }
 
 .navbar {
+  height: 5vh;
   a {
     font-weight: bold;
     color: #f0e68c;

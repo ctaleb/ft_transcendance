@@ -13,13 +13,7 @@ import { ServerModule } from 'src/server/server.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      ChannelEntity,
-      ChannelMemberEntity,
-      ChannelMessageEntity,
-      ChannelRestrictionsEntity,
-      ChannelInvitationEntity,
-    ]),
+    TypeOrmModule.forFeature([ChannelEntity, ChannelMemberEntity, ChannelMessageEntity, ChannelRestrictionsEntity, ChannelInvitationEntity]),
     UserModule,
     PassportModule,
   ],
