@@ -306,7 +306,7 @@ export class ChatService {
     return result;
   }
 
-  async getChannelsList(getChannelsListDto: GetChannelsListDto, userId: number): Promise<IChannel[]> {
+  async getChannelsList(userId: number): Promise<IChannel[]> {
     const userChannels: IChannel[] = await this.getUserChannels(userId);
     const result: IChannel[] = [];
 
@@ -316,8 +316,6 @@ export class ChatService {
         type: Not(ChannelType.PRIVATE),
       },
       order: { id: 'ASC' },
-      take: 20,
-      skip: getChannelsListDto.skip,
     }).then((data) => {
       data = data.filter((elem) => !userChannels.find((userChan) => userChan.id === elem.id));
       data.forEach((elem) => {
@@ -328,22 +326,6 @@ export class ChatService {
   }
 
   async getChannelMembers(getChannelMembersDto: LeaveChannelDto, userId: number) {
-    // const query = ChannelMemberEntity.createQueryBuilder('member')
-    //   .select('member.channelId')
-    //   .where('member.userId = :id', { id: userId })
-    //   .andWhere('member.channelId = :chanId', {
-    //     chanId: getChannelMembersDto.id,
-    //   });
-    // const channel = await ChannelEntity.createQueryBuilder('channel')
-    //   .innerJoin('channel.members', 'members')
-    //   .innerJoin('members.user', 'user')
-    //   .innerJoin('user.avatar', 'avatar')
-    //   .select(['user.nickname AS nickname', 'avatar.path AS path', 'members.role AS role'])
-    //   .where('channel.id IN (' + query.getQuery() + ')')
-    //   .setParameters(query.getParameters())
-    //   .orderBy('members.role', 'ASC')
-    //   .execute();
-    // return channel;
     const member = await ChannelMemberEntity.findBy({
       user: { id: userId },
       channel: { id: getChannelMembersDto.id },

@@ -1,6 +1,6 @@
 <template>
   <div id="chat">
-    <ChatMenu :channels="myChannels" :convs="privateConvs" :allChannels="allChannels" :invitations="channelInvitations" />
+    <ChatMenu :channels="myChannels" :all-channels="allChannels" :convs="privateConvs" :invitations="channelInvitations" />
     <ChatWindow @update-channels-list="updateChannelsList()" />
     <!-- <div v-if="show == 0" class="lobbyChat">
       <h2>Welcome on the chat</h2>
@@ -166,6 +166,7 @@ const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 const updateChannelsList = () => {
   getMyChannels();
+  getAllChannels();
 };
 
 onUpdated(() => {
@@ -174,9 +175,10 @@ onUpdated(() => {
 });
 
 onMounted(async () => {
-  getMyChannels();
-  getAllChannels();
-  getChannelInvitations();
+  await getMyChannels();
+  await getAllChannels();
+  await getChannelInvitations();
+  await getAllConvs();
 
   // var audio = new Audio(require("../assets/adelsol.mp3"));
   // socket?.on("Message to the client", async (privateMessage: { author: string; text: string }) => {
@@ -235,7 +237,6 @@ onMounted(async () => {
   //     });
   //   }
   // });
-  await getAllConvs();
   // if (store.user?.friends) friends.value = JSON.parse(JSON.stringify(store.user?.friends)); what is this
   // organizeFriends();
 });
@@ -245,10 +246,8 @@ const getMyChannels = async (): Promise<void> => {
 };
 
 const getAllChannels = async (): Promise<void> => {
-  const data: Channel[] = await fetchJSONDatas("api/chat/list", "POST", {
-    skip: allChannels.value.length,
-  });
-  allChannels.value = [...allChannels.value, ...data];
+  const data: Channel[] = await fetchJSONDatas("api/chat/list", "GET");
+  allChannels.value = data;
 };
 
 const getChannelInvitations = async (): Promise<void> => {

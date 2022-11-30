@@ -17,15 +17,20 @@
     <CollapseList :toggleMode="false" title="Channel invitations" :data="invitations" v-slot="{ element }: { element: Channel }">
       <ChatMenuItem :title="Channel.getName(element)" />
     </CollapseList>
-    <CollapseList :toggleMode="false" title="Avaliable channels" :data="allChannels" v-slot="{ element }: { element: Channel }">
-      <ChatMenuItem :title="Channel.getName(element)" />
-    </CollapseList>
+    <button @click="showAllChannelsModal = true">All Channels</button>
   </div>
+  <AllChannelsModal
+    v-if="showAllChannelsModal"
+    @close-all-channels-modal="showAllChannelsModal = false"
+    @join-channel="joiningNewChannel"
+    :all-channels="allChannels"
+  />
 </template>
 
 <script setup lang="ts">
 import ChatMenuItem from "@/components/chat/ChatMenuItem.vue";
 import CollapseList from "@/components/common/CollapseList.vue";
+import AllChannelsModal from "@/components/chat/modals/AllChannelsModal.vue";
 import { fetchJSONDatas } from "@/functions/funcs";
 import { useStore } from "@/store";
 import { Channel, isChannel } from "@/types/Channel";
@@ -40,11 +45,10 @@ const props = defineProps<{
   invitations: Channel[];
 }>();
 
-const emits = defineEmits<{
-  (e: "setCurrentChatWindow"): void;
-}>();
+const emits = defineEmits(["joinChannel", "setCurrentChatWindow", "closeAllChannelsModal"]);
 
 const friends: Ref<User[] | undefined> = ref();
+const showAllChannelsModal = ref(false);
 
 const store = useStore();
 let socket = store.socket;
@@ -60,6 +64,14 @@ const createConversation = async (element: User) => {
     friends.value = friends.value?.splice(friends.value.indexOf(element), 1);
     props.convs.unshift(newConv);
   }
+};
+
+const joiningNewChannel = (channel: any) => {
+  const data: Channel = channel;
+  props.channels.push(data);
+  props.allChannels.splice(props.allChannels.indexOf(data), 1);
+  socket?.emit("joinChannelRoom", { id: data.id });
+  showAllChannelsModal.value = false;
 };
 
 const setCurrentChatWindow = async (target: Channel | Conversation) => {
@@ -100,8 +112,6 @@ const setCurrentChatWindow = async (target: Channel | Conversation) => {
 
 onMounted(() => {
   socket?.on("Update conv list", (convData: { conv: Conversation }) => {
-    console.log("Conv");
-    console.log(convData);
     const convIndex = props.convs.findIndex((conv) => conv.id === convData.conv.id);
     const convToTop = props.convs.splice(convIndex, 1)[0];
     props.convs.splice(0, 0, convToTop);

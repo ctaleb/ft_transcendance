@@ -28,9 +28,9 @@ export class ChatController {
     return this.chatService.getChannelInvitations(req.user.payload.id);
   }
 
-  @Post('list')
-  getChannelsList(@Request() req, @Body() getChannelsListDto: GetChannelsListDto) {
-    return this.chatService.getChannelsList(getChannelsListDto, req.user.payload.id);
+  @Get('list')
+  getChannelsList(@Request() req) {
+    return this.chatService.getChannelsList(req.user.payload.id);
   }
 
   @Post('load-channel')
