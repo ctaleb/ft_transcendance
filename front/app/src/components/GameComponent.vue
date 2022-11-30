@@ -1,32 +1,16 @@
 <template>
   <section class="lobby container">
-    <!-- <img class="border-gold user-image michel" :src="User.getAvatar(store.user)" alt="" /> -->
     <div :class="powers ? '' : ' hidden'">
       <power-slider-component v-model="power" id="powerSlider" />
     </div>
-    <!-- <div>
-	  <button @click="toggleGameQueue()">CHANGE MODE</button>
-	</div> -->
-    <!-- <div>{{ toggleLadder }}</div>
-	<div>{{ toggleInvited }}</div> -->
     <div v-if="toggleLadder" class="ladder">
-      <!-- <PowerSliderComponent v-model="power" id="powerSlider" /> -->
       <div>
         <div @click="findMatch()" class="btn">
           <div class="text">PLAY</div>
         </div>
       </div>
-      <!-- <div v-if="gameBoard">
-		{{ gameBoard }}
-		
-	  </div> -->
       <canvas class="canvas hidden" ref="canvas"></canvas>
       <div v-if="summary" class="overlay">
-        <!-- <div v-if="modal" class="modal">
-		  <h1>Ready to play ?</h1>
-		  <button @click="confirmGame()">Yes</button>
-		  <button @click="denyGame()">No</button>
-		</div> -->
         <Modal :title="sumTitle" :data="gameSummary" :start="start" :end="end" @close="showSummary(false)"></Modal>
       </div>
       <div v-if="noFriends" class="overlay">
@@ -396,7 +380,6 @@ function drawParticle(ctx: CanvasRenderingContext2D, gameState: GameState) {
         ctx.fillStyle = "#edd199";
         ctx.arc(element.x, element.y, 1, 0, 2 * Math.PI);
         ctx.fill();
-        // ctx.drawImage(ballImg, element.x, element.y, 3, 3);
         ctx.globalAlpha = 1;
       });
     });

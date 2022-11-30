@@ -43,7 +43,7 @@
 
 <script setup lang="ts">
 import { fetchJSONDatas } from "@/functions/funcs";
-import { useStore } from "@/store";
+import { socketLocal, useStore } from "@/store";
 import { Channel, isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
 import { Message } from "@/types/Message";
@@ -57,7 +57,6 @@ defaultAvatarImg.src = defaultAvatarUrl;
 const store = useStore();
 
 let currentChannelId = store.currentChat?.id;
-let socket = store.socket;
 
 const messageField = ref("");
 const blockScroll = ref(false);
@@ -75,12 +74,12 @@ const scrollDownMessages = (behavior: ScrollBehavior | undefined) => {
 const sendMessage = () => {
   if (messageField.value.length > 0) {
     if (isChannel(store.currentChat!)) {
-      socket?.emit("sendChannelMessage", {
+      socketLocal.value?.emit("sendChannelMessage", {
         channelId: store.currentChat!.id,
         content: messageField.value,
       });
     } else {
-      socket?.emit(
+      socketLocal.value?.emit(
         "deliverMessage",
         {
           message: messageField.value,
@@ -141,8 +140,6 @@ window.addEventListener("keydown", (e) => {
 });
 
 store.$subscribe((mutation, state) => {
-  socket = state.socket;
-
   if (currentChannelId != state.currentChat?.id) {
     scrollDownMessages("auto");
   } else {

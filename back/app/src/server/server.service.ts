@@ -741,6 +741,7 @@ export class ServerService {
     game.client.gameData.right = false;
     game.client.gameData.power.reset();
     game.host.gameData.power.reset();
+    game.gameState.hit.hit = false;
   }
 
   startRound(room: GameRoom) {
@@ -815,9 +816,7 @@ export class ServerService {
       this.moveBar(gameState.clientBar, game.client, game.room.options.barSpeed);
       this.barBallCollision(gameState.hostBar, gameState.clientBar, gameState.ball, game.room, game.host, game.client);
       this.wallBallCollision(gameState, game.room);
-
-      this.barBallCollision(gameState.hostBar, gameState.clientBar, gameState.ball, game.room, game.host, game.client);
-      this.wallBallCollision(gameState, game.room);
+      this.reset_collide(gameState.ball, game.room, game);
       this.nadal(gameState.ball, game.room.effect);
       gameState.ball.pos.x += gameState.ball.speed.x;
       gameState.ball.pos.y += gameState.ball.speed.y;

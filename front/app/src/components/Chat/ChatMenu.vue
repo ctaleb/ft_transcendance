@@ -32,7 +32,7 @@ import ChatMenuItem from "@/components/chat/ChatMenuItem.vue";
 import CollapseList from "@/components/common/CollapseList.vue";
 import AllChannelsModal from "@/components/chat/modals/AllChannelsModal.vue";
 import { fetchJSONDatas } from "@/functions/funcs";
-import { useStore } from "@/store";
+import { socketLocal, useStore } from "@/store";
 import { Channel, isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
 import { User } from "@/types/User";
@@ -51,11 +51,6 @@ const friends: Ref<User[] | undefined> = ref();
 const showAllChannelsModal = ref(false);
 
 const store = useStore();
-let socket = store.socket;
-
-store.$subscribe((mutation, state) => {
-  socket = state.socket;
-});
 
 const createConversation = async (element: User) => {
   const conv: any = await User.createConversation(element);
@@ -70,7 +65,7 @@ const joiningNewChannel = (channel: any) => {
   const data: Channel = channel;
   props.channels.push(data);
   props.allChannels.splice(props.allChannels.indexOf(data), 1);
-  socket?.emit("joinChannelRoom", { id: data.id });
+  socketLocal.value?.emit("joinChannelRoom", { id: data.id });
   showAllChannelsModal.value = false;
 };
 
@@ -111,7 +106,7 @@ const setCurrentChatWindow = async (target: Channel | Conversation) => {
 };
 
 onMounted(() => {
-  socket?.on("Update conv list", (convData: { conv: Conversation }) => {
+  socketLocal.value?.on("Update conv list", (convData: { conv: Conversation }) => {
     const convIndex = props.convs.findIndex((conv) => conv.id === convData.conv.id);
     const convToTop = props.convs.splice(convIndex, 1)[0];
     props.convs.splice(0, 0, convToTop);
