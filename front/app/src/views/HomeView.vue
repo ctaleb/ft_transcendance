@@ -227,55 +227,49 @@ async function studentLogin(code: string) {
   justify-content: center;
   align-items: center;
 }
-.principalSection {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-around;
-  align-items: center;
-  width: 100vw;
-  height: 75vh;
-  .mainContainer {
-    .classicLogin {
-      width: 100%;
-    }
-    .intraLogin {
-      width: 100%;
-      display: flex;
-      flex-direction: row;
-      justify-content: center;
-    }
-    .register {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      margin-top: auto;
-      margin-bottom: 15px;
-    }
-    register-component {
-      width: 100%;
-    }
-    img {
-      margin-top: 2rem;
-    }
-    .sectionDivider {
-      display: flex;
-      flex-direction: row;
-      justify-content: space-around;
-      align-items: center;
 
-      h4 {
-        margin: 0 15px 0 15px;
-      }
-      .divider {
-        margin: 2rem auto;
-        border-color: #aa9e7d;
-        width: 10rem;
-      }
+.mainContainer {
+  .classicLogin {
+    width: 100%;
+  }
+  .intraLogin {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+  }
+  .register {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin-top: auto;
+    margin-bottom: 15px;
+  }
+  register-component {
+    width: 100%;
+  }
+  img {
+    margin-top: 2rem;
+  }
+  .sectionDivider {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+
+    h4 {
+      margin: 0 15px 0 15px;
+    }
+    .divider {
+      margin: 2rem auto;
+      border-color: #aa9e7d;
+      width: 10rem;
     }
   }
 }
+
 .svgSection {
   width: 30%;
   img {

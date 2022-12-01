@@ -15,3 +15,12 @@
   height: 65vh;
   text-align: center;
 }
+
+.principalSection {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+  width: 100vw;
+  height: 75vh;
+}
