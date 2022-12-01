@@ -1,34 +1,40 @@
 <template @update-invitations="getRelations()">
+  <svg preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" class="topSvg">
+    <path fill="#C1A36B" fill-opacity="1" d="M0,224L288,256L576,224L864,224L1152,288L1440,256L1440,0L1152,0L864,0L576,0L288,0L0,0Z"></path>
+  </svg>
   <section v-if="currentUser !== undefined" id="profile" class="container">
-    <div class="current-user border-gold">
+    <div class="current-user">
+      <div>
+        <img class="sideIcons" src="../assets/profileEloIcon.svg" alt="" />
+        <h3>{{ currentUser?.elo }}</h3>
+      </div>
       <div>
         <img class="border-gold user-image" :src="User.getAvatar(currentUser)" alt="" />
+        <h3 class="playerName">{{ currentUser?.nickname }}</h3>
       </div>
       <div>
-        <h2 class="playerName">{{ currentUser?.nickname }}</h2>
-        <h4>elo : {{ currentUser?.elo }}</h4>
+        <img class="sideIcons" src="../assets/profileStatusIcon.svg" alt="" />
+        <h3>status</h3>
       </div>
-      <div>
-        <div class="buttons" v-if="currentUser === store.user">
-          <router-link class="test" to="/" v-on:click.prevent="logout()">
-            <img :src="shutdownUrl" alt="edit" />
+      <!--<div class="buttons" v-if="currentUser === store.user">
+		  <router-link class="test" to="/" v-on:click.prevent="logout()">
+            <img :src="shutdownUrl" alt="edit" width="25" height="25" />
           </router-link>
           <router-link class="test" to="/edit">
-            <img :src="editUrl" alt="shutdown" />
-          </router-link>
-        </div>
-      </div>
+			  <img :src="editUrl" alt="shutdown" width="25" height="25" />
+			</router-link>
+        </div>-->
     </div>
     <div class="subMenu">
-      <button @click="watchFriend()">Friend</button>
-      <button @click="watchHistory()">Match History</button>
+      <button class="darkButton pulse" :style="toogleMenu ? '' : 'border: 1px solid white'" @click="watchFriend()">Friend</button>
+      <button class="darkButton pulse" :style="toogleMenu ? 'border: 1px solid white' : ''" @click="watchHistory()">Match History</button>
     </div>
     <div class="search" :style="toogleMenu ? 'display: none' : ''">
       <div class="searchBar">
         <div class="searchIcon"><i class="gg-search"></i></div>
-        <input type="text" class="searchField" name="searchFriend" v-model="searchFriend" placeholder="Player name" />
+        <input type="text" class="input" name="searchFriend" v-model="searchFriend" placeholder="Player name" />
       </div>
-      <button @click="invite()">Add Friend</button>
+      <button class="button pulse" @click="invite()">Add Friend</button>
     </div>
     <div v-if="currentUser === store.user" class="invitations" :style="toogleMenu ? 'display: none' : ''">
       <h2 v-if="store.user?.invitations?.length">Invitations</h2>
@@ -36,18 +42,17 @@
         <InvitationCard v-for="invitation of store.user?.invitations" :invitation="invitation" />
       </ul>
     </div>
-    <h2 style="margin: 1rem" :style="toogleMenu ? 'display: none' : ''">Friends</h2>
     <div class="friends" :style="toogleMenu ? 'display: none' : ''">
       <ul>
         <FriendCard v-for="friend of currentFriend" :friend="friend" />
       </ul>
     </div>
     <div class="summary" :style="toogleMenu ? '' : 'display: none'">
-      <h2 style="margin: 1rem">Match History</h2>
       <ul>
         <SummaryCard v-for="summary of currentSummary" :summary="summary" />
       </ul>
     </div>
+    <img src="../assets/profileConfettis.svg" class="leftBottomSvg" alt="" />
   </section>
   <h4 v-else>User not found T_T</h4>
   <!-- <friend-alert :requester-name="incomingFriendRequest" /> -->

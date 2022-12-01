@@ -220,7 +220,7 @@ async function studentLogin(code: string) {
 @import "../styles/variables";
 @import "../styles/inputsAndButtons";
 @import "../styles/mixins/sizes";
-@import "../styles/bottomSvg";
+@import "../styles/svgStyles";
 @import "../styles/containerStyle.scss";
 .twofaComponentDiv {
   display: flex;

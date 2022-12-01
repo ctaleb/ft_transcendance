@@ -29,6 +29,18 @@ input[type="phone"]:focus {
   background: $primary;
   color: white;
 }
+.darkButton {
+  width: 60%;
+  padding: 10px;
+  background: $secondary;
+  border: 1px solid $secondary;
+  cursor: pointer;
+  color: $primary;
+}
+.darkButton:hover {
+  background: $primary;
+  color: white;
+}
 // Animate the size, outside
 .pulse:hover,
 .pulse:focus {

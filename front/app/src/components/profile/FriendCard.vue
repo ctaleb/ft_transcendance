@@ -1,14 +1,14 @@
 <template>
   <li class="friend border-gold">
+    <img class="user-image" :src="User.getAvatar(friend)" alt="" />
+    <h3>{{ friend.nickname }}</h3>
+    <h4 style="color: greenyellow; text-align: center">{{ "en ligne" }}</h4>
     <div>
-      <img class="user-image" :src="User.getAvatar(friend)" alt="" />
       <button @click="unfriend()">Remove</button>
       <button @click="watchProfile()">Profile</button>
       <button @click="spectateGame(friend.nickname)">Spectate</button>
       <button @click="inviteCustom(friend.nickname)">Invite</button>
     </div>
-    <h3 style="margin: 10px">{{ friend.nickname }}</h3>
-    <h4 style="color: greenyellow; text-align: center">{{ "en ligne" }}</h4>
   </li>
 </template>
 

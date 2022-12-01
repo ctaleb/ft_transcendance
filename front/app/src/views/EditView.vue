@@ -301,7 +301,7 @@ export default defineComponent({
 <style lang="scss" scoped>
 @import "../styles/variables";
 @import "../styles/inputsAndButtons.scss";
-@import "../styles/bottomSvg.scss";
+@import "../styles/svgStyles.scss";
 @import "../styles/containerStyle.scss";
 @import "../styles/switch.scss";
 .principalSection {
