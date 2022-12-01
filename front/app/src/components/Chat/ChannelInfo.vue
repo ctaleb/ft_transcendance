@@ -5,19 +5,27 @@
       <button v-if="(<Channel>store.currentChat).type === ChannelType.PRIVATE" @click="showInviteToChannelModal = true" class="primary-btn">
         Invite new member
       </button>
+      <button v-if="user.role === ChannelRole.OWNER" @click="showUpdateChannelModal = true">Update channel</button>
     </div>
     <ChannelMembers />
   </div>
   <InviteToChannel v-if="showInviteToChannelModal" @close-invite-modal="showInviteToChannelModal = false" />
+  <ChannelUpdateModal
+    v-if="showUpdateChannelModal"
+    @close-channel-modal="showUpdateChannelModal = false"
+    @update-channel="channelUpdated"
+    :channel="<Channel>store.currentChat"
+  />
 </template>
 
 <script setup lang="ts">
 import ChannelMembers from "@/components/chat/ChannelMembers.vue";
 import InviteToChannel from "@/components/chat/modals/InviteToChannel.vue";
+import ChannelUpdateModal from "@/components/chat/modals/ChannelUpdateModal.vue";
 import { fetchJSONDatas } from "@/functions/funcs";
 import { useStore } from "@/store";
-import { Channel, ChannelType } from "@/types/Channel";
-import { onMounted, ref } from "vue";
+import { Channel, ChannelType, ChannelUser, ChannelRole } from "@/types/Channel";
+import { onMounted, Ref, ref } from "vue";
 
 const store = useStore();
 let socket = store.socket;
@@ -25,9 +33,12 @@ let socket = store.socket;
 const emits = defineEmits<{
   (e: "updateChannelsList"): void;
   (e: "closeInviteModal"): void;
+  (e: "updateChannel"): void;
 }>();
 
+const user: Ref<ChannelUser> = ref((<Channel>store.currentChat!).members!.find((member) => member.id === store.user!.id)!);
 const showInviteToChannelModal = ref(false);
+const showUpdateChannelModal = ref(false);
 
 store.$subscribe((mutation, state) => {
   socket = state.socket;
@@ -42,6 +53,11 @@ const leaveChannel = async (): Promise<void> => {
   store.$patch({
     currentChat: undefined,
   });
+};
+
+const channelUpdated = () => {
+  const channel: Channel = <Channel>store.currentChat;
+  store.socket?.emit("channelUpdated", { id: channel.id, name: channel.name, type: channel.type });
 };
 
 onMounted(() => {});

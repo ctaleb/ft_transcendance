@@ -468,6 +468,11 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     await this.serverService.leaveChannelRoom(client, channelId);
   }
 
+  @SubscribeMessage('channelUpdated')
+  async channelUpdated(@ConnectedSocket() client: Socket, @MessageBody('id') id: number, @MessageBody('name') name: string, @MessageBody('type') type: string) {
+    await this.serverService.updateChannel(client, id, name, type);
+  }
+
   @SubscribeMessage('privateChannelInvite')
   async privateChannelInvite(@ConnectedSocket() client: Socket, @MessageBody('nickname') nickname: string, @MessageBody('channel') channel: string) {
     this.server.to(this.serverService.PlayerToSocket(nickname).id).emit('incomingChannelInvitation', channel);

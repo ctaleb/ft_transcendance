@@ -47,7 +47,7 @@ export class ChatService {
 
   async updateChannel(updateChannelDto: UpdateChannelDto, userId: number) {
     const owner = await ChannelMemberEntity.findOne({
-      where: { user: { id: userId } },
+      where: { user: { id: userId }, channel: { id: updateChannelDto.id } },
     });
     if (!owner || owner.channel.id !== updateChannelDto.id) throw new BadRequestException('You are not the channel owner');
     owner.channel.password = updateChannelDto.type === ChannelType.PROTECTED ? updateChannelDto.password : null;

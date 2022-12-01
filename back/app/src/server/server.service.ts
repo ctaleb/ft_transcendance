@@ -24,9 +24,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { MatchHistoryEntity, GameSummaryData, PlayerInfoData } from './entities/match_history.entity';
 import { DeepPartial, Repository } from 'typeorm';
 import { UserService } from 'src/user/user.service';
-import { Channel } from './entities/channel';
+import { Channel, ChannelRole } from './entities/channel';
 import { ChatService } from 'src/chat/chat.service';
 import { emit } from 'process';
+import { ChannelType } from 'src/chat/entities/channel.entity';
 
 const chargeMax = 1;
 const ballSize = 16;
@@ -862,5 +863,13 @@ export class ServerService {
   async leaveChannelRoom(client: Socket, channelId: number) {
     this.server.to(`${channelId}`).emit('updateChannelMembers', channelId);
     client.leave(`${channelId}`);
+  }
+
+  async updateChannel(client: Socket, id: number, name: string, type: string) {
+    const channels = await this._chatService.getUserChannels(client.handshake.auth.user.id);
+    const channel = channels.find((ell) => ell.id === id);
+    if (channel) {
+      this.server.to(`${channel.id}`).emit('channelUpdatd', {id: channel.id, name: channel.name, type: channel.type });
+    }
   }
 }
