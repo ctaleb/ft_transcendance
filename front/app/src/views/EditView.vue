@@ -4,7 +4,6 @@
     <div class="mainContainer">
       <h3>Personnal informations</h3>
       <div class="section">
-        <h4 style="margin-bottom: 10px; margin-top: 0">Avatar</h4>
         <img :src="avatarUrl" alt="" class="image" />
         <label for="avatar" class="fileInput"
           >Select picture <i class="gg-image"></i><input type="file" id="avatar" name="avatar" accept="image/*" @change="updateAvatar"
@@ -31,6 +30,7 @@
       <img :class="{ lessOpacity: twoFactorEnabled == false }" src="../assets/twoFaDisabled.svg" alt="" />
       <div class="content">
         <h2 v-if="twoFactorEnabled == false">2FA disabled</h2>
+        <h2 v-else>2FA enabled</h2>
         <label class="switch">
           <input type="checkbox" id="2faSwitch" @change="twoFactorSwitch($event)" />
           <span class="slider round"></span>
@@ -303,6 +303,7 @@ export default defineComponent({
 @import "../styles/inputsAndButtons.scss";
 @import "../styles/bottomSvg.scss";
 @import "../styles/containerStyle.scss";
+@import "../styles/switch.scss";
 .principalSection {
   display: flex;
   flex-direction: row;
@@ -313,6 +314,10 @@ export default defineComponent({
 
   .mainContainer {
     justify-content: space-around;
+    padding: 20px;
+    h3 {
+      margin-bottom: 3px;
+    }
   }
   .svgSection {
     display: flex;
@@ -340,67 +345,6 @@ export default defineComponent({
       flex-direction: column;
       justify-content: center;
       align-items: center;
-
-      .switch {
-        z-index: 2;
-        position: relative;
-        display: inline-block;
-        width: 90px;
-        height: 51px;
-
-        & > input {
-          opacity: 0;
-          width: 0;
-          height: 0;
-
-          &:checked + .slider {
-            background-color: #c1a36b;
-
-            &:before {
-              -webkit-transform: translateX(39px);
-              -ms-transform: translateX(39px);
-              transform: translateX(39px);
-            }
-          }
-
-          &:focus + .slider {
-            box-shadow: 0 0 1px #c1a36b;
-          }
-
-          & + .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            -webkit-transition: 0.4s;
-            transition: 0.4s;
-
-            /* Rounded sliders */
-            &.round {
-              border-radius: 51px;
-
-              &:before {
-                border-radius: 50%;
-              }
-            }
-
-            &:before {
-              position: absolute;
-              content: "";
-              height: 39px;
-              width: 39px;
-              left: 6px;
-              bottom: 6px;
-              background-color: white;
-              -webkit-transition: 0.4s;
-              transition: 0.4s;
-            }
-          }
-        }
-      }
     }
   }
 
@@ -416,6 +360,7 @@ export default defineComponent({
       width: 200px;
       height: 200px;
       border-radius: 50%;
+      object-fit: cover;
     }
   }
 
