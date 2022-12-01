@@ -11,7 +11,7 @@
           </div>
         </div>
       </div>
-      <div class="svgSection"><img src="../assets/taken.svg" alt="" /></div>
+      <div class="svgSection"><img src="../assets/lobbyIllustration.gif" alt="" /></div>
     </div>
 
     <div v-if="toggleLadder" class="ladder">
