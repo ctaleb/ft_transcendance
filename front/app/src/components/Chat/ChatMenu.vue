@@ -16,20 +16,11 @@
     </CollapseList>
     <button @click="showAllChannelsModal = true">All Channels</button>
     <button @click="showInvitationsModal = true">Invitations</button>
+    <button @click="showChannelModal = true">Create new channel</button>
   </div>
-  <AllChannelsModal
-    v-if="showAllChannelsModal"
-    @close-all-channels-modal="showAllChannelsModal = false"
-    @join-channel="joiningNewChannel"
-    :all-channels="allChannels"
-  />
-  <InvitationsModal
-    v-if="showInvitationsModal"
-    @decline-invitation="declineInvitation"
-    @join-private-channel="joiningNewPrivateChannel"
-    @close-invitations-modal="showInvitationsModal = false"
-    :invitations="invitations"
-  />
+  <AllChannelsModal v-if="showAllChannelsModal" @close-all-channels-modal="showAllChannelsModal = false" @join-channel="joiningNewChannel" />
+  <InvitationsModal v-if="showInvitationsModal" @join-private-channel="joiningNewPrivateChannel" @close-invitations-modal="showInvitationsModal = false" />
+  <ChannelCreateFormModal v-if="showChannelModal" @close-channel-modal="showChannelModal = false" @create-new-channel="createNewChannel" />
 </template>
 
 <script setup lang="ts">
@@ -37,6 +28,7 @@ import ChatMenuItem from "@/components/chat/ChatMenuItem.vue";
 import CollapseList from "@/components/common/CollapseList.vue";
 import InvitationsModal from "@/components/chat/modals/InvitationsModal.vue";
 import AllChannelsModal from "@/components/chat/modals/AllChannelsModal.vue";
+import ChannelCreateFormModal from "@/components/chat/modals/ChannelCreateFormModal.vue";
 import { fetchJSONDatas } from "@/functions/funcs";
 import { useStore } from "@/store";
 import { Channel, isChannel } from "@/types/Channel";
@@ -46,23 +38,30 @@ import { onMounted, onUpdated, Ref, ref, watch } from "vue";
 
 const props = defineProps<{
   channels: Channel[];
-  allChannels: Channel[];
   convs: Conversation[];
-  invitations: Channel[];
 }>();
 
-const emits = defineEmits(["joinChannel", "joinPrivateChannel", "setCurrentChatWindow", "closeAllChannelsModal"]);
+const emits = defineEmits([
+  "joinChannel",
+  "joinPrivateChannel",
+  "setCurrentChatWindow",
+  "createNewChannel",
+  "closeAllChannelsModal",
+  "closeInvitationsModal",
+  "closeChannelModal",
+]);
 
 const friends: Ref<User[] | undefined> = ref();
 const showAllChannelsModal = ref(false);
 const showInvitationsModal = ref(false);
+const showChannelModal = ref(false);
 
 const store = useStore();
 
 const createConversation = async (element: User) => {
   const conv: any = await User.createConversation(element);
   if (conv.created) {
-    let newConv: Conversation = { id: conv.conv.id, other: element, notif: false, messages: [] };
+    const newConv: Conversation = { id: conv.conv.id, other: element, notif: false, messages: [] };
     props.convs.unshift(newConv);
     store.socket?.emit("friendToConv", { target: newConv.other.nickname });
     friends.value = store.user?.friends?.filter((user) => !props.convs.find((conv) => conv.other.id === user.id));
@@ -72,7 +71,6 @@ const createConversation = async (element: User) => {
 const joiningNewPrivateChannel = (channel: any) => {
   const data: Channel = channel;
   props.channels.push(data);
-  props.invitations.splice(props.invitations.indexOf(data), 1);
   store.socket?.emit("joinChannelRoom", { id: data.id });
   showInvitationsModal.value = false;
 };
@@ -80,14 +78,12 @@ const joiningNewPrivateChannel = (channel: any) => {
 const joiningNewChannel = (channel: any) => {
   const data: Channel = channel;
   props.channels.push(data);
-  props.allChannels.splice(props.allChannels.indexOf(data), 1);
   store.socket?.emit("joinChannelRoom", { id: data.id });
   showAllChannelsModal.value = false;
 };
 
-const declineInvitation = (channel: any) => {
-  const data: Channel = channel;
-  props.invitations.splice(props.invitations.indexOf(data), 1);
+const createNewChannel = (channel: Channel) => {
+  props.channels.push(channel);
 };
 
 const setCurrentChatWindow = async (target: Channel | Conversation) => {

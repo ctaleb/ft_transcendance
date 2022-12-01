@@ -28,6 +28,8 @@ export class ChatService {
 
   async createChannel(channelDto: CreateChannelDto, nickname: string) {
     const user: UserEntity = await this._userService.getUserByNickname(nickname);
+    const uniqueCheck = await ChannelEntity.findOneBy({ name: channelDto.name });
+    if (uniqueCheck) throw new BadRequestException('Channel with that name already exists');
     let channel: ChannelEntity = ChannelEntity.create({
       name: channelDto.name,
       type: channelDto.type,
@@ -47,7 +49,7 @@ export class ChatService {
     const owner = await ChannelMemberEntity.findOne({
       where: { user: { id: userId } },
     });
-    if (owner.channel.id !== updateChannelDto.id) throw new BadRequestException('You are not the channel owner');
+    if (!owner || owner.channel.id !== updateChannelDto.id) throw new BadRequestException('You are not the channel owner');
     owner.channel.password = updateChannelDto.type === ChannelType.PROTECTED ? updateChannelDto.password : null;
     owner.channel.type = updateChannelDto.type;
     return await ChannelEntity.save(owner.channel);

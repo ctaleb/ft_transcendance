@@ -294,6 +294,11 @@ onMounted(() => {
           }
         });
       }
+      if (!store.socket?.hasListeners("incomingChannelInvitation")) {
+        store.socket?.on("incomingChannelInvitation", (channel: string) => {
+          addAlertMessage(`You've been invited to join "${channel}" channel`, 1);
+        });
+      }
     }
   );
 });

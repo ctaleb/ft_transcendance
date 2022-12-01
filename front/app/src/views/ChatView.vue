@@ -1,6 +1,6 @@
 <template>
   <div id="chat">
-    <ChatMenu :channels="myChannels" :all-channels="allChannels" :convs="privateConvs" :invitations="channelInvitations" />
+    <ChatMenu :channels="myChannels" :convs="privateConvs" />
     <ChatWindow @update-channels-list="updateChannelsList()" />
     <!-- <div v-if="show == 0" class="lobbyChat">
       <h2>Welcome on the chat</h2>
@@ -152,8 +152,6 @@ defineProps(["incomingFriendRequest"]);
 defineEmits(["notification", "updateChannelsList"]);
 
 const myChannels: Ref<Array<Channel>> = ref([]);
-const allChannels: Ref<Array<Channel>> = ref([]);
-const channelInvitations: Ref<Array<Channel>> = ref([]);
 const channelMembers: Ref<Array<ChannelUser>> = ref([]);
 const channelMessageSkip = ref(0);
 const show = ref(0);
@@ -166,8 +164,6 @@ const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 const updateChannelsList = () => {
   getMyChannels();
-  getAllChannels();
-  getChannelInvitations();
 };
 
 onUpdated(() => {
@@ -177,16 +173,7 @@ onUpdated(() => {
 
 onMounted(async () => {
   await getMyChannels();
-  await getAllChannels();
-  await getChannelInvitations();
   await getAllConvs();
-
-  if (!store.socket?.hasListeners("incomingChannelInvitation")) {
-    store.socket?.on("incomingChannelInvitation", (channel: string) => {
-      getChannelInvitations();
-      addAlertMessage(`You've been invited to join "${channel}" channel`, 1);
-    });
-  }
 
   // var audio = new Audio(require("../assets/adelsol.mp3"));
   // socket?.on("Message to the client", async (privateMessage: { author: string; text: string }) => {
@@ -251,15 +238,6 @@ onMounted(async () => {
 
 const getMyChannels = async (): Promise<void> => {
   myChannels.value = await fetchJSONDatas("api/chat", "GET").catch(() => {});
-};
-
-const getAllChannels = async (): Promise<void> => {
-  const data: Channel[] = await fetchJSONDatas("api/chat/list", "GET");
-  allChannels.value = data;
-};
-
-const getChannelInvitations = async (): Promise<void> => {
-  channelInvitations.value = await fetchJSONDatas("api/chat/invitations", "GET");
 };
 
 function initConv(convs: Array<Conversation>) {

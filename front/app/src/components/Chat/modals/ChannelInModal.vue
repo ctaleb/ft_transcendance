@@ -32,7 +32,7 @@ store.$subscribe((mutation, state) => {
 });
 
 const joinChannel = async (channel: Channel): Promise<void> => {
-  if (passwordField.value.length <= 0) return;
+  if (channel.type === ChannelType.PROTECTED && passwordField.value.length <= 0) return;
   await fetchJSONDatas("api/chat/join-channel", "POST", {
     id: channel.id,
     password: passwordField.value,
