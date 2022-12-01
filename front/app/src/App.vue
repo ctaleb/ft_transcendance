@@ -274,7 +274,7 @@ onMounted(() => {
 
   watch(
     () => store.socket,
-    (oldValue, currentValue) => {
+    () => {
       //chat listeners
       if (!store.socket?.hasListeners("Message to the client")) {
         store.socket?.on("Message to the client", async (privateMessage: Message) => {

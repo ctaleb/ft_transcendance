@@ -25,6 +25,7 @@
   />
   <InvitationsModal
     v-if="showInvitationsModal"
+    @decline-invitation="declineInvitation"
     @join-private-channel="joiningNewPrivateChannel"
     @close-invitations-modal="showInvitationsModal = false"
     :invitations="invitations"
@@ -57,18 +58,13 @@ const showAllChannelsModal = ref(false);
 const showInvitationsModal = ref(false);
 
 const store = useStore();
-let socket = store.socket;
-
-store.$subscribe((mutation, state) => {
-  socket = state.socket;
-});
 
 const createConversation = async (element: User) => {
   const conv: any = await User.createConversation(element);
   if (conv.created) {
     let newConv: Conversation = { id: conv.conv.id, other: element, notif: false, messages: [] };
     props.convs.unshift(newConv);
-    socket?.emit("friendToConv", { target: newConv.other.nickname });
+    store.socket?.emit("friendToConv", { target: newConv.other.nickname });
     friends.value = store.user?.friends?.filter((user) => !props.convs.find((conv) => conv.other.id === user.id));
   }
 };
@@ -77,7 +73,7 @@ const joiningNewPrivateChannel = (channel: any) => {
   const data: Channel = channel;
   props.channels.push(data);
   props.invitations.splice(props.invitations.indexOf(data), 1);
-  socket?.emit("joinChannelRoom", { id: data.id });
+  store.socket?.emit("joinChannelRoom", { id: data.id });
   showInvitationsModal.value = false;
 };
 
@@ -85,8 +81,13 @@ const joiningNewChannel = (channel: any) => {
   const data: Channel = channel;
   props.channels.push(data);
   props.allChannels.splice(props.allChannels.indexOf(data), 1);
-  socket?.emit("joinChannelRoom", { id: data.id });
+  store.socket?.emit("joinChannelRoom", { id: data.id });
   showAllChannelsModal.value = false;
+};
+
+const declineInvitation = (channel: any) => {
+  const data: Channel = channel;
+  props.invitations.splice(props.invitations.indexOf(data), 1);
 };
 
 const setCurrentChatWindow = async (target: Channel | Conversation) => {
@@ -113,6 +114,7 @@ const setCurrentChatWindow = async (target: Channel | Conversation) => {
     await fetchJSONDatas(`api/privateConv/getMessages/${conversation.id}/${offset}`, "GET")
       .then((data) => {
         if (data.length > 0) conversation.messages = data;
+        else conversation.messages = [];
         store.$patch({
           currentChat: conversation,
         });
@@ -132,14 +134,25 @@ onMounted(() => {
       friends.value = store.user?.friends?.filter((user) => !props.convs.find((conv) => conv.other.id === user.id));
     }
   );
-  socket?.on("friendTooConv", (friend: string) => {
-    console.log(friend);
-  });
-  socket?.on("Update conv list", (convData: { conv: Conversation }) => {
-    const convIndex = props.convs.findIndex((conv) => conv.id === convData.conv.id);
-    const convToTop = props.convs.splice(convIndex, 1)[0];
-    props.convs.splice(0, 0, convToTop);
-    friends.value = store.user?.friends?.filter((user) => !props.convs.find((conv) => conv.other.id === user.id));
-  });
+  watch(
+    () => store.socket,
+    () => {
+      if (!store.socket?.hasListeners("friendTooConv")) {
+        store.socket?.on("friendTooConv", async (friendId: number) => {
+          const data = await fetchJSONDatas(`api/privateConv/create/${friendId}`, "GET").catch(() => {});
+          props.convs.unshift(data.conv);
+          friends.value = store.user?.friends?.filter((user) => !props.convs.find((conv) => conv.other.id === user.id));
+        });
+      }
+      if (!store.socket?.hasListeners("Update conv list")) {
+        store.socket?.on("Update conv list", (convData: { conv: Conversation }) => {
+          const convIndex = props.convs.findIndex((conv) => conv.id === convData.conv.id);
+          const convToTop = props.convs.splice(convIndex, 1)[0];
+          props.convs.splice(0, 0, convToTop);
+          friends.value = store.user?.friends?.filter((user) => !props.convs.find((conv) => conv.other.id === user.id));
+        });
+      }
+    }
+  );
 });
 </script>

@@ -2,16 +2,17 @@
   <div class="channel-in-modal">
     <h3>{{ channel.name }}</h3>
     <div v-if="channel.type === ChannelType.PUBLIC"><i class="gg-lock-unlock"></i></div>
-    <div v-else>
+    <div v-else-if="channel.type === ChannelType.PROTECTED">
       <i class="gg-lock"></i>
       <input type="password" v-model="passwordField" placeholder="password" />
     </div>
     <button @click="joinChannel(channel)">Join</button>
+    <button v-if="channel.type === ChannelType.PRIVATE" @click="declineInvitation(channel)">Decline</button>
   </div>
 </template>
 
 <script setup lang="ts">
-import { fetchJSONDatas } from "@/functions/funcs";
+import { addAlertMessage, fetchJSONDatas } from "@/functions/funcs";
 import { useStore } from "@/store";
 import { Channel, ChannelType } from "@/types/Channel";
 import { onMounted, ref } from "vue";
@@ -20,7 +21,7 @@ const props = defineProps<{
   channel: Channel;
 }>();
 
-const emits = defineEmits(["joinChannel"]);
+const emits = defineEmits(["joinChannel", "declineInvitation"]);
 
 const store = useStore();
 const passwordField = ref("");
@@ -41,5 +42,14 @@ const joinChannel = async (channel: Channel): Promise<void> => {
     })
     .catch(() => {});
   passwordField.value = "";
+};
+
+const declineInvitation = async (channel: Channel) => {
+  await fetchJSONDatas("api/chat/decline-invitation", "DELETE", { id: channel.id })
+    .then(() => {
+      addAlertMessage("Invitation delined", 1);
+      emits("declineInvitation", channel);
+    })
+    .catch(() => {});
 };
 </script>

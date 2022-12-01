@@ -154,7 +154,7 @@ store.$subscribe((mutation, state) => {
 
 onMounted(() => {
   scrollDownMessages("auto");
-  if (store.currentChat!.messages!.length < 20) disableLoadMore.value = true;
+  if (store.currentChat && store.currentChat!.messages && store.currentChat!.messages!.length < 20) disableLoadMore.value = true;
   watch(
     () => store.currentChat?.id,
     () => {

@@ -1,5 +1,5 @@
 <template>
-  <div class="member-controll" @click="toggleMemberAction()">
+  <div class="member-controll" @auxclick="toggleMemberAction()">
     <div v-if="me.role !== ChannelRole.MEMBER && member.role !== ChannelRole.OWNER && toggleMode" class="member-action">
       <button class="primary-btn"><i class="gg-mic"></i></button>
       <button class="primary-btn"><i class="gg-thermostat"></i></button>

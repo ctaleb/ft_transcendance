@@ -449,8 +449,7 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
 
   @SubscribeMessage('friendToConv')
   friendToConv(@ConnectedSocket() client: Socket, @MessageBody('target') nickname: string) {
-    console.log('GOOOOOOO');
-    this.serverService.PlayerToSocket(nickname).emit('friendTooConv', client.handshake.auth.user.nickname);
+    this.server.to(this.serverService.PlayerToSocket(nickname).id).emit('friendTooConv', client.handshake.auth.user.id);
   }
 
   @SubscribeMessage('updateChannelMembers')
@@ -470,7 +469,7 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   }
 
   @SubscribeMessage('privateChannelInvite')
-  async privateChannelInvite(@ConnectedSocket() client: Socket, @MessageBody('id') channelId: number) {
-    await this.serverService.leaveChannelRoom(client, channelId);
+  async privateChannelInvite(@ConnectedSocket() client: Socket, @MessageBody('nickname') nickname: string, @MessageBody('channel') channel: string) {
+    this.server.to(this.serverService.PlayerToSocket(nickname).id).emit('incomingChannelInvitation', channel);
   }
 }

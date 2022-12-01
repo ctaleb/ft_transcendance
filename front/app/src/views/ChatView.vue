@@ -167,6 +167,7 @@ const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 const updateChannelsList = () => {
   getMyChannels();
   getAllChannels();
+  getChannelInvitations();
 };
 
 onUpdated(() => {
@@ -179,6 +180,13 @@ onMounted(async () => {
   await getAllChannels();
   await getChannelInvitations();
   await getAllConvs();
+
+  if (!store.socket?.hasListeners("incomingChannelInvitation")) {
+    store.socket?.on("incomingChannelInvitation", (channel: string) => {
+      getChannelInvitations();
+      addAlertMessage(`You've been invited to join "${channel}" channel`, 1);
+    });
+  }
 
   // var audio = new Audio(require("../assets/adelsol.mp3"));
   // socket?.on("Message to the client", async (privateMessage: { author: string; text: string }) => {

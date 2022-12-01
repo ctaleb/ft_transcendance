@@ -3,7 +3,11 @@
   <div class="modal all-chan-modal">
     <span @click="$emit('closeInvitationsModal')" class="close-modal"><i class="gg-close-o"></i></span>
     <template v-for="channel in invitations">
-      <ChannelInModal @join-channel="(channel) => $emit('joinPrivateChannel', channel)" :channel="channel" />
+      <ChannelInModal
+        @join-channel="(channel) => $emit('joinPrivateChannel', channel)"
+        @decline-invitation="(channel) => $emit('declineInvitation', channel)"
+        :channel="channel"
+      />
     </template>
   </div>
 </template>
@@ -21,6 +25,7 @@ const props = defineProps<{
 const emits = defineEmits<{
   (e: "closeInvitationsModal"): void;
   (e: "joinPrivateChannel"): void;
+  (e: "declineInvitation"): void;
 }>();
 
 const store = useStore();

@@ -39,7 +39,6 @@ onMounted(() => {
           id: store.currentChat!.id,
         })
           .then((data) => {
-            console.log(data);
             store.$patch({
               currentChat: { members: data },
             });

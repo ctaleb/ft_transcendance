@@ -101,7 +101,7 @@ export class ChatService {
     return channel;
   }
 
-  async inviteToChannel(inviteToChannelDto: InviteToChannelDto, userId: number): Promise<ChannelInvitationEntity> {
+  async inviteToChannel(inviteToChannelDto: InviteToChannelDto, userId: number) {
     const member = await ChannelMemberEntity.findOneBy({
       user: { id: userId },
       channel: { id: inviteToChannelDto.channelId },
@@ -132,7 +132,8 @@ export class ChatService {
       channel: { id: inviteToChannelDto.channelId },
       target: invitationTarget,
     });
-    return await ChannelInvitationEntity.save(invitation);
+    const result = await ChannelInvitationEntity.save(invitation);
+    return { channel: member.channel.name, target: result.target.nickname };
   }
 
   async declineInvitation(declineInvitationDto: DeclineInvitationDto, userId: number) {
