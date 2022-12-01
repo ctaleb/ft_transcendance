@@ -4,7 +4,7 @@ import { defineStore } from "pinia";
 import { Socket } from "socket.io-client";
 import { Conversation } from "@/types/Conversation";
 import { Channel } from "@/types/Channel";
-import { ShallowReactive, shallowReactive } from "vue";
+import { ref, ShallowReactive, shallowReactive } from "vue";
 
 export interface State {
   user?: User;
@@ -12,6 +12,13 @@ export interface State {
   message: Alert[];
   token?: string;
   currentChat?: Channel | Conversation;
+}
+
+export interface Menu {
+  user?: User;
+  top: number;
+  left: number;
+  view: boolean;
 }
 
 export const useStore = defineStore("default", {
@@ -24,4 +31,11 @@ export const useStore = defineStore("default", {
       currentChat: undefined,
     };
   },
+});
+
+export const menu = ref<Menu>({
+  user: undefined,
+  top: 0,
+  left: 0,
+  view: false,
 });

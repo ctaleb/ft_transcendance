@@ -1,6 +1,5 @@
 <template>
-  <div v-if="menu.view" class="context-menu" v-bind:style="{ top: menu.top.toString() + 'px', left: menu.left.toString() + 'px' }">test</div>
-  <div class="chat-menu">
+  <div>
     <CollapseList :toggleMode="true" title="Conversations" :data="convs" v-slot="{ element }: { element: Conversation }">
       <ChatMenuItem
         @set-current-chat-window="setCurrentChatWindow(element)"
@@ -14,7 +13,7 @@
     <hr />
     <CollapseList :toggleMode="false" title="Friends" :data="friends" v-slot="{ element }: { element: User }">
       <ChatMenuItem
-        @contextmenu.prevent="showUserMenu($event)"
+        @contextmenu.prevent="showUserMenu($event, element)"
         @click="createConversation(element)"
         :title="User.getName(element)"
         :picture="User.getAvatar(element)"
@@ -35,7 +34,7 @@ import CollapseList from "@/components/common/CollapseList.vue";
 import InvitationsModal from "@/components/chat/modals/InvitationsModal.vue";
 import AllChannelsModal from "@/components/chat/modals/AllChannelsModal.vue";
 import ChannelCreateFormModal from "@/components/chat/modals/ChannelCreateFormModal.vue";
-import { fetchJSONDatas } from "@/functions/funcs";
+import { fetchJSONDatas, showUserMenu } from "@/functions/funcs";
 import { useStore } from "@/store";
 import { Channel, isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
@@ -64,26 +63,6 @@ const showInvitationsModal = ref(false);
 const showChannelModal = ref(false);
 
 const store = useStore();
-const menu = ref({
-  top: 0,
-  left: 0,
-  view: false,
-});
-
-const showUserMenu = (event: any) => {
-  const largestHeight: number = window.innerHeight - 30;
-  const largestWidth: number = window.innerWidth - 50;
-
-  menu.value.top = event.clientY;
-  menu.value.left = event.clientX;
-  if (menu.value.top > largestHeight) menu.value.top = largestHeight;
-  if (menu.value.left > largestWidth) menu.value.left = largestWidth;
-
-  console.log(menu.value.top);
-  console.log(menu.value.left);
-  if (menu.value.view) menu.value.view = false;
-  else menu.value.view = true;
-};
 
 const createConversation = async (element: User) => {
   const conv: any = await User.createConversation(element);

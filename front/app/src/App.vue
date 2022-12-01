@@ -1,5 +1,6 @@
 <template>
-  <div>
+  <ChatContextMenu />
+  <div @click="hideUserMenu()">
     <nav class="navbar">
       <div style="display: flex; position: relative; justify-content: center" v-if="$route.path != '/' && $route.path != '/signup'">
         <router-link to="/profile"
@@ -27,8 +28,9 @@
 </template>
 
 <script setup lang="ts">
-import { addAlertMessage, trySetupUser, updateStatus } from "@/functions/funcs";
-import { useStore } from "@/store";
+import ChatContextMenu from "@/components/chat/ChatContextMenu.vue";
+import { addAlertMessage, trySetupUser, updateStatus, hideUserMenu } from "@/functions/funcs";
+import { useStore, menu } from "@/store";
 import { isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
 import { Alert } from "@/types/GameSummary";
@@ -306,6 +308,13 @@ onMounted(() => {
 
 <style lang="scss">
 @import "styles/custom.scss";
+
+.context-menu {
+  width: 50px;
+  height: 30px;
+  position: absolute;
+  background-color: aqua;
+}
 
 body {
   background-color: #010b12;

@@ -1,5 +1,5 @@
 import config from "@/config/config";
-import { useStore } from "@/store";
+import { menu, useStore } from "@/store";
 import { Alert } from "@/types/GameSummary";
 import { User } from "@/types/User";
 import { io, Socket } from "socket.io-client";
@@ -140,3 +140,19 @@ export function updateStatus(id: number, status: string) {
   user = store.user;
   if (user?.id == id) user.status = status;
 }
+
+export const showUserMenu = (event: any, user: User) => {
+  const largestHeight: number = window.innerHeight - 30;
+  const largestWidth: number = window.innerWidth - 50;
+
+  menu.value.top = event.clientY;
+  menu.value.left = event.clientX;
+  if (menu.value.top > largestHeight) menu.value.top = largestHeight;
+  if (menu.value.left > largestWidth) menu.value.left = largestWidth;
+  menu.value.user = user;
+  menu.value.view = true;
+};
+
+export const hideUserMenu = () => {
+  menu.value.view = false;
+};
