@@ -37,7 +37,6 @@
       <button class="button pulse" @click="invite()">Add Friend</button>
     </div>
     <div v-if="currentUser === store.user" class="invitations" :style="toogleMenu ? 'display: none' : ''">
-      <h2 v-if="store.user?.invitations?.length">Invitations</h2>
       <ul>
         <InvitationCard v-for="invitation of store.user?.invitations" :invitation="invitation" />
       </ul>

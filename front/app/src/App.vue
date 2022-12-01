@@ -1,13 +1,14 @@
 <template>
   <div>
     <nav class="navbar">
-      <div style="display: flex; position: relative; justify-content: center" v-if="$route.path != '/' && $route.path != '/signup'">
-        <router-link to="/profile"
+      <img src="./assets/navbarLogo.gif" width="85" height="85" alt="" />
+      <div v-if="$route.path != '/' && $route.path != '/signup'" class="links">
+        <router-link to="/profile" class="link"
           >Profile
           <div :class="'dot' + (profileNotificationBadge ? ' show' : '')"></div
         ></router-link>
-        |<router-link to="/game"> PLAY </router-link>|
-        <router-link to="/chat">Chat</router-link>
+        <router-link to="/game" class="link"> PLAY </router-link>
+        <router-link to="/chat" class="link">Chat</router-link>
       </div>
     </nav>
     <router-view :key="$route.fullPath" @notification="changeNotificationValue" :incoming-friend-request="incomingFriendRequest" />
@@ -259,12 +260,26 @@ body {
 }
 
 .navbar {
-  a {
-    font-weight: bold;
-    color: #f0e68c;
-
-    &.router-link-exact-active {
-      color: #d2691e;
+  height: 85px;
+  width: 100vw;
+  background: $secondary;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-bottom: 1px solid $primary;
+  img {
+    margin-left: 15px;
+    margin-right: auto;
+  }
+  .links {
+    width: 20%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    .link {
+      text-decoration: none;
+      color: $primary;
     }
   }
 }
