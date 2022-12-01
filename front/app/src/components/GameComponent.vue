@@ -432,7 +432,7 @@ function drawPowerCharge(ctx: CanvasRenderingContext2D, gameState: GameState) {
 }
 
 function drawBall(ctx: CanvasRenderingContext2D, gameState: GameState) {
-  if (gameState.hit.hit == 1) {
+  if (gameState.hit.hit) {
     ballBouncedSide = 3;
     ctx.drawImage(
       ballImg,
@@ -450,24 +450,6 @@ function drawBall(ctx: CanvasRenderingContext2D, gameState: GameState) {
       gameState.ball.size * 2 * scale
     );
     ballBouncedSide--;
-  } else if (gameState.hit.hit == 2) {
-    ballBouncedBar = 3;
-    ctx.drawImage(
-      ballImg,
-      gameState.ball.pos.x - gameState.ball.size * scale,
-      gameState.ball.pos.y - gameState.ball.size * scale,
-      gameState.ball.size * 2 * scale * 0.7,
-      gameState.ball.size * 2 * scale
-    );
-  } else if (ballBouncedBar > 0) {
-    ctx.drawImage(
-      ballImg,
-      gameState.ball.pos.x - gameState.ball.size * scale,
-      gameState.ball.pos.y - gameState.ball.size * scale,
-      gameState.ball.size * 2 * scale * 0.8 + 0.1 * (3 - ballBouncedBar),
-      gameState.ball.size * 2 * scale
-    );
-    ballBouncedBar--;
   } else {
     ctx.drawImage(
       ballImg,
@@ -477,6 +459,24 @@ function drawBall(ctx: CanvasRenderingContext2D, gameState: GameState) {
       gameState.ball.size * 2 * scale
     );
   }
+  // } else if (gameState.hit.hit == 2) {
+  //   ballBouncedBar = 3;
+  //   ctx.drawImage(
+  //     ballImg,
+  //     gameState.ball.pos.x - gameState.ball.size * scale,
+  //     gameState.ball.pos.y - gameState.ball.size * scale,
+  //     gameState.ball.size * 2 * scale * 0.7,
+  //     gameState.ball.size * 2 * scale
+  //   );
+  // } else if (ballBouncedBar > 0) {
+  //   ctx.drawImage(
+  //     ballImg,
+  //     gameState.ball.pos.x - gameState.ball.size * scale,
+  //     gameState.ball.pos.y - gameState.ball.size * scale,
+  //     gameState.ball.size * 2 * scale * 0.8 + 0.1 * (3 - ballBouncedBar),
+  //     gameState.ball.size * 2 * scale
+  //   );
+  //   ballBouncedBar--;}
 }
 
 function updateSummary(summary: GameSummaryData) {

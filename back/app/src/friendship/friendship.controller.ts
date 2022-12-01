@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Request, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Request, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/authentication/jwt-auth.guard';
 import { FriendshipDto } from './friendship.dto';
 import { FriendshipService } from './friendship.service';
@@ -33,6 +33,11 @@ export class FriendshipController {
     return await this._friendshipService.block(req.user.payload.nickname, friendshipDto.addressee);
   }
 
+  @Put('unblock')
+  async unblock(@Request() req, @Body() friendshipDto: FriendshipDto) {
+    return await this._friendshipService.unblock(req.user.payload.nickname, friendshipDto.addressee);
+  }
+
   @Get()
   async getRelations(@Request() req) {
     return await this._friendshipService.getRelationsOf(req.user.payload.nickname);
@@ -46,5 +51,10 @@ export class FriendshipController {
   @Get('has-invitations')
   async hasInvitations(@Request() req) {
     return await this._friendshipService.hasPendingInvitations(req.user.payload.nickname);
+  }
+
+  @Get('isBlocked/:id')
+  async isBlocked(@Request() req, @Param('id', ParseIntPipe) id: number) {
+    return await this._friendshipService.getBlockedStatus(req.user.payload.id, id);
   }
 }

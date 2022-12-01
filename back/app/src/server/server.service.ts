@@ -140,6 +140,7 @@ export class ServerService {
   //status stuff
   async updateStatus(id: number, status: string) {
     await this._userService.updateStatus(id, status);
+
     this.server.emit('updateOneUserStatus', { id, status });
   }
 

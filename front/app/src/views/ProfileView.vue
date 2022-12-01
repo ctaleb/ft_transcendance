@@ -20,8 +20,10 @@
         </div>
         <div v-else class="buttonProfile">
           <button class="invite" @click="invite(currentUser)">Friend Request</button>
-          <button class="block" @click="block(currentUser)">Block</button>
+          <button v-if="currentUserIsBlocked == false" class="block" @click="block(currentUser)">Block</button>
+          <button v-else class="block" @click="unblock(currentUser)">Unblock</button>
           <button class="play" @click="">Invite/spectate</button>
+          <button v-if="!hideMEe" @contextmenu.prevent="hideME()">TEST</button>
         </div>
       </div>
     </div>
@@ -45,7 +47,7 @@
     <h2 style="margin: 1rem" :style="toogleMenu ? 'display: none' : ''">Friends</h2>
     <div class="friends" :style="toogleMenu ? 'display: none' : ''">
       <ul>
-        <FriendCard v-for="friend of currentFriend" :friend="friend" />
+        <FriendCard v-for="friend of currentFriend" :friend="friend" :currentUser="currentUser" />
       </ul>
     </div>
     <div class="summary" :style="toogleMenu ? '' : 'display: none'">
@@ -76,23 +78,16 @@ const router = useRouter();
 const route = useRoute();
 
 const store = useStore();
-// const prop = defineProps<{
-//   incomingFriendRequest: string;
-// }>();
-// const emit = defineEmits<{
-//   (e: "notification", enable: boolean): void;
-//   (e: "updateInvitations"): void;
-// }>();
-// const checkNotificationBadge = () => {
-//   if (store.user?.invitations?.length === 0) emit("notification", false);
-// };
 
 const searchFriend = ref("");
 const toogleMenu = ref(false);
 
+const currentUserIsBlocked = ref(false);
 const currentUser = ref<User>();
 const currentFriend = ref<User[]>();
 const currentSummary = ref<History[]>();
+
+const hideMEe = ref(false);
 
 onMounted(async () => {
   let nick = <string | undefined>route.params.nickname;
@@ -104,9 +99,14 @@ onMounted(async () => {
         .then((data) => {
           currentSummary.value = data;
         })
-        .catch((err) => {
-          console.log(err);
-        });
+        .catch(() => {});
+      if (store.user?.id != currentUser.value!.id) {
+        fetchJSONDatas(`api/friendship/isBlocked/${currentUser.value?.id}`, "GET")
+          .then((data) => {
+            currentUserIsBlocked.value = data;
+          })
+          .catch(() => {});
+      }
     }
   );
 
@@ -127,7 +127,23 @@ onMounted(async () => {
       currentFriend.value = store.user?.friends;
     });
   }
+
+  // fetchJSONDatas("api/profile/summary/" + currentUser.value?.nickname, "GET")
+  //   .then((data) => {
+  //     currentUserIsBlocked.value = data;
+  //   })
+  //   .catch(() => {});
+  // if (store.user?.id != currentUser.value!.id)
+  //   fetchJSONDatas("api/riendship/isBlocked/" + currentUser.value?.id, "GET")
+  //     .then((data) => {
+  //       currentSummary.value = data;
+  //     })
+  //     .catch(() => {});
 });
+
+const hideME = () => {
+  hideMEe.value = true;
+};
 
 const watchFriend = () => {
   toogleMenu.value = false;
@@ -149,6 +165,20 @@ const invite = async (user: User | undefined) => {
 };
 
 const block = async (user: User | undefined) => {
-  if (user) await fetchJSONDatas("api/friendship/block", "PUT", { addressee: user.nickname }).catch();
+  if (user)
+    await fetchJSONDatas("api/friendship/block", "PUT", { addressee: user.nickname })
+      .then(() => {
+        currentUserIsBlocked.value = true;
+      })
+      .catch();
+};
+
+const unblock = async (user: User | undefined) => {
+  if (user)
+    await fetchJSONDatas("api/friendship/unblock", "PUT", { addressee: user.nickname })
+      .then(() => {
+        currentUserIsBlocked.value = false;
+      })
+      .catch(() => {});
 };
 </script>

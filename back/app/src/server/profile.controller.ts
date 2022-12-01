@@ -9,9 +9,6 @@ export class ProfileController {
 
   @Get('/summary/:name')
   async matchHistory(@Request() req, @Param('name') name: string) {
-    console.log(name);
-    console.log('^ c le user');
-
     return await this._serverService.getMatchHistory(name);
   }
 }

@@ -111,6 +111,7 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
           }
         });
         // if (!ingame) {
+        this.serverService.updateStatus(player.id, 'offline');
         this.serverService.userList.splice(this.serverService.userList.indexOf(player), 1);
         // }
       }

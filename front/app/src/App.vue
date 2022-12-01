@@ -27,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-import { addAlertMessage, trySetupUser } from "@/functions/funcs";
+import { addAlertMessage, trySetupUser, updateStatus } from "@/functions/funcs";
 import { socketLocal, useStore } from "@/store";
 import { isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
@@ -191,6 +191,11 @@ onMounted(() => {
   watch(
     () => socketLocal.value,
     (currentValue, oldValue) => {
+      if (!socket.value?.hasListeners("updateOneUserStatus")) {
+        socket.value?.on("updateOneUserStatus", (obj: { id: number; status: string }) => {
+          updateStatus(obj.id, obj.status);
+        });
+      }
       if (!socket.value?.hasListeners("customInvite")) {
         socket.value?.on("customInvite", (inviter: string) => {
           // theRoom = gameRoom;

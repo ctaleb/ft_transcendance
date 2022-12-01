@@ -169,7 +169,6 @@ export class FriendshipService {
 
   async unblock(requester: string, addressee: string): Promise<FriendshipEntity> {
     let result: Promise<FriendshipEntity>;
-
     const req: UserEntity = await this._userService.getUserByNickname(requester);
     const adr: UserEntity = await this._userService.getUserByNickname(addressee);
     if (adr.id === req.id) throw new BadRequestException('Requester and addressee are the same person');
@@ -179,7 +178,7 @@ export class FriendshipService {
       status: 'blocked',
     });
     if (friendship) {
-      this._friendshipRepository.remove(friendship);
+      result = this._friendshipRepository.remove(friendship);
     } else {
       throw new BadRequestException('Friendship not found or wrong status');
     }
@@ -193,6 +192,16 @@ export class FriendshipService {
       friends: await this.findFriendsOf(user),
     };
     return null;
+  }
+
+  async getBlockedStatus(requesterID: number, addresseeID: number) {
+    const status = await FriendshipEntity.findOneBy({
+      requester: { id: requesterID },
+      addressee: { id: addresseeID },
+      status: 'blocked',
+    });
+    if (status) return true;
+    return false;
   }
 
   async hasPendingInvitations(username: string) {
