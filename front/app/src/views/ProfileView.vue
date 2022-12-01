@@ -10,16 +10,13 @@
       </div>
       <div>
         <img class="border-gold user-image" :src="User.getAvatar(currentUser)" alt="" />
-        <h3 class="playerName">{{ currentUser?.nickname }}</h3>
+        <h3 class="playerName">{{ currentUser?.nickname }} <i v-if="currentUser === store.user" class="gg-edit-markup" @click="redirectToEdit()"></i></h3>
       </div>
       <div>
         <img class="sideIcons" src="../assets/profileStatusIcon.svg" alt="" />
         <h3>status</h3>
       </div>
       <!--<div class="buttons" v-if="currentUser === store.user">
-		  <router-link class="test" to="/" v-on:click.prevent="logout()">
-            <img :src="shutdownUrl" alt="edit" width="25" height="25" />
-          </router-link>
           <router-link class="test" to="/edit">
 			  <img :src="editUrl" alt="shutdown" width="25" height="25" />
 			</router-link>
@@ -151,13 +148,6 @@ const watchHistory = () => {
   toogleMenu.value = true;
 };
 
-const logout = () => {
-  localStorage.removeItem("token");
-  localStorage.removeItem("user");
-  socket?.emit("disco", {});
-  socket?.close();
-};
-
 const invite = async () => {
   if (searchFriend.value.length <= 0) return;
 
@@ -166,4 +156,7 @@ const invite = async () => {
   });
   searchFriend.value = "";
 };
+function redirectToEdit() {
+  window.location.href = "/edit";
+}
 </script>

@@ -78,6 +78,18 @@
       justify-content: center;
       align-items: center;
       width: 30%;
+      h3 {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        i {
+          cursor: pointer;
+          margin-left: 8px;
+          &:hover {
+            color: white;
+          }
+        }
+      }
     }
     .subMenu {
       & > .darkButton {

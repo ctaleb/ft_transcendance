@@ -1,14 +1,15 @@
 <template>
   <div>
-    <nav class="navbar">
+    <nav class="navbar" v-if="$route.path != '/' && $route.path != '/signup'">
       <img src="./assets/navbarLogo.gif" width="85" height="85" alt="" />
-      <div v-if="$route.path != '/' && $route.path != '/signup'" class="links">
+      <div class="links">
         <router-link to="/profile" class="link"
           >Profile
           <div :class="'dot' + (profileNotificationBadge ? ' show' : '')"></div
         ></router-link>
         <router-link to="/game" class="link"> PLAY </router-link>
         <router-link to="/chat" class="link">Chat</router-link>
+        <router-link to="/" class="link" v-on:click.prevent="logout()">Logout</router-link>
       </div>
     </nav>
     <router-view :key="$route.fullPath" @notification="changeNotificationValue" :incoming-friend-request="incomingFriendRequest" />
@@ -186,17 +187,9 @@ const invFailure = () => {
 const logout = () => {
   localStorage.removeItem("token");
   localStorage.removeItem("user");
-  store.$reset();
-  // map through that list and use the **$reset** fn to reset the state
-  //  socket? = io("http://" + window.location.hostname + ":3500", {
-  store.socket?.emit("disco", {});
-  //  store.socket? = io("http://" + window.location.hostname + ":3500", {
-  //    transports: ["websocket"],
-  //    // path: "/api/socket.io/",
-  //    autoConnect: false,
-  //  });
+  socket?.emit("disco", {});
+  socket?.close();
 };
-
 const changeNotificationValue = (value: boolean) => {
   profileNotificationBadge.value = value;
 };
