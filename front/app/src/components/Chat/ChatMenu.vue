@@ -31,7 +31,7 @@ import AllChannelsModal from "@/components/chat/modals/AllChannelsModal.vue";
 import ChannelCreateFormModal from "@/components/chat/modals/ChannelCreateFormModal.vue";
 import { fetchJSONDatas } from "@/functions/funcs";
 import { useStore } from "@/store";
-import { Channel, isChannel } from "@/types/Channel";
+import { Channel, ChannelType, isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
 import { User } from "@/types/User";
 import { onMounted, onUpdated, Ref, ref, watch } from "vue";
@@ -146,6 +146,14 @@ onMounted(() => {
           const convToTop = props.convs.splice(convIndex, 1)[0];
           props.convs.splice(0, 0, convToTop);
           friends.value = store.user?.friends?.filter((user) => !props.convs.find((conv) => conv.other.id === user.id));
+        });
+      }
+      if (!store.socket?.hasListeners("channelUpdatd")) {
+        store.socket?.on("channelUpdatd", (data: { id: number; name: string; type: ChannelType }) => {
+          const index = props.channels.findIndex((el) => el.id === data.id);
+          if (index !== -1) {
+            props.channels[index].type = data.type;
+          }
         });
       }
     }

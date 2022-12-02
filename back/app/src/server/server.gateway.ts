@@ -443,8 +443,13 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
 
   // Channel messages by the GOAT
   @SubscribeMessage('sendChannelMessage')
-  async sendChannelMessage(@ConnectedSocket() client: Socket, @MessageBody('channelId') channelId: number, @MessageBody('content') content: string) {
-    return await this.serverService.sendChannelMessage(channelId, content, client.handshake.auth.user.id);
+  async sendChannelMessage(
+    @ConnectedSocket() client: Socket,
+    @MessageBody('channelId') channelId: number,
+    @MessageBody('channelName') channelName: string,
+    @MessageBody('content') content: string,
+  ) {
+    return await this.serverService.sendChannelMessage(channelId, channelName, content, client.handshake.auth.user.id);
   }
 
   @SubscribeMessage('friendToConv')
@@ -476,5 +481,33 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   @SubscribeMessage('privateChannelInvite')
   async privateChannelInvite(@ConnectedSocket() client: Socket, @MessageBody('nickname') nickname: string, @MessageBody('channel') channel: string) {
     this.server.to(this.serverService.PlayerToSocket(nickname).id).emit('incomingChannelInvitation', channel);
+  }
+
+  @SubscribeMessage('memberGotBanned')
+  async memberGotBanned(
+    @ConnectedSocket() client: Socket,
+    @MessageBody('id') id: number,
+    @MessageBody('channel') channel: string,
+    @MessageBody('nickname') nickname: string,
+  ) {
+    const targetSocket: Socket = this.serverService.PlayerToSocket(nickname);
+    if (targetSocket) {
+      targetSocket.leave(`${id}`);
+      this.server.to(targetSocket.id).emit('gotBannedFromChannel', channel);
+    }
+  }
+
+  @SubscribeMessage('memberGotUnbanned')
+  async memberGotUnbanned(
+    @ConnectedSocket() client: Socket,
+    @MessageBody('id') id: number,
+    @MessageBody('channel') channel: string,
+    @MessageBody('nickname') nickname: string,
+  ) {
+    const targetSocket: Socket = this.serverService.PlayerToSocket(nickname);
+    if (targetSocket) {
+      targetSocket.join(`${id}`);
+      this.server.to(targetSocket.id).emit('gotUnbannedFromChannel', channel);
+    }
   }
 }

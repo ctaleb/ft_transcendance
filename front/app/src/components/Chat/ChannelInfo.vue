@@ -25,7 +25,7 @@ import ChannelUpdateModal from "@/components/chat/modals/ChannelUpdateModal.vue"
 import { fetchJSONDatas } from "@/functions/funcs";
 import { useStore } from "@/store";
 import { Channel, ChannelType, ChannelUser, ChannelRole } from "@/types/Channel";
-import { onMounted, Ref, ref } from "vue";
+import { onMounted, Ref, ref, watch } from "vue";
 
 const store = useStore();
 let socket = store.socket;
@@ -60,5 +60,12 @@ const channelUpdated = () => {
   store.socket?.emit("channelUpdated", { id: channel.id, name: channel.name, type: channel.type });
 };
 
-onMounted(() => {});
+onMounted(() => {
+  watch(
+    () => store.currentChat,
+    () => {
+      user.value = (<Channel>store.currentChat!).members!.find((member) => member.id === store.user!.id)!;
+    }
+  );
+});
 </script>

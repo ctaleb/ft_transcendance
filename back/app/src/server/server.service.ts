@@ -830,24 +830,30 @@ export class ServerService {
 
   // GOAT
   async joinAllChannels(socket: Socket, userId: number) {
-    const channels = await this._chatService.getUserChannels(userId);
+    let channels = await this._chatService.getUserChannels(userId);
+    const bannedChannels = await this._chatService.getUsersBannedChannels(userId);
+    channels = channels.filter((el) => !bannedChannels.find((chan) => chan.id === el.id));
     channels.forEach((ell) => {
       socket.join(`${ell.id}`);
     });
   }
 
-  async sendChannelMessage(channelId: number, content: string, userId: number) {
-    const message = await this._chatService.saveMessage({ id: channelId, content: content }, userId);
-    if (message.author) {
-      this.server.to(`${channelId}`).emit('messageReceived', channelId, message);
-    }
-    return message;
+  async sendChannelMessage(channelId: number, channelName: string, content: string, userId: number) {
+    let error: string;
+    await this._chatService
+      .saveMessage({ id: channelId, content: content }, userId)
+      .then((data) => {
+        this.server.to(`${channelId}`).emit('messageReceived', channelId, channelName, data);
+      })
+      .catch((err) => {
+        error = err.message;
+      });
+    return error;
   }
 
   async updateChannelMembers(channelId: number, client: Socket) {
     const channels = await this._chatService.getUserChannels(client.handshake.auth.user.id);
     if (channels.find((ell) => ell.id === channelId)) {
-      console.log('');
       this.server.to(`${channelId}`).emit('updateChannelMembers', channelId);
     }
   }
@@ -869,7 +875,7 @@ export class ServerService {
     const channels = await this._chatService.getUserChannels(client.handshake.auth.user.id);
     const channel = channels.find((ell) => ell.id === id);
     if (channel) {
-      this.server.to(`${channel.id}`).emit('channelUpdatd', {id: channel.id, name: channel.name, type: channel.type });
+      this.server.to(`${channel.id}`).emit('channelUpdatd', { id: channel.id, name: channel.name, type: channel.type });
     }
   }
 }

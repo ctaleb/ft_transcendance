@@ -29,7 +29,7 @@
 <script setup lang="ts">
 import { addAlertMessage, trySetupUser, updateStatus } from "@/functions/funcs";
 import { useStore } from "@/store";
-import { isChannel } from "@/types/Channel";
+import { Channel, isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
 import { Alert } from "@/types/GameSummary";
 import { Message } from "@/types/Message";
@@ -286,17 +286,32 @@ onMounted(() => {
         });
       }
       if (!store.socket?.hasListeners("messageRecieved")) {
-        store.socket?.on("messageReceived", (channelId: number, msg: Message) => {
+        store.socket?.on("messageReceived", (channelId: number, channelName: string, msg: Message) => {
           if (isChannel(store.currentChat!) && channelId === store.currentChat!.id) {
             store.currentChat?.messages?.push(msg);
           } else {
-            addAlertMessage(`New message from ${msg.author} in channel`, 1);
+            addAlertMessage(`New message from ${msg.author} in "${channelName}"`, 1);
           }
         });
       }
       if (!store.socket?.hasListeners("incomingChannelInvitation")) {
         store.socket?.on("incomingChannelInvitation", (channel: string) => {
           addAlertMessage(`You've been invited to join "${channel}" channel`, 1);
+        });
+      }
+      if (!store.socket?.hasListeners("gotBannedFromChannel")) {
+        store.socket?.on("gotBannedFromChannel", (channel: string) => {
+          if (store.currentChat && isChannel(store.currentChat!) && (<Channel>store.currentChat)?.name === channel) {
+            store.$patch({
+              currentChat: undefined,
+            });
+          }
+          addAlertMessage(`You've been banned from "${channel}" channel`, 3);
+        });
+      }
+      if (!store.socket?.hasListeners("gotUnbannedFromChannel")) {
+        store.socket?.on("gotUnbannedFromChannel", (channel: string) => {
+          addAlertMessage(`You've been unbanned from "${channel}" channel`, 1);
         });
       }
     }

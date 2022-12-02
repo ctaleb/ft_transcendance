@@ -42,7 +42,7 @@
 </template>
 
 <script setup lang="ts">
-import { fetchJSONDatas } from "@/functions/funcs";
+import { addAlertMessage, fetchJSONDatas } from "@/functions/funcs";
 import { useStore } from "@/store";
 import { Channel, isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
@@ -75,10 +75,19 @@ const scrollDownMessages = (behavior: ScrollBehavior | undefined) => {
 const sendMessage = () => {
   if (messageField.value.length > 0) {
     if (isChannel(store.currentChat!)) {
-      socket?.emit("sendChannelMessage", {
-        channelId: store.currentChat!.id,
-        content: messageField.value,
-      });
+      socket?.emit(
+        "sendChannelMessage",
+        {
+          channelId: store.currentChat!.id,
+          channelName: (<Channel>store.currentChat)?.name,
+          content: messageField.value,
+        },
+        (error: string) => {
+          if (error.length > 0) {
+            addAlertMessage(`${error}`, 1);
+          }
+        }
+      );
     } else {
       socket?.emit(
         "deliverMessage",
