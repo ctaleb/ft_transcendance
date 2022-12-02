@@ -1,17 +1,15 @@
 <template>
   <section class="lobby container">
     <div class="principalSection">
-      <div class="mainContainer">
-        <div :class="powers ? '' : ' hidden'">
+      <div class="mainContainer" :class="powers ? '' : ' hidden'">
+        <div>
           <power-slider-component v-model="power" id="powerSlider" />
         </div>
-        <div>
-          <div @click="findMatch()" class="btn">
-            <div class="text">PLAY</div>
-          </div>
-        </div>
       </div>
-      <div class="svgSection"><img src="../assets/lobbyIllustration.gif" alt="" /></div>
+      <div :class="powers ? '' : ' hidden'" class="svgSection"><img src="../assets/playGame.gif" alt="" class="playButton" @click="findMatch()" /></div>
+      <div :class="!powers ? '' : ' hidden'" class="loadingDiv">
+        <img src="../assets/loadingGameIllustration.gif" alt="" class="loadingImage" />
+      </div>
     </div>
 
     <div v-if="toggleLadder" class="ladder">
@@ -19,11 +17,11 @@
       <div v-if="summary" class="overlay">
         <Modal :title="sumTitle" :data="gameSummary" :start="start" :end="end" @close="showSummary(false)"></Modal>
       </div>
-      <div0 v-if="noFriends" class="overlay">
+      <div v-if="noFriends" class="overlay">
         <Denial :inviter="friendName" @sadStory="showDenial(false)"></Denial>
-      </div0>
-      <div class="power">Selected power: {{ power }}</div>
-      <div class="power">Selected power: {{ power }}</div>
+      </div>
+      <!-- <div class="power">Selected power: {{ power }}</div>
+      <div class="power">Selected power: {{ power }}</div> -->
     </div>
     <div v-else class="custom">
       <div>
@@ -79,6 +77,13 @@
         </div>
       </div>
     </div>
+    <svg preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" :class="powers ? 'bottomSvg' : ' hidden'">
+      <path
+        fill="#C1A36B"
+        fill-opacity="1"
+        d="M0,128L80,122.7C160,117,320,107,480,122.7C640,139,800,181,960,197.3C1120,213,1280,203,1360,197.3L1440,192L1440,320L1360,320C1280,320,1120,320,960,320C800,320,640,320,480,320C320,320,160,320,80,320L0,320Z"
+      ></path>
+    </svg>
   </section>
 </template>
 
@@ -630,7 +635,35 @@ const customInvitation = () => {};
 
 <style lang="scss" scoped>
 @import "../styles/containerStyle";
+@import "../styles/svgStyles";
 
+.mainContainer {
+  justify-content: space-around;
+  height: 30vh;
+  margin-top: 0;
+}
+.playButton {
+  &:hover {
+    cursor: pointer;
+  }
+}
+.svgSection {
+  width: 30%;
+  img {
+    width: 100%;
+  }
+}
+.loadingDiv {
+  width: 100vw;
+  height: 90vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  .loadingImage {
+    width: 400px;
+    height: 400px;
+  }
+}
 .hidden {
   display: none;
 }

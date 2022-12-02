@@ -1,5 +1,4 @@
 <template>
-  <!--<h2>{{ user.nickname }} profile edition</h2>-->
   <div class="principalSection">
     <div class="mainContainer">
       <h3>Personnal informations</h3>
