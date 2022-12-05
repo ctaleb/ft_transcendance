@@ -229,6 +229,7 @@ async function studentLogin(code: string) {
 }
 
 .mainContainer {
+  height: 65vh;
   .classicLogin {
     width: 100%;
   }

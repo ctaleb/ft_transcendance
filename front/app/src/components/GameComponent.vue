@@ -1,13 +1,76 @@
 <template>
   <section class="lobby container">
     <div class="principalSection">
-      <div class="mainContainer" :class="powers ? '' : ' hidden'">
+      <div class="mainContainer" :class="!displayLoading ? '' : ' hidden'">
         <div>
           <power-slider-component v-model="power" id="powerSlider" />
+          <div v-if="!toggleLadder">
+            <div>
+              <h1>Custom Game with {{ friendName }}</h1>
+              <div v-if="!toggleInvited" class="inviter">
+                <div>
+                  <div class="setting">
+                    <label for="score">Max Score</label>
+                    <input v-model="score" type="range" id="score" name="score" min="1" max="100" :disabled="readyButton == true" />
+                    <h4>{{ score }}</h4>
+                  </div>
+                  <div class="setting">
+                    <label for="ballSpeed">Ball Speed</label>
+                    <input v-model="ballSpeed" type="range" id="ballSpeed" name="ballSpeed" min="0" max="5" :disabled="readyButton == true" />
+                    <h4>{{ ballSpeed }}</h4>
+                  </div>
+                  <div class="setting">
+                    <label for="ballSize">Ball Size</label>
+                    <input v-model="ballSize" type="range" id="ballSize" name="ballSize" min="0" max="3" :disabled="readyButton == true" />
+                    <h4>{{ ballSize }}</h4>
+                  </div>
+                  <div class="setting">
+                    <label for="barSpeed">Bar Speed</label>
+                    <input v-model="barSpeed" type="range" id="barSpeed" name="barSpeed" min="0" max="5" :disabled="readyButton == true" />
+                    <h4>{{ barSpeed }}</h4>
+                  </div>
+                  <div class="setting">
+                    <label for="barSize">Bar Size Factor</label>
+                    <input v-model="barSize" type="range" id="barSize" name="barSize" min="0" max="2" :disabled="readyButton == true" />
+                    <h4>{{ barSize }}</h4>
+                  </div>
+                  <div class="setting">
+                    <label for="smashStrength">Smash Strength</label>
+                    <input
+                      v-model="smashStrength"
+                      type="range"
+                      id="smashStrength"
+                      name="smashStrength"
+                      min="1"
+                      max="10"
+                      :disabled="smashes == false || readyButton == true"
+                    />
+                    <h4>{{ smashStrength }}</h4>
+                  </div>
+                  <div class="setting">
+                    <div class="checkbox">
+                      <input v-model="effects" type="checkbox" id="switch" :disabled="readyButton == true" /><label for="effects">Effects</label>
+                    </div>
+                    <div class="checkbox">
+                      <input v-model="powers" type="checkbox" id="switch" :disabled="readyButton == true" /><label for="powers">Powers</label>
+                    </div>
+                    <div class="checkbox">
+                      <input v-model="smashes" type="checkbox" id="switch" :disabled="readyButton == true" /><label for="smashes">Smashes</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <button class="button" @click="readyUp()" :disabled="readyButton">
+                {{ customReady }}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
-      <div :class="powers ? '' : ' hidden'" class="svgSection"><img src="../assets/playGame.gif" alt="" class="playButton" @click="findMatch()" /></div>
-      <div :class="!powers ? '' : ' hidden'" class="loadingDiv">
+      <div :class="!displayLoading ? '' : ' hidden'" class="svgSection">
+        <img src="../assets/playGame.gif" alt="" class="playButton" @click="findMatch()" />
+      </div>
+      <div :class="displayLoading ? '' : ' hidden'" class="loadingDiv">
         <img src="../assets/loadingGameIllustration.gif" alt="" class="loadingImage" />
       </div>
     </div>
@@ -23,61 +86,8 @@
       <!-- <div class="power">Selected power: {{ power }}</div>
       <div class="power">Selected power: {{ power }}</div> -->
     </div>
-    <div v-else class="custom">
-      <div>
-        <h1>Custom Game with {{ friendName }}</h1>
-        <div v-if="!toggleInvited" class="inviter">
-          <div>
-            <label for="score">Max Score: {{ score }}</label>
-            <div>
-              <label for="score">Max Score: {{ score }}</label>
-              <div>1<input v-model="score" type="range" id="score" name="score" min="1" max="100" :disabled="readyButton == true" />100</div>
-            </div>
-            <div>
-              <label for="ballSpeed">Initial Ball Speed (0 for half speed): {{ ballSpeed }}</label>
-              <div>0<input v-model="ballSpeed" type="range" id="ballSpeed" name="ballSpeed" min="0" max="5" :disabled="readyButton == true" />5</div>
-            </div>
-            <div>
-              <label for="ballSize">Ball Size Factor (0 for half size): {{ ballSize }}</label>
-              <div>0<input v-model="ballSize" type="range" id="ballSize" name="ballSize" min="0" max="3" :disabled="readyButton == true" />3</div>
-            </div>
-            <div>
-              <label for="barSpeed">Bar Speed Factor (0 for half speed): {{ barSpeed }}</label>
-              <div>0<input v-model="barSpeed" type="range" id="barSpeed" name="barSpeed" min="0" max="5" :disabled="readyButton == true" />5</div>
-            </div>
-            <div>
-              <label for="barSize">Bar Size Factor (0 for half size): {{ barSize }}</label>
-              <div>0<input v-model="barSize" type="range" id="barSize" name="barSize" min="0" max="2" :disabled="readyButton == true" />2</div>
-            </div>
-            <div><input v-model="smashes" type="checkbox" id="switch" :disabled="readyButton == true" /><label for="smashes">Toggle smashes</label></div>
-            <div>
-              <label for="smashStrength">Smash Strength Factor: {{ smashStrength }}</label>
-              <div>
-                1<input
-                  v-model="smashStrength"
-                  type="range"
-                  id="smashStrength"
-                  name="smashStrength"
-                  min="1"
-                  max="10"
-                  :disabled="smashes == false || readyButton == true"
-                />10
-              </div>
-            </div>
-            <div><input v-model="effects" type="checkbox" id="switch" :disabled="readyButton == true" /><label for="effects">Toggle effects</label></div>
-            <div><input v-model="powers" type="checkbox" id="switch" :disabled="readyButton == true" /><label for="powers">Toggle powers</label></div>
-            <div><input v-model="effects" type="checkbox" id="switch" :disabled="readyButton == true" /><label for="effects">Toggle effects</label></div>
-            <div><input v-model="powers" type="checkbox" id="switch" :disabled="readyButton == true" /><label for="powers">Toggle powers</label></div>
-          </div>
-          <div>
-            <button @click="readyUp()" :disabled="readyButton">
-              {{ customReady }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-    <svg preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" :class="powers ? 'bottomSvg' : ' hidden'">
+    <div v-else class="custom"></div>
+    <svg preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" :class="!displayLoading ? 'bottomSvg' : ' hidden'">
       <path
         fill="#C1A36B"
         fill-opacity="1"
@@ -167,6 +177,7 @@ const summary = ref(false);
 const toggleLadder = ref(true);
 const toggleInvited = ref(false);
 const gameBoard = ref(false);
+let displayLoading = ref(false);
 
 const friendName = ref("Placeholder");
 const customReady = ref("Ready ?");
@@ -226,6 +237,7 @@ function showDenial(show: boolean) {
 }
 
 function findMatch() {
+  displayLoading.value = true;
   startButton.value = true;
   lobbyStatus.value = "Looking for an opponent...";
   powers.value = false;
@@ -234,6 +246,7 @@ function findMatch() {
   });
 }
 function readyUp() {
+  displayLoading.value = true;
   readyButton.value = true;
   customReady.value = "Waiting for " + friendName.value;
   if (toggleInvited.value) {
@@ -588,6 +601,7 @@ const Win = (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) => 
   lobbyStatus.value = "Defeat... You lost -" + elo_diff + " elo ! Return to lobby ?";
   startButton.value = false;
   readyButton.value = false;
+  displayLoading.value = false;
   customReady.value = "Ready ?";
   powers.value = true;
   end = new Date();
@@ -604,6 +618,7 @@ const Lose = (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) =>
   lobbyStatus.value = "Victory ! You gained +" + elo_diff + " elo ! Return to lobby ?";
   startButton.value = false;
   readyButton.value = false;
+  displayLoading.value = false;
   customReady.value = "Ready ?";
   powers.value = true;
   end = new Date();
@@ -636,11 +651,64 @@ const customInvitation = () => {};
 <style lang="scss" scoped>
 @import "../styles/containerStyle";
 @import "../styles/svgStyles";
+@import "../styles/variables";
 
 .mainContainer {
   justify-content: space-around;
-  height: 30vh;
-  margin-top: 0;
+  .inviter {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    .setting {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-around;
+      label {
+        width: 30%;
+        text-align: left;
+      }
+      h4 {
+        width: 15%;
+      }
+      input[type="range"] {
+        overflow: hidden;
+        -webkit-appearance: none;
+        border-radius: 10px;
+        background-color: $secondary;
+      }
+      input[type="range"]::-webkit-slider-runnable-track {
+        -webkit-appearance: none;
+        color: $primary;
+      }
+      input[type="range"]::-webkit-slider-thumb {
+        width: 20px;
+        -webkit-appearance: none;
+        height: 20px;
+        cursor: pointer;
+        background: #524e9b;
+        border-radius: 100%;
+        box-shadow: -80px 0 0 70px $primary;
+      }
+      input[type="range"]:disabled {
+        opacity: 0.6;
+      }
+      .checkbox {
+        display: flex;
+        margin-top: 10px;
+        flex-direction: row;
+        align-items: center;
+        input[type="checkbox"] {
+          width: 20px;
+          height: 20px;
+          accent-color: #524e9b;
+        }
+      }
+    }
+  }
+  .button {
+    margin: 25px 0 25px 0;
+  }
 }
 .playButton {
   &:hover {
@@ -651,6 +719,12 @@ const customInvitation = () => {};
   width: 30%;
   img {
     width: 100%;
+  }
+  .playButton {
+    opacity: 0.8;
+    &:hover {
+      opacity: 1;
+    }
   }
 }
 .loadingDiv {
