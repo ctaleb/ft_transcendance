@@ -16,11 +16,11 @@
         <img class="sideIcons" src="../assets/profileStatusIcon.svg" alt="" />
         <h3>status</h3>
       </div>
-      <div class="buttonProfile" v-if="currentUser != store.user">
-        <button class="invite" @click="invite(currentUser)">Friend Request</button>
-        <button class="block" @click="block(currentUser)">Block</button>
-        <button class="play" @click="">Invite/spectate</button>
-      </div>
+    </div>
+    <div class="buttonProfile" v-if="currentUser != store.user">
+      <i title="Add friend" class="gg-user-add" @click="invite(currentUser)"></i>
+      <i title="Block user" class="gg-block" @click="block(currentUser)"></i>
+      <i title="Spectate your friend" class="gg-eye" @click=""></i>
     </div>
     <div class="subMenu">
       <button class="darkButton pulse" :style="toogleMenu ? '' : 'border: 1px solid white'" @click="watchFriend()">Friend</button>
