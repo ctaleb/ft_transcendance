@@ -314,6 +314,7 @@ export default defineComponent({
   .mainContainer {
     justify-content: space-around;
     padding: 20px;
+    height: 65vh;
     h3 {
       margin-bottom: 3px;
     }
