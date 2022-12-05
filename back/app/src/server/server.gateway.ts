@@ -404,15 +404,11 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     @ConnectedSocket() client: Socket,
     @MessageBody('message') messageToDeliver: string,
     @MessageBody('friendNickname') friendNickname: string,
-  ): Promise<void> {
+  ) {
     let requester: UserEntity;
     const getAuthor = this.serverService.SocketToPlayer(client);
     const receiver = this.serverService.userList.find((element) => element.name === friendNickname);
     if (receiver) {
-      this.server.to(receiver.socket.id).emit('Message to the client', {
-        author: getAuthor.name,
-        text: messageToDeliver,
-      });
       requester = await this.userService.getUserByNickname(receiver.name);
     } else {
       requester = await this.userService.getUserByNickname(friendNickname);
@@ -431,17 +427,39 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     this.server.to(client.id).emit('Update conv list', {
       conv: conv,
     });
-    this.privateMessageService.createMessage({
+    const message = await this.privateMessageService.createMessage({
       conv: conv,
       author: author,
       text: messageToDeliver,
     });
+    if (receiver)
+      this.server.to(receiver.socket.id).emit('Message to the client', {
+        author: getAuthor.name,
+        text: messageToDeliver,
+        date: message.date,
+      });
+    return { author: getAuthor.name, text: messageToDeliver, date: message.date };
   }
 
   // Channel messages by the GOAT
   @SubscribeMessage('sendChannelMessage')
-  async sendChannelMessage(@ConnectedSocket() client: Socket, @MessageBody('channelId') channelId: number, @MessageBody('content') content: string) {
-    return await this.serverService.sendChannelMessage(channelId, content, client.handshake.auth.user.id);
+  async sendChannelMessage(
+    @ConnectedSocket() client: Socket,
+    @MessageBody('channelId') channelId: number,
+    @MessageBody('channelName') channelName: string,
+    @MessageBody('content') content: string,
+  ) {
+    return await this.serverService.sendChannelMessage(channelId, channelName, content, client.handshake.auth.user.id);
+  }
+
+  @SubscribeMessage('friendToConv')
+  friendToConv(@ConnectedSocket() client: Socket, @MessageBody('target') nickname: string) {
+    this.server.to(this.serverService.PlayerToSocket(nickname).id).emit('friendTooConv', client.handshake.auth.user.id);
+  }
+
+  @SubscribeMessage('updateChannelMembers')
+  async updateChannelMembers(@ConnectedSocket() client: Socket, @MessageBody('id') channelId: number) {
+    await this.serverService.updateChannelMembers(channelId, client);
   }
 
   @SubscribeMessage('joinChannelRoom')
@@ -453,5 +471,43 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   @SubscribeMessage('leaveChannelRoom')
   async leaveChannelRoom(@ConnectedSocket() client: Socket, @MessageBody('id') channelId: number) {
     await this.serverService.leaveChannelRoom(client, channelId);
+  }
+
+  @SubscribeMessage('channelUpdated')
+  async channelUpdated(@ConnectedSocket() client: Socket, @MessageBody('id') id: number, @MessageBody('name') name: string, @MessageBody('type') type: string) {
+    await this.serverService.updateChannel(client, id, name, type);
+  }
+
+  @SubscribeMessage('privateChannelInvite')
+  async privateChannelInvite(@ConnectedSocket() client: Socket, @MessageBody('nickname') nickname: string, @MessageBody('channel') channel: string) {
+    this.server.to(this.serverService.PlayerToSocket(nickname).id).emit('incomingChannelInvitation', channel);
+  }
+
+  @SubscribeMessage('memberGotBanned')
+  async memberGotBanned(
+    @ConnectedSocket() client: Socket,
+    @MessageBody('id') id: number,
+    @MessageBody('channel') channel: string,
+    @MessageBody('nickname') nickname: string,
+  ) {
+    const targetSocket: Socket = this.serverService.PlayerToSocket(nickname);
+    if (targetSocket) {
+      targetSocket.leave(`${id}`);
+      this.server.to(targetSocket.id).emit('gotBannedFromChannel', channel);
+    }
+  }
+
+  @SubscribeMessage('memberGotUnbanned')
+  async memberGotUnbanned(
+    @ConnectedSocket() client: Socket,
+    @MessageBody('id') id: number,
+    @MessageBody('channel') channel: string,
+    @MessageBody('nickname') nickname: string,
+  ) {
+    const targetSocket: Socket = this.serverService.PlayerToSocket(nickname);
+    if (targetSocket) {
+      targetSocket.join(`${id}`);
+      this.server.to(targetSocket.id).emit('gotUnbannedFromChannel', channel);
+    }
   }
 }

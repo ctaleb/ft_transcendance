@@ -24,9 +24,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { MatchHistoryEntity, GameSummaryData, PlayerInfoData } from './entities/match_history.entity';
 import { DeepPartial, Repository } from 'typeorm';
 import { UserService } from 'src/user/user.service';
-import { Channel } from './entities/channel';
+import { Channel, ChannelRole } from './entities/channel';
 import { ChatService } from 'src/chat/chat.service';
 import { emit } from 'process';
+import { ChannelType } from 'src/chat/entities/channel.entity';
 
 const chargeMax = 1;
 const ballSize = 16;
@@ -818,9 +819,7 @@ export class ServerService {
 
       this.barBallCollision(gameState.hostBar, gameState.clientBar, gameState.ball, game.room, game.host, game.client);
       this.wallBallCollision(gameState, game.room);
-
       this.nadal(gameState.ball, game.room.effect);
-      this.reset_collide(gameState.ball, game.room, game);
       gameState.ball.pos.x += gameState.ball.speed.x;
       gameState.ball.pos.y += gameState.ball.speed.y;
 
@@ -831,18 +830,32 @@ export class ServerService {
 
   // GOAT
   async joinAllChannels(socket: Socket, userId: number) {
-    const channels = await this._chatService.getUserChannels(userId);
+    let channels = await this._chatService.getUserChannels(userId);
+    const bannedChannels = await this._chatService.getUsersBannedChannels(userId);
+    channels = channels.filter((el) => !bannedChannels.find((chan) => chan.id === el.id));
     channels.forEach((ell) => {
       socket.join(`${ell.id}`);
     });
   }
 
-  async sendChannelMessage(channelId: number, content: string, userId: number) {
-    const message = await this._chatService.saveMessage({ id: channelId, content: content }, userId);
-    if (message.author) {
-      this.server.to(`${channelId}`).emit('messageReceived', channelId, message);
+  async sendChannelMessage(channelId: number, channelName: string, content: string, userId: number) {
+    let error: string;
+    await this._chatService
+      .saveMessage({ id: channelId, content: content }, userId)
+      .then((data) => {
+        this.server.to(`${channelId}`).emit('messageReceived', channelId, channelName, data);
+      })
+      .catch((err) => {
+        error = err.message;
+      });
+    return error;
+  }
+
+  async updateChannelMembers(channelId: number, client: Socket) {
+    const channels = await this._chatService.getUserChannels(client.handshake.auth.user.id);
+    if (channels.find((ell) => ell.id === channelId)) {
+      this.server.to(`${channelId}`).emit('updateChannelMembers', channelId);
     }
-    return message;
   }
 
   async joinChannelRoom(client: Socket, channelId: number) {
@@ -856,5 +869,13 @@ export class ServerService {
   async leaveChannelRoom(client: Socket, channelId: number) {
     this.server.to(`${channelId}`).emit('updateChannelMembers', channelId);
     client.leave(`${channelId}`);
+  }
+
+  async updateChannel(client: Socket, id: number, name: string, type: string) {
+    const channels = await this._chatService.getUserChannels(client.handshake.auth.user.id);
+    const channel = channels.find((ell) => ell.id === id);
+    if (channel) {
+      this.server.to(`${channel.id}`).emit('channelUpdatd', { id: channel.id, name: channel.name, type: channel.type });
+    }
   }
 }

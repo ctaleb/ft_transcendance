@@ -4,13 +4,14 @@ import { defineStore } from "pinia";
 import { Socket } from "socket.io-client";
 import { Conversation } from "@/types/Conversation";
 import { Channel } from "@/types/Channel";
+import { ShallowReactive, shallowReactive } from "vue";
 
-interface State {
-  user: User | undefined;
-  socket: Socket | undefined;
+export interface State {
+  user?: User;
+  socket?: Socket;
   message: Alert[];
-  token: string | undefined;
-  currentChat: Channel | Conversation | undefined;
+  token?: string;
+  currentChat?: Channel | Conversation;
 }
 
 export const useStore = defineStore("default", {

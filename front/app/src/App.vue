@@ -27,17 +27,19 @@
 </template>
 
 <script setup lang="ts">
+import { addAlertMessage, trySetupUser, updateStatus } from "@/functions/funcs";
+import { useStore } from "@/store";
+import { Channel, isChannel } from "@/types/Channel";
+import { Conversation } from "@/types/Conversation";
+import { Alert } from "@/types/GameSummary";
+import { Message } from "@/types/Message";
+import { getUserByNickname, User } from "@/types/User";
 import { onMounted, ref, watch } from "vue";
 import { RouterLink, RouterView, useRoute, useRouter } from "vue-router";
-import { User, getUserByNickname } from "@/types/User";
-import { trySetupUser } from "@/functions/funcs";
-import { Alert } from "@/types/GameSummary";
-import { useStore } from "@/store";
-import GameConfirmation from "./components/GameConfirmation/Modal.vue";
 import AlertCard from "./components/AlertCard.vue";
 import CustomInvitation from "./components/CustomInvitation/Modal.vue";
 import FailedInvitation from "./components/FailedInvitation/Modal.vue";
-import { updateStatus } from "@/functions/funcs";
+import GameConfirmation from "./components/GameConfirmation/Modal.vue";
 
 const store = useStore();
 const route = useRoute();
@@ -116,6 +118,28 @@ store.$subscribe((mutation, state) => {
     });
   }
 });
+
+// //chat listeners
+// if (!store.socket?.hasListeners("Message to the client")) {
+//   store.socket?.on("Message to the client", async (privateMessage: Message) => {
+//     console.log(store.currentChat);
+//     if (privateMessage.author === (<Conversation>store.currentChat)?.other.nickname) {
+//       store.currentChat?.messages?.push(privateMessage);
+//     } else {
+//       console.log("received");
+//       addAlertMessage(`New message from ${privateMessage.author}`, 1);
+//     }
+//   });
+// }
+// if (!store.socket?.hasListeners("messageRecieved")) {
+//   store.socket?.on("messageReceived", (channelId: number, msg: Message) => {
+//     if (isChannel(store.currentChat!) && channelId === store.currentChat!.id) {
+//       store.currentChat?.messages?.push(msg);
+//     } else {
+//       addAlertMessage(`New message from ${msg.author} in channel`, 1);
+//     }
+//   });
+// }
 
 window.addEventListener("keydown", (e) => {
   if (e.key === "ArrowLeft")
@@ -222,6 +246,9 @@ onMounted(() => {
   watch(
     () => route.path,
     (currentValue, oldValue) => {
+      store.$patch({
+        currentChat: undefined,
+      });
       if (currentValue != "/game") store.socket?.emit("watchPath");
 
       if (localStorage.getItem("token") && profileNotificationBadge.value === false) {
@@ -241,6 +268,51 @@ onMounted(() => {
             console.log(err);
             profileNotificationBadge.value = false;
           });
+      }
+    }
+  );
+
+  watch(
+    () => store.socket,
+    () => {
+      //chat listeners
+      if (!store.socket?.hasListeners("Message to the client")) {
+        store.socket?.on("Message to the client", async (privateMessage: Message) => {
+          if (!isChannel(store.currentChat!) && privateMessage.author === (<Conversation>store.currentChat)?.other.nickname) {
+            store.currentChat?.messages?.push(privateMessage);
+          } else {
+            addAlertMessage(`New message from ${privateMessage.author}`, 1);
+          }
+        });
+      }
+      if (!store.socket?.hasListeners("messageRecieved")) {
+        store.socket?.on("messageReceived", (channelId: number, channelName: string, msg: Message) => {
+          if (isChannel(store.currentChat!) && channelId === store.currentChat!.id) {
+            store.currentChat?.messages?.push(msg);
+          } else {
+            addAlertMessage(`New message from ${msg.author} in "${channelName}"`, 1);
+          }
+        });
+      }
+      if (!store.socket?.hasListeners("incomingChannelInvitation")) {
+        store.socket?.on("incomingChannelInvitation", (channel: string) => {
+          addAlertMessage(`You've been invited to join "${channel}" channel`, 1);
+        });
+      }
+      if (!store.socket?.hasListeners("gotBannedFromChannel")) {
+        store.socket?.on("gotBannedFromChannel", (channel: string) => {
+          if (store.currentChat && isChannel(store.currentChat!) && (<Channel>store.currentChat)?.name === channel) {
+            store.$patch({
+              currentChat: undefined,
+            });
+          }
+          addAlertMessage(`You've been banned from "${channel}" channel`, 3);
+        });
+      }
+      if (!store.socket?.hasListeners("gotUnbannedFromChannel")) {
+        store.socket?.on("gotUnbannedFromChannel", (channel: string) => {
+          addAlertMessage(`You've been unbanned from "${channel}" channel`, 1);
+        });
       }
     }
   );
@@ -265,6 +337,7 @@ body {
 }
 
 .navbar {
+  height: 5vh;
   a {
     font-weight: bold;
     color: #f0e68c;
