@@ -1,0 +1,25 @@
+.mainContainer {
+  margin-top: 5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 11;
+  background: rgb(47, 42, 44);
+  background: linear-gradient(165deg, rgba(47, 42, 44, 1) 50%, rgba(31, 31, 24, 1) 100%);
+  border: 2px solid;
+  border-image-slice: 1;
+  box-shadow: 5px 5px 5px #5c5b58;
+  border-radius: 10px;
+  color: #aa9e7d;
+  width: 30%;
+  text-align: center;
+}
+
+.principalSection {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+  width: 100vw;
+  height: 75vh;
+}

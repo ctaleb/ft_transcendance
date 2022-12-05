@@ -11,6 +11,7 @@ import {
   UploadedFile,
   UseInterceptors,
   Inject,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { UserEntity } from 'src/user/user.entity';
 import { RegistrationDto } from 'src/authentication/registration.dto';
@@ -38,6 +39,7 @@ export class AuthenticationController {
     }),
   )
   async registration(@UploadedFile() avatar: Express.Multer.File, @Body() registrationDto: RegistrationDto): Promise<UserEntity> {
+    if (registrationDto.nickname.length > 15) throw new UnauthorizedException();
     return this._authenticationService.registration(
       registrationDto,
       avatar

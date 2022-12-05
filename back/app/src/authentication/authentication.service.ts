@@ -28,14 +28,14 @@ export class AuthenticationService {
     } catch (error) {
       await queryRunner.rollbackTransaction();
       console.log(error);
-      if (imageDto) {
+      if (imageDto && imageDto.filename != 'pizz.jpeg') {
         unlink(imageDto.path, (err) => {
           if (err) throw err;
           console.log(imageDto.path + ' has been deleted');
         });
       }
       if (error?.code === PostgresErrorCode.UniqueViolation) {
-        throw new UserAlreadyExistException();
+        throw new UnauthorizedException('Nickname already exists');
       }
       throw new InternalServerErrorException();
     } finally {

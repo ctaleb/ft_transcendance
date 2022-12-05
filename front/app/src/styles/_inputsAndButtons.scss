@@ -1,0 +1,115 @@
+@import "variables";
+input[type="text"],
+input[type="password"],
+input[type="phone"] {
+  color: white;
+  font-size: 20px;
+  padding: 15px;
+  width: 60%;
+  border-bottom: $primary;
+  background: transparent;
+  border: none;
+  border-bottom: solid 2px $primary;
+}
+input[type="text"],
+input[type="password"],
+input[type="phone"]:focus {
+  outline: none;
+}
+
+.button {
+  width: 60%;
+  padding: 10px;
+  background: transparent;
+  border: 1px solid $primary;
+  cursor: pointer;
+  color: $primary;
+}
+.button:hover {
+  background: $primary;
+  color: white;
+}
+.darkButton {
+  width: 60%;
+  padding: 10px;
+  background: $secondary;
+  border: 1px solid $secondary;
+  cursor: pointer;
+  color: $primary;
+}
+.darkButton:hover {
+  background: $primary;
+  color: white;
+}
+// Animate the size, outside
+.pulse:hover,
+.pulse:focus {
+  animation: pulse 1s;
+  box-shadow: 0 0 0 0.5em transparent;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 var(--hover);
+  }
+}
+$colors: (
+  pulse: #aa9e7d,
+);
+
+// Sass variables compile to a static string; CSS variables are dynamic and inherited
+// Loop through the map and set CSS custom properties using Sass variables
+@each $button, $color in $colors {
+  .#{$button} {
+    --color: #{$color};
+    --hover: #{adjust-hue($color, 45deg)};
+  }
+}
+
+.fileInput {
+  input {
+    display: none;
+  }
+  color: $primary;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  width: 60%;
+  padding: 10px;
+  border-radius: 10px;
+  margin-top: 15px;
+  padding-inline: 0;
+  border: 1px solid $primary;
+  i {
+    margin-left: 10px;
+  }
+  margin-bottom: 25px;
+  &.fileInputActive {
+    background: #c1a36b;
+    color: white;
+    cursor: pointer;
+  }
+}
+
+.fileInput:hover {
+  background: #c1a36b;
+  color: white;
+  cursor: pointer;
+}
+
+.sliderButton {
+  width: 50px;
+  height: 50px;
+  cursor: pointer;
+  img {
+    width: 100%;
+    height: 100%;
+    transition-property: width;
+    transition-duration: 0.5s;
+    transition-delay: 0s;
+    &:hover {
+      width: 90%;
+    }
+  }
+}
