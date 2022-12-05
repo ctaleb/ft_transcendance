@@ -13,16 +13,7 @@ import { ChatModule } from 'src/chat/chat.module';
 import { ProfileController } from 'src/server/profile.controller';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([
-      MatchHistoryEntity,
-      PrivateMessageEntity,
-      PrivateConvEntity,
-    ]),
-    UserModule,
-    ChatModule,
-    PrivateConvModule,
-  ],
+  imports: [TypeOrmModule.forFeature([MatchHistoryEntity, PrivateMessageEntity, PrivateConvEntity]), UserModule, ChatModule, PrivateConvModule],
   controllers: [ProfileController],
   providers: [ServerGateway, ServerService, PrivateConvService],
   exports: [ServerService],

@@ -1,12 +1,7 @@
 <template>
   <div id="chat">
-    <ChatMenu
-      :channels="myChannels"
-      :convs="privateConvs"
-      :allChannels="allChannels"
-      :invitations="channelInvitations"
-    />
-    <ChatWindow />
+    <ChatMenu :channels="myChannels" :convs="privateConvs" />
+    <ChatWindow @update-channels-list="updateChannelsList()" />
     <!-- <div v-if="show == 0" class="lobbyChat">
       <h2>Welcome on the chat</h2>
       <br />
@@ -132,13 +127,13 @@
 import ChatMenu from "@/components/chat/ChatMenu.vue";
 import ChatWindow from "@/components/chat/ChatWindow.vue";
 import FriendAlert from "@/components/FriendAlert.vue";
-import { fetchJSONDatas } from "@/functions/funcs";
+import { addAlertMessage, fetchJSONDatas } from "@/functions/funcs";
 import { useStore } from "@/store";
-import { Channel, ChannelRole, ChannelType, ChannelUser } from "@/types/Channel";
+import { Channel, ChannelRole, ChannelType, ChannelUser, isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
 import { Message } from "@/types/Message";
 import { User } from "@/types/User";
-import { onMounted, onUpdated, ref, Ref } from "vue";
+import { onMounted, onUpdated, ref, Ref, watch } from "vue";
 
 const store = useStore();
 let socket = store.socket;
@@ -147,19 +142,16 @@ store.$subscribe((mutation, state) => {
   socket = state.socket;
 });
 
-const privateConvs = ref(Array<Conversation>());
+const privateConvs: Ref<Array<Conversation>> = ref([]);
 const messagesToDisplay: Ref<Array<Message>> = ref([]);
 const messagesBoxRef = ref<HTMLDivElement | null>(null);
 let currentConv = ref<Conversation>();
 let isLoadMore = false;
 
 defineProps(["incomingFriendRequest"]);
-defineEmits(["notification"]);
+defineEmits(["notification", "updateChannelsList"]);
 
 const myChannels: Ref<Array<Channel>> = ref([]);
-const allChannels: Ref<Array<Channel>> = ref([]);
-const channelInvitations: Ref<Array<Channel>> = ref([]);
-const current: Ref<Channel | Conversation | null> = ref(null);
 const channelMembers: Ref<Array<ChannelUser>> = ref([]);
 const channelMessageSkip = ref(0);
 const show = ref(0);
@@ -170,102 +162,86 @@ const showInvitationModal = ref(false);
 const inviteUser = ref("");
 const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
+const updateChannelsList = () => {
+  getMyChannels();
+};
+
 onUpdated(() => {
-  if (isLoadMore == false) scrollDownMessages();
-  isLoadMore = false;
+  // if (isLoadMore == false) scrollDownMessages();
+  // isLoadMore = false;
 });
 
 onMounted(async () => {
-  getMyChannels();
-  getAllChannels();
-  getChannelInvitations();
-  var audio = new Audio(require("../assets/adelsol.mp3"));
-  socket?.on("Message to the client", async (privateMessage: { author: string; text: string }) => {
-    if (privateMessage.author == friendNickname.value) messagesToDisplay.value.push(privateMessage);
-    else {
-      await getAllConvs();
-      organizeFriends();
-      notifConv(privateMessage.author);
-      audio.play();
-    }
-  });
-  socket?.on("messageReceived", (channelId: number, msg: Message) => {
-    if (thisChannel.value && channelId === thisChannel.value.id) {
-      msg.date = moment(msg.date).tz(timezone).add(1, "hours").format("MMMM Do YYYY, h:mm:ss a");
-      messagesToDisplay.value.push(msg);
-      channelMessageSkip.value++;
-    } else {
-      console.log("incoming message");
-    }
-  });
-  socket?.on("updateChannelMembers", async (channelId: number) => {
-    if (thisChannel.value && channelId === thisChannel.value.id) {
-      let data = await fetchJSONDatas("api/chat/members", "POST", {
-        id: thisChannel.value.id,
-      });
-      channelMembers.value.forEach(await fetchUserAvatarURL);
-      channelMembers.value = data;
-    }
-  });
-  socket?.on("Update conv list", (convData: { conv: privateConv }) => {
-    console.log("UPDATE");
-  });
-
-  store.$subscribe((mutation, state) => {
-    if (!state.socket?.hasListeners("Message to the client")) {
-      state.socket?.on("Message to the client", async (privateMessage: { author: string; text: string }) => {
-        console.log(1);
-
-        if (privateMessage.author == friendNickname.value) messagesToDisplay.value.push(privateMessage);
-        else {
-          await getAllConvs();
-          organizeFriends();
-          notifConv(privateMessage.author);
-          audio.play();
-        }
-      });
-    }
-
-    if (!state.socket?.hasListeners("Update conv list")) {
-      state.socket?.on("Update conv list", (convData: { conv: privateConv }) => {
-        console.log("UPDATE");
-
-        let convIndex = privateConvs.value.findIndex((conv) => conv.uuid === convData.conv.uuid);
-        const convToTop = privateConvs.value.splice(convIndex, 1)[0];
-        privateConvs.value.splice(0, 0, convToTop);
-      });
-    }
-  });
-
-  window.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      if (thisChannel.value == null) sendPrivateMessage(friendNickname.value);
-      else sendChannelMessage();
-    }
-  });
+  await getMyChannels();
   await getAllConvs();
+
+  // var audio = new Audio(require("../assets/adelsol.mp3"));
+  // socket?.on("Message to the client", async (privateMessage: { author: string; text: string }) => {
+  //   if (privateMessage.author == friendNickname.value) messagesToDisplay.value.push(privateMessage);
+  //   else {
+  //     await getAllConvs();
+  //     organizeFriends();
+  //     notifConv(privateMessage.author);
+  //     audio.play();
+  //   }
+  // });
+  // socket?.on("messageReceived", (channelId: number, msg: Message) => {
+  //   if (thisChannel.value && channelId === thisChannel.value.id) {
+  //     msg.date = moment(msg.date).tz(timezone).add(1, "hours").format("MMMM Do YYYY, h:mm:ss a");
+  //     messagesToDisplay.value.push(msg);
+  //     channelMessageSkip.value++;
+  //   } else {
+  //     console.log("incoming message");
+  //   }
+  // });
+  // socket?.on("updateChannelMembers", async (channelId: number) => {
+  //   if (thisChannel.value && channelId === thisChannel.value.id) {
+  //     let data = await fetchJSONDatas("api/chat/members", "POST", {
+  //       id: thisChannel.value.id,
+  //     });
+  //     channelMembers.value.forEach(await fetchUserAvatarURL);
+  //     channelMembers.value = data;
+  //   }
+  // });
+  // socket?.on("Update conv list", (convData: { conv: privateConv }) => {
+  //   console.log("UPDATE");
+  // });
+
+  // store.$subscribe((mutation, state) => {
+  //   if (!state.socket?.hasListeners("Message to the client")) {
+  //     state.socket?.on("Message to the client", async (privateMessage: { author: string; text: string }) => {
+  //       console.log(1);
+
+  //       if (privateMessage.author == friendNickname.value) messagesToDisplay.value.push(privateMessage);
+  //       else {
+  //         await getAllConvs();
+  //         organizeFriends();
+  //         notifConv(privateMessage.author);
+  //         audio.play();
+  //       }
+  //     });
+  //   }
+
+  //   if (!state.socket?.hasListeners("Update conv list")) {
+  //     state.socket?.on("Update conv list", (convData: { conv: privateConv }) => {
+  //       console.log("UPDATE");
+
+  //       let convIndex = privateConvs.value.findIndex((conv) => conv.uuid === convData.conv.uuid);
+  //       const convToTop = privateConvs.value.splice(convIndex, 1)[0];
+  //       privateConvs.value.splice(0, 0, convToTop);
+  //     });
+  //   }
+  // });
   // if (store.user?.friends) friends.value = JSON.parse(JSON.stringify(store.user?.friends)); what is this
   // organizeFriends();
 });
 
 const getMyChannels = async (): Promise<void> => {
-  myChannels.value = await fetchJSONDatas("api/chat", "GET");
+  myChannels.value = await fetchJSONDatas("api/chat", "GET").catch(() => {});
 };
 
-const getAllChannels = async (): Promise<void> => {
-  const data: Channel[] = await fetchJSONDatas("api/chat/list", "POST", {
-    skip: allChannels.value.length,
-  });
-  allChannels.value = [...allChannels.value, ...data];
-};
-
-const getChannelInvitations = async (): Promise<void> => {
-  channelInvitations.value = await fetchJSONDatas("api/chat/invitations", "GET");
-};
-
-function initConv(convs: Array<privateConv>) {
+function initConv(convs: Array<Conversation>) {
   convs.forEach((conv) => {
-    conv.offset = 0;
     conv.notif = false;
   });
 }
@@ -348,9 +324,7 @@ const loadAllChannels = () => {
 };
 
 const getAllConvs = async (): Promise<void> => {
-  let data: Conversation[] = await fetchJSONDatas("api/privateConv/getAllConvs", "GET");
-  privateConvs.value = data;
-  console.log(privateConvs.value);
+  privateConvs.value = await fetchJSONDatas("api/privateConv/getAllConvs", "GET");
   initConv(privateConvs.value);
 };
 
@@ -380,20 +354,6 @@ const declineChannelInvitation = async (channel: Channel): Promise<void> => {
   }).then(() => {
     allChannels.value = allChannels.value.filter((x) => x.id != channel.id);
     if (channelsNum.value > 0) channelsNum.value--;
-  });
-};
-
-const giveAdmin = async (): Promise<void> => {
-  await fetchJSONDatas("api/chat/give-admin", "PUT", {
-    id: 22,
-    username: "Ah Sahm",
-  });
-};
-
-const takeAdmin = async (): Promise<void> => {
-  await fetchJSONDatas("api/chat/take-admin", "PUT", {
-    id: 22,
-    username: "Ah Sahm",
   });
 };
 

@@ -1,0 +1,53 @@
+@import "../variables";
+
+.chat-messages {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 0 5%;
+  overflow-y: auto;
+
+  .chat-message {
+    margin-bottom: 3%;
+    text-align: left;
+    width: fit-content;
+    max-width: 45%;
+    overflow-wrap: break-word;
+    padding: 10px;
+    min-width: 30%;
+    .date {
+      color: black;
+    }
+  }
+  .msg-in {
+    display: flex;
+    gap: 1%;
+    align-items: center;
+    width: 100%;
+    align-self: flex-start;
+    img {
+      height: 50px;
+    }
+  }
+  .msg-out {
+    display: flex;
+    gap: 1%;
+    width: 100%;
+    align-items: center;
+    align-self: flex-end;
+    img {
+      height: 50px;
+    }
+  }
+  .chat-message-in {
+    background-color: #492f00;
+    color: #c37c00;
+    border-radius: 0 1rem 1rem 1rem;
+  }
+  .chat-message-out {
+    background-color: #6e4700;
+    color: #3b2600;
+    border-radius: 1rem 1rem 0 1rem;
+    margin-left: auto;
+  }
+}

@@ -24,6 +24,7 @@
 </template>
 
 <script lang="ts" setup>
+import { fetchJSONDatas } from "@/functions/funcs";
 import { useStore } from "@/store";
 import { User } from "@/types/User";
 import { useRouter } from "vue-router";
@@ -40,28 +41,12 @@ store.$subscribe((mutation, state) => {
   socket = state.socket;
 });
 
-const unfriend = () => {
-  fetch("http://" + window.location.hostname + ":3000/api/friendship/unfriend", {
-    method: "DELETE",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + localStorage.getItem("token"),
-    },
-    body: JSON.stringify({
-      addressee: props.friend.nickname,
-    }),
-  })
-    .then((res) => {
-      if (res.status !== 200) {
-        throw res.statusText;
-      }
-      return res.json();
-    })
+const unfriend = async () => {
+  await fetchJSONDatas("api/friendship/unfriend", "DELETE", { addressee: props.friend.nickname })
     .then((data) => {
       store.user?.friends!.splice(store.user?.friends!.indexOf(props.friend), 1);
     })
-    .catch((err) => console.log(err));
-  console.log(props.friend.nickname);
+    .catch(() => {});
 };
 
 const watchProfile = () => {

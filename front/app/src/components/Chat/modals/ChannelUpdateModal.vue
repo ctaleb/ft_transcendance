@@ -1,0 +1,71 @@
+<template>
+  <div class="overlay"></div>
+  <div class="modal">
+    <span @click="$emit('closeChannelModal')" class="close-modal"><i class="gg-close-o"></i></span>
+    <h1>Update channel</h1>
+    <div>Channel Name: {{ channel.name }}</div>
+    <div>Channel type: {{ picked }}</div>
+    <div class="radioBundle">
+      <input type="radio" id="one" name="public" value="public" v-model="picked" />
+      <label for="public">public</label>
+
+      <input type="radio" id="two" name="protected" value="protected" v-model="picked" />
+      <label for="protected">protected</label>
+
+      <input type="radio" id="three" name="private" value="private" v-model="picked" />
+      <label for="private">private</label>
+    </div>
+    <div v-if="picked === 'protected'">
+      <label for="channelPassword">Password:</label>
+      <div class="searchBar">
+        <input type="password" class="searchField" name="channelPassword" placeholder="Password" v-model="channelPassword" required />
+      </div>
+    </div>
+    <button @click="updateChannel">Update channel</button>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { addAlertMessage, fetchJSONDatas } from "@/functions/funcs";
+import { useStore } from "@/store";
+import { Channel, ChannelType, ChannelUser } from "@/types/Channel";
+import { onMounted, Ref, ref } from "vue";
+
+const props = defineProps<{
+  channel: Channel;
+}>();
+
+const emits = defineEmits(["closeChannelModal", "updateChannel"]);
+
+const store = useStore();
+let socket = store.socket;
+
+const picked = ref("public");
+const channelPassword = ref("");
+
+const updateChannel = async (): Promise<void> => {
+  if (picked.value === "protected" && channelPassword.value.length <= 0) {
+    return;
+  }
+  const channelType = <ChannelType>picked.value;
+  await fetchJSONDatas("api/chat/update-channel", "PUT", {
+    id: props.channel.id,
+    type: channelType,
+    password: channelPassword.value,
+  })
+    .then((data: Channel) => {
+      emits("updateChannel");
+      addAlertMessage("Channel successfully updated", 1);
+      emits("closeChannelModal");
+    })
+    .catch(() => {});
+};
+
+store.$subscribe((mutation, state) => {
+  socket = state.socket;
+});
+
+onMounted(() => {
+  picked.value = <string>props.channel.type;
+});
+</script>

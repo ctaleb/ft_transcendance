@@ -16,11 +16,11 @@
         <img class="sideIcons" src="../assets/profileStatusIcon.svg" alt="" />
         <h3>status</h3>
       </div>
-      <!--<div class="buttons" v-if="currentUser === store.user">
-          <router-link class="test" to="/edit">
-			  <img :src="editUrl" alt="shutdown" width="25" height="25" />
-			</router-link>
-        </div>-->
+      <div class="buttonProfile" v-if="currentUser != store.user">
+        <button class="invite" @click="invite(currentUser)">Friend Request</button>
+        <button class="block" @click="block(currentUser)">Block</button>
+        <button class="play" @click="">Invite/spectate</button>
+      </div>
     </div>
     <div class="subMenu">
       <button class="darkButton pulse" :style="toogleMenu ? '' : 'border: 1px solid white'" @click="watchFriend()">Friend</button>
@@ -31,7 +31,7 @@
         <div class="searchIcon"><i class="gg-search"></i></div>
         <input type="text" class="input" name="searchFriend" v-model="searchFriend" placeholder="Player name" />
       </div>
-      <button class="button pulse" @click="invite()">Add Friend</button>
+      <button class="button pulse" @click="router.push('/profile/' + searchFriend)">Search Profile</button>
     </div>
     <div v-if="currentUser === store.user" class="invitations" :style="toogleMenu ? 'display: none' : ''">
       <ul>
@@ -68,7 +68,9 @@ import { useRoute } from "vue-router";
 import editUrl from "../assets/edit.png";
 import shutdownUrl from "../assets/shutdown.png";
 let funcs = require("../functions/funcs");
+import { useRouter } from "vue-router";
 
+const router = useRouter();
 const route = useRoute();
 
 const store = useStore();
@@ -148,13 +150,18 @@ const watchHistory = () => {
   toogleMenu.value = true;
 };
 
-const invite = async () => {
-  if (searchFriend.value.length <= 0) return;
+const invite = async (user: User | undefined) => {
+  if (user)
+    await fetchJSONDatas("api/friendship/invite", "POST", { addressee: user?.nickname }).catch((err) => {
+      console.log(err);
+    });
+};
 
-  await fetchJSONDatas("api/friendship/invite", "POST", { addressee: searchFriend.value }).catch((err) => {
-    console.log(err);
-  });
-  searchFriend.value = "";
+const block = async (user: User | undefined) => {
+  if (user)
+    await fetchJSONDatas("api/friendship/block", "PUT", { addressee: user.nickname }).catch((err) => {
+      console.log(err);
+    });
 };
 function redirectToEdit() {
   window.location.href = "/edit";

@@ -9,6 +9,7 @@ import { unlink } from 'fs';
 import { JwtService } from '@nestjs/jwt';
 import { FriendshipService } from 'src/friendship/friendship.service';
 import { FriendshipEntity } from 'src/friendship/entities/friendship.entity';
+import { ServerService } from 'src/server/server.service';
 
 @Injectable()
 export class UserService {
@@ -127,6 +128,11 @@ export class UserService {
 
   async updateElo(newElo: number, userId: number) {
     await this._usersRepository.update(userId, { elo: newElo });
+    return { success: true };
+  }
+
+  async updateStatus(userId: number, newStatus: string) {
+    await this._usersRepository.update(userId, { status: newStatus });
     return { success: true };
   }
 
