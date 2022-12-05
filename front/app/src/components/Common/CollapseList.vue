@@ -13,7 +13,7 @@
 import { ref } from "vue";
 
 const props = defineProps<{
-  toggleMode: boolean,
+  toggleMode: boolean;
   title: string;
   data: any[] | undefined;
 }>();
@@ -24,3 +24,19 @@ const toggle = () => {
   show.value = !show.value;
 };
 </script>
+
+<style lang="scss" scoped>
+@import "../../styles/variables";
+
+nav {
+  h3 {
+    color: $primary;
+    border-bottom: 1px solid #4f4d99;
+    margin: 5px 0 15px 0;
+    &:hover {
+      cursor: pointer;
+      opacity: 0.8;
+    }
+  }
+}
+</style>

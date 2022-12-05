@@ -331,8 +331,7 @@ body {
 }
 
 .navbar {
-  height: 85px;
-  width: 100vw;
+  height: 7vh;
   background: $secondary;
   display: flex;
   justify-content: center;

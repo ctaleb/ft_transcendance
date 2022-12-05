@@ -3,30 +3,37 @@
   <div class="modal">
     <span @click="$emit('closeMuteModal')" class="close-modal"><i class="gg-close-o"></i></span>
     <h2>Mute {{ member.nickname }}</h2>
-    <div>Duration: {{ picked }} minutes</div>
     <div class="radioBundle">
-      <input type="radio" name="0" value="0" v-model="picked" checked />
-      <label for="0">unmute</label>
-
-      <input type="radio" name="5" value="5" v-model="picked" />
-      <label for="5">5 min</label>
-
-      <input type="radio" name="10" value="10" v-model="picked" />
-      <label for="10">10 min</label>
-
-      <input type="radio" name="30" value="30" v-model="picked" />
-      <label for="30">30 min</label>
-
-      <input type="radio" name="60" value="60" v-model="picked" />
-      <label for="60">1 h</label>
-
-      <input type="radio" name="180" value="180" v-model="picked" />
-      <label for="180">3 h</label>
-
-      <input type="radio" name="360" value="360" v-model="picked" />
-      <label for="360">6 h</label>
+      <div>
+        <input type="radio" name="0" value="0" v-model="picked" checked />
+        <label for="0">unmute</label>
+      </div>
+      <div>
+        <input type="radio" name="5" value="5" v-model="picked" />
+        <label for="5">5 min</label>
+      </div>
+      <div>
+        <input type="radio" name="10" value="10" v-model="picked" />
+        <label for="10">10 min</label>
+      </div>
+      <div>
+        <input type="radio" name="30" value="30" v-model="picked" />
+        <label for="30">30 min</label>
+      </div>
+      <div>
+        <input type="radio" name="60" value="60" v-model="picked" />
+        <label for="60">1 h</label>
+      </div>
+      <div>
+        <input type="radio" name="180" value="180" v-model="picked" />
+        <label for="180">3 h</label>
+      </div>
+      <div>
+        <input type="radio" name="360" value="360" v-model="picked" />
+        <label for="360">6 h</label>
+      </div>
     </div>
-    <button @click="mute()">Submit</button>
+    <button class="button" @click="mute()">Submit</button>
   </div>
 </template>
 
@@ -67,3 +74,25 @@ const mute = async () => {
     .catch(() => {});
 };
 </script>
+
+<style lang="scss" scoped>
+.modal {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 12px;
+  width: 20%;
+  .radioBundle {
+    display: flex;
+    flex-direction: column;
+    div {
+      margin-top: 8px;
+      margin-bottom: 8px;
+    }
+  }
+  .button {
+    margin-top: 15px;
+  }
+}
+</style>
