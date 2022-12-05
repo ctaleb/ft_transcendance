@@ -70,7 +70,7 @@
       <div :class="!displayLoading ? '' : ' hidden'" class="svgSection">
         <img src="../assets/playGame.gif" alt="" class="playButton" @click="findMatch()" />
       </div>
-      <div :class="displayLoading ? '' : ' hidden'" class="loadingDiv">
+      <div :class="displayLoading && lobbyStatus != 'Play !' ? '' : ' hidden'" class="loadingDiv">
         <img src="../assets/loadingGameIllustration.gif" alt="" class="loadingImage" />
       </div>
     </div>
@@ -746,6 +746,7 @@ const customInvitation = () => {};
 
 .mainContainer {
   justify-content: space-around;
+  z-index: 1;
   .inviter {
     display: flex;
     flex-direction: column;
