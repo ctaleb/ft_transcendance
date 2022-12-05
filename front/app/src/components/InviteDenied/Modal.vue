@@ -1,9 +1,7 @@
 <template>
   <div class="modal">
-    <div>
-      <h1>{{ props.inviter }} declined your invitation...</h1>
-      <button @click="$emit('sadStory')">Ok</button>
-    </div>
+    <h1>{{ props.inviter }} declined your invitation</h1>
+    <button class="button" @click="$emit('sadStory')">Ok</button>
   </div>
 </template>
 
@@ -15,3 +13,17 @@ const props = defineProps<{
   inviter: String;
 }>();
 </script>
+
+<style lang="scss" scoped>
+@import "../../styles/inputsAndButtons";
+
+.modal {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  .button {
+    width: 30%;
+  }
+}
+</style>

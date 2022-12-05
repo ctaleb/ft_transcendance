@@ -1,13 +1,12 @@
 <template>
   <div class="channel-in-modal">
     <h3>{{ channel.name }}</h3>
-    <div v-if="channel.type === ChannelType.PUBLIC"><i class="gg-lock-unlock"></i></div>
-    <div v-else-if="channel.type === ChannelType.PROTECTED">
+    <div v-if="channel.type === ChannelType.PROTECTED">
       <i class="gg-lock"></i>
       <input type="password" v-model="passwordField" placeholder="password" />
     </div>
-    <button @click="joinChannel(channel)">Join</button>
-    <button v-if="channel.type === ChannelType.PRIVATE" @click="declineInvitation(channel)">Decline</button>
+    <button class="button" @click="joinChannel(channel)">Join</button>
+    <button class="button" v-if="channel.type === ChannelType.PRIVATE" @click="declineInvitation(channel)">Decline</button>
   </div>
 </template>
 
@@ -53,3 +52,5 @@ const declineInvitation = async (channel: Channel) => {
     .catch(() => {});
 };
 </script>
+
+<style lang="scss" scoped></style>

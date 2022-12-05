@@ -840,7 +840,7 @@ const customInvitation = () => {};
   transform: translate(-50%, -50%);
   width: 70%;
   background-color: white;
-  padding: 6rem;
+  padding: 3rem;
   border-radius: 5px;
   box-shadow: 0 3rem 5rem rgba(0, 0, 0, 0.3);
   z-index: 10;

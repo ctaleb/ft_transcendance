@@ -1,14 +1,14 @@
 <template>
   <div class="modal">
     <PlayerInfo :player="props.data.host" />
-    <div>
+    <div class="midSection">
       <h2>{{ props.title }}</h2>
       <p>{{ dayjs(props.start).format("DD/MM/YY") }}</p>
       <p>
         {{ dayjs(dayjs(props.end).diff(props.start)).format("hh:mm:ss") }}
       </p>
-      <div class="versus">VS</div>
-      <button @click="$emit('close')">Close</button>
+      <h2>VS</h2>
+      <button class="button" @click="$emit('close')">Close</button>
     </div>
     <PlayerInfo :player="props.data.client" />
   </div>
@@ -32,55 +32,20 @@ const emit = defineEmits<{
 </script>
 
 <style lang="scss" scoped>
+@import "../../styles/inputsAndButtons";
+@import "../../styles/variables";
 .modal {
   display: flex;
   justify-content: space-between;
-  background-color: #2a2a2a;
-  color: #bcaf7b;
-
-  &:deep(p),
-  &:deep(h2),
-  &:deep(h3) {
-    margin: 0;
-  }
-
-  &:deep(h2) {
-    font-size: 2.5rem;
-  }
-
-  &:deep(h3) {
-    font-weight: normal;
-    font-size: 1.5rem;
-    margin-bottom: 10px;
-  }
-
-  & > div {
-    height: 100%;
+  background-color: $secondary;
+  color: $primary;
+  .midSection {
     display: flex;
     flex-direction: column;
-    align-content: center;
-    justify-content: space-between;
-    .titleVictory {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      font-size: 4vw;
-      .date {
-        font-size: 1vw;
-      }
-      .time {
-        font-size: 1vw;
-      }
-    }
-    .versus {
-      height: 50%;
-      font-size: 7vw;
-      font-weight: bolder;
-      color: #bcaf7b;
-    }
-    .closeButton {
-      position: absolute;
-      bottom: 0;
+    justify-content: center;
+    align-items: center;
+    .button {
+      margin-top: auto;
     }
   }
 }
