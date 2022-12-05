@@ -34,6 +34,7 @@ const unfriend = async () => {
   await fetchJSONDatas("api/friendship/unfriend", "DELETE", { addressee: props.friend.nickname })
     .then((data) => {
       store.user?.friends!.splice(store.user?.friends!.indexOf(props.friend), 1);
+      socket?.emit("unfriend", { id: store.user?.id, addresseeId: props.friend.id, target: props.friend.nickname, requester: store.user?.nickname });
     })
     .catch(() => {});
 };

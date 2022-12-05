@@ -51,12 +51,11 @@ const emits = defineEmits([
   "closeChannelModal",
 ]);
 
-const friends: Ref<User[] | undefined> = ref();
+const store = useStore();
+const friends: Ref<User[] | undefined> = ref([]);
 const showAllChannelsModal = ref(false);
 const showInvitationsModal = ref(false);
 const showChannelModal = ref(false);
-
-const store = useStore();
 
 const createConversation = async (element: User) => {
   const conv: any = await User.createConversation(element);

@@ -28,26 +28,5 @@ onMounted(() => {
       me.value = (<Channel>store.currentChat!).members!.find((member) => member.id === store.user!.id)!;
     }
   );
-  // watch(
-  //   () => store.socket,
-  //   () => {
-  //chat listeners
-  if (!store.socket?.hasListeners("updateChannelMembers")) {
-    store.socket?.on("updateChannelMembers", async (channelId: number) => {
-      if (store.currentChat && isChannel(store.currentChat) && channelId === store.currentChat.id) {
-        await fetchJSONDatas("api/chat/members", "POST", {
-          id: store.currentChat!.id,
-        })
-          .then((data) => {
-            store.$patch({
-              currentChat: { members: data },
-            });
-          })
-          .catch(() => {});
-      }
-    });
-  }
-  //   }
-  // );
 });
 </script>

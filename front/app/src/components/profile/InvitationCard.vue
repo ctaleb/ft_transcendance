@@ -24,6 +24,7 @@
 </template>
 
 <script lang="ts" setup>
+import { fetchJSONDatas } from "@/functions/funcs";
 import { useStore } from "@/store";
 import { User } from "@/types/User";
 import { useRouter } from "vue-router";
@@ -39,29 +40,16 @@ const watchProfile = () => {
   router.push("/profile/" + props.invitation.nickname);
 };
 
-const befriend = (invitation: User) => {
-  fetch("http://" + window.location.hostname + ":3000/api/friendship/befriend", {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + localStorage.getItem("token"),
-    },
-    body: JSON.stringify({
-      addressee: invitation.nickname,
-    }),
+const befriend = async (invitation: User) => {
+  await fetchJSONDatas("api/friendship/befriend", "PUT", {
+    addressee: invitation.nickname,
   })
-    .then((res) => {
-      if (res.status !== 200) {
-        throw res.statusText;
-      }
-      return res.json();
-    })
-    .then((data) => {
+    .then(() => {
       store.user?.invitations?.splice(store.user?.invitations?.indexOf(invitation), 1);
       store.user?.friends?.push(invitation);
-      // checkNotificationBadge();
+      store.socket?.emit("befriend", { id: store.user?.id, addresseeId: invitation.id, target: invitation.nickname, requester: store.user?.nickname });
     })
-    .catch((err) => console.log(err));
+    .catch(() => {});
 };
 
 const decline = (invitation: User) => {

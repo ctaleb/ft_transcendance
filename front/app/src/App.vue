@@ -90,24 +90,24 @@ store.$subscribe((mutation, state) => {
     });
   }
   if (!state.socket?.hasListeners("friendshipInvite")) {
-    state.socket?.on("friendshipInvite", (requester: User) => {
-      incomingFriendRequest.value = requester.nickname;
+    state.socket?.on("friendshipInvite", (requester: string) => {
+      incomingFriendRequest.value = requester;
       profileNotificationBadge.value = true;
-      getUserByNickname(requester.nickname).then((data) => {
+      getUserByNickname(requester).then((data) => {
         state.user?.invitations?.push(data!);
       });
     });
   }
   if (!state.socket?.hasListeners("acceptInvite")) {
-    state.socket?.on("acceptInvite", (requester: User) => {
-      getUserByNickname(requester.nickname).then((data) => {
+    state.socket?.on("acceptInvite", (requester: string) => {
+      getUserByNickname(requester).then((data) => {
         state.user?.friends?.push(data!);
       });
     });
   }
   if (!state.socket?.hasListeners("removeFriend")) {
-    state.socket?.on("removeFriend", (requester: User) => {
-      getUserByNickname(requester.nickname).then((data) => {
+    state.socket?.on("removeFriend", (requester: string) => {
+      getUserByNickname(requester).then((data) => {
         state.user?.friends?.splice(state.user?.friends?.indexOf(data!), 1);
       });
     });
