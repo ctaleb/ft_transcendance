@@ -825,6 +825,7 @@ const customInvitation = () => {};
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: -1;
   .loadingImage {
     width: 400px;
     height: 400px;
