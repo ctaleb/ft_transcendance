@@ -2,9 +2,7 @@
   <div class="overlay"></div>
   <div class="modal">
     <span @click="$emit('closeChannelModal')" class="close-modal"><i class="gg-close-o"></i></span>
-    <h1>Update channel</h1>
-    <div>Channel Name: {{ channel.name }}</div>
-    <div>Channel type: {{ picked }}</div>
+    <h3>{{ channel.name }} - {{ picked }} channel</h3>
     <div class="radioBundle">
       <input type="radio" id="one" name="public" value="public" v-model="picked" />
       <label for="public">public</label>
@@ -15,13 +13,10 @@
       <input type="radio" id="three" name="private" value="private" v-model="picked" />
       <label for="private">private</label>
     </div>
-    <div v-if="picked === 'protected'">
-      <label for="channelPassword">Password:</label>
-      <div class="searchBar">
-        <input type="password" class="searchField" name="channelPassword" placeholder="Password" v-model="channelPassword" required />
-      </div>
+    <div v-if="picked === 'protected'" class="searchBar">
+      <input type="password" class="searchField" name="channelPassword" placeholder="Password" v-model="channelPassword" required />
     </div>
-    <button @click="updateChannel">Update channel</button>
+    <button class="button" @click="updateChannel">Update channel</button>
   </div>
 </template>
 
@@ -69,3 +64,31 @@ onMounted(() => {
   picked.value = <string>props.channel.type;
 });
 </script>
+
+<style lang="scss" scoped>
+@import "../../../styles/variables";
+.modal {
+  z-index: 5;
+  padding: 10px;
+  width: 30%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+  h3 {
+    margin: 0;
+    color: $primary;
+  }
+  .radioBundle {
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+  .searchBar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 10px;
+    width: 70%;
+  }
+}
+</style>

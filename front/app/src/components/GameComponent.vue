@@ -1,7 +1,7 @@
 <template>
   <section class="lobby container">
     <div class="principalSection">
-      <div class="mainContainer" :class="!displayLoading ? '' : ' hidden'">
+      <div class="mainContainer" :class="lobbyStatus == 'Find match' ? '' : ' hidden'">
         <div>
           <power-slider-component v-model="power" id="powerSlider" />
           <div v-if="!toggleLadder">
@@ -67,10 +67,10 @@
           </div>
         </div>
       </div>
-      <div :class="!displayLoading ? '' : ' hidden'" class="svgSection">
+      <div :class="lobbyStatus == 'Find match' ? '' : ' hidden'" class="svgSection">
         <img src="../assets/playGame.gif" alt="" class="playButton" @click="findMatch()" />
       </div>
-      <div :class="displayLoading && lobbyStatus != 'Play !' ? '' : ' hidden'" class="loadingDiv">
+      <div :class="lobbyStatus == 'Looking for an opponent...' ? '' : ' hidden'" class="loadingDiv">
         <img src="../assets/loadingGameIllustration.gif" alt="" class="loadingImage" />
       </div>
     </div>
@@ -824,6 +824,7 @@ const customInvitation = () => {};
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: -1;
   .loadingImage {
     width: 400px;
     height: 400px;
@@ -839,7 +840,7 @@ const customInvitation = () => {};
   transform: translate(-50%, -50%);
   width: 70%;
   background-color: white;
-  padding: 6rem;
+  padding: 3rem;
   border-radius: 5px;
   box-shadow: 0 3rem 5rem rgba(0, 0, 0, 0.3);
   z-index: 10;

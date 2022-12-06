@@ -10,13 +10,14 @@
     <CollapseList :toggleMode="true" title="Channels" :data="channels" v-slot="{ element }: { element: Channel }">
       <ChatMenuItem @set-current-chat-window="setCurrentChatWindow(element)" :title="Channel.getName(element)" />
     </CollapseList>
-    <hr />
     <CollapseList :toggleMode="false" title="Friends" :data="friends" v-slot="{ element }: { element: User }">
       <ChatMenuItem @click="createConversation(element)" :title="User.getName(element)" :picture="User.getAvatar(element)" />
     </CollapseList>
-    <button @click="showAllChannelsModal = true">All Channels</button>
-    <button @click="showInvitationsModal = true">Invitations</button>
-    <button @click="showChannelModal = true">Create new channel</button>
+    <div class="menuBottomButtons">
+      <button class="button" @click="showAllChannelsModal = true">All Channels</button>
+      <button class="button" @click="showInvitationsModal = true">Invitations</button>
+      <button class="button" @click="showChannelModal = true">Create new channel</button>
+    </div>
   </div>
   <AllChannelsModal v-if="showAllChannelsModal" @close-all-channels-modal="showAllChannelsModal = false" @join-channel="joiningNewChannel" />
   <InvitationsModal v-if="showInvitationsModal" @join-private-channel="joiningNewPrivateChannel" @close-invitations-modal="showInvitationsModal = false" />
@@ -162,3 +163,17 @@ onMounted(() => {
   );
 });
 </script>
+
+<style lang="scss" scoped>
+.menuBottomButtons {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-top: auto;
+  button {
+    width: 100%;
+  }
+}
+</style>

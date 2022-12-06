@@ -1,6 +1,6 @@
 FROM node:18-bullseye
 RUN apt-get update && apt-get upgrade
-RUN npm install -g npm@9.1.2
+RUN npm install -g npm@9.1.3
 COPY app/ /front/app/
 WORKDIR /front/app/
 RUN npm i

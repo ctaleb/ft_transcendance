@@ -15,3 +15,9 @@ defineProps<{
   picture?: string;
 }>();
 </script>
+<style lang="scss" scoped>
+@import "../../styles/variables";
+h4 {
+  color: $primary;
+}
+</style>

@@ -1,73 +1,188 @@
 @import "../variables";
+@import "../inputsAndButtons";
 
-.chat-body {
+#chat {
+  overflow-x: hidden;
   display: flex;
-  justify-content: space-between;
-  height: 89%;
-  width: 100%;
-
-  .chat-area {
-    position: relative;
-    height: 100%;
+  height: calc(93vh - 1px);
+  width: 100vw;
+  .default-chat-window {
+    display: flex;
     width: 100%;
-    background-color: lighten($chat-background, 40%);
+    background-color: $secondary;
+    justify-content: center;
+    align-items: center;
+    color: $primary;
+  }
+  .chat-window {
+    width: 85%;
+    height: 100%;
+    background-color: $secondary;
+    display: flex;
+    flex-direction: column;
+  }
+  .chat-window-header {
+    display: flex;
+    position: relative;
+    height: 10%;
+    width: 100%;
+    color: $chat-primary-color;
+    border-bottom: solid $primary;
+    align-items: center;
 
-    .chat-input {
-      position: absolute;
+    button {
+      background: none;
+      border: solid $chat-secondary-color;
+      color: $chat-secondary-color;
+      margin: 0 2%;
+    }
+
+    .chat-window-header-info {
       display: flex;
-      bottom: 0;
+      flex-direction: row;
+      justify-content: flex-start;
+      align-items: center;
+      padding: 0 5%;
       width: 100%;
-      .searchBar {
-        width: 100%;
-        height: 100%;
-        position: relative;
-        display: flex;
-        justify-content: flex-start;
-        border: 3px solid;
-        border-image-slice: 1;
-        border-image-source: linear-gradient(to bottom, #242218, #c1a36b);
-        background: linear-gradient(to bottom, #071018, #151d23);
-        font-size: 10px;
-        align-items: center;
-        .searchField {
-          width: 100%;
-          border: unset;
-          background: inherit;
-          font-size: 2em;
-          height: auto;
-          color: grey;
-          &:-webkit-autofill {
-            transition: background-color 5000s ease-in-out 0s;
-            -webkit-text-fill-color: rgb(239, 206, 206);
-          }
-        }
-        .searchField:focus {
-          outline: none;
-          caret-color: grey;
+      height: 100%;
+      h2 {
+        margin: 0;
+      }
+      i {
+        margin-left: auto;
+        color: $primary;
+        --ggs: 1.3;
+        &:hover {
+          cursor: pointer;
+          color: white;
         }
       }
-      button {
-        position: relative;
-        height: auto;
-        width: 10%;
-        color: #aa9e7d;
-        border-image-slice: 1;
-        border-image-source: linear-gradient(to bottom, #c1a36b, #635e4f);
-        background: linear-gradient(to bottom right, #191e2a, #182121);
-        padding: 0;
+
+      p {
+        margin: 0;
+        color: darken($chat-primary-color, 40%);
       }
     }
   }
-  .channel-info {
-    width: 20%;
-    border-left: solid $chat-secondary-color;
-    .channel-options {
+  .chat-body {
+    height: 90%;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    .chat-area {
+      height: 100%;
+      width: 100%;
       display: flex;
       flex-direction: column;
-      justify-content: space-around;
-      align-items: center;
-      height: 10%;
-      border-bottom: solid $chat-secondary-color;
+      .chat-messages {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        height: 95%;
+        padding: 10px;
+        overflow-y: auto;
+        background: rgb(55, 46, 31);
+        background: radial-gradient(circle, rgba(55, 46, 31, 1) 0%, rgba(37, 31, 19, 1) 100%);
+
+        .button {
+          margin-top: 5px;
+        }
+        .chat-message {
+          text-align: left;
+          width: fit-content;
+          max-width: 45%;
+          overflow-wrap: break-word;
+          padding: 10px;
+          min-width: 30%;
+          h4,
+          p {
+            margin: 5px 2px 5px 2px;
+          }
+          .date {
+            color: rgb(102, 88, 59);
+            text-align: right;
+            font-size: 12px;
+          }
+        }
+
+        .msg-in {
+          display: flex;
+          gap: 1%;
+          align-items: center;
+          width: 100%;
+          align-self: flex-start;
+          margin-bottom: 25px;
+          background: transparent;
+          img {
+            height: 50px;
+          }
+        }
+        .msg-out {
+          display: flex;
+          gap: 1%;
+          width: 100%;
+          align-items: center;
+          align-self: flex-end;
+          margin-bottom: 25px;
+          background: transparent;
+          img {
+            height: 50px;
+          }
+        }
+        .chat-message-in {
+          background-color: #957c55;
+          color: $secondary;
+          border-left: 1px solid $primary;
+          border-radius: 0 1rem 1rem 0;
+          box-shadow: 1.5px 1.5px 1.5px rgba(132, 109, 55, 0.692);
+        }
+        .chat-message-out {
+          background-color: #c2a672;
+          color: $secondary;
+          border-right: 1px solid $primary;
+          border-radius: 1rem 0 0 1rem;
+          box-shadow: -1.5px 1.5px 1.5px rgba(132, 109, 55, 0.692);
+          margin-left: auto;
+        }
+      }
+      .chat-input {
+        height: 5%;
+        width: 100%;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-around;
+        border: 1px solid $primary;
+        .input {
+          height: 100%;
+          width: 100%;
+          background: rgb(26, 25, 23);
+          padding: 0 10px 0 10px;
+          border-bottom: none;
+        }
+      }
+      .button {
+        width: 10%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        &:hover {
+          background-color: $secondary;
+          padding: 8px;
+        }
+        img {
+          width: 100%;
+          height: 100%;
+        }
+      }
+    }
+    .channel-info {
+      width: 15%;
+      .channel-options {
+        .button {
+          width: 100%;
+        }
+      }
     }
   }
 }
