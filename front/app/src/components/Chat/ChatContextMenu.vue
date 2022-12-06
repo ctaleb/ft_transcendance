@@ -8,10 +8,11 @@
   </div>
 </template>
 
+<!-- Need to add isBlocked() to show/ornot blockbutton -->
+
 <script setup lang="ts">
 import { fetchJSONDatas } from "@/functions/funcs";
-import { useStore, menu } from "@/store";
-import { User } from "@/types/User";
+import { menu, useStore } from "@/store";
 import { useRouter } from "vue-router";
 
 const store = useStore();
@@ -52,15 +53,24 @@ const block = async () => {
 </script>
 
 <style lang="scss" scoped>
+@import "@/styles/variables";
 .contextMenu {
   display: flex;
   flex-direction: column;
   width: 60px;
-  background-color: black;
 
-  & > button {
+  button {
+    background-color: $background;
+    color: $primary;
+    border: 1px solid lighten($background, 20%);
     height: 20px;
     width: 60px;
+    transition: all 0.5s ease;
+
+    :hover {
+      background-color: lighten($background, 20%);
+      border: 1px solid $primary;
+    }
   }
 }
 </style>
