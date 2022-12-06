@@ -1,34 +1,64 @@
 <template>
-  <div id="backgroundVideo">
-    <video class="video" ref="video" autoplay loop muted>
-      <source src="../assets/stars.webm" type="video/mp4" />
-    </video>
-  </div>
-  <div v-if="twofaFlag == false" class="main_container">
-    <img src="https://findicons.com/files/icons/1275/naruto_vol_1/256/uzumaki_naruto.png" width="80" height="80" alt="" />
-    <div class="bounce">
-      <p>SUPERPONG</p>
+  <div class="principalSection">
+    <div class="mainContainer">
+      <img src="../assets/logo.gif" width="270" height="270" alt="" />
+      <div class="twofaComponentDiv" v-if="twofaFlag == true">
+        <two-factor-component class="twoFactorComponent" v-model="codeValidated" @twofaSuccessClassicUser="login" @twofaSuccessIntraUser="studentLogin" />
+      </div>
+      <register-component v-if="displayRegister == true" v-model="displayRegister" />
+      <div v-if="twofaFlag == false && displayRegister == false" style="width: 100%">
+        <div class="classicLogin">
+          <form @submit.prevent="login" style="margin-bottom: 2em">
+            <input class="input" placeholder="Username" v-model="username" type="text" id="username" name="username" required /><br /><br />
+            <input class="input" placeholder="Password" v-model="password" type="password" id="password" name="password" required /><br /><br />
+            <button type="submit" value="Connexion" class="button classic_login_btn pulse">Login</button>
+          </form>
+        </div>
+        <div class="sectionDivider">
+          <hr class="solid divider" />
+          <h4>Or</h4>
+          <hr class="solid divider" />
+        </div>
+        <div class="intraLogin">
+          <button class="button pulse" @click="redirectTo(intra_redirection)">Continue with 42</button>
+        </div>
+      </div>
+      <div class="register" v-if="twofaFlag == false && displayRegister == false">
+        <p>Don't have an account yet ?</p>
+        <button class="button pulse" @click="displayRegister = true">New account</button>
+      </div>
     </div>
-    <form @submit.prevent="login" style="margin-bottom: 2em">
-      <input class="input" placeholder="Username" v-model="username" type="text" id="username" name="username" required /><br /><br />
-      <input class="input" placeholder="Password" v-model="password" type="password" id="password" name="password" required /><br /><br />
-      <button type="submit" value="Connexion" class="button classic_login_btn pulse">Connexion</button>
-    </form>
-    <hr class="solid divider" />
-    <a class="button pulse" v-bind:href="intra_redirection"> Continue with 42 </a>
-    <a id="signup_link" href="/signup">New account</a>
+    <div class="svgSection">
+      <img src="../assets/taken.svg" alt="" />
+    </div>
   </div>
   <!--   <div :style="{ color: login_failed_color }" v-if="login_failed_msg"> -->
   <div class="text-red" v-if="login_failed_msg">Login failed. Please try again.</div>
-  <div class="twofaComponentDiv">
-    <two-factor-component
-      v-if="twofaFlag == true"
-      class="twoFactorComponent"
-      v-model="codeValidated"
-      @twofaSuccessClassicUser="login"
-      @twofaSuccessIntraUser="studentLogin"
-    />
+  <div class="footer">
+    <h2>Welcome to Superpong</h2>
+    <div class="howToPlay">
+      <div class="howToPlaySection">
+        <i class="gg-log-in gg-icon"></i>
+        <h4>Register</h4>
+      </div>
+      <div class="howToPlaySection">
+        <i class="gg-games gg-icon"></i>
+        <h4>Play</h4>
+      </div>
+      <div class="howToPlaySection">
+        <i class="gg-comment gg-icon"></i>
+        <h4>Chat with your friends</h4>
+      </div>
+    </div>
   </div>
+
+  <svg class="bottomSvg" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
+    <path
+      fill="#C1A36B"
+      fill-opacity="1"
+      d="M0,64L80,58.7C160,53,320,43,480,48C640,53,800,75,960,74.7C1120,75,1280,53,1360,42.7L1440,32L1440,320L1360,320C1280,320,1120,320,960,320C800,320,640,320,480,320C320,320,160,320,80,320L0,320Z"
+    ></path>
+  </svg>
 </template>
 
 <script lang="ts" setup>
@@ -37,6 +67,7 @@ import { useStore } from "@/store";
 import { User } from "@/types/User";
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
+import registerComponent from "../components/registerComponent.vue";
 import twoFactorComponent from "../components/twoFactorComponent.vue";
 
 const router = useRouter();
@@ -56,6 +87,7 @@ let token = {
   login_failed_msg = ref(false);
 let codeValidated = ref(false);
 let twofaFlag = ref(false);
+let displayRegister = ref(false);
 // computed: {
 //   videoElement() {
 //     return this.$refs.video;
@@ -79,7 +111,22 @@ onMounted(async () => {
     await studentLogin(code);
   }
 });
-
+function redirectTo(url: string) {
+  location.href = url;
+}
+async function sendCode() {
+  await fetch("http://" + window.location.hostname + ":3000/api/twofactor/sendCode/" + localStorage.getItem("phoneTo2fa"), {
+    method: "POST",
+  })
+    .then((data) => data.json())
+    .then((data) => {
+      console.log(data.status);
+      //error in the console(unexpected json input) because i don't return jsons format in the service and the controller. Need to add return before the send function, and make a json return int eh last then
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+}
 async function login() {
   let data = await funcs
     .fetchJSONDatas("api/Authentication/login", "POST", {
@@ -164,187 +211,98 @@ async function studentLogin(code: string) {
   funcs.trySetupUser().then(() => {
     router.push("/game");
   });
-
-  async function sendCode() {
-    await fetch("http://" + window.location.hostname + ":3000/api/twofactor/sendCode/" + localStorage.getItem("phoneTo2fa"), {
-      method: "POST",
-    })
-      .then((data) => data.json())
-      .then((data) => {
-        console.log(data.status);
-        //error in the console(unexpected json input) because i don't return jsons format in the service and the controller. Need to add return before the send function, and make a json return int eh last then
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  }
 }
 </script>
 
 <style lang="scss" scoped>
 @import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Press+Start+2P&display=swap");
-.bounce {
-  height: 50px;
-  overflow: hidden;
-  position: relative;
-  color: #aa9e7d;
-  margin: 1rem auto;
-  width: 20rem;
-  border-left: #aa9e7d 4px SOLID;
-  border-right: #aa9e7d 4px SOLID;
-  p {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    line-height: 50px;
-    text-align: center;
-    font-family: "Orbitron", sans-serif;
-    font-size: 25px;
-    -moz-transform: translateX(50%);
-    -webkit-transform: translateX(50%);
-    transform: translateX(50%);
-    -moz-animation: bouncing-text 1s linear infinite alternate;
-    -webkit-animation: bouncing-text 1s linear infinite alternate;
-    animation: bouncing-text 2s linear infinite alternate;
-  }
-}
-
-@-moz-keyframes bouncing-text {
-  0% {
-    -moz-transform: translateX(50%);
-  }
-  100% {
-    -moz-transform: translateX(-50%);
-  }
-}
-
-@-webkit-keyframes bouncing-text {
-  0% {
-    -webkit-transform: translateX(50%);
-  }
-  100% {
-    -webkit-transform: translateX(-50%);
-  }
-}
-
-@keyframes bouncing-text {
-  0% {
-    -moz-transform: translateX(22%);
-    -webkit-transform: translateX(22%);
-    transform: translateX(22%);
-  }
-  100% {
-    -moz-transform: translateX(-22%);
-    -webkit-transform: translateX(-22%);
-    transform: translateX(-22%);
-  }
-}
+@import "../styles/variables";
+@import "../styles/inputsAndButtons";
+@import "../styles/mixins/sizes";
+@import "../styles/svgStyles";
+@import "../styles/containerStyle.scss";
 .twofaComponentDiv {
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-#backgroundVideo {
-  position: fixed;
-  right: 0;
-  bottom: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: -1;
-  .video {
+.mainContainer {
+  height: 65vh;
+  .classicLogin {
     width: 100%;
-    height: 100%;
+  }
+  .intraLogin {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+  }
+  .register {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin-top: auto;
+    margin-bottom: 15px;
+  }
+  register-component {
+    width: 100%;
+  }
+  img {
+    margin-top: 2rem;
+  }
+  .sectionDivider {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+
+    h4 {
+      margin: 0 15px 0 15px;
+    }
+    .divider {
+      margin: 2rem auto;
+      border-color: #aa9e7d;
+      width: 10rem;
+    }
   }
 }
 
-.loadingGif {
-  width: 100vw;
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.main_title {
-  //  font-family: "Press Start 2P", cursive;
-  font-family: "Orbitron", sans-serif;
-  margin: 1rem auto;
-  width: 20rem;
-}
-.button {
-  position: relative;
-  height: auto;
-  padding: 5px;
-  color: #aa9e7d;
-  border: 3px solid;
-  border-image-slice: 1;
-  border-image-source: linear-gradient(to bottom, #c1a36b, #635e4f);
-  background: linear-gradient(to bottom right, #191e2a, #182121);
-}
-
-.main_container {
-  //  https://i.gifer.com/QgxJ.gif
-  background-image: url("https://cdna.artstation.com/p/assets/images/images/015/582/594/4k/artur-sadlos-leg-never-sh270-background-as-v001.jpg?1548866512&dl=1");
-  background-size: cover;
-  border: 2px solid;
-  border-image-slice: 1;
-  border-image-source: linear-gradient(to bottom, #c1a36b, #635e4f);
-  border-radius: 10px;
-  box-shadow: 5px 5px 5px #5c5b58;
-  color: #aa9e7d;
-  margin: 20rem auto;
-  width: 60rem;
-  text-align: center;
-}
-.input {
-  padding: 8px;
-  border-radius: 60px;
-  border: solid 3px #aa9e7d;
-  border-radius: 10px;
-  width: 12rem;
-}
-#signup_link {
-  color: white;
-  display: block;
-  margin-top: 2rem;
-  margin-bottom: 3rem;
-  font-size: 20px;
-  text-decoration: underline;
-}
-.classic_login_btn {
-  width: 12rem;
-  margin-left: 0;
-}
-.divider {
-  margin: 2rem auto;
-  border-color: #aa9e7d;
-  width: 12rem;
-}
-// Animate the size, outside
-.pulse:hover,
-.pulse:focus {
-  animation: pulse 1s;
-  box-shadow: 0 0 0 0.5em transparent;
-}
-
-@keyframes pulse {
-  0% {
-    box-shadow: 0 0 0 0 var(--hover);
+.svgSection {
+  width: 30%;
+  img {
+    width: 100%;
   }
 }
-$colors: (
-  pulse: #aa9e7d,
-);
 
-// Sass variables compile to a static string; CSS variables are dynamic and inherited
-// Loop through the map and set CSS custom properties using Sass variables
-@each $button, $color in $colors {
-  .#{$button} {
-    --color: #{$color};
-    --hover: #{adjust-hue($color, 45deg)};
+.footer {
+  margin-top: 4rem;
+  position: absolute;
+  bottom: 0;
+  .howToPlay {
+    width: 100vw;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    font-size: 25px;
+    .howToPlaySection {
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      width: 20%;
+      .gg-icon {
+        --ggs: 1.5;
+      }
+    }
+  }
+  h2 {
+    text-align: center;
+    color: white;
   }
 }
 

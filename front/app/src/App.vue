@@ -1,13 +1,15 @@
 <template>
   <div>
-    <nav class="navbar">
-      <div style="display: flex; position: relative; justify-content: center" v-if="$route.path != '/' && $route.path != '/signup'">
-        <router-link to="/profile"
+    <nav class="navbar" v-if="$route.path != '/' && $route.path != '/signup'">
+      <img src="./assets/navbarLogo.gif" width="85" height="85" alt="" />
+      <div class="links">
+        <router-link to="/profile" class="link"
           >Profile
           <div :class="'dot' + (profileNotificationBadge ? ' show' : '')"></div
         ></router-link>
-        |<router-link to="/game"> PLAY </router-link>|
-        <router-link to="/chat">Chat</router-link>
+        <router-link to="/game" class="link"> PLAY </router-link>
+        <router-link to="/chat" class="link">Chat</router-link>
+        <router-link to="/" class="link" v-on:click.prevent="logout()">Logout</router-link>
       </div>
     </nav>
     <router-view :key="$route.fullPath" @notification="changeNotificationValue" :incoming-friend-request="incomingFriendRequest" />
@@ -32,7 +34,7 @@ import { useStore } from "@/store";
 import { Channel, isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
 import { Alert } from "@/types/GameSummary";
-import { Message, defaultMessageFormat, transformDate } from "@/types/Message";
+import { Message, transformDate } from "@/types/Message";
 import { getUserByNickname, User } from "@/types/User";
 import { onMounted, ref, watch } from "vue";
 import { RouterLink, RouterView, useRoute, useRouter } from "vue-router";
@@ -216,17 +218,9 @@ const invFailure = () => {
 const logout = () => {
   localStorage.removeItem("token");
   localStorage.removeItem("user");
-  store.$reset();
-  // map through that list and use the **$reset** fn to reset the state
-  //  socket? = io("http://" + window.location.hostname + ":3500", {
-  store.socket?.emit("disco", {});
-  //  store.socket? = io("http://" + window.location.hostname + ":3500", {
-  //    transports: ["websocket"],
-  //    // path: "/api/socket.io/",
-  //    autoConnect: false,
-  //  });
+  socket?.emit("disco", {});
+  socket?.close();
 };
-
 const changeNotificationValue = (value: boolean) => {
   profileNotificationBadge.value = value;
 };
@@ -324,7 +318,7 @@ onMounted(() => {
 @import "styles/custom.scss";
 
 body {
-  background-color: #010b12;
+  background-color: $secondary;
   color: #aa9e7d;
   margin: 0;
   padding: 0;
@@ -338,13 +332,26 @@ body {
 }
 
 .navbar {
-  height: 5vh;
-  a {
-    font-weight: bold;
-    color: #f0e68c;
-
-    &.router-link-exact-active {
-      color: #d2691e;
+  height: 85px;
+  width: 100vw;
+  background: $secondary;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-bottom: 1px solid $primary;
+  img {
+    margin-left: 15px;
+    margin-right: auto;
+  }
+  .links {
+    width: 20%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    .link {
+      text-decoration: none;
+      color: $primary;
     }
   }
 }

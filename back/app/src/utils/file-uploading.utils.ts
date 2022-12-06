@@ -1,8 +1,9 @@
+import { UnauthorizedException } from '@nestjs/common';
 import { extname } from 'path';
 
 export const imageFileFilter = (req, file, callback) => {
   if (!file.originalname.match(/\.(jpg|jpeg|png|gif|JPG|JPEG)$/)) {
-    return callback(new Error('Only image files are allowed!'), false);
+    return callback(new UnauthorizedException('Only image files are allowed!'), false);
   }
   callback(null, true);
 };

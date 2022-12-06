@@ -1,0 +1,33 @@
+.bottomSvg {
+  position: absolute;
+  bottom: 0;
+  z-index: -5;
+  height: 39vh;
+  width: 100vw;
+  path {
+    width: 100%;
+  }
+}
+.topSvg {
+  position: absolute;
+  top: 0;
+  z-index: -5;
+  width: 100vw;
+  height: 60vh;
+
+  path {
+    width: 100%;
+  }
+}
+
+.leftBottomSvg {
+  opacity: 0.085;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  z-index: -4;
+  width: 100vw;
+  path {
+    width: 100%;
+  }
+}

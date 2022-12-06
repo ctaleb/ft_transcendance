@@ -40,11 +40,11 @@
 
   .btn {
     display: flex;
+    cursor: pointer;
     justify-content: center;
     align-items: center;
-    box-shadow: 0 0 0 4px lighten($background, 50%),
-      0 0 0 11px darken($background, 10%), 0 0 0 13px $primary;
-    background-color: lighten($background, 10%);
+    box-shadow: 0 0 0 4px lighten($background, 50%), 0 0 0 11px darken($background, 10%), 0 0 0 13px $primary;
+
     width: 150px;
     height: 75px;
     border-radius: 10000px;
@@ -69,13 +69,11 @@
       text-align: center;
       font-size: xx-large;
       font-weight: bolder;
-      color: lighten($background, 70%);
+      color: white;
     }
 
     &:hover {
-      box-shadow: 0 0 0px 4px lighten($background, 70%),
-        0 0 3px 6px lighten($background, 70%),
-        0 0 0 11px darken($background, 10%), 0 0 0 13px $primary,
+      box-shadow: 0 0 0px 4px lighten($background, 70%), 0 0 3px 6px lighten($background, 70%), 0 0 0 11px darken($background, 10%), 0 0 0 13px $primary,
         0 0 4px 15px $primary;
     }
   }
