@@ -3,10 +3,7 @@
 @import "mixins/border";
 @import "variables";
 @import "chat/channel.member";
-@import "chat/global";
 @import "chat/menu";
-@import "chat/window.header";
-@import "chat/messages";
 @import "chat/modals";
 @import "chat/chat";
 @import "profile";
@@ -31,7 +28,7 @@ h3 {
   height: 100%;
   width: 100%;
   background-color: rgba(0, 0, 0, 0.5);
-  z-index: -1;
+  z-index: 5;
 }
 
 .modal {
@@ -41,10 +38,9 @@ h3 {
   left: 50%;
   transform: translate(-50%, -50%);
   border: 3px solid;
-  border-image-slice: 1;
-  border-image-source: linear-gradient(to bottom, #c1a36b, #635e4f);
-  color: grey;
-  background: linear-gradient(to bottom, #071018, #151d23);
+  border: 0.3rem solid $primary;
+  color: white;
+  background: $secondary;
 }
 
 .primary-btn {

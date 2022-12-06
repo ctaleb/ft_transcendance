@@ -3,8 +3,10 @@
   <div class="modal">
     <span @click="$emit('closeInviteModal')" class="close-modal"><i class="gg-close-o"></i></span>
     <h3>Invite to channel</h3>
-    <input type="text" v-model="nickname" placeholder="name" />
-    <button @click="inviteToChannel">Send</button>
+    <div>
+      <input type="text" v-model="nickname" placeholder="name" />
+      <button class="button" @click="inviteToChannel">Send</button>
+    </div>
   </div>
 </template>
 
@@ -43,3 +45,23 @@ const inviteToChannel = async (): Promise<void> => {
   nickname.value = "";
 };
 </script>
+<style lang="scss" scoped>
+.modal {
+  z-index: 5;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+  width: 30%;
+  div {
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    .button {
+      width: 20%;
+    }
+  }
+}
+</style>

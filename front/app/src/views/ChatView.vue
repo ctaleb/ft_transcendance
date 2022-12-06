@@ -2,113 +2,7 @@
   <div id="chat">
     <ChatMenu :channels="myChannels" :convs="privateConvs" />
     <ChatWindow @update-channels-list="updateChannelsList()" />
-    <!-- <div v-if="show == 0" class="lobbyChat">
-      <h2>Welcome on the chat</h2>
-      <br />
-      <h4>Chat with your friends with the contact list to the left</h4>
-    </div> -->
-    <!-- <div v-if="show == 1" class="lobbyChat allChannels">
-      <template v-for="channel in allChannels">
-        <div class="channel">
-          <h5 v-if="channel.type == ChannelType.PRIVATE">Channel invitation</h5>
-          <h3>{{ channel.name }}</h3>
-          <h5 class="textGrey">{{ channel.type }}</h5>
-          <div class="channelControl">
-            <div v-if="channel.type == ChannelType.PROTECTED" class="searchBar">
-              <input type="password" placeholder="password" class="searchField" v-model="channel.passwordField" />
-            </div>
-            <button v-if="channel.type == ChannelType.PRIVATE" class="joinChannel" @click="joinChannel(channel)">Accept</button>
-            <button v-else class="joinChannel" @click="joinChannel(channel)">Join</button>
-            <button v-if="channel.type == ChannelType.PRIVATE" class="joinChannel" @click="declineChannelInvitation(channel)">Decline</button>
-          </div>
-        </div>
-      </template>
-    </div> -->
-    <!-- <div v-if="show == 2" class="conversation">
-      <div class="upperChat">
-        <div
-          :class="{
-            messagesPrivate: thisChannel == null,
-            messages: thisChannel != null,
-          }"
-        >
-          <button class="loadMoreButton" @click="loadMoreMessages($event)">Load more</button>
-          <template v-for="message in messagesToDisplay">
-            <div v-if="message.author == clientNickname" class="clientMessage" v-bind:key="message.text">
-              <h4 class="clientName">
-                {{ message.author }}
-              </h4>
-              <p>{{ message.text }}</p>
-              <p>{{ message.date }}</p>
-            </div>
-            <div v-else class="friendMessage" v-bind:key="message.text">
-              <h4 class="friendName">
-                {{ message.author }}
-              </h4>
-              <p>{{ message.text }}</p>
-              <p>{{ message.date }}</p>
-            </div>
-          </template>
-          <div ref="messagesBoxRef"></div>
-        </div>
-        <div v-if="thisChannel != null" class="channelInfo">
-          <div class="channelHeader">
-            <h1>{{ thisChannel.name }}</h1>
-            <h3>{{ thisChannel.type }}</h3>
-          </div>
-          <div v-for="member in channelMembers" class="channelMember">
-            <img :src="member.image" alt="" />
-            <p
-              :class="{
-                textColorRed: member.role == ChannelRole.OWNER,
-                textColorGold: member.role == ChannelRole.ADMIN,
-              }"
-            >
-              {{ member.nickname }}
-            </p>
-          </div>
-          <div class="actionBar">
-            <button @click="leaveChannel()" class="convListHeader">Leave channel</button>
-            <button v-if="thisChannel.type == ChannelType.PRIVATE" @click="showInvitation()" class="convListHeader">Invite</button>
-          </div>
-        </div>
-      </div>
-      <div class="input">
-        <input type="text" placeholder="Send message" class="textInput" v-model="messageInput" />
-        <button v-if="thisChannel == null" class="sendButton" @click="sendPrivateMessage(friendNickname)">
-          <i class="gg-slack"></i>
-        </button>
-        <button v-else class="sendButton" @click="sendChannelMessage()">
-          <i class="gg-slack"></i>
-        </button>
-      </div>
-    </div> -->
-    <!-- <div v-if="show == 3" class="channelCreationForm">
-      <h2>Create channel</h2>
-      <label for="channelName">Channel name:</label>
-      <div class="searchBar">
-        <input type="text" class="searchField" name="channelName" placeholder="Channel name" v-model="channelName" required />
-      </div>
-      <div>Channel type: {{ picked }}</div>
 
-      <div class="radioBundle">
-        <input type="radio" id="one" name="public" value="public" v-model="picked" checked />
-        <label for="public">public</label>
-
-        <input type="radio" id="two" name="protected" value="protected" v-model="picked" />
-        <label for="protected">protected</label>
-
-        <input type="radio" id="three" name="private" value="private" v-model="picked" />
-        <label for="private">private</label>
-      </div>
-      <div v-if="picked == 'protected'">
-        <label for="channelPassword">Password:</label>
-        <div class="searchBar">
-          <input type="password" class="searchField" name="channelPassword" placeholder="Password" v-model="channelPassword" required />
-        </div>
-      </div>
-      <button @click="createChannel()" class="joinChannel">Submit</button>
-    </div> -->
     <div v-if="showInvitationModal" class="overlay">
       <div class="modal">
         <button class="close" @click="closeInvitation()">&times;</button>
@@ -466,6 +360,7 @@ const sendPrivateMessage = (nickname: string): void => {
 </script>
 
 <style lang="scss" scoped>
+@import "../styles/svgStyles";
 .overlay {
   position: fixed;
   height: 100vh;

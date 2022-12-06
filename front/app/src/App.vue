@@ -332,8 +332,7 @@ body {
 }
 
 .navbar {
-  height: 85px;
-  width: 100vw;
+  height: 7vh;
   background: $secondary;
   display: flex;
   justify-content: center;
@@ -362,17 +361,6 @@ body {
 
 .hidden {
   display: none !important;
-}
-
-.overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(3px);
-  z-index: 5;
 }
 
 .dot {
