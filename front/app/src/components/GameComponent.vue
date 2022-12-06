@@ -1,7 +1,7 @@
 <template>
   <section class="lobby container">
     <div class="principalSection">
-      <div class="mainContainer" :class="!displayLoading ? '' : ' hidden'">
+      <div class="mainContainer" :class="lobbyStatus == 'Find match' ? '' : ' hidden'">
         <div>
           <power-slider-component v-model="power" id="powerSlider" />
           <div v-if="!toggleLadder">
@@ -67,10 +67,10 @@
           </div>
         </div>
       </div>
-      <div :class="!displayLoading ? '' : ' hidden'" class="svgSection">
+      <div :class="lobbyStatus == 'Find match' ? '' : ' hidden'" class="svgSection">
         <img src="../assets/playGame.gif" alt="" class="playButton" @click="findMatch()" />
       </div>
-      <div :class="displayLoading && lobbyStatus != 'Play !' ? '' : ' hidden'" class="loadingDiv">
+      <div :class="lobbyStatus == 'Looking for an opponent...' ? '' : ' hidden'" class="loadingDiv">
         <img src="../assets/loadingGameIllustration.gif" alt="" class="loadingImage" />
       </div>
     </div>

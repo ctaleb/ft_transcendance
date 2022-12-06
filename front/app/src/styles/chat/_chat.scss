@@ -94,8 +94,14 @@
           overflow-wrap: break-word;
           padding: 10px;
           min-width: 30%;
+          h4,
+          p {
+            margin: 5px 2px 5px 2px;
+          }
           .date {
-            color: black;
+            color: rgb(102, 88, 59);
+            text-align: right;
+            font-size: 12px;
           }
         }
 
@@ -129,10 +135,6 @@
           border-left: 1px solid $primary;
           border-radius: 0 1rem 1rem 0;
           box-shadow: 1.5px 1.5px 1.5px rgba(132, 109, 55, 0.692);
-          h4,
-          p {
-            margin: 5px 2px 5px 2px;
-          }
         }
         .chat-message-out {
           background-color: #c2a672;
@@ -141,10 +143,6 @@
           border-radius: 1rem 0 0 1rem;
           box-shadow: -1.5px 1.5px 1.5px rgba(132, 109, 55, 0.692);
           margin-left: auto;
-          h4,
-          p {
-            margin: 5px 2px 5px 2px;
-          }
         }
       }
       .chat-input {

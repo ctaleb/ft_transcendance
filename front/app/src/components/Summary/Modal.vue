@@ -37,7 +37,7 @@ const emit = defineEmits<{
 .modal {
   display: flex;
   justify-content: space-between;
-  background-color: $secondary;
+  background-color: $secondary !important;
   color: $primary;
   .midSection {
     display: flex;
