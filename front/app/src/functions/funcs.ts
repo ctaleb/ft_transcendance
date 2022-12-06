@@ -99,6 +99,7 @@ function connectSocket(token: string, user: any): void {
 
   store.socket = markRaw<Socket>(
     io("http://" + window.location.hostname + ":3500", {
+      // io("database:3000", {
       auth: { token: token, user: user },
       transports: ["websocket"],
     })

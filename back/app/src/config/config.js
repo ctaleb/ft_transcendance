@@ -5,7 +5,7 @@ const application = {
 
 const database = {
   // Fetch infos from env variables
-  host: 'localhost',
+  host: 'database',
   port: 5432,
   username: 'postgres',
   password: 'postgres',
