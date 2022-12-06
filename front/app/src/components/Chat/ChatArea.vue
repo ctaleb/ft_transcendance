@@ -46,9 +46,8 @@ import { addAlertMessage, fetchJSONDatas } from "@/functions/funcs";
 import { useStore } from "@/store";
 import { Channel, isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
-import { Message } from "@/types/Message";
+import { Message, transformDate } from "@/types/Message";
 import { User } from "@/types/User";
-import { memberExpression } from "@babel/types";
 import { nextTick, onMounted, ref, watch } from "vue";
 import defaultAvatarUrl from "../../assets/defaultAvatar.png";
 
@@ -100,7 +99,7 @@ const sendMessage = () => {
           if (msg.blocked) {
             addAlertMessage(msg.message, 3);
           } else {
-            store.currentChat?.messages?.push(msg);
+            store.currentChat?.messages?.push(transformDate(msg));
           }
         }
       );
@@ -127,6 +126,8 @@ const loadChannelMessages = async (channel: Channel): Promise<void> => {
     disableLoadMore.value = true;
     return;
   }
+  for (let i = 0; i < data.length; i++)
+    data[i] = transformDate(data[i]);
   store.$patch({
     currentChat: {
       messages: [...data, ...store.currentChat?.messages!],
@@ -141,6 +142,8 @@ const loadPrivateMessages = async (conv: Conversation): Promise<void> => {
     disableLoadMore.value = true;
     return;
   }
+  for (let i = 0; i < data.length; i++)
+    data[i] = transformDate(data[i]);
   store.$patch({
     currentChat: {
       messages: [...data, ...store.currentChat?.messages!],

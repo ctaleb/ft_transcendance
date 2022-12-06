@@ -32,10 +32,11 @@ import { useStore } from "@/store";
 import { Channel, isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
 import { Alert } from "@/types/GameSummary";
-import { Message } from "@/types/Message";
+import { Message, defaultMessageFormat, transformDate } from "@/types/Message";
 import { getUserByNickname, User } from "@/types/User";
 import { onMounted, ref, watch } from "vue";
 import { RouterLink, RouterView, useRoute, useRouter } from "vue-router";
+import dayjs from "dayjs";
 import AlertCard from "./components/AlertCard.vue";
 import CustomInvitation from "./components/CustomInvitation/Modal.vue";
 import FailedInvitation from "./components/FailedInvitation/Modal.vue";
@@ -279,7 +280,7 @@ onMounted(() => {
       if (!store.socket?.hasListeners("Message to the client")) {
         store.socket?.on("Message to the client", async (privateMessage: Message) => {
           if (!isChannel(store.currentChat!) && privateMessage.author === (<Conversation>store.currentChat)?.other.nickname) {
-            store.currentChat?.messages?.push(privateMessage);
+            store.currentChat?.messages?.push(transformDate(privateMessage));
           } else {
             addAlertMessage(`New message from ${privateMessage.author}`, 1);
           }
@@ -288,7 +289,7 @@ onMounted(() => {
       if (!store.socket?.hasListeners("messageRecieved")) {
         store.socket?.on("messageReceived", (channelId: number, channelName: string, msg: Message) => {
           if (isChannel(store.currentChat!) && channelId === store.currentChat!.id) {
-            store.currentChat?.messages?.push(msg);
+            store.currentChat?.messages?.push(transformDate(msg));
           } else {
             addAlertMessage(`New message from ${msg.author} in "${channelName}"`, 1);
           }

@@ -386,7 +386,6 @@ export class ChatService {
           date: entry.createdAt,
         });
       });
-      console.log(new Date());
     });
     return result;
   }
