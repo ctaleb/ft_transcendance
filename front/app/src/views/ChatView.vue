@@ -21,32 +21,14 @@
 import ChatMenu from "@/components/chat/ChatMenu.vue";
 import ChatWindow from "@/components/chat/ChatWindow.vue";
 import FriendAlert from "@/components/FriendAlert.vue";
-<<<<<<< HEAD
-import { fetchJSONDatas } from "@/functions/funcs";
-import { socketLocal, useStore } from "@/store";
-import { Channel, ChannelType, ChannelUser } from "@/types/Channel";
-import { Conversation } from "@/types/Conversation";
-import { Message } from "@/types/Message";
-import { onMounted, onUpdated, ref, Ref } from "vue";
-=======
 import { addAlertMessage, fetchJSONDatas } from "@/functions/funcs";
-import { useStore } from "@/store";
+import { socketLocal, useStore } from "@/store";
 import { Channel, ChannelRole, ChannelType, ChannelUser, isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
 import { Message } from "@/types/Message";
 import { User } from "@/types/User";
 import { onMounted, onUpdated, ref, Ref, watch } from "vue";
->>>>>>> a65524ed2d5abc1fc861c3306531c9cc18e54e39
 
-const store = useStore();
-
-<<<<<<< HEAD
-=======
-store.$subscribe((mutation, state) => {
-  socket = state.socket;
-});
-
->>>>>>> a65524ed2d5abc1fc861c3306531c9cc18e54e39
 const privateConvs: Ref<Array<Conversation>> = ref([]);
 const messagesToDisplay: Ref<Array<Message>> = ref([]);
 const messagesBoxRef = ref<HTMLDivElement | null>(null);
@@ -57,11 +39,6 @@ defineProps(["incomingFriendRequest"]);
 defineEmits(["notification", "updateChannelsList"]);
 
 const myChannels: Ref<Array<Channel>> = ref([]);
-<<<<<<< HEAD
-const allChannels: Ref<Array<Channel>> = ref([]);
-const channelInvitations: Ref<Array<Channel>> = ref([]);
-=======
->>>>>>> a65524ed2d5abc1fc861c3306531c9cc18e54e39
 const channelMembers: Ref<Array<ChannelUser>> = ref([]);
 const channelMessageSkip = ref(0);
 const show = ref(0);
@@ -74,10 +51,6 @@ const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 const updateChannelsList = () => {
   getMyChannels();
-<<<<<<< HEAD
-  getAllChannels();
-=======
->>>>>>> a65524ed2d5abc1fc861c3306531c9cc18e54e39
 };
 
 onUpdated(() => {
@@ -87,19 +60,10 @@ onUpdated(() => {
 
 onMounted(async () => {
   await getMyChannels();
-<<<<<<< HEAD
-  await getAllChannels();
-  await getChannelInvitations();
-  await getAllConvs();
-
-  // var audio = new Audio(require("../assets/adelsol.mp3"));
-  // socketLocal.value?.on("Message to the client", async (privateMessage: { author: string; text: string }) => {
-=======
   await getAllConvs();
 
   // var audio = new Audio(require("../assets/adelsol.mp3"));
   // socket?.on("Message to the client", async (privateMessage: { author: string; text: string }) => {
->>>>>>> a65524ed2d5abc1fc861c3306531c9cc18e54e39
   //   if (privateMessage.author == friendNickname.value) messagesToDisplay.value.push(privateMessage);
   //   else {
   //     await getAllConvs();
@@ -108,11 +72,7 @@ onMounted(async () => {
   //     audio.play();
   //   }
   // });
-<<<<<<< HEAD
-  // socketLocal.value?.on("messageReceived", (channelId: number, msg: Message) => {
-=======
   // socket?.on("messageReceived", (channelId: number, msg: Message) => {
->>>>>>> a65524ed2d5abc1fc861c3306531c9cc18e54e39
   //   if (thisChannel.value && channelId === thisChannel.value.id) {
   //     msg.date = moment(msg.date).tz(timezone).add(1, "hours").format("MMMM Do YYYY, h:mm:ss a");
   //     messagesToDisplay.value.push(msg);
@@ -121,11 +81,7 @@ onMounted(async () => {
   //     console.log("incoming message");
   //   }
   // });
-<<<<<<< HEAD
-  // socketLocal.value?.on("updateChannelMembers", async (channelId: number) => {
-=======
   // socket?.on("updateChannelMembers", async (channelId: number) => {
->>>>>>> a65524ed2d5abc1fc861c3306531c9cc18e54e39
   //   if (thisChannel.value && channelId === thisChannel.value.id) {
   //     let data = await fetchJSONDatas("api/chat/members", "POST", {
   //       id: thisChannel.value.id,
@@ -134,22 +90,13 @@ onMounted(async () => {
   //     channelMembers.value = data;
   //   }
   // });
-<<<<<<< HEAD
-  // socketLocal.value?.on("Update conv list", (convData: { conv: privateConv }) => {
-=======
   // socket?.on("Update conv list", (convData: { conv: privateConv }) => {
->>>>>>> a65524ed2d5abc1fc861c3306531c9cc18e54e39
   //   console.log("UPDATE");
   // });
 
   // store.$subscribe((mutation, state) => {
-<<<<<<< HEAD
-  //   if (!state.socketLocal.value?.hasListeners("Message to the client")) {
-  //     state.socketLocal.value?.on("Message to the client", async (privateMessage: { author: string; text: string }) => {
-=======
   //   if (!state.socket?.hasListeners("Message to the client")) {
   //     state.socket?.on("Message to the client", async (privateMessage: { author: string; text: string }) => {
->>>>>>> a65524ed2d5abc1fc861c3306531c9cc18e54e39
   //       console.log(1);
 
   //       if (privateMessage.author == friendNickname.value) messagesToDisplay.value.push(privateMessage);
@@ -162,13 +109,8 @@ onMounted(async () => {
   //     });
   //   }
 
-<<<<<<< HEAD
-  //   if (!state.socketLocal.value?.hasListeners("Update conv list")) {
-  //     state.socketLocal.value?.on("Update conv list", (convData: { conv: privateConv }) => {
-=======
   //   if (!state.socket?.hasListeners("Update conv list")) {
   //     state.socket?.on("Update conv list", (convData: { conv: privateConv }) => {
->>>>>>> a65524ed2d5abc1fc861c3306531c9cc18e54e39
   //       console.log("UPDATE");
 
   //       let convIndex = privateConvs.value.findIndex((conv) => conv.uuid === convData.conv.uuid);
@@ -183,22 +125,8 @@ onMounted(async () => {
 
 const getMyChannels = async (): Promise<void> => {
   myChannels.value = await fetchJSONDatas("api/chat", "GET").catch(() => {});
-<<<<<<< HEAD
 };
 
-const getAllChannels = async (): Promise<void> => {
-  const data: Channel[] = await fetchJSONDatas("api/chat/list", "GET");
-  allChannels.value = data;
-};
-
-const getChannelInvitations = async (): Promise<void> => {
-  channelInvitations.value = await fetchJSONDatas("api/chat/invitations", "GET");
-};
-
-=======
-};
-
->>>>>>> a65524ed2d5abc1fc861c3306531c9cc18e54e39
 function initConv(convs: Array<Conversation>) {
   convs.forEach((conv) => {
     conv.notif = false;

@@ -14,12 +14,13 @@
       </div>
       <div>
         <img class="sideIcons" src="../assets/profileStatusIcon.svg" alt="" />
-        <h3>status</h3>
+        <h3>{{ store.user?.status }}</h3>
       </div>
     </div>
     <div class="buttonProfile" v-if="currentUser != store.user">
       <i title="Add friend" class="gg-user-add" @click="invite(currentUser)"></i>
-      <i title="Block user" class="gg-block" @click="block(currentUser)"></i>
+      <i v-if="currentUserIsBlocked == false" title="Block user" class="gg-block" @click="block(currentUser)"></i>
+      <i v-else title="Unblock user" class="gg-block" @click="unblock(currentUser)"></i>
       <i title="Spectate your friend" class="gg-eye" @click=""></i>
     </div>
     <div class="subMenu">
@@ -83,8 +84,6 @@ const currentUser = ref<User>();
 const currentFriend = ref<User[]>();
 const currentSummary = ref<History[]>();
 
-const hideMEe = ref(false);
-
 onMounted(async () => {
   let nick = <string | undefined>route.params.nickname;
 
@@ -110,7 +109,6 @@ onMounted(async () => {
     currentUser.value = await getUserByNickname(nick).catch((err) => {
       return undefined;
     });
-    console.log(currentUser.value);
 
     if (!currentUser.value) return;
     await fetchJSONDatas("api/friendship/profile/" + nick, "GET")
@@ -137,11 +135,14 @@ onMounted(async () => {
     .then((data) => {
       currentSummary.value = data;
     });
+  if (store.user?.id != currentUser.value!.id) {
+    fetchJSONDatas(`api/friendship/isBlocked/${currentUser.value?.id}`, "GET")
+      .then((data) => {
+        currentUserIsBlocked.value = data;
+      })
+      .catch(() => {});
+  }
 });
-
-const hideME = () => {
-  hideMEe.value = true;
-};
 
 const watchFriend = () => {
   toogleMenu.value = false;
@@ -165,7 +166,18 @@ const block = async (user: User | undefined) => {
   if (user)
     await fetchJSONDatas("api/friendship/block", "PUT", { addressee: user.nickname })
       .then(() => {
+        currentUserIsBlocked.value = true;
         addAlertMessage("The user has been blocked", 2);
+      })
+      .catch((err) => {});
+};
+
+const unblock = async (user: User | undefined) => {
+  if (user)
+    await fetchJSONDatas("api/friendship/unblock", "PUT", { addressee: user.nickname })
+      .then(() => {
+        currentUserIsBlocked.value = false;
+        addAlertMessage("The user has been unblocked", 2);
       })
       .catch((err) => {});
 };

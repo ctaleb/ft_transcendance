@@ -9,17 +9,13 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { FriendshipService } from 'src/friendship/friendship.service';
 import { UserEntity } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
-<<<<<<< HEAD
 import { PrivateConvService } from '../private_conv/private_conv.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { Game, GameOptions, IPower } from './entities/server.entity';
 import { ServerService } from './server.service';
-=======
-import { NamingStrategyNotFoundError } from 'typeorm';
-import { FriendshipService } from 'src/friendship/friendship.service';
->>>>>>> a65524ed2d5abc1fc861c3306531c9cc18e54e39
 
 @WebSocketGateway(3500, {
   cors: {
@@ -464,11 +460,6 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   @SubscribeMessage('friendToConv')
   friendToConv(@ConnectedSocket() client: Socket, @MessageBody('target') nickname: string) {
     this.server.to(this.serverService.PlayerToSocket(nickname).id).emit('friendTooConv', client.handshake.auth.user.id);
-  }
-
-  @SubscribeMessage('updateChannelMembers')
-  async updateChannelMembers(@ConnectedSocket() client: Socket, @MessageBody('id') channelId: number) {
-    await this.serverService.updateChannelMembers(channelId, client);
   }
 
   @SubscribeMessage('updateChannelMembers')
