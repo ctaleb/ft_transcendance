@@ -20,7 +20,6 @@ import { UserModule } from 'src/user/user.module';
     }),
     TypeOrmModule.forFeature([FriendshipEntity]),
     ImageModule,
-    ServerModule,
     UserModule,
   ],
   controllers: [FriendshipController],

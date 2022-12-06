@@ -1,114 +1,8 @@
 <template>
   <div id="chat">
-    <ChatMenu :channels="myChannels" :all-channels="allChannels" :convs="privateConvs" :invitations="channelInvitations" />
+    <ChatMenu :channels="myChannels" :convs="privateConvs" />
     <ChatWindow @update-channels-list="updateChannelsList()" />
-    <!-- <div v-if="show == 0" class="lobbyChat">
-      <h2>Welcome on the chat</h2>
-      <br />
-      <h4>Chat with your friends with the contact list to the left</h4>
-    </div> -->
-    <!-- <div v-if="show == 1" class="lobbyChat allChannels">
-      <template v-for="channel in allChannels">
-        <div class="channel">
-          <h5 v-if="channel.type == ChannelType.PRIVATE">Channel invitation</h5>
-          <h3>{{ channel.name }}</h3>
-          <h5 class="textGrey">{{ channel.type }}</h5>
-          <div class="channelControl">
-            <div v-if="channel.type == ChannelType.PROTECTED" class="searchBar">
-              <input type="password" placeholder="password" class="searchField" v-model="channel.passwordField" />
-            </div>
-            <button v-if="channel.type == ChannelType.PRIVATE" class="joinChannel" @click="joinChannel(channel)">Accept</button>
-            <button v-else class="joinChannel" @click="joinChannel(channel)">Join</button>
-            <button v-if="channel.type == ChannelType.PRIVATE" class="joinChannel" @click="declineChannelInvitation(channel)">Decline</button>
-          </div>
-        </div>
-      </template>
-    </div> -->
-    <!-- <div v-if="show == 2" class="conversation">
-      <div class="upperChat">
-        <div
-          :class="{
-            messagesPrivate: thisChannel == null,
-            messages: thisChannel != null,
-          }"
-        >
-          <button class="loadMoreButton" @click="loadMoreMessages($event)">Load more</button>
-          <template v-for="message in messagesToDisplay">
-            <div v-if="message.author == clientNickname" class="clientMessage" v-bind:key="message.text">
-              <h4 class="clientName">
-                {{ message.author }}
-              </h4>
-              <p>{{ message.text }}</p>
-              <p>{{ message.date }}</p>
-            </div>
-            <div v-else class="friendMessage" v-bind:key="message.text">
-              <h4 class="friendName">
-                {{ message.author }}
-              </h4>
-              <p>{{ message.text }}</p>
-              <p>{{ message.date }}</p>
-            </div>
-          </template>
-          <div ref="messagesBoxRef"></div>
-        </div>
-        <div v-if="thisChannel != null" class="channelInfo">
-          <div class="channelHeader">
-            <h1>{{ thisChannel.name }}</h1>
-            <h3>{{ thisChannel.type }}</h3>
-          </div>
-          <div v-for="member in channelMembers" class="channelMember">
-            <img :src="member.image" alt="" />
-            <p
-              :class="{
-                textColorRed: member.role == ChannelRole.OWNER,
-                textColorGold: member.role == ChannelRole.ADMIN,
-              }"
-            >
-              {{ member.nickname }}
-            </p>
-          </div>
-          <div class="actionBar">
-            <button @click="leaveChannel()" class="convListHeader">Leave channel</button>
-            <button v-if="thisChannel.type == ChannelType.PRIVATE" @click="showInvitation()" class="convListHeader">Invite</button>
-          </div>
-        </div>
-      </div>
-      <div class="input">
-        <input type="text" placeholder="Send message" class="textInput" v-model="messageInput" />
-        <button v-if="thisChannel == null" class="sendButton" @click="sendPrivateMessage(friendNickname)">
-          <i class="gg-slack"></i>
-        </button>
-        <button v-else class="sendButton" @click="sendChannelMessage()">
-          <i class="gg-slack"></i>
-        </button>
-      </div>
-    </div> -->
-    <!-- <div v-if="show == 3" class="channelCreationForm">
-      <h2>Create channel</h2>
-      <label for="channelName">Channel name:</label>
-      <div class="searchBar">
-        <input type="text" class="searchField" name="channelName" placeholder="Channel name" v-model="channelName" required />
-      </div>
-      <div>Channel type: {{ picked }}</div>
 
-      <div class="radioBundle">
-        <input type="radio" id="one" name="public" value="public" v-model="picked" checked />
-        <label for="public">public</label>
-
-        <input type="radio" id="two" name="protected" value="protected" v-model="picked" />
-        <label for="protected">protected</label>
-
-        <input type="radio" id="three" name="private" value="private" v-model="picked" />
-        <label for="private">private</label>
-      </div>
-      <div v-if="picked == 'protected'">
-        <label for="channelPassword">Password:</label>
-        <div class="searchBar">
-          <input type="password" class="searchField" name="channelPassword" placeholder="Password" v-model="channelPassword" required />
-        </div>
-      </div>
-      <button @click="createChannel()" class="joinChannel">Submit</button>
-    </div> -->
     <div v-if="showInvitationModal" class="overlay">
       <div class="modal">
         <button class="close" @click="closeInvitation()">&times;</button>
@@ -127,15 +21,32 @@
 import ChatMenu from "@/components/chat/ChatMenu.vue";
 import ChatWindow from "@/components/chat/ChatWindow.vue";
 import FriendAlert from "@/components/FriendAlert.vue";
+<<<<<<< HEAD
 import { fetchJSONDatas } from "@/functions/funcs";
 import { socketLocal, useStore } from "@/store";
 import { Channel, ChannelType, ChannelUser } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
 import { Message } from "@/types/Message";
 import { onMounted, onUpdated, ref, Ref } from "vue";
+=======
+import { addAlertMessage, fetchJSONDatas } from "@/functions/funcs";
+import { useStore } from "@/store";
+import { Channel, ChannelRole, ChannelType, ChannelUser, isChannel } from "@/types/Channel";
+import { Conversation } from "@/types/Conversation";
+import { Message } from "@/types/Message";
+import { User } from "@/types/User";
+import { onMounted, onUpdated, ref, Ref, watch } from "vue";
+>>>>>>> a65524ed2d5abc1fc861c3306531c9cc18e54e39
 
 const store = useStore();
 
+<<<<<<< HEAD
+=======
+store.$subscribe((mutation, state) => {
+  socket = state.socket;
+});
+
+>>>>>>> a65524ed2d5abc1fc861c3306531c9cc18e54e39
 const privateConvs: Ref<Array<Conversation>> = ref([]);
 const messagesToDisplay: Ref<Array<Message>> = ref([]);
 const messagesBoxRef = ref<HTMLDivElement | null>(null);
@@ -146,8 +57,11 @@ defineProps(["incomingFriendRequest"]);
 defineEmits(["notification", "updateChannelsList"]);
 
 const myChannels: Ref<Array<Channel>> = ref([]);
+<<<<<<< HEAD
 const allChannels: Ref<Array<Channel>> = ref([]);
 const channelInvitations: Ref<Array<Channel>> = ref([]);
+=======
+>>>>>>> a65524ed2d5abc1fc861c3306531c9cc18e54e39
 const channelMembers: Ref<Array<ChannelUser>> = ref([]);
 const channelMessageSkip = ref(0);
 const show = ref(0);
@@ -160,7 +74,10 @@ const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 const updateChannelsList = () => {
   getMyChannels();
+<<<<<<< HEAD
   getAllChannels();
+=======
+>>>>>>> a65524ed2d5abc1fc861c3306531c9cc18e54e39
 };
 
 onUpdated(() => {
@@ -170,12 +87,19 @@ onUpdated(() => {
 
 onMounted(async () => {
   await getMyChannels();
+<<<<<<< HEAD
   await getAllChannels();
   await getChannelInvitations();
   await getAllConvs();
 
   // var audio = new Audio(require("../assets/adelsol.mp3"));
   // socketLocal.value?.on("Message to the client", async (privateMessage: { author: string; text: string }) => {
+=======
+  await getAllConvs();
+
+  // var audio = new Audio(require("../assets/adelsol.mp3"));
+  // socket?.on("Message to the client", async (privateMessage: { author: string; text: string }) => {
+>>>>>>> a65524ed2d5abc1fc861c3306531c9cc18e54e39
   //   if (privateMessage.author == friendNickname.value) messagesToDisplay.value.push(privateMessage);
   //   else {
   //     await getAllConvs();
@@ -184,7 +108,11 @@ onMounted(async () => {
   //     audio.play();
   //   }
   // });
+<<<<<<< HEAD
   // socketLocal.value?.on("messageReceived", (channelId: number, msg: Message) => {
+=======
+  // socket?.on("messageReceived", (channelId: number, msg: Message) => {
+>>>>>>> a65524ed2d5abc1fc861c3306531c9cc18e54e39
   //   if (thisChannel.value && channelId === thisChannel.value.id) {
   //     msg.date = moment(msg.date).tz(timezone).add(1, "hours").format("MMMM Do YYYY, h:mm:ss a");
   //     messagesToDisplay.value.push(msg);
@@ -193,7 +121,11 @@ onMounted(async () => {
   //     console.log("incoming message");
   //   }
   // });
+<<<<<<< HEAD
   // socketLocal.value?.on("updateChannelMembers", async (channelId: number) => {
+=======
+  // socket?.on("updateChannelMembers", async (channelId: number) => {
+>>>>>>> a65524ed2d5abc1fc861c3306531c9cc18e54e39
   //   if (thisChannel.value && channelId === thisChannel.value.id) {
   //     let data = await fetchJSONDatas("api/chat/members", "POST", {
   //       id: thisChannel.value.id,
@@ -202,13 +134,22 @@ onMounted(async () => {
   //     channelMembers.value = data;
   //   }
   // });
+<<<<<<< HEAD
   // socketLocal.value?.on("Update conv list", (convData: { conv: privateConv }) => {
+=======
+  // socket?.on("Update conv list", (convData: { conv: privateConv }) => {
+>>>>>>> a65524ed2d5abc1fc861c3306531c9cc18e54e39
   //   console.log("UPDATE");
   // });
 
   // store.$subscribe((mutation, state) => {
+<<<<<<< HEAD
   //   if (!state.socketLocal.value?.hasListeners("Message to the client")) {
   //     state.socketLocal.value?.on("Message to the client", async (privateMessage: { author: string; text: string }) => {
+=======
+  //   if (!state.socket?.hasListeners("Message to the client")) {
+  //     state.socket?.on("Message to the client", async (privateMessage: { author: string; text: string }) => {
+>>>>>>> a65524ed2d5abc1fc861c3306531c9cc18e54e39
   //       console.log(1);
 
   //       if (privateMessage.author == friendNickname.value) messagesToDisplay.value.push(privateMessage);
@@ -221,8 +162,13 @@ onMounted(async () => {
   //     });
   //   }
 
+<<<<<<< HEAD
   //   if (!state.socketLocal.value?.hasListeners("Update conv list")) {
   //     state.socketLocal.value?.on("Update conv list", (convData: { conv: privateConv }) => {
+=======
+  //   if (!state.socket?.hasListeners("Update conv list")) {
+  //     state.socket?.on("Update conv list", (convData: { conv: privateConv }) => {
+>>>>>>> a65524ed2d5abc1fc861c3306531c9cc18e54e39
   //       console.log("UPDATE");
 
   //       let convIndex = privateConvs.value.findIndex((conv) => conv.uuid === convData.conv.uuid);
@@ -237,6 +183,7 @@ onMounted(async () => {
 
 const getMyChannels = async (): Promise<void> => {
   myChannels.value = await fetchJSONDatas("api/chat", "GET").catch(() => {});
+<<<<<<< HEAD
 };
 
 const getAllChannels = async (): Promise<void> => {
@@ -248,6 +195,10 @@ const getChannelInvitations = async (): Promise<void> => {
   channelInvitations.value = await fetchJSONDatas("api/chat/invitations", "GET");
 };
 
+=======
+};
+
+>>>>>>> a65524ed2d5abc1fc861c3306531c9cc18e54e39
 function initConv(convs: Array<Conversation>) {
   convs.forEach((conv) => {
     conv.notif = false;
@@ -474,6 +425,7 @@ const sendPrivateMessage = (nickname: string): void => {
 </script>
 
 <style lang="scss" scoped>
+@import "../styles/svgStyles";
 .overlay {
   position: fixed;
   height: 100vh;

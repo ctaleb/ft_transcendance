@@ -1,56 +1,61 @@
 <template>
-  <div style="margin: 3rem">
-    <h2>{{ user.nickname }} profile edition</h2>
-    <label class="switch">
-      <input type="checkbox" id="2faSwitch" @change="twoFactorSwitch($event)" />
-      <span class="slider round"></span>
-    </label>
-    <div v-if="toggleClicked == true">
-      <div v-if="missingPhoneNumber == true">Add a phone number to your profile in order to enable 2FA</div>
-      <div v-if="twoFactorEnabled == true">2FA enabled ! You will be asked for a code sent by sms during your next connection</div>
-      <div v-else>2FA Disabled !</div>
-    </div>
-    <div>
-      <div class="edition-section">
-        <input class="text-input" type="text" v-model="nickname" />
-        <input class="submit-input" type="submit" value="update nickname" @click.stop.prevent="updateNickname()" />
-        <div v-if="nicknameUsed">Nickname is already in use.</div>
-        <div v-if="success">Nickname successfully updated.</div>
+  <div class="principalSection">
+    <div class="mainContainer">
+      <h3>Personnal informations</h3>
+      <div class="section">
+        <img :src="avatarUrl" alt="" class="image" />
+        <label for="avatar" class="fileInput"
+          >Select picture <i class="gg-image"></i><input type="file" id="avatar" name="avatar" accept="image/*" @change="updateAvatar"
+        /></label>
       </div>
-      <div class="edition-section">
-        <img :src="avatarUrl" alt="" class="image" /><br />
-        <label for="avatar">Update your profile picture:</label><br />
-        <input type="file" id="avatar" name="avatar" accept="image/*" @change="updateAvatar" />
+      <div class="section">
+        <input id="nick" type="text" v-model="nickname" maxlength="15" minlength="3" />
+        <button type="submit" class="button" @click.stop.prevent="updateNickname()">Update nickname</button>
       </div>
-      <div class="edition-section">
-        <input class="text-input" type="text" placeholder="+33 6 11 22 33 44" v-model="phone" @input="formatPhone" />
-        <input class="submit-input" type="submit" value="update phone" :disabled="phoneFormatError.length ? true : false" @click.stop.prevent="updatePhone()" />
-        <div v-if="phoneSuccess == true">Phone number updated successfully !</div>
+      <div class="section">
+        <input id="phone" type="text" placeholder="+33 6 11 22 33 44" v-model="phone" @input="formatPhone" />
+        <button type="submit" class="button" :disabled="phoneFormatError.length ? true : false" @click.stop.prevent="updatePhone()">Update phone</button>
         <div v-if="phoneFormatError.length">
           {{ phoneFormatError }}
         </div>
       </div>
-      <div v-if="!user.intraId" class="edition-section">
-        <input class="text-input" type="text" placeholder="new password" v-model="password" /><br />
-        <br />
-        <input class="text-input" type="password" placeholder="please confirm new password" v-model="confirmPassword" />
-        <input class="submit-input" type="submit" value="confirm password" @click.stop.prevent="updatePassword()" />
-        <div v-if="!passwordMatchFlag">Passwords don't match.</div>
-        <div v-if="!ValidPasswordFlag">
-          Password must contains at least one uppercase, one lowercase, one special character, and be between 9 and 13 characters long.
-        </div>
-        <div v-if="updatePasswordSuccess" color="green">Password successfully updated!</div>
+      <div class="section">
+        <input id="password" type="password" placeholder="new password" v-model="password" />
+        <input type="password" placeholder="please confirm new password" v-model="confirmPassword" />
+        <button type="submit" class="button" @click.stop.prevent="updatePassword()">Update password</button>
       </div>
     </div>
-    <button type="button" id="deleteAccountButton" @click.stop.prevent="deleteAccount()">DELETE MY ACCOUNT</button>
+    <div class="svgSection">
+      <img :class="{ lessOpacity: twoFactorEnabled == false }" src="../assets/twoFaDisabled.svg" alt="" />
+      <div class="content">
+        <h2 v-if="twoFactorEnabled == false">2FA disabled</h2>
+        <h2 v-else>2FA enabled</h2>
+        <label class="switch">
+          <input type="checkbox" id="2faSwitch" @change="twoFactorSwitch($event)" />
+          <span class="slider round"></span>
+        </label>
+      </div>
+    </div>
+    <!--<div>
+      <h4>Two factor authentication</h4>
+      <h6 :class="{ twoFaTitleActive: twoFactorEnabled }">You will receive an sms code during your future connections</h6>
+      <friend-alert :requester-name="incomingFriendRequest" />
+    </div>-->
   </div>
-  <friend-alert :requester-name="incomingFriendRequest" />
+
+  <svg class="bottomSvg" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
+    <path
+      fill="#C1A36B"
+      fill-opacity="1"
+      d="M0,64L80,58.7C160,53,320,43,480,48C640,53,800,75,960,74.7C1120,75,1280,53,1360,42.7L1440,32L1440,320L1360,320C1280,320,1120,320,960,320C800,320,640,320,480,320C320,320,160,320,80,320L0,320Z"
+    ></path>
+  </svg>
 </template>
 
 <script lang="ts">
-import { getUserAvatar, trySetupUser } from "@/functions/funcs";
-import { User, getUserById } from "@/types/User";
+import { trySetupUser } from "@/functions/funcs";
 import { useStore } from "@/store";
+import { getUserById } from "@/types/User";
 import { defineComponent, ref } from "vue";
 import FriendAlert from "../components/FriendAlert.vue";
 let funcs = require("../functions/funcs");
@@ -64,15 +69,11 @@ export default defineComponent({
       avatar: "{}",
       phone: JSON.parse(localStorage.getItem("user") || "{}").phone,
       nickname: JSON.parse(localStorage.getItem("user") || "{}").nickname,
-      nicknameUsed: ref(false),
-      success: ref(false),
       phoneSuccess: ref(false),
       newAvatar: File.prototype,
       password: ref(""),
       confirmPassword: ref(""),
       ValidPasswordFlag: ref(true),
-      passwordMatchFlag: ref(true),
-      updatePasswordSuccess: ref(false),
       missingPhoneNumber: ref(false),
       twoFactorEnabled: ref(false),
       toggleClicked: ref(false),
@@ -95,24 +96,25 @@ export default defineComponent({
         return null;
       });
       if (fetch_ret == null) {
-        this.nicknameUsed = true;
-        this.success = false;
+        funcs.addAlertMessage("Nickname must stay between 3 and 15 chars.", 1);
         return;
       }
       if (fetch_ret.user) {
         localStorage.setItem("user", JSON.stringify(fetch_ret.user));
         localStorage.setItem("token", fetch_ret.token);
         this.user = fetch_ret.user;
-        this.nicknameUsed = false;
-        this.success = true;
-      } else {
-        this.nicknameUsed = true;
-        this.success = false;
+        funcs.addAlertMessage("Nickname successfully updated", 2);
       }
     },
     updateAvatar(event: Event) {
-      this.newAvatar = (event.target as HTMLInputElement).files?.[0]!;
-      if (this.newAvatar != File.prototype) this.updatePicture();
+      if ((event.target as HTMLInputElement).files?.[0].size! < 2097152) {
+        this.newAvatar = (event.target as HTMLInputElement).files?.[0]!;
+        if (this.newAvatar != File.prototype) {
+          this.updatePicture();
+        }
+      } else {
+        funcs.addAlertMessage("File too big, should be less than 2Mb", 1);
+      }
     },
     async updatePicture() {
       let formData = new FormData();
@@ -125,11 +127,14 @@ export default defineComponent({
         body: formData,
       })
         .then((res) => {
+          if (!res.ok) return Promise.reject();
           return res.json();
         })
         .catch((err) => {
-          console.log(err);
+          funcs.addAlertMessage("Unauthorized", 3);
+          return null;
         });
+      if (fetch_ret == null) return;
       localStorage.setItem("user", JSON.stringify(fetch_ret.user));
       localStorage.setItem("token", fetch_ret.token);
       await trySetupUser();
@@ -167,10 +172,14 @@ export default defineComponent({
     async updatePassword() {
       if (!this.isValidPassword(this.password)) {
         this.ValidPasswordFlag = false;
+        funcs.addAlertMessage(
+          "Password must contains at least one uppercase, one lowercase, one special character, and be between 9 and 13 characters long.",
+          2
+        );
         return;
       }
       if (!this.passwordsMatch(this.password, this.confirmPassword)) {
-        this.passwordMatchFlag = false;
+        funcs.addAlertMessage("Passwords don't match", 2);
         return;
       }
       const updateResult = await fetch("http://" + window.location.hostname + ":3000/api/user/passwordEdit", {
@@ -190,7 +199,7 @@ export default defineComponent({
           console.log(err);
         });
       if (updateResult.success) {
-        this.updatePasswordSuccess = true;
+        funcs.addAlertMessage("Password updated !", 1);
       }
     },
 
@@ -211,15 +220,15 @@ export default defineComponent({
 
     initTwoFactorToggle() {
       if (this.user.twoFactorAuth == true) {
+        this.twoFactorEnabled = true;
         document.getElementById("2faSwitch")?.setAttribute("checked", "true");
       } else {
         console.log("2fa disabled");
       }
     },
     twoFactorSwitch(event: any) {
-      this.toggleClicked = true;
       if (this.phone == null) {
-        this.missingPhoneNumber = true;
+        funcs.addAlertMessage("Missing phone number", 2);
         const checkbox = document.getElementById("2faSwitch") as HTMLInputElement | null;
 
         if (checkbox != null) {
@@ -237,18 +246,20 @@ export default defineComponent({
         method: "PUT",
       })
         .then((res) => {
+          if (!res.ok) return Promise.reject();
           return res.json();
         })
         .catch((err) => {
-          console.log(err);
+          funcs.addAlertMessage("Bad format. Need to be +336XXXXXXXX", 3);
+          return null;
         });
-      if (fetch_ret.user) {
+      if (fetch_ret && fetch_ret.user) {
         localStorage.setItem("user", JSON.stringify(fetch_ret.user));
         localStorage.setItem("token", fetch_ret.token);
         this.user = fetch_ret.user;
-        this.phoneSuccess = true;
+        funcs.addAlertMessage("Phone successfully updated", 2);
         this.missingPhoneNumber = false;
-      } else this.phoneSuccess = false;
+      } else funcs.addAlertMessage("Updated failed", 3);
     },
 
     async updateTwoFactorAuth() {
@@ -268,7 +279,13 @@ export default defineComponent({
         localStorage.setItem("user", JSON.stringify(fetch_ret.user));
         localStorage.setItem("token", fetch_ret.token);
         this.user = fetch_ret.user;
-        this.twoFactorEnabled = fetch_ret.newValue;
+        if (fetch_ret.newValue == true) {
+          funcs.addAlertMessage("2fa enabled !", 2);
+          this.twoFactorEnabled = true;
+        } else {
+          this.twoFactorEnabled = false;
+          funcs.addAlertMessage("2fa Disabled", 2);
+        }
       }
     },
     formatPhone() {
@@ -280,94 +297,78 @@ export default defineComponent({
 });
 </script>
 
-<style scoped>
-.edition-section {
-  border: 0.2rem solid black;
-  border-radius: 10px;
-  margin-top: 0.5rem;
-  padding: 0.5rem;
-}
-.text-input {
-  padding: 0.7rem;
-  width: 50%;
-  box-sizing: border-box;
-}
-.submit-input {
-  padding: 0.7rem;
-  background-color: #5aff75;
-}
-#deleteAccountButton {
-  background-color: #e13511;
-  border-radius: 20px;
-  width: 15rem;
-  box-sizing: border-box;
-  padding: 1rem;
-  margin-top: 2rem;
-}
+<style lang="scss" scoped>
+@import "../styles/variables";
+@import "../styles/inputsAndButtons.scss";
+@import "../styles/svgStyles.scss";
+@import "../styles/containerStyle.scss";
+@import "../styles/switch.scss";
+.principalSection {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+  width: 100vw;
+  height: 75vh;
 
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 60px;
-  height: 34px;
-}
+  .mainContainer {
+    justify-content: space-around;
+    padding: 20px;
+    height: 65vh;
+    h3 {
+      margin-bottom: 3px;
+    }
+  }
+  .svgSection {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 35%;
+    color: white;
+    position: relative;
 
-.switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
+    img {
+      width: 100%;
+      transition: opacity 0.4s ease;
+    }
 
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #ccc;
-  -webkit-transition: 0.4s;
-  transition: 0.4s;
-}
+    & > .content {
+      // Self
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      bottom: 0;
 
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 26px;
-  width: 26px;
-  left: 4px;
-  bottom: 4px;
-  background-color: white;
-  -webkit-transition: 0.4s;
-  transition: 0.4s;
-}
+      // Layout
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+  }
 
-input:checked + .slider {
-  background-color: #c1a36b;
-}
+  .section {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 
-input:focus + .slider {
-  box-shadow: 0 0 1px #c1a36b;
-}
+    .image {
+      padding: 0;
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+  }
 
-input:checked + .slider:before {
-  -webkit-transform: translateX(26px);
-  -ms-transform: translateX(26px);
-  transform: translateX(26px);
-}
-
-/* Rounded sliders */
-.slider.round {
-  border-radius: 34px;
-}
-
-.slider.round:before {
-  border-radius: 50%;
-}
-
-.image {
-  width: 15%;
-  height: 15rem;
-  object-fit: cover;
+  .button {
+    margin-top: 15px;
+  }
+  .lessOpacity {
+    opacity: 0.5;
+  }
 }
 </style>

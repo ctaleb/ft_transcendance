@@ -82,12 +82,13 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @Put('nicknameEdit/:newNickname')
   async editNickname(@Request() req, @Param('newNickname') newNickname: string) {
+    if (newNickname.length > 15 || newNickname.length < 3) throw new UnauthorizedException();
     return this._userService.updateNickname(req.user.payload.nickname, newNickname);
   }
   @UseGuards(JwtAuthGuard)
   @Put('phoneEdit/:phone')
   async editPhone(@Request() req, @Param('phone') newPhone: string) {
-    // input validation --> if (!newPhone.match(/\+\d{2}[1-9]\d{8}/)) throw error
+    if (!newPhone.match(/\+\d{2}[1-9]\d{8}/) || newPhone.length != 12) throw new UnauthorizedException();
     return this._userService.updatePhone(req.user.payload.nickname, newPhone);
   }
 
@@ -103,6 +104,7 @@ export class UserController {
     }),
   )
   async editAvatar(@UploadedFile() avatar: Express.Multer.File, @Request() req) {
+    console.log(avatar);
     return this._userService.updateAvatar(
       avatar
         ? {

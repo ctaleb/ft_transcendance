@@ -1,32 +1,30 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Server, Socket } from 'socket.io';
+import { ChatService } from 'src/chat/chat.service';
+import { UserEntity } from 'src/user/user.entity';
+import { UserService } from 'src/user/user.service';
+import { Repository } from 'typeorm';
 import { CreateMessageDto } from './dto/create-message.dto';
+import { Channel } from './entities/channel';
+import { GameSummaryData, MatchHistoryEntity } from './entities/match_history.entity';
 import {
   ChatRoom,
   Game,
+  GameOptions,
   GameRoom,
-  User,
-  IBar,
+  GameState,
   IBall,
+  IBar,
   IPoint,
   IPower,
-  GameState,
+  IPowerInfo,
   PowerElastico,
   PowerExhaust,
-  GameOptions,
-  IPowerInfo,
   PowerInvisibility,
   PowerMinimo,
-  Status,
+  User,
 } from './entities/server.entity';
-import { Server, Socket } from 'socket.io';
-import { UserEntity } from 'src/user/user.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import { MatchHistoryEntity, GameSummaryData, PlayerInfoData } from './entities/match_history.entity';
-import { DeepPartial, Repository } from 'typeorm';
-import { UserService } from 'src/user/user.service';
-import { Channel } from './entities/channel';
-import { ChatService } from 'src/chat/chat.service';
-import { emit } from 'process';
 
 const chargeMax = 1;
 const ballSize = 16;
@@ -829,24 +827,30 @@ export class ServerService {
 
   // GOAT
   async joinAllChannels(socket: Socket, userId: number) {
-    const channels = await this._chatService.getUserChannels(userId);
+    let channels = await this._chatService.getUserChannels(userId);
+    const bannedChannels = await this._chatService.getUsersBannedChannels(userId);
+    channels = channels.filter((el) => !bannedChannels.find((chan) => chan.id === el.id));
     channels.forEach((ell) => {
       socket.join(`${ell.id}`);
     });
   }
 
-  async sendChannelMessage(channelId: number, content: string, userId: number) {
-    const message = await this._chatService.saveMessage({ id: channelId, content: content }, userId);
-    if (message.author) {
-      this.server.to(`${channelId}`).emit('messageReceived', channelId, message);
-    }
-    return message;
+  async sendChannelMessage(channelId: number, channelName: string, content: string, userId: number) {
+    let error: string;
+    await this._chatService
+      .saveMessage({ id: channelId, content: content }, userId)
+      .then((data) => {
+        this.server.to(`${channelId}`).emit('messageReceived', channelId, channelName, data);
+      })
+      .catch((err) => {
+        error = err.message;
+      });
+    return error;
   }
 
   async updateChannelMembers(channelId: number, client: Socket) {
     const channels = await this._chatService.getUserChannels(client.handshake.auth.user.id);
     if (channels.find((ell) => ell.id === channelId)) {
-      console.log('');
       this.server.to(`${channelId}`).emit('updateChannelMembers', channelId);
     }
   }
@@ -862,5 +866,13 @@ export class ServerService {
   async leaveChannelRoom(client: Socket, channelId: number) {
     this.server.to(`${channelId}`).emit('updateChannelMembers', channelId);
     client.leave(`${channelId}`);
+  }
+
+  async updateChannel(client: Socket, id: number, name: string, type: string) {
+    const channels = await this._chatService.getUserChannels(client.handshake.auth.user.id);
+    const channel = channels.find((ell) => ell.id === id);
+    if (channel) {
+      this.server.to(`${channel.id}`).emit('channelUpdatd', { id: channel.id, name: channel.name, type: channel.type });
+    }
   }
 }

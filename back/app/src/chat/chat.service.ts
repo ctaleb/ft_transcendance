@@ -28,6 +28,8 @@ export class ChatService {
 
   async createChannel(channelDto: CreateChannelDto, nickname: string) {
     const user: UserEntity = await this._userService.getUserByNickname(nickname);
+    const uniqueCheck = await ChannelEntity.findOneBy({ name: channelDto.name });
+    if (uniqueCheck) throw new BadRequestException('Channel with that name already exists');
     let channel: ChannelEntity = ChannelEntity.create({
       name: channelDto.name,
       type: channelDto.type,
@@ -45,9 +47,9 @@ export class ChatService {
 
   async updateChannel(updateChannelDto: UpdateChannelDto, userId: number) {
     const owner = await ChannelMemberEntity.findOne({
-      where: { user: { id: userId } },
+      where: { user: { id: userId }, channel: { id: updateChannelDto.id } },
     });
-    if (owner.channel.id !== updateChannelDto.id) throw new BadRequestException('You are not the channel owner');
+    if (!owner || owner.channel.id !== updateChannelDto.id) throw new BadRequestException('You are not the channel owner');
     owner.channel.password = updateChannelDto.type === ChannelType.PROTECTED ? updateChannelDto.password : null;
     owner.channel.type = updateChannelDto.type;
     return await ChannelEntity.save(owner.channel);
@@ -101,7 +103,7 @@ export class ChatService {
     return channel;
   }
 
-  async inviteToChannel(inviteToChannelDto: InviteToChannelDto, userId: number): Promise<ChannelInvitationEntity> {
+  async inviteToChannel(inviteToChannelDto: InviteToChannelDto, userId: number) {
     const member = await ChannelMemberEntity.findOneBy({
       user: { id: userId },
       channel: { id: inviteToChannelDto.channelId },
@@ -132,7 +134,8 @@ export class ChatService {
       channel: { id: inviteToChannelDto.channelId },
       target: invitationTarget,
     });
-    return await ChannelInvitationEntity.save(invitation);
+    const result = await ChannelInvitationEntity.save(invitation);
+    return { channel: member.channel.name, target: result.target.nickname };
   }
 
   async declineInvitation(declineInvitationDto: DeclineInvitationDto, userId: number) {
@@ -246,6 +249,8 @@ export class ChatService {
     const date = new Date();
     date.setMinutes(date.getMinutes() + restrictionDto.minutes);
     if (restriction) {
+      if (restriction.ban && restrictionDto.minutes === 0) return await ChannelRestrictionsEntity.remove(restriction);
+      else if (restrictionDto.minutes === 0) throw new BadRequestException('The member you are trying to unban is not banned');
       restriction.mute = null;
       restriction.ban = date;
       return await ChannelRestrictionsEntity.save(restriction);
@@ -278,15 +283,29 @@ export class ChatService {
     date.setMinutes(date.getMinutes() + restrictionDto.minutes);
     if (restriction && restriction.ban) throw new BadRequestException('The user is already banned on this channel');
     else if (restriction) {
+      if (restrictionDto.minutes === 0) return await ChannelRestrictionsEntity.remove(restriction);
       restriction.mute = date;
       return await ChannelRestrictionsEntity.save(restriction);
     }
+    if (restrictionDto.minutes === 0) throw new BadRequestException('The member you are trying to unmute is not muted');
     const mute = ChannelRestrictionsEntity.create({
       channel: admin.channel,
       user: target.user,
       mute: date,
     });
     return await ChannelRestrictionsEntity.save(mute);
+  }
+
+  async getUsersBannedChannels(userId: number) {
+    const bannedChannels = await ChannelRestrictionsEntity.findBy({
+      user: { id: userId },
+      mute: null,
+    });
+    const result: IChannel[] = [];
+    bannedChannels.forEach((restriction) => {
+      result.push({ id: restriction.channel.id, name: restriction.channel.name, type: restriction.channel.type });
+    });
+    return result;
   }
 
   async getChannelInvitations(userId: number): Promise<IChannel[]> {
@@ -384,7 +403,7 @@ export class ChatService {
       channel: { id: channel.id },
       user: { id: userId },
     });
-    if (ban) {
+    if (ban && ban.ban) {
       if (ban.ban.getTime() < Date.now()) await ChannelRestrictionsEntity.remove(ban);
       else throw new BadRequestException(`You are banned till ${ban.ban}`);
     }
@@ -420,9 +439,11 @@ export class ChatService {
     const mute = await ChannelRestrictionsEntity.findOneBy({
       channel: { id: channel.id },
       user: { id: userId },
-      mute: LessThan(new Date()),
     });
-    if (mute) throw new BadRequestException(`You are muted till ${mute.mute}`);
+    if (mute && mute.mute) {
+      if (mute.mute.getTime() > Date.now()) throw new BadRequestException(`You are muted till ${mute.mute}`);
+      await ChannelRestrictionsEntity.remove(mute);
+    }
     const member = await ChannelMemberEntity.findOneBy({
       channel: { id: saveMessageDto.id },
       user: { id: userId },

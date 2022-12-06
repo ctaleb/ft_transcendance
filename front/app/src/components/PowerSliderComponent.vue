@@ -1,14 +1,18 @@
 <template>
   <div class="items">
-    <div class="button" @click="gotoPrev()"></div>
-    <div class="item" id="exhaust" :style="anim ? 'animation: ease 1.5s slide' + anim + ';' : ''">
+    <div class="sliderButton" @click="gotoPrev()">
+      <img src="../assets/sliderLeftIcon.svg" alt="" />
+    </div>
+    <div class="item" id="exhaust" :style="anim ? 'animation: ease 1.3s slide' + anim + ';' : ''">
       <img class="user-image" :src="powers[current].image" />
       <div class="info">
         <h4>{{ powers[current].name }}</h4>
         <p>{{ powers[current].power }}</p>
       </div>
     </div>
-    <div class="button" @click="anim ? '' : gotoNext()"></div>
+    <div class="sliderButton" @click="anim ? '' : gotoNext()">
+      <img src="../assets/sliderRightIcon.svg" alt="" />
+    </div>
   </div>
 </template>
 <script setup lang="ts">
@@ -81,3 +85,7 @@ function gotoNext() {
   }, 1500);
 }
 </script>
+
+<style lang="scss" scoped>
+@import "../styles/_inputsAndButtons.scss";
+</style>

@@ -14,59 +14,76 @@
     <CollapseList :toggleMode="false" title="Friends" :data="friends" v-slot="{ element }: { element: User }">
       <ChatMenuItem @click="createConversation(element)" :title="User.getName(element)" :picture="User.getAvatar(element)" />
     </CollapseList>
-    <CollapseList :toggleMode="false" title="Channel invitations" :data="invitations" v-slot="{ element }: { element: Channel }">
-      <ChatMenuItem :title="Channel.getName(element)" />
-    </CollapseList>
     <button @click="showAllChannelsModal = true">All Channels</button>
+    <button @click="showInvitationsModal = true">Invitations</button>
+    <button @click="showChannelModal = true">Create new channel</button>
   </div>
-  <AllChannelsModal
-    v-if="showAllChannelsModal"
-    @close-all-channels-modal="showAllChannelsModal = false"
-    @join-channel="joiningNewChannel"
-    :all-channels="allChannels"
-  />
+  <AllChannelsModal v-if="showAllChannelsModal" @close-all-channels-modal="showAllChannelsModal = false" @join-channel="joiningNewChannel" />
+  <InvitationsModal v-if="showInvitationsModal" @join-private-channel="joiningNewPrivateChannel" @close-invitations-modal="showInvitationsModal = false" />
+  <ChannelCreateFormModal v-if="showChannelModal" @close-channel-modal="showChannelModal = false" @create-new-channel="createNewChannel" />
 </template>
 
 <script setup lang="ts">
 import ChatMenuItem from "@/components/chat/ChatMenuItem.vue";
 import CollapseList from "@/components/common/CollapseList.vue";
+import InvitationsModal from "@/components/chat/modals/InvitationsModal.vue";
 import AllChannelsModal from "@/components/chat/modals/AllChannelsModal.vue";
+import ChannelCreateFormModal from "@/components/chat/modals/ChannelCreateFormModal.vue";
 import { fetchJSONDatas } from "@/functions/funcs";
 import { socketLocal, useStore } from "@/store";
-import { Channel, isChannel } from "@/types/Channel";
+import { Channel, ChannelType, isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
 import { User } from "@/types/User";
 import { onMounted, onUpdated, Ref, ref, watch } from "vue";
+import { transformDate } from "@/types/Message";
 
 const props = defineProps<{
   channels: Channel[];
-  allChannels: Channel[];
   convs: Conversation[];
-  invitations: Channel[];
 }>();
 
-const emits = defineEmits(["joinChannel", "setCurrentChatWindow", "closeAllChannelsModal"]);
-
-const friends: Ref<User[] | undefined> = ref();
-const showAllChannelsModal = ref(false);
+const emits = defineEmits([
+  "joinChannel",
+  "joinPrivateChannel",
+  "setCurrentChatWindow",
+  "createNewChannel",
+  "closeAllChannelsModal",
+  "closeInvitationsModal",
+  "closeChannelModal",
+]);
 
 const store = useStore();
+const friends: Ref<User[] | undefined> = ref([]);
+const showAllChannelsModal = ref(false);
+const showInvitationsModal = ref(false);
+const showChannelModal = ref(false);
 
 const createConversation = async (element: User) => {
   const conv: any = await User.createConversation(element);
   if (conv.created) {
-    let newConv: Conversation = { id: conv.conv.id, other: element, notif: false, messages: [] };
-    friends.value = friends.value?.splice(friends.value.indexOf(element), 1);
+    const newConv: Conversation = { id: conv.conv.id, other: element, notif: false, messages: [] };
     props.convs.unshift(newConv);
+    socketLocal.value?.emit("friendToConv", { target: newConv.other.nickname });
+    friends.value = store.user?.friends?.filter((user) => !props.convs.find((conv) => conv.other.id === user.id));
   }
+};
+
+const joiningNewPrivateChannel = (channel: any) => {
+  const data: Channel = channel;
+  props.channels.push(data);
+  socketLocal.value?.emit("joinChannelRoom", { id: data.id });
+  showInvitationsModal.value = false;
 };
 
 const joiningNewChannel = (channel: any) => {
   const data: Channel = channel;
   props.channels.push(data);
-  props.allChannels.splice(props.allChannels.indexOf(data), 1);
   socketLocal.value?.emit("joinChannelRoom", { id: data.id });
   showAllChannelsModal.value = false;
+};
+
+const createNewChannel = (channel: Channel) => {
+  props.channels.push(channel);
 };
 
 const setCurrentChatWindow = async (target: Channel | Conversation) => {
@@ -77,6 +94,7 @@ const setCurrentChatWindow = async (target: Channel | Conversation) => {
     })
       .then((data) => {
         channel.members = data.members;
+        for (let i = 0; i < data.messages.length; i++) data.messages[i] = transformDate(data.messages[i]);
         channel.messages = data.messages;
         store.$patch({
           currentChat: channel,
@@ -93,6 +111,8 @@ const setCurrentChatWindow = async (target: Channel | Conversation) => {
     await fetchJSONDatas(`api/privateConv/getMessages/${conversation.id}/${offset}`, "GET")
       .then((data) => {
         if (data.length > 0) conversation.messages = data;
+        else conversation.messages = [];
+        for (let i = 0; i < conversation.messages.length; i++) conversation.messages[i] = transformDate(conversation.messages[i]);
         store.$patch({
           currentChat: conversation,
         });
@@ -106,10 +126,39 @@ const setCurrentChatWindow = async (target: Channel | Conversation) => {
 };
 
 onMounted(() => {
-  socketLocal.value?.on("Update conv list", (convData: { conv: Conversation }) => {
-    const convIndex = props.convs.findIndex((conv) => conv.id === convData.conv.id);
-    const convToTop = props.convs.splice(convIndex, 1)[0];
-    props.convs.splice(0, 0, convToTop);
-  });
+  watch(
+    () => props.convs,
+    () => {
+      friends.value = store.user?.friends?.filter((user) => !props.convs.find((conv) => conv.other.id === user.id));
+    }
+  );
+  watch(
+    () => socketLocal.value,
+    () => {
+      if (!socketLocal.value?.hasListeners("friendTooConv")) {
+        socketLocal.value?.on("friendTooConv", async (friendId: number) => {
+          const data = await fetchJSONDatas(`api/privateConv/create/${friendId}`, "GET").catch(() => {});
+          props.convs.unshift(data.conv);
+          friends.value = store.user?.friends?.filter((user) => !props.convs.find((conv) => conv.other.id === user.id));
+        });
+      }
+      if (!socketLocal.value?.hasListeners("Update conv list")) {
+        socketLocal.value?.on("Update conv list", (convData: { conv: Conversation }) => {
+          const convIndex = props.convs.findIndex((conv) => conv.id === convData.conv.id);
+          const convToTop = props.convs.splice(convIndex, 1)[0];
+          props.convs.splice(0, 0, convToTop);
+          friends.value = store.user?.friends?.filter((user) => !props.convs.find((conv) => conv.other.id === user.id));
+        });
+      }
+      if (!socketLocal.value?.hasListeners("channelUpdatd")) {
+        socketLocal.value?.on("channelUpdatd", (data: { id: number; name: string; type: ChannelType }) => {
+          const index = props.channels.findIndex((el) => el.id === data.id);
+          if (index !== -1) {
+            props.channels[index].type = data.type;
+          }
+        });
+      }
+    }
+  );
 });
 </script>

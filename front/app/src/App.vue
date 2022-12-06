@@ -1,13 +1,15 @@
 <template>
   <div>
-    <nav class="navbar">
-      <div style="display: flex; position: relative; justify-content: center" v-if="$route.path != '/' && $route.path != '/signup'">
-        <router-link to="/profile"
+    <nav class="navbar" v-if="$route.path != '/' && $route.path != '/signup'">
+      <img src="./assets/navbarLogo.gif" width="85" height="85" alt="" />
+      <div class="links">
+        <router-link to="/profile" class="link"
           >Profile
           <div :class="'dot' + (profileNotificationBadge ? ' show' : '')"></div
         ></router-link>
-        |<router-link to="/game"> PLAY </router-link>|
-        <router-link to="/chat">Chat</router-link>
+        <router-link to="/game" class="link"> PLAY </router-link>
+        <router-link to="/chat" class="link">Chat</router-link>
+        <router-link to="/" class="link" v-on:click.prevent="logout()">Logout</router-link>
       </div>
     </nav>
     <router-view :key="$route.fullPath" @notification="changeNotificationValue" :incoming-friend-request="incomingFriendRequest" />
@@ -29,13 +31,14 @@
 <script setup lang="ts">
 import { addAlertMessage, trySetupUser, updateStatus } from "@/functions/funcs";
 import { socketLocal, useStore } from "@/store";
-import { isChannel } from "@/types/Channel";
+import { Channel, isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
 import { Alert } from "@/types/GameSummary";
-import { Message } from "@/types/Message";
+import { Message, transformDate } from "@/types/Message";
 import { getUserByNickname, User } from "@/types/User";
 import { onMounted, ref, watch } from "vue";
 import { RouterLink, RouterView, useRoute, useRouter } from "vue-router";
+import dayjs from "dayjs";
 import AlertCard from "./components/AlertCard.vue";
 import CustomInvitation from "./components/CustomInvitation/Modal.vue";
 import FailedInvitation from "./components/FailedInvitation/Modal.vue";
@@ -132,17 +135,9 @@ const invFailure = () => {
 const logout = () => {
   localStorage.removeItem("token");
   localStorage.removeItem("user");
-  store.$reset();
-  // map through that list and use the **$reset** fn to reset the state
-  //  socket? = io("http://" + window.location.hostname + ":3500", {
   socketLocal.value?.emit("disco", {});
-  //  socket?.value? = io("http://" + window.location.hostname + ":3500", {
-  //    transports: ["websocket"],
-  //    // path: "/api/socket.io/",
-  //    autoConnect: false,
-  //  });
+  socketLocal.value?.close();
 };
-
 const changeNotificationValue = (value: boolean) => {
   profileNotificationBadge.value = value;
 };
@@ -163,10 +158,10 @@ onMounted(() => {
   watch(
     () => route.path,
     (currentValue, oldValue) => {
-      if (currentValue != "/game") socket?.value?.emit("watchPath");
       store.$patch({
         currentChat: undefined,
       });
+      if (currentValue != "/game") socketLocal.value?.emit("watchPath");
 
       if (localStorage.getItem("token") && profileNotificationBadge.value === false) {
         fetch("http://" + window.location.hostname + ":3000/api/friendship/has-invitations", {
@@ -258,13 +253,33 @@ onMounted(() => {
           }
         });
       }
-      if (!socketLocal?.value?.hasListeners("messageRecieved")) {
-        socketLocal?.value?.on("messageReceived", (channelId: number, msg: Message) => {
+      if (!socketLocal.value?.hasListeners("messageRecieved")) {
+        socketLocal.value?.on("messageReceived", (channelId: number, channelName: string, msg: Message) => {
           if (isChannel(store.currentChat!) && channelId === store.currentChat!.id) {
-            store.currentChat?.messages?.push(msg);
+            store.currentChat?.messages?.push(transformDate(msg));
           } else {
-            addAlertMessage(`New message from ${msg.author} in channel`, 1);
+            addAlertMessage(`New message from ${msg.author} in "${channelName}"`, 1);
           }
+        });
+      }
+      if (!socketLocal.value?.hasListeners("incomingChannelInvitation")) {
+        socketLocal.value?.on("incomingChannelInvitation", (channel: string) => {
+          addAlertMessage(`You've been invited to join "${channel}" channel`, 1);
+        });
+      }
+      if (!socketLocal.value?.hasListeners("gotBannedFromChannel")) {
+        socketLocal.value?.on("gotBannedFromChannel", (channel: string) => {
+          if (store.currentChat && isChannel(store.currentChat!) && (<Channel>store.currentChat)?.name === channel) {
+            store.$patch({
+              currentChat: undefined,
+            });
+          }
+          addAlertMessage(`You've been banned from "${channel}" channel`, 3);
+        });
+      }
+      if (!socketLocal.value?.hasListeners("gotUnbannedFromChannel")) {
+        socketLocal.value?.on("gotUnbannedFromChannel", (channel: string) => {
+          addAlertMessage(`You've been unbanned from "${channel}" channel`, 1);
         });
       }
     }
@@ -276,7 +291,7 @@ onMounted(() => {
 @import "styles/custom.scss";
 
 body {
-  background-color: #010b12;
+  background-color: $secondary;
   color: #aa9e7d;
   margin: 0;
   padding: 0;
@@ -290,13 +305,25 @@ body {
 }
 
 .navbar {
-  height: 5vh;
-  a {
-    font-weight: bold;
-    color: #f0e68c;
-
-    &.router-link-exact-active {
-      color: #d2691e;
+  height: 7vh;
+  background: $secondary;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-bottom: 1px solid $primary;
+  img {
+    margin-left: 15px;
+    margin-right: auto;
+  }
+  .links {
+    width: 20%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    .link {
+      text-decoration: none;
+      color: $primary;
     }
   }
 }
@@ -307,17 +334,6 @@ body {
 
 .hidden {
   display: none !important;
-}
-
-.overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(3px);
-  z-index: 5;
 }
 
 .dot {

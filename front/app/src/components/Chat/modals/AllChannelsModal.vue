@@ -10,23 +10,27 @@
 
 <script setup lang="ts">
 import ChannelInModal from "@/components/chat/modals/ChannelInModal.vue";
+import { fetchJSONDatas } from "@/functions/funcs";
 import { useStore } from "@/store";
 import { Channel } from "@/types/Channel";
-import { onMounted } from "vue";
+import { onMounted, ref, Ref } from "vue";
 
-const props = defineProps<{
-  allChannels: Channel[];
-}>();
+const allChannels: Ref<Array<Channel>> = ref([]);
 
 const emits = defineEmits<{
   (e: "closeAllChannelsModal"): void;
   (e: "joinChannel"): void;
 }>();
 
-const store = useStore();
-let socket = store.socket;
+const getAllChannels = async (): Promise<void> => {
+  await fetchJSONDatas("api/chat/list", "GET")
+    .then((data) => {
+      allChannels.value = data;
+    })
+    .catch(() => {});
+};
 
-store.$subscribe((mutation, state) => {
-  socket = state.socket;
+onMounted(() => {
+  getAllChannels();
 });
 </script>

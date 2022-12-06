@@ -15,8 +15,8 @@ import { ChannelEntity } from './channel.entity';
 @Entity({ name: 'channel_invitation' })
 export class ChannelInvitationEntity extends AbstractEntity {
   @ManyToOne((type) => ChannelEntity, {
-    onDelete: 'CASCADE',
     eager: true,
+    onDelete: 'CASCADE',
   })
   @JoinColumn()
   public channel: ChannelEntity;

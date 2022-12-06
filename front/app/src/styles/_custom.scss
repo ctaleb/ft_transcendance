@@ -1,0 +1,114 @@
+@import url("https://css.gg/css");
+@import "mixins/sizes";
+@import "mixins/border";
+@import "variables";
+@import "chat/channel.member";
+@import "chat/menu";
+@import "chat/modals";
+@import "chat/chat";
+@import "profile";
+@import "alert";
+@import "lobby";
+@import "slider";
+
+h2 {
+  font-size: 2.5em;
+}
+
+h3 {
+  font-size: 2em;
+}
+
+.border-gold {
+  border: $standard-border-size solid $primary;
+}
+
+.overlay {
+  position: fixed;
+  height: 100%;
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 5;
+}
+
+.modal {
+  position: fixed;
+  max-width: 80vw;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 3px solid;
+  border: 0.3rem solid $primary;
+  color: white;
+  background: $secondary;
+}
+
+.primary-btn {
+  height: 3em;
+  width: 10em;
+  margin: 10px;
+  border: 0px;
+  color: $primary;
+  background-color: $background;
+  border: 1px solid lighten($background, 10%);
+  border-radius: 5px;
+  transition: border 0.5s ease;
+
+  &:hover {
+    border: 1px solid $primary;
+  }
+}
+
+.square {
+  aspect-ratio: 1 / 1;
+}
+
+.rounded {
+  border-radius: 10000px;
+  overflow: hidden;
+}
+
+.avatar {
+  @extend .square;
+  object-fit: cover;
+  object-position: center;
+}
+
+.user-image {
+  @extend .rounded;
+  @extend .avatar;
+}
+
+.container {
+  margin: 0 auto;
+  width: 1320px;
+  padding: 0 20px;
+
+  &.large {
+    width: 1800px;
+
+    @include screen-xxl {
+      width: 1320px;
+    }
+  }
+
+  @include screen-xl {
+    width: 1140px !important;
+  }
+
+  @include screen-lg {
+    width: 960px !important;
+  }
+
+  @include screen-md {
+    width: 720px !important;
+  }
+
+  @include screen-sm {
+    width: 540px !important;
+  }
+
+  @include screen-xs {
+    width: 100% !important;
+  }
+}

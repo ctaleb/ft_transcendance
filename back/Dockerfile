@@ -1,6 +1,6 @@
 FROM node:18-bullseye
 RUN apt-get update && apt-get upgrade
-RUN npm install -g npm@8.14.0
+RUN npm install -g npm@9.1.3
 COPY app/ /back/app/
 WORKDIR /back/app/
 RUN npm i
@@ -15,4 +15,5 @@ EXPOSE 3000:3000
 # 	&& npm run typeorm
 # ENTRYPOINT ["node"]
 # CMD ["dist/main.js"]
-CMD ["npx", "nest", "start", "watch"]
+#CMD ["npx", "nest", "start", "watch"]
+ CMD ["sleep", "infinity"]

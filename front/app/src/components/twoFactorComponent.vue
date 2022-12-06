@@ -1,15 +1,8 @@
 <template>
-  <div class="mainContainer">
+  <div class="section">
     <h3>Two Factor Authentication</h3>
     <p>A code was sent to the {{ phone }}</p>
-    <input
-      class="codeInput"
-      type="text"
-      placeholder="X X X X X X"
-      v-model="code"
-      maxlength="6"
-      @input="validateCode()"
-    />
+    <input class="codeInput" type="text" placeholder="X X X X X X" v-model="code" maxlength="6" @input="validateCode()" />
     <div v-if="error == true">Please enter a valid code</div>
   </div>
 </template>
@@ -25,11 +18,7 @@ let phone = ref(hidePhone(localStorage.getItem("phoneTo2fa")));
 //const isCodeEntered = computed(() => {
 //  return code.value.length == 6 ? true : false;
 //});
-const emit = defineEmits([
-  "twofaSuccessClassicUser",
-  "twofaSuccessIntraUser",
-  "update:modelValue",
-]);
+const emit = defineEmits(["twofaSuccessClassicUser", "twofaSuccessIntraUser", "update:modelValue"]);
 
 onMounted(() => {
   phone.value = hidePhone(localStorage.getItem("phoneTo2fa"));
@@ -45,24 +34,15 @@ function hidePhone(phone: string | null): string | null {
 
 async function validateCode() {
   if (code.value.length != 6) return;
-  await fetch(
-    "http://" +
-      window.location.hostname +
-      ":3000/api/twofactor/verifyCode/" +
-      code.value +
-      "/" +
-      localStorage.getItem("phoneTo2fa"),
-    {
-      method: "POST",
-    }
-  )
+  await fetch("http://" + window.location.hostname + ":3000/api/twofactor/verifyCode/" + code.value + "/" + localStorage.getItem("phoneTo2fa"), {
+    method: "POST",
+  })
     .then((data) => data.json())
     .then((data) => {
       if (data.status == "approved") {
         console.log("code validated");
         emit("update:modelValue", true);
-        if (localStorage.getItem("userType") == "classic")
-          emit("twofaSuccessClassicUser");
+        if (localStorage.getItem("userType") == "classic") emit("twofaSuccessClassicUser");
         else emit("twofaSuccessIntraUser");
         localStorage.removeItem("phoneTo2fa");
         localStorage.removeItem("userType");
@@ -76,15 +56,9 @@ async function validateCode() {
     });
 }
 async function sendCode() {
-  await fetch(
-    "http://" +
-      window.location.hostname +
-      ":3000/api/twofactor/sendCode/" +
-      localStorage.getItem("phoneTo2fa"),
-    {
-      method: "POST",
-    }
-  )
+  await fetch("http://" + window.location.hostname + ":3000/api/twofactor/sendCode/" + localStorage.getItem("phoneTo2fa"), {
+    method: "POST",
+  })
     .then((data) => data.json())
     .then((data) => {
       console.log(data.status);
@@ -96,39 +70,12 @@ async function sendCode() {
 }
 </script>
 <style lang="scss" scoped>
-.mainContainer {
-  height: 30vh;
-  margin: auto;
+@import "../styles/inputsAndButtons.scss";
+.section {
   text-align: center;
-  background-color: rgb(25, 23, 23);
-  border-radius: 30px;
-  width: 40%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  color: white;
-
-  .codeInput {
-    height: 50px;
-    font-size: 20px;
-    margin-bottom: 10px;
+  input {
     text-align: center;
-    letter-spacing: 5px;
-    border: 1px solid white;
-    border-radius: 10px;
   }
-  .sendCodeButton {
-    width: 20%;
-    color: white;
-    height: 5%;
-    margin-top: 15px;
-  }
-  .validateCodeButton {
-    width: 20%;
-    color: white;
-    height: 7%;
-    margin-top: 15px;
-  }
+  margin-bottom: auto;
 }
 </style>

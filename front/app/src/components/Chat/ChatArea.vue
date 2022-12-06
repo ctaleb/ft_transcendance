@@ -1,11 +1,11 @@
 <template>
   <div class="chat-area">
     <div class="chat-messages">
-      <button v-if="!disableLoadMore" class="loadMoreButton" @click="loadMoreMessages()">Load more</button>
+      <button v-if="!disableLoadMore" class="button" @click="loadMoreMessages()">Load more</button>
       <template v-for="(message, index) in store.currentChat?.messages">
         <div v-if="store.user?.nickname === message.author" class="msg-out">
           <div class="chat-message chat-message-out">
-            <h5>{{ message.author }}</h5>
+            <h4>{{ message.author }}</h4>
             <p>{{ message.text }}</p>
             <p class="date">{{ message.date }}</p>
           </div>
@@ -15,10 +15,18 @@
             :src="User.getAvatar(store.user)"
             alt=""
           />
+          <img v-else class="user-image" :src="User.getAvatar(store.user)" alt="" style="z-index: -1000" />
         </div>
         <div v-else class="msg-in">
           <img
             v-if="index < 1 || store.currentChat?.messages![index - 1].author != message.author"
+            class="user-image"
+            :src="message.author != 'UNKNOWN' ? User.getAvatarByNickname(message.author, store.currentChat!) : defaultAvatarUrl"
+            alt=""
+          />
+          <img
+            v-else
+            style="z-index: -1000"
             class="user-image"
             :src="message.author != 'UNKNOWN' ? User.getAvatarByNickname(message.author, store.currentChat!) : defaultAvatarUrl"
             alt=""
@@ -33,20 +41,18 @@
       <div ref="messagesBoxRef"></div>
     </div>
     <div class="chat-input">
-      <div class="searchBar">
-        <input type="text" class="searchField" name="messageField" v-model="messageField" placeholder="Write your message" />
-      </div>
-      <button @click="sendMessage()">Send message</button>
+      <input type="text" class="input" name="messageField" v-model="messageField" placeholder="Write your message" />
+      <button class="button pulse" @click="sendMessage()"><img src="../../assets/sendIcon.svg" alt="" /></button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { fetchJSONDatas } from "@/functions/funcs";
+import { addAlertMessage, fetchJSONDatas } from "@/functions/funcs";
 import { socketLocal, useStore } from "@/store";
 import { Channel, isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
-import { Message } from "@/types/Message";
+import { Message, transformDate } from "@/types/Message";
 import { User } from "@/types/User";
 import { nextTick, onMounted, ref, watch } from "vue";
 import defaultAvatarUrl from "../../assets/defaultAvatar.png";
@@ -74,10 +80,19 @@ const scrollDownMessages = (behavior: ScrollBehavior | undefined) => {
 const sendMessage = () => {
   if (messageField.value.length > 0) {
     if (isChannel(store.currentChat!)) {
-      socketLocal.value?.emit("sendChannelMessage", {
-        channelId: store.currentChat!.id,
-        content: messageField.value,
-      });
+      socketLocal.value?.emit(
+        "sendChannelMessage",
+        {
+          channelId: store.currentChat!.id,
+          channelName: (<Channel>store.currentChat)?.name,
+          content: messageField.value,
+        },
+        (error: string) => {
+          if (error.length > 0) {
+            addAlertMessage(`${error}`, 1);
+          }
+        }
+      );
     } else {
       socketLocal.value?.emit(
         "deliverMessage",
@@ -85,8 +100,12 @@ const sendMessage = () => {
           message: messageField.value,
           friendNickname: (<Conversation>store.currentChat).other.nickname,
         },
-        (msg: Message) => {
-          store.currentChat?.messages?.push(msg);
+        (msg: any) => {
+          if (msg.blocked) {
+            addAlertMessage(msg.message, 3);
+          } else {
+            store.currentChat?.messages?.push(transformDate(msg));
+          }
         }
       );
     }
@@ -112,6 +131,8 @@ const loadChannelMessages = async (channel: Channel): Promise<void> => {
     disableLoadMore.value = true;
     return;
   }
+  for (let i = 0; i < data.length; i++)
+    data[i] = transformDate(data[i]);
   store.$patch({
     currentChat: {
       messages: [...data, ...store.currentChat?.messages!],
@@ -126,6 +147,8 @@ const loadPrivateMessages = async (conv: Conversation): Promise<void> => {
     disableLoadMore.value = true;
     return;
   }
+  for (let i = 0; i < data.length; i++)
+    data[i] = transformDate(data[i]);
   store.$patch({
     currentChat: {
       messages: [...data, ...store.currentChat?.messages!],
@@ -159,5 +182,23 @@ onMounted(() => {
       if (store.currentChat && store.currentChat!.messages && store.currentChat!.messages!.length < 20) disableLoadMore.value = true;
     }
   );
+  if (!socketLocal.value?.hasListeners("updateChannelMembers")) {
+    socketLocal.value?.on("updateChannelMembers", async (channelId: number) => {
+      if (store.currentChat && isChannel(store.currentChat) && channelId === store.currentChat.id) {
+        await fetchJSONDatas("api/chat/members", "POST", {
+          id: store.currentChat!.id,
+        })
+          .then((data) => {
+            store.currentChat?.messages?.forEach((msg) => {
+              if (!data.find((member: any) => member.nickname === msg.author)) msg.author = "UNKNOWN";
+            });
+            store.$patch({
+              currentChat: { members: data },
+            });
+          })
+          .catch(() => {});
+      }
+    });
+  }
 });
 </script>
