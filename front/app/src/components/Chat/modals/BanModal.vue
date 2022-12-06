@@ -1,35 +1,42 @@
 <template>
-  <div class="overlay"></div>
   <div class="modal">
     <span @click="$emit('closeBanModal')" class="close-modal"><i class="gg-close-o"></i></span>
     <h2>Ban {{ member.nickname }}</h2>
-    <div>Duration: {{ picked }} hours</div>
     <div class="radioBundle">
-      <input type="radio" name="0" value="0" v-model="picked" checked />
-      <label for="0">unban</label>
-
-      <input type="radio" name="0.05" value="0.05" v-model="picked" />
-      <label for="0.05">some min</label>
-
-      <input type="radio" name="24" value="24" v-model="picked" />
-      <label for="24">24 h</label>
-
-      <input type="radio" name="72" value="72" v-model="picked" />
-      <label for="72">3 days</label>
-
-      <input type="radio" name="168" value="168" v-model="picked" />
-      <label for="168">1 week</label>
-
-      <input type="radio" name="720" value="720" v-model="picked" />
-      <label for="720">1 month</label>
-
-      <input type="radio" name="2160" value="2160" v-model="picked" />
-      <label for="2160">3 month</label>
-
-      <input type="radio" name="4320" value="4320" v-model="picked" />
-      <label for="4320">6 month</label>
+      <div>
+        <input type="radio" name="0" value="0" v-model="picked" checked />
+        <label for="0">unban</label>
+      </div>
+      <div>
+        <input type="radio" name="0.05" value="0.05" v-model="picked" />
+        <label for="0.05">some min</label>
+      </div>
+      <div>
+        <input type="radio" name="24" value="24" v-model="picked" />
+        <label for="24">24 h</label>
+      </div>
+      <div>
+        <input type="radio" name="72" value="72" v-model="picked" />
+        <label for="72">3 days</label>
+      </div>
+      <div>
+        <input type="radio" name="168" value="168" v-model="picked" />
+        <label for="168">1 week</label>
+      </div>
+      <div>
+        <input type="radio" name="720" value="720" v-model="picked" />
+        <label for="720">1 month</label>
+      </div>
+      <div>
+        <input type="radio" name="2160" value="2160" v-model="picked" />
+        <label for="2160">3 month</label>
+      </div>
+      <div>
+        <input type="radio" name="4320" value="4320" v-model="picked" />
+        <label for="4320">6 month</label>
+      </div>
     </div>
-    <button @click="ban()">Submit</button>
+    <button class="button" @click="ban()">Submit</button>
   </div>
 </template>
 
@@ -77,3 +84,25 @@ const ban = async () => {
     .catch(() => {});
 };
 </script>
+
+<style lang="scss" scoped>
+.modal {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 12px;
+  width: 20%;
+  .radioBundle {
+    display: flex;
+    flex-direction: column;
+    div {
+      margin-top: 8px;
+      margin-bottom: 8px;
+    }
+  }
+  .button {
+    margin-top: 15px;
+  }
+}
+</style>

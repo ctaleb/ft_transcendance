@@ -45,6 +45,7 @@ const getAllConvs = async (): Promise<void> => {
 </script>
 
 <style lang="scss" scoped>
+@import "../styles/svgStyles";
 .overlay {
   position: fixed;
   height: 100vh;

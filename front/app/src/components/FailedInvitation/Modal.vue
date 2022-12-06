@@ -1,9 +1,7 @@
 <template>
   <div class="modal">
-    <div>
-      <h1>Invitation Failed</h1>
-      <button @click="$emit('invFailure')">Ok</button>
-    </div>
+    <h1>Invitation Failed</h1>
+    <button class="button" @click="$emit('invFailure')">Ok</button>
   </div>
 </template>
 
@@ -12,3 +10,13 @@ const emit = defineEmits<{
   (e: "invFailure"): void;
 }>();
 </script>
+
+<style lang="scss" scoped>
+.modal {
+  display: flex;
+  padding: 2rem;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+</style>

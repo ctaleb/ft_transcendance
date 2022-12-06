@@ -8,17 +8,28 @@
   align-items: center;
   overflow-y: auto;
   height: 70vh;
+  min-width: 60%;
+  z-index: 9;
+  padding: 20px;
   .channel-in-modal {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    border: 3px solid;
-    border-image-slice: 1;
-    border-image-source: linear-gradient(to bottom, #c1a36b, #635e4f);
-    padding: 2%;
+    align-items: center;
+    border: 3px solid $primary;
+    padding: 0.5rem;
+    width: 20%;
+    height: 20%;
+    h3 {
+      margin: 8px 0 8px 0;
+    }
     div {
       display: flex;
       align-items: center;
+      justify-content: center;
+      input {
+        margin-bottom: 10px;
+      }
     }
   }
 }
