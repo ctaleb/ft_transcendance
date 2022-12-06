@@ -16,6 +16,7 @@ import { Game, GameOptions, IPower } from './entities/server.entity';
 import { UserEntity } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
 import { NamingStrategyNotFoundError } from 'typeorm';
+import { FriendshipService } from 'src/friendship/friendship.service';
 
 @WebSocketGateway(3500, {
   cors: {
@@ -30,6 +31,7 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     private readonly serverService: ServerService,
     private readonly privateMessageService: PrivateConvService,
     private readonly userService: UserService,
+    private readonly friendshipService: FriendshipService,
   ) {}
 
   afterInit(server: Server) {
@@ -419,6 +421,9 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     const conv = await this.privateMessageService.getConv(author.id, requester.id).catch(async () => {
       return await this.privateMessageService.createConv(author.id, requester.id);
     });
+    if (await this.friendshipService.getBlockedStatus(requester.id, author.id)) {
+      return { blocked: true, message: 'You are blocked by the user' };
+    }
     await this.privateMessageService.updateLastMessageDate(conv);
     if (receiver)
       this.server.to(receiver.socket.id).emit('Update conv list', {
@@ -481,6 +486,48 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   @SubscribeMessage('privateChannelInvite')
   async privateChannelInvite(@ConnectedSocket() client: Socket, @MessageBody('nickname') nickname: string, @MessageBody('channel') channel: string) {
     this.server.to(this.serverService.PlayerToSocket(nickname).id).emit('incomingChannelInvitation', channel);
+  }
+
+  @SubscribeMessage('friendship-invite')
+  async friendshipInvite(
+    @ConnectedSocket() client: Socket,
+    @MessageBody('id') id: number,
+    @MessageBody('addresseeId') addresseeId: number,
+    @MessageBody('target') target: string,
+    @MessageBody('requester') requester: string,
+  ) {
+    const friendship = await this.friendshipService.findFriendship(id, addresseeId);
+    if (friendship && friendship.status === 'invitation' && friendship.addresseeId === addresseeId) {
+      this.server.to(this.serverService.PlayerToSocket(target).id).emit('friendshipInvite', requester);
+    }
+  }
+
+  @SubscribeMessage('befriend')
+  async befriend(
+    @ConnectedSocket() client: Socket,
+    @MessageBody('id') id: number,
+    @MessageBody('addresseeId') addresseeId: number,
+    @MessageBody('target') target: string,
+    @MessageBody('requester') requester: string,
+  ) {
+    const friendship = await this.friendshipService.findFriendship(id, addresseeId);
+    if (friendship && friendship.status === 'friend') {
+      this.server.to(this.serverService.PlayerToSocket(target).id).emit('acceptInvite', requester);
+    }
+  }
+
+  @SubscribeMessage('unfriend')
+  async unfriend(
+    @ConnectedSocket() client: Socket,
+    @MessageBody('id') id: number,
+    @MessageBody('addresseeId') addresseeId: number,
+    @MessageBody('target') target: string,
+    @MessageBody('requester') requester: string,
+  ) {
+    const friendship = await this.friendshipService.findFriendship(id, addresseeId);
+    if (!friendship) {
+      this.server.to(this.serverService.PlayerToSocket(target).id).emit('removeFriend', requester);
+    }
   }
 
   @SubscribeMessage('memberGotBanned')

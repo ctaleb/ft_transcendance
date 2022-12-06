@@ -11,11 +11,19 @@ import { PrivateMessageEntity } from 'src/private_conv/entities/privateMessage.e
 import { PrivateConvEntity } from 'src/private_conv/entities/private_conv.entity';
 import { ChatModule } from 'src/chat/chat.module';
 import { ProfileController } from 'src/server/profile.controller';
+import { FriendshipModule } from 'src/friendship/friendship.module';
+import { FriendshipService } from 'src/friendship/friendship.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([MatchHistoryEntity, PrivateMessageEntity, PrivateConvEntity]), UserModule, ChatModule, PrivateConvModule],
+  imports: [
+    TypeOrmModule.forFeature([MatchHistoryEntity, PrivateMessageEntity, PrivateConvEntity]),
+    UserModule,
+    ChatModule,
+    PrivateConvModule,
+    FriendshipModule,
+  ],
   controllers: [ProfileController],
-  providers: [ServerGateway, ServerService, PrivateConvService],
+  providers: [ServerGateway, ServerService, PrivateConvService, FriendshipService],
   exports: [ServerService],
 })
 export class ServerModule {}

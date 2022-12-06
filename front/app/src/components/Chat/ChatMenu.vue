@@ -36,6 +36,7 @@ import { Channel, ChannelType, isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
 import { User } from "@/types/User";
 import { onMounted, onUpdated, Ref, ref, watch } from "vue";
+import { transformDate } from "@/types/Message";
 
 const props = defineProps<{
   channels: Channel[];
@@ -52,12 +53,11 @@ const emits = defineEmits([
   "closeChannelModal",
 ]);
 
-const friends: Ref<User[] | undefined> = ref();
+const store = useStore();
+const friends: Ref<User[] | undefined> = ref([]);
 const showAllChannelsModal = ref(false);
 const showInvitationsModal = ref(false);
 const showChannelModal = ref(false);
-
-const store = useStore();
 
 const createConversation = async (element: User) => {
   const conv: any = await User.createConversation(element);
@@ -95,6 +95,7 @@ const setCurrentChatWindow = async (target: Channel | Conversation) => {
     })
       .then((data) => {
         channel.members = data.members;
+        for (let i = 0; i < data.messages.length; i++) data.messages[i] = transformDate(data.messages[i]);
         channel.messages = data.messages;
         store.$patch({
           currentChat: channel,
@@ -112,6 +113,7 @@ const setCurrentChatWindow = async (target: Channel | Conversation) => {
       .then((data) => {
         if (data.length > 0) conversation.messages = data;
         else conversation.messages = [];
+        for (let i = 0; i < conversation.messages.length; i++) conversation.messages[i] = transformDate(conversation.messages[i]);
         store.$patch({
           currentChat: conversation,
         });
