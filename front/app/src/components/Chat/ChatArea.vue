@@ -46,7 +46,7 @@ import { addAlertMessage, fetchJSONDatas } from "@/functions/funcs";
 import { useStore } from "@/store";
 import { Channel, isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
-import { Message } from "@/types/Message";
+import { Message, transformDate } from "@/types/Message";
 import { User } from "@/types/User";
 import { nextTick, onMounted, ref, watch } from "vue";
 import defaultAvatarUrl from "../../assets/defaultAvatar.png";
@@ -95,8 +95,12 @@ const sendMessage = () => {
           message: messageField.value,
           friendNickname: (<Conversation>store.currentChat).other.nickname,
         },
-        (msg: Message) => {
-          store.currentChat?.messages?.push(msg);
+        (msg: any) => {
+          if (msg.blocked) {
+            addAlertMessage(msg.message, 3);
+          } else {
+            store.currentChat?.messages?.push(transformDate(msg));
+          }
         }
       );
     }
@@ -122,6 +126,8 @@ const loadChannelMessages = async (channel: Channel): Promise<void> => {
     disableLoadMore.value = true;
     return;
   }
+  for (let i = 0; i < data.length; i++)
+    data[i] = transformDate(data[i]);
   store.$patch({
     currentChat: {
       messages: [...data, ...store.currentChat?.messages!],
@@ -136,6 +142,8 @@ const loadPrivateMessages = async (conv: Conversation): Promise<void> => {
     disableLoadMore.value = true;
     return;
   }
+  for (let i = 0; i < data.length; i++)
+    data[i] = transformDate(data[i]);
   store.$patch({
     currentChat: {
       messages: [...data, ...store.currentChat?.messages!],
@@ -171,5 +179,23 @@ onMounted(() => {
       if (store.currentChat && store.currentChat!.messages && store.currentChat!.messages!.length < 20) disableLoadMore.value = true;
     }
   );
+  if (!store.socket?.hasListeners("updateChannelMembers")) {
+    store.socket?.on("updateChannelMembers", async (channelId: number) => {
+      if (store.currentChat && isChannel(store.currentChat) && channelId === store.currentChat.id) {
+        await fetchJSONDatas("api/chat/members", "POST", {
+          id: store.currentChat!.id,
+        })
+          .then((data) => {
+            store.currentChat?.messages?.forEach((msg) => {
+              if (!data.find((member: any) => member.nickname === msg.author)) msg.author = "UNKNOWN";
+            });
+            store.$patch({
+              currentChat: { members: data },
+            });
+          })
+          .catch(() => {});
+      }
+    });
+  }
 });
 </script>

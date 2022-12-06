@@ -23,35 +23,23 @@ export default defineComponent({
     };
   },
   mounted() {
-    fetch(
-      "http://" +
-        window.location.hostname +
-        ":3000/api/user/bynickname/" +
-        this.$props.nick,
-      {
-        method: "GET",
-        headers: {
-          Authorization: "Bearer " + localStorage.getItem("token"),
-        },
-      }
-    )
+    fetch("http://" + window.location.hostname + ":3000/api/user/bynickname/" + this.$props.nick, {
+      method: "GET",
+      headers: {
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+    })
       .then((res) => res.json())
       .then((data) => {
         this.nickname = data.nickname;
         this.phone = data.phone;
         let avatar = data.avatar.path;
-        fetch(
-          "http://" +
-            window.location.hostname +
-            ":3000/api/user/profile-picture/" +
-            avatar,
-          {
-            method: "GET",
-            headers: {
-              Authorization: "Bearer " + localStorage.getItem("token"),
-            },
-          }
-        )
+        fetch("http://" + window.location.hostname + ":3000/api/user/profile-picture/" + avatar, {
+          method: "GET",
+          headers: {
+            Authorization: "Bearer " + localStorage.getItem("token"),
+          },
+        })
           .then((res) => res.blob())
           .then((data) => {
             this.imageUrl = URL.createObjectURL(data);

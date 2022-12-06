@@ -34,10 +34,11 @@ import { useStore } from "@/store";
 import { Channel, isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
 import { Alert } from "@/types/GameSummary";
-import { Message } from "@/types/Message";
+import { Message, transformDate } from "@/types/Message";
 import { getUserByNickname, User } from "@/types/User";
 import { onMounted, ref, watch } from "vue";
 import { RouterLink, RouterView, useRoute, useRouter } from "vue-router";
+import dayjs from "dayjs";
 import AlertCard from "./components/AlertCard.vue";
 import CustomInvitation from "./components/CustomInvitation/Modal.vue";
 import FailedInvitation from "./components/FailedInvitation/Modal.vue";
@@ -92,24 +93,24 @@ store.$subscribe((mutation, state) => {
     });
   }
   if (!state.socket?.hasListeners("friendshipInvite")) {
-    state.socket?.on("friendshipInvite", (requester: User) => {
-      incomingFriendRequest.value = requester.nickname;
+    state.socket?.on("friendshipInvite", (requester: string) => {
+      incomingFriendRequest.value = requester;
       profileNotificationBadge.value = true;
-      getUserByNickname(requester.nickname).then((data) => {
+      getUserByNickname(requester).then((data) => {
         state.user?.invitations?.push(data!);
       });
     });
   }
   if (!state.socket?.hasListeners("acceptInvite")) {
-    state.socket?.on("acceptInvite", (requester: User) => {
-      getUserByNickname(requester.nickname).then((data) => {
+    state.socket?.on("acceptInvite", (requester: string) => {
+      getUserByNickname(requester).then((data) => {
         state.user?.friends?.push(data!);
       });
     });
   }
   if (!state.socket?.hasListeners("removeFriend")) {
-    state.socket?.on("removeFriend", (requester: User) => {
-      getUserByNickname(requester.nickname).then((data) => {
+    state.socket?.on("removeFriend", (requester: string) => {
+      getUserByNickname(requester).then((data) => {
         state.user?.friends?.splice(state.user?.friends?.indexOf(data!), 1);
       });
     });
@@ -273,7 +274,7 @@ onMounted(() => {
       if (!store.socket?.hasListeners("Message to the client")) {
         store.socket?.on("Message to the client", async (privateMessage: Message) => {
           if (!isChannel(store.currentChat!) && privateMessage.author === (<Conversation>store.currentChat)?.other.nickname) {
-            store.currentChat?.messages?.push(privateMessage);
+            store.currentChat?.messages?.push(transformDate(privateMessage));
           } else {
             addAlertMessage(`New message from ${privateMessage.author}`, 1);
           }
@@ -282,7 +283,7 @@ onMounted(() => {
       if (!store.socket?.hasListeners("messageRecieved")) {
         store.socket?.on("messageReceived", (channelId: number, channelName: string, msg: Message) => {
           if (isChannel(store.currentChat!) && channelId === store.currentChat!.id) {
-            store.currentChat?.messages?.push(msg);
+            store.currentChat?.messages?.push(transformDate(msg));
           } else {
             addAlertMessage(`New message from ${msg.author} in "${channelName}"`, 1);
           }

@@ -11,9 +11,9 @@ export abstract class AbstractEntity extends BaseEntity {
   @Generated('uuid')
   public uuid: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   public createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   public updatedAt: Date;
 }

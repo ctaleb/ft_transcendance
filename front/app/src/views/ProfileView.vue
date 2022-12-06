@@ -58,7 +58,7 @@
 import FriendCard from "@/components/profile/FriendCard.vue";
 import InvitationCard from "@/components/profile/InvitationCard.vue";
 import SummaryCard from "@/components/profile/SummaryCard.vue";
-import { fetchJSONDatas } from "@/functions/funcs";
+import { addAlertMessage, fetchJSONDatas } from "@/functions/funcs";
 import { useStore } from "@/store";
 import { History } from "@/types/GameSummary";
 import { getUserByNickname, User } from "@/types/User";
@@ -67,8 +67,8 @@ import { onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import editUrl from "../assets/edit.png";
 import shutdownUrl from "../assets/shutdown.png";
-let funcs = require("../functions/funcs");
 import { useRouter } from "vue-router";
+let funcs = require("../functions/funcs");
 
 const router = useRouter();
 const route = useRoute();
@@ -137,7 +137,6 @@ onMounted(async () => {
   })
     .then((data) => data.json())
     .then((data) => {
-      console.log(data);
       currentSummary.value = data;
     });
 });
@@ -152,17 +151,23 @@ const watchHistory = () => {
 
 const invite = async (user: User | undefined) => {
   if (user)
-    await fetchJSONDatas("api/friendship/invite", "POST", { addressee: user?.nickname }).catch((err) => {
-      console.log(err);
-    });
+    await fetchJSONDatas("api/friendship/invite", "POST", { addressee: user?.nickname })
+      .then((data) => {
+        socket?.emit("friendship-invite", { id: store.user?.id, addresseeId: user?.id, target: user?.nickname, requester: store.user?.nickname });
+        addAlertMessage("The user has been invited", 2);
+      })
+      .catch((err) => {});
 };
 
 const block = async (user: User | undefined) => {
   if (user)
-    await fetchJSONDatas("api/friendship/block", "PUT", { addressee: user.nickname }).catch((err) => {
-      console.log(err);
-    });
+    await fetchJSONDatas("api/friendship/block", "PUT", { addressee: user.nickname })
+      .then(() => {
+        addAlertMessage("The user has been blocked", 2);
+      })
+      .catch((err) => {});
 };
+
 function redirectToEdit() {
   window.location.href = "/edit";
 }
