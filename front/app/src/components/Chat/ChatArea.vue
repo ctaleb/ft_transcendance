@@ -1,11 +1,11 @@
 <template>
   <div class="chat-area">
     <div class="chat-messages">
-      <button v-if="!disableLoadMore" class="loadMoreButton" @click="loadMoreMessages()">Load more</button>
+      <button v-if="!disableLoadMore" class="button" @click="loadMoreMessages()">Load more</button>
       <template v-for="(message, index) in store.currentChat?.messages">
         <div v-if="store.user?.nickname === message.author" class="msg-out">
           <div class="chat-message chat-message-out">
-            <h5>{{ message.author }}</h5>
+            <h4>{{ message.author }}</h4>
             <p>{{ message.text }}</p>
             <p class="date">{{ message.date }}</p>
           </div>
@@ -15,10 +15,18 @@
             :src="User.getAvatar(store.user)"
             alt=""
           />
+          <img v-else class="user-image" :src="User.getAvatar(store.user)" alt="" style="z-index: -1000" />
         </div>
         <div v-else class="msg-in">
           <img
             v-if="index < 1 || store.currentChat?.messages![index - 1].author != message.author"
+            class="user-image"
+            :src="message.author != 'UNKNOWN' ? User.getAvatarByNickname(message.author, store.currentChat!) : defaultAvatarUrl"
+            alt=""
+          />
+          <img
+            v-else
+            style="z-index: -1000"
             class="user-image"
             :src="message.author != 'UNKNOWN' ? User.getAvatarByNickname(message.author, store.currentChat!) : defaultAvatarUrl"
             alt=""
@@ -33,10 +41,8 @@
       <div ref="messagesBoxRef"></div>
     </div>
     <div class="chat-input">
-      <div class="searchBar">
-        <input type="text" class="searchField" name="messageField" v-model="messageField" placeholder="Write your message" />
-      </div>
-      <button @click="sendMessage()">Send message</button>
+      <input type="text" class="input" name="messageField" v-model="messageField" placeholder="Write your message" />
+      <button class="button" @click="sendMessage()">Send message</button>
     </div>
   </div>
 </template>

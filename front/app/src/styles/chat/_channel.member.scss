@@ -4,17 +4,22 @@
   display: flex;
   flex-direction: column;
 
-  margin: 5%;
-
   .member-controll {
     display: flex;
     align-items: center;
     position: relative;
-    border: solid $chat-secondary-color;
+    border-bottom: solid $primary;
     height: $chat-menu-item-height;
-    margin-bottom: 5%;
     cursor: pointer;
-
+    h4 {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      i {
+        margin-left: 15px;
+        color: $primary;
+      }
+    }
     div {
       display: flex;
       align-items: center;

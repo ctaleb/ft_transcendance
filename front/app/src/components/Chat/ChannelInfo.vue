@@ -1,8 +1,8 @@
 <template>
   <div class="channel-info">
     <div class="channel-options">
-      <button @click="leaveChannel" class="primary-btn">Leave channel</button>
-      <button v-if="(<Channel>store.currentChat).type === ChannelType.PRIVATE" @click="showInviteToChannelModal = true" class="primary-btn">
+      <button class="button" @click="leaveChannel">Leave channel</button>
+      <button class="button" v-if="(<Channel>store.currentChat).type === ChannelType.PRIVATE" @click="showInviteToChannelModal = true">
         Invite new member
       </button>
       <button v-if="user.role === ChannelRole.OWNER" @click="showUpdateChannelModal = true">Update channel</button>

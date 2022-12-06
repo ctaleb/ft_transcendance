@@ -1,11 +1,12 @@
 <template>
   <div class="chat-window-header">
-    <button @click="store.currentChat = undefined">Leave</button>
     <div class="chat-window-header-info">
-      <h2>{{ title }}</h2>
-      <p>{{ detail }}</p>
+      <div>
+        <h2>{{ title }}</h2>
+        <p>{{ detail }}</p>
+      </div>
+      <i class="gg-more-o" v-if="isChannel(store.currentChat!)" @click="$emit('toggleChannelInfo')"></i>
     </div>
-    <button v-if="isChannel(store.currentChat!)" @click="$emit('toggleChannelInfo')">Info</button>
   </div>
 </template>
 

@@ -29,13 +29,19 @@ const toggle = () => {
 @import "../../styles/variables";
 
 nav {
+  text-align: center;
   h3 {
-    color: $primary;
-    border-bottom: 1px solid #4f4d99;
-    margin: 5px 0 15px 0;
+    color: $secondary;
+    width: 100%;
+    background-color: $primary;
+    border-bottom: 1px solid $secondary;
+    margin: 0;
     &:hover {
       cursor: pointer;
       opacity: 0.8;
+    }
+    ul {
+      text-align: left;
     }
   }
 }

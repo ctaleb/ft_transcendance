@@ -10,9 +10,7 @@
     </div>
     <div v-else>
       <img class="user-image" :src="User.getAvatar(member)" alt="" />
-      <h4 v-if="member.role === ChannelRole.OWNER" style="color: red">
-        {{ member.nickname }}
-      </h4>
+      <h4 v-if="member.role === ChannelRole.OWNER" style="color: red">{{ member.nickname }}<i class="gg-crown"></i></h4>
       <h4 v-else-if="member.role === ChannelRole.ADMIN" style="color: gold">
         {{ member.nickname }}
       </h4>

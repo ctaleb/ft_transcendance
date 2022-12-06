@@ -28,38 +28,28 @@ services:
     # http://localhost:8080/ to access adminer page
     ports:
       - 8080:8080
-  # candidate to replace adminer with; needs a lot more configuration to work properly
-  # pgadmin:
-  #   image: dpage/pgadmin4
-  #   container_name: pg_admin
-  #   init: true
-  #   restart: unless-stopped
-  #   ports:
-  #     - 8080:8080
-  # back:
-  #   depends_on:
-  #     - database
-  #   image: back
-  #   container_name: back
-  #   networks:
-  #     - 42network
-  #   init: true
-  #   build: back/.
-  #   restart: unless-stopped
-  # ports:
-  #   - 3000:3000
-  # front:
-  #   depends_on:
-  #     - back
-  #   image: front
-  #   container_name: front
-  #   networks:
-  #     - 42network
-  #   init: true
-  #   build: front/.
-  #   restart: unless-stopped
-  #   ports:
-  #     - 4000:4000
+  #back:
+  #  depends_on:
+  #    - database
+  #  image: back
+  #  container_name: back
+  #  networks:
+  #    - 42network
+  #  init: true
+  #  build: back/.
+  #  restart: unless-stopped
+  #front:
+  #  depends_on:
+  #    - back
+  #  image: front
+  #  container_name: front
+  #  networks:
+  #    - 42network
+  #  init: true
+  #  build: front/.
+  #  restart: unless-stopped
+  #  ports:
+  #    - 4000:4000
 # volumes:
 #   db:
 #     name: db
