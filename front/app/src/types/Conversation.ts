@@ -4,7 +4,6 @@ import { Message } from "@/types/Message";
 export interface Conversation {
   id: number;
   other: User;
-  notif: boolean;
   messages: Message[];
 }
 

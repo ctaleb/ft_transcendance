@@ -51,7 +51,6 @@
     <img src="../assets/profileConfettis.svg" class="leftBottomSvg" alt="" />
   </section>
   <h4 v-else>User not found T_T</h4>
-  <!-- <friend-alert :requester-name="incomingFriendRequest" /> -->
 </template>
 
 <script lang="ts" setup>
@@ -80,17 +79,6 @@ store.$subscribe((mutation, state) => {
   socket = state.socket;
 });
 
-// const prop = defineProps<{
-//   incomingFriendRequest: string;
-// }>();
-// const emit = defineEmits<{
-//   (e: "notification", enable: boolean): void;
-//   (e: "updateInvitations"): void;
-// }>();
-// const checkNotificationBadge = () => {
-//   if (store.user?.invitations?.length === 0) emit("notification", false);
-// };
-
 const searchFriend = ref("");
 const toogleMenu = ref(false);
 
@@ -105,7 +93,6 @@ onMounted(async () => {
     currentUser.value = await getUserByNickname(nick).catch((err) => {
       return undefined;
     });
-    console.log(currentUser.value);
 
     if (!currentUser.value) return;
     await fetch("http://" + window.location.hostname + ":3000/api/friendship/profile/" + nick, {

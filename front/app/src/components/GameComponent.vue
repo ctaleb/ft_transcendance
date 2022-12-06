@@ -129,7 +129,6 @@ store.$subscribe((mutation, state) => {
   socket = state.socket;
 });
 
-console.log("config " + socket?.id);
 const ballImg = new Image();
 ballImg.src = ballUrl;
 const powerChargeImg = new Image();
@@ -204,8 +203,8 @@ let cSmashingPercent = 0;
 let hSmashingPercent = 0;
 const particles: particleSet[] = [];
 
-let start: Date;
-let end: Date;
+let start: Date = new Date();
+let end: Date = new Date();
 
 let theRoom: GameRoom;
 const gameSummary = reactive<GameSummaryData>({
@@ -547,7 +546,7 @@ function resizeCanvas() {
 
 onMounted(() => {
   ctx = canvas.value?.getContext("2d");
-  console.log("ctx " + ctx);
+  // console.log("ctx " + ctx);
   ctx?.drawImage(plateauImg, 0, 0, cWidth, cHeight);
 
   scaling(ctx);
