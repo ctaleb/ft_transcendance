@@ -223,8 +223,6 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     if (game) {
       console.log(game.host.socket.id + ' vs ' + game.client.socket.id);
       this.server.to(game.room.name).emit('gameConfirmation', game.room);
-      //   console.log(game.client.socket.id);
-      //   console.log(game.host.socket.id);
       setTimeout(() => {
         if (game.host.gameData.status === 'ready' && game.client.gameData.status === 'ready') {
           game.room.status = 'playing';

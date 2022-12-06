@@ -188,6 +188,9 @@ onMounted(() => {
     (currentValue, oldValue) => {
       if (!socket.value?.hasListeners("updateOneUserStatus")) {
         socket.value?.on("updateOneUserStatus", (obj: { id: number; status: string }) => {
+          console.log("Update status");
+          console.log(obj.id);
+          console.log(obj.status);
           updateStatus(obj.id, obj.status);
         });
       }
@@ -217,24 +220,24 @@ onMounted(() => {
         });
       }
       if (!socket.value?.hasListeners("friendshipInvite")) {
-        socket.value?.on("friendshipInvite", (requester: User) => {
-          incomingFriendRequest.value = requester.nickname;
+        socket.value?.on("friendshipInvite", (requester: string) => {
+          incomingFriendRequest.value = requester;
           profileNotificationBadge.value = true;
-          getUserByNickname(requester.nickname).then((data) => {
+          getUserByNickname(requester).then((data) => {
             store.user?.invitations?.push(data!);
           });
         });
       }
       if (!socket.value?.hasListeners("acceptInvite")) {
-        socket.value?.on("acceptInvite", (requester: User) => {
-          getUserByNickname(requester.nickname).then((data) => {
+        socket.value?.on("acceptInvite", (requester: string) => {
+          getUserByNickname(requester).then((data) => {
             store.user?.friends?.push(data!);
           });
         });
       }
       if (!socket.value?.hasListeners("removeFriend")) {
-        socket.value?.on("removeFriend", (requester: User) => {
-          getUserByNickname(requester.nickname).then((data) => {
+        socket.value?.on("removeFriend", (requester: string) => {
+          getUserByNickname(requester).then((data) => {
             store.user?.friends?.splice(store.user?.friends?.indexOf(data!), 1);
           });
         });

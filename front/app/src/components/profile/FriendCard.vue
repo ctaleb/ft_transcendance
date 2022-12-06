@@ -9,7 +9,7 @@
     </svg>
     <img class="user-image" :src="User.getAvatar(friend)" alt="" />
     <h3>{{ friend.nickname }}</h3>
-    <h4 style="color: greenyellow; text-align: center">{{ "en ligne" }}</h4>
+    <h4 style="color: greenyellow; text-align: center">{{ friend.status }}</h4>
     <div class="socialIcons">
       <i title="Spectate your friend" class="gg-eye" @click="spectateGame(friend.nickname)"></i>
       <i title="Go to profile" class="gg-profile" @click="watchProfile()"></i>
