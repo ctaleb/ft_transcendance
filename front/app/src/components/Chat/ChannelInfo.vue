@@ -5,7 +5,7 @@
       <button class="button" v-if="(<Channel>store.currentChat).type === ChannelType.PRIVATE" @click="showInviteToChannelModal = true">
         Invite new member
       </button>
-      <button v-if="user.role === ChannelRole.OWNER" @click="showUpdateChannelModal = true">Update channel</button>
+      <button class="button" v-if="user.role === ChannelRole.OWNER" @click="showUpdateChannelModal = true">Update channel</button>
     </div>
     <ChannelMembers />
   </div>

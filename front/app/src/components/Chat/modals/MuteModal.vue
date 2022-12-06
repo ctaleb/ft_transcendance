@@ -1,5 +1,4 @@
 <template>
-  <div class="overlay"></div>
   <div class="modal">
     <span @click="$emit('closeMuteModal')" class="close-modal"><i class="gg-close-o"></i></span>
     <h2>Mute {{ member.nickname }}</h2>

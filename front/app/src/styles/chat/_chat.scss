@@ -79,7 +79,11 @@
         flex-direction: column;
         align-items: center;
         height: 95%;
+        padding: 10px;
         overflow-y: auto;
+        background: rgb(193, 163, 107);
+        background: radial-gradient(circle, rgba(193, 163, 107, 1) 0%, rgba(135, 113, 71, 1) 100%);
+
         .button {
           margin-top: 5px;
         }
@@ -94,6 +98,7 @@
             color: black;
           }
         }
+
         .msg-in {
           display: flex;
           gap: 1%;
@@ -101,6 +106,7 @@
           width: 100%;
           align-self: flex-start;
           margin-bottom: 25px;
+          background: transparent;
           img {
             height: 50px;
           }
@@ -112,25 +118,28 @@
           align-items: center;
           align-self: flex-end;
           margin-bottom: 25px;
+          background: transparent;
           img {
             height: 50px;
           }
         }
         .chat-message-in {
-          background-color: #24272a;
-          color: $primary;
+          background-color: #957c55;
+          color: $secondary;
           border-left: 1px solid $primary;
           border-radius: 0 1rem 1rem 0;
+          box-shadow: 1.5px 1.5px 1.5px rgba(132, 109, 55, 0.692);
           h4,
           p {
             margin: 5px 2px 5px 2px;
           }
         }
         .chat-message-out {
-          background-color: #32363a;
-          color: $primary;
+          background-color: #c2a672;
+          color: $secondary;
           border-right: 1px solid $primary;
           border-radius: 1rem 0 0 1rem;
+          box-shadow: -1.5px 1.5px 1.5px rgba(132, 109, 55, 0.692);
           margin-left: auto;
           h4,
           p {
@@ -144,10 +153,11 @@
         display: flex;
         align-items: flex-end;
         justify-content: space-around;
+        border: 1px solid $primary;
         .input {
           height: 100%;
           width: 100%;
-          background: pink;
+          background: rgb(26, 25, 23);
           padding: 0 10px 0 10px;
           border-bottom: none;
         }
@@ -155,6 +165,25 @@
       .button {
         width: 10%;
         height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        &:hover {
+          background-color: $secondary;
+          padding: 8px;
+        }
+        img {
+          width: 100%;
+          height: 100%;
+        }
+      }
+    }
+    .channel-info {
+      width: 15%;
+      .channel-options {
+        .button {
+          width: 100%;
+        }
       }
     }
   }

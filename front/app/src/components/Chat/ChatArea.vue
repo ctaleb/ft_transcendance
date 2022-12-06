@@ -42,7 +42,7 @@
     </div>
     <div class="chat-input">
       <input type="text" class="input" name="messageField" v-model="messageField" placeholder="Write your message" />
-      <button class="button" @click="sendMessage()">Send message</button>
+      <button class="button pulse" @click="sendMessage()"><img src="../../assets/sendIcon.svg" alt="" /></button>
     </div>
   </div>
 </template>
