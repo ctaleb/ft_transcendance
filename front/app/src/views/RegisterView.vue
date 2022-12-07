@@ -47,8 +47,6 @@ let funcs = require("../functions/funcs");
 
 export default defineComponent({
   name: "RegisterView",
-  emits: ["notification"],
-  props: ["incomingFriendRequest"],
   setup() {
     const hidePassword = ref(true);
     const passwordFieldType = computed(() => (hidePassword.value ? "password" : "text"));

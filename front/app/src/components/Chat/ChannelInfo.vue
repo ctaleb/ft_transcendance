@@ -42,6 +42,7 @@ const showUpdateChannelModal = ref(false);
 
 store.$subscribe((mutation, state) => {
   socket = state.socket;
+  user.value = (<Channel>store.currentChat!).members!.find((member) => member.id === store.user!.id)!;
 });
 
 const leaveChannel = async (): Promise<void> => {

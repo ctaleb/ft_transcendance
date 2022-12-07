@@ -3,16 +3,13 @@
     <nav class="navbar" v-if="$route.path != '/' && $route.path != '/signup'">
       <img src="./assets/navbarLogo.gif" width="85" height="85" alt="" />
       <div class="links">
-        <router-link to="/profile" class="link"
-          >Profile
-          <div :class="'dot' + (profileNotificationBadge ? ' show' : '')"></div
-        ></router-link>
+        <router-link to="/profile" class="link">Profile </router-link>
         <router-link to="/game" class="link"> PLAY </router-link>
         <router-link to="/chat" class="link">Chat</router-link>
         <router-link to="/" class="link" v-on:click.prevent="logout()">Logout</router-link>
       </div>
     </nav>
-    <router-view :key="$route.fullPath" @notification="changeNotificationValue" :incoming-friend-request="incomingFriendRequest" />
+    <router-view :key="$route.fullPath" />
     <div v-if="gameConfirmation" class="overlay">
       <GameConfirmation @confirmGame="confirmGame()" @denyGame="denyGame()"></GameConfirmation>
     </div>
@@ -47,8 +44,6 @@ import GameConfirmation from "./components/GameConfirmation/Modal.vue";
 const store = useStore();
 const route = useRoute();
 const router = useRouter();
-const incomingFriendRequest = ref("");
-const profileNotificationBadge = ref(false);
 const gameConfirmation = ref(false);
 const customInvitation = ref(false);
 const failedInvitation = ref(false);
@@ -94,10 +89,9 @@ store.$subscribe((mutation, state) => {
   }
   if (!state.socket?.hasListeners("friendshipInvite")) {
     state.socket?.on("friendshipInvite", (requester: string) => {
-      incomingFriendRequest.value = requester;
-      profileNotificationBadge.value = true;
       getUserByNickname(requester).then((data) => {
         state.user?.invitations?.push(data!);
+        addAlertMessage(`Incoming friendship request from ${requester}`, 1);
       });
     });
   }
@@ -221,9 +215,9 @@ const logout = () => {
   socket?.emit("disco", {});
   socket?.close();
 };
-const changeNotificationValue = (value: boolean) => {
-  profileNotificationBadge.value = value;
-};
+// const changeNotificationValue = (value: boolean) => {
+//   profileNotificationBadge.value = value;
+// };
 
 function showConfirmation(show: boolean) {
   gameConfirmation.value = show;
@@ -238,34 +232,34 @@ function showFailure(show: boolean) {
 }
 
 onMounted(() => {
-  watch(
-    () => route.path,
-    (currentValue, oldValue) => {
-      store.$patch({
-        currentChat: undefined,
-      });
-      if (currentValue != "/game") store.socket?.emit("watchPath");
+  // watch(
+  //   () => route.path,
+  //   (currentValue, oldValue) => {
+  //     store.$patch({
+  //       currentChat: undefined,
+  //     });
+  //     if (currentValue != "/game") store.socket?.emit("watchPath");
 
-      if (localStorage.getItem("token") && profileNotificationBadge.value === false) {
-        fetch("http://" + window.location.hostname + ":3000/api/friendship/has-invitations", {
-          method: "GET",
-          headers: {
-            Authorization: "Bearer " + localStorage.getItem("token"),
-          },
-        })
-          .then((res) => {
-            return res.json();
-          })
-          .then((data) => {
-            profileNotificationBadge.value = data;
-          })
-          .catch((err) => {
-            console.log(err);
-            profileNotificationBadge.value = false;
-          });
-      }
-    }
-  );
+  //     if (localStorage.getItem("token") && profileNotificationBadge.value === false) {
+  //       fetch("http://" + window.location.hostname + ":3000/api/friendship/has-invitations", {
+  //         method: "GET",
+  //         headers: {
+  //           Authorization: "Bearer " + localStorage.getItem("token"),
+  //         },
+  //       })
+  //         .then((res) => {
+  //           return res.json();
+  //         })
+  //         .then((data) => {
+  //           profileNotificationBadge.value = data;
+  //         })
+  //         .catch((err) => {
+  //           console.log(err);
+  //           profileNotificationBadge.value = false;
+  //         });
+  //     }
+  //   }
+  // );
 
   watch(
     () => store.socket,

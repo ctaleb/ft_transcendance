@@ -19,6 +19,7 @@ let socket = store.socket;
 
 store.$subscribe((mutation, state) => {
   socket = state.socket;
+  me.value = (<Channel>store.currentChat!).members!.find((member) => member.id === store.user!.id)!;
 });
 
 onMounted(() => {

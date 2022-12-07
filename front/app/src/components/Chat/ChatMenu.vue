@@ -62,10 +62,11 @@ const showChannelModal = ref(false);
 const createConversation = async (element: User) => {
   const conv: any = await User.createConversation(element);
   if (conv.created) {
-    const newConv: Conversation = { id: conv.conv.id, other: element, notif: false, messages: [] };
+    const newConv: Conversation = { id: conv.conv.id, other: element, messages: [] };
     props.convs.unshift(newConv);
     store.socket?.emit("friendToConv", { target: newConv.other.nickname });
     friends.value = store.user?.friends?.filter((user) => !props.convs.find((conv) => conv.other.id === user.id));
+    setCurrentChatWindow(newConv);
   }
 };
 
@@ -108,8 +109,7 @@ const setCurrentChatWindow = async (target: Channel | Conversation) => {
       });
   } else {
     const conversation = <Conversation>target;
-    const offset: number = conversation.messages ? conversation.messages.length : 0;
-    await fetchJSONDatas(`api/privateConv/getMessages/${conversation.id}/${offset}`, "GET")
+    await fetchJSONDatas(`api/privateConv/getMessages/${conversation.id}/0`, "GET")
       .then((data) => {
         if (data.length > 0) conversation.messages = data;
         else conversation.messages = [];
