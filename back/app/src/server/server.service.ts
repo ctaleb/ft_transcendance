@@ -1,33 +1,30 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Server, Socket } from 'socket.io';
+import { ChatService } from 'src/chat/chat.service';
+import { UserEntity } from 'src/user/user.entity';
+import { UserService } from 'src/user/user.service';
+import { Repository } from 'typeorm';
 import { CreateMessageDto } from './dto/create-message.dto';
+import { Channel } from './entities/channel';
+import { GameSummaryData, MatchHistoryEntity } from './entities/match_history.entity';
 import {
   ChatRoom,
   Game,
+  GameOptions,
   GameRoom,
-  User,
-  IBar,
+  GameState,
   IBall,
+  IBar,
   IPoint,
   IPower,
-  GameState,
+  IPowerInfo,
   PowerElastico,
   PowerExhaust,
-  GameOptions,
-  IPowerInfo,
   PowerInvisibility,
   PowerMinimo,
-  Status,
+  User,
 } from './entities/server.entity';
-import { Server, Socket } from 'socket.io';
-import { UserEntity } from 'src/user/user.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import { MatchHistoryEntity, GameSummaryData, PlayerInfoData } from './entities/match_history.entity';
-import { DeepPartial, Repository } from 'typeorm';
-import { UserService } from 'src/user/user.service';
-import { Channel, ChannelRole } from './entities/channel';
-import { ChatService } from 'src/chat/chat.service';
-import { emit } from 'process';
-import { ChannelType } from 'src/chat/entities/channel.entity';
 
 const chargeMax = 1;
 const ballSize = 16;
@@ -68,7 +65,7 @@ export class ServerService {
     const bdd_user: UserEntity = await this._userService.getUserByNickname(user);
     const newUser: User = {
       token: token,
-      socket: null,
+      socket: sock,
       name: user,
       id: bdd_user.id,
       status: 'online',
@@ -86,7 +83,6 @@ export class ServerService {
         RoomList: [],
       },
     };
-    if (sock) newUser.socket = sock;
     this.userList.push(newUser);
     this.updateStatus(newUser.id, 'online');
   }
@@ -141,6 +137,7 @@ export class ServerService {
 
   //status stuff
   async updateStatus(id: number, status: string) {
+    console.log(status);
     await this._userService.updateStatus(id, status);
     this.server.emit('updateOneUserStatus', { id, status });
   }
@@ -743,6 +740,7 @@ export class ServerService {
     game.client.gameData.right = false;
     game.client.gameData.power.reset();
     game.host.gameData.power.reset();
+    game.gameState.hit.hit = false;
   }
 
   startRound(room: GameRoom) {
@@ -809,16 +807,15 @@ export class ServerService {
     if (!game.room.kickOff) {
       const gameState = game.gameState;
       this.resetHit(gameState);
-
       this.updateMoveStatus(game.host, gameState.hostBar, 'host', game.room.options);
       this.updateMoveStatus(game.client, gameState.clientBar, 'client', game.room.options);
       if (game.room.options.smashes) this.chargeUp(game);
       //this.handlePower(game);
       this.moveBar(gameState.hostBar, game.host, game.room.options.barSpeed);
       this.moveBar(gameState.clientBar, game.client, game.room.options.barSpeed);
-
       this.barBallCollision(gameState.hostBar, gameState.clientBar, gameState.ball, game.room, game.host, game.client);
       this.wallBallCollision(gameState, game.room);
+      this.reset_collide(gameState.ball, game.room, game);
       this.nadal(gameState.ball, game.room.effect);
       gameState.ball.pos.x += gameState.ball.speed.x;
       gameState.ball.pos.y += gameState.ball.speed.y;

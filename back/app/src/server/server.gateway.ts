@@ -1,22 +1,21 @@
 import {
-  WebSocketGateway,
-  SubscribeMessage,
-  MessageBody,
-  WebSocketServer,
   ConnectedSocket,
-  OnGatewayInit,
+  MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
+  OnGatewayInit,
+  SubscribeMessage,
+  WebSocketGateway,
+  WebSocketServer,
 } from '@nestjs/websockets';
-import { ServerService } from './server.service';
-import { PrivateConvService } from '../private_conv/private_conv.service';
-import { CreateMessageDto } from './dto/create-message.dto';
 import { Server, Socket } from 'socket.io';
-import { Game, GameOptions, IPower } from './entities/server.entity';
+import { FriendshipService } from 'src/friendship/friendship.service';
 import { UserEntity } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
-import { NamingStrategyNotFoundError } from 'typeorm';
-import { FriendshipService } from 'src/friendship/friendship.service';
+import { PrivateConvService } from '../private_conv/private_conv.service';
+import { CreateMessageDto } from './dto/create-message.dto';
+import { Game, GameOptions, IPower } from './entities/server.entity';
+import { ServerService } from './server.service';
 
 @WebSocketGateway(3500, {
   cors: {
@@ -41,7 +40,6 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   handleConnection(@ConnectedSocket() client: Socket) {
     let hsToken: string;
     let hsNick: string;
-    console.log('%%%');
     if (client.handshake) {
       hsToken = client.handshake.auth.token;
       hsNick = client.handshake.auth.user.nickname;
@@ -49,7 +47,8 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     const user = this.serverService.userList.find((element) => element.name === hsNick);
     if (user && user.token === hsToken) {
       user.socket = client;
-      if (user.gameData.status === 'ready') this.serverService.reconnect(user);
+      console.log(user.name + ' rejoining ' + user.status);
+      this.serverService.reconnect(user);
     } else {
       this.serverService.newUser(hsToken, hsNick, client);
     }
@@ -98,6 +97,7 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       if (this.serverService.playerQueue.find((element) => element === player)) {
         this.serverService.playerQueue.splice(this.serverService.playerQueue.indexOf(player), 1);
         this.serverService.userList.splice(this.serverService.userList.indexOf(player), 1);
+        this.serverService.updateStatus(player.id, 'offline');
       } else {
         this.serverService.games.forEach((element) => {
           if (
@@ -113,9 +113,8 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
             ingame = true;
           }
         });
-        // if (!ingame) {
+        this.serverService.updateStatus(player.id, 'offline');
         this.serverService.userList.splice(this.serverService.userList.indexOf(player), 1);
-        // }
       }
     }
     client.disconnect();
@@ -223,8 +222,6 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     if (game) {
       console.log(game.host.socket.id + ' vs ' + game.client.socket.id);
       this.server.to(game.room.name).emit('gameConfirmation', game.room);
-      //   console.log(game.client.socket.id);
-      //   console.log(game.host.socket.id);
       setTimeout(() => {
         if (game.host.gameData.status === 'ready' && game.client.gameData.status === 'ready') {
           game.room.status = 'playing';

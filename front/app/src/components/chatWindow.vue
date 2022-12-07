@@ -20,10 +20,11 @@
   </div>
 </template>
 <script lang="ts" setup>
+import { socketLocal } from "@/store";
 import { onMounted, ref } from "vue";
 import config from "../config/config";
 let funcs = require("../functions/funcs");
-const socket = config.socket;
+const socket = socketLocal;
 const clientNickname: string = JSON.parse(localStorage.getItem("user") || "{}").nickname;
 const props = defineProps(["destNickname"]);
 const emit = defineEmits(["closeWindow", "notifChat"]);
@@ -35,7 +36,7 @@ let tmpFirstMessage: { author: string; text: string };
 
 function sendPrivateMessage(nickname: string): void {
   if (privateMessage.value != "") {
-    socket.emit("deliverMessage", {
+    socket.value?.emit("deliverMessage", {
       message: privateMessage.value,
       friendNickname: nickname,
     });
@@ -50,21 +51,21 @@ function closePrivateConv(nickname: string): void {
   emit("closeWindow", nickname);
 }
 function requestConvMessages() {
-  socket.emit("getMessages", {
+  socket.value?.emit("getMessages", {
     friendNickname: nickname,
   });
 }
 
 onMounted(() => {
   requestConvMessages();
-  socket.once("Deliver all messages", (messages) => {
+  socket.value?.once("Deliver all messages", (messages) => {
     allMessages.value = messages.messages;
     if (tmpFirstMessage) allMessages.value.push(tmpFirstMessage);
   });
   window.addEventListener("keydown", (e) => {
     if (e.key === "Enter") sendPrivateMessage(nickname);
   });
-  socket.on("Message to the client", (privateMessage: { author: string; text: string }) => {
+  socket.value?.on("Message to the client", (privateMessage: { author: string; text: string }) => {
     if (allMessages.value.length == 0) tmpFirstMessage = privateMessage;
     else allMessages.value.push(privateMessage);
   });

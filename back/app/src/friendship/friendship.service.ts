@@ -1,11 +1,8 @@
-import { BadRequestException, forwardRef, HttpException, Inject, Injectable } from '@nestjs/common';
-import { FriendshipEntity } from './entities/friendship.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { UserService } from 'src/user/user.service';
+import { BadRequestException, forwardRef, Inject, Injectable } from '@nestjs/common';
 import { UserEntity } from 'src/user/user.entity';
+import { UserService } from 'src/user/user.service';
+import { FriendshipEntity } from './entities/friendship.entity';
 import { BlockedFriendshipException, CannotAcceptFriendshipRequestException, FriendshipAlreadyExistsException } from './friendship.exception';
-import { ServerService } from 'src/server/server.service';
 
 @Injectable()
 export class FriendshipService {
@@ -15,8 +12,6 @@ export class FriendshipService {
   ) {}
 
   async invite(requester: string, addressee: string): Promise<FriendshipEntity> {
-    let result: FriendshipEntity;
-
     const req: UserEntity = await this._userService.getUserByNickname(requester);
     const adr: UserEntity = await this._userService.getUserByNickname(addressee);
     if (adr.id === req.id) throw new BadRequestException('Requester and addressee are the same person');
@@ -30,7 +25,7 @@ export class FriendshipService {
       addressee: adr,
       status: 'invitation',
     });
-    result = await FriendshipEntity.save(invitation);
+    const result = await FriendshipEntity.save(invitation);
     return result;
   }
 
@@ -164,7 +159,6 @@ export class FriendshipService {
 
   async unblock(requester: string, addressee: string): Promise<FriendshipEntity> {
     let result: Promise<FriendshipEntity>;
-
     const req: UserEntity = await this._userService.getUserByNickname(requester);
     const adr: UserEntity = await this._userService.getUserByNickname(addressee);
     if (adr.id === req.id) throw new BadRequestException('Requester and addressee are the same person');
