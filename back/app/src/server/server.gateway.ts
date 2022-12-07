@@ -206,7 +206,6 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     @ConnectedSocket()
     client: Socket,
   ) {
-    console.log('recieved ' + key + ' from ' + client.id);
     // const player = this.serverService.SocketToPlayer(client);
     // if (player && player.gameData.status != 'idle')
     this.serverService.storeInput(client, key);

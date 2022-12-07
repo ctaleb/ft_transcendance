@@ -55,15 +55,15 @@ const spectateGame = (friendName: string) => {
 };
 
 const inviteCustom = (friendName: string) => {
-  let accepted = "yes";
+  let accepted: string | undefined = undefined;
   socketLocal.value?.emit("customInvite", { friend: friendName }, (response: string) => {
     if (response != "accepted") {
       accepted = "no";
     }
   });
   if (accepted === "no") return;
-  router.push("game");
   socketLocal.value?.emit("settingsInviter", { friend: friendName });
+  router.push("game");
 };
 </script>
 

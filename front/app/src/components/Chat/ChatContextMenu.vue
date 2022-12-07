@@ -6,8 +6,8 @@
     <button @click="invite()">Friend Request</button>
     <button v-if="menu.user!.status == 'inGame'" @click="spectateGame()">Spectate</button>
     <button v-if="menu.user!.status == 'online'" @click="inviteCustom()">Invite</button>
-    <button v-if="isBlocked" @click="block()">Block</button>
-    <button v-else title="Unblock user" class="gg-block" @click="unblock(currentUserProfile)"></button>
+    <button v-if="!isBlocked" @click="block()">Block</button>
+    <button v-else title="Unblock user" @click="unblock(currentUserProfile)">Unblock</button>
   </div>
 </template>
 
@@ -78,6 +78,7 @@ const block = async () => {
   if (menu.value.user)
     await fetchJSONDatas("api/friendship/block", "PUT", { addressee: menu.value.user?.nickname })
       .then(() => {
+        isBlocked.value = true;
         addAlertMessage("The user has been blocked", 2);
       })
       .catch(() => {});

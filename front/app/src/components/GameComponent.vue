@@ -1,7 +1,7 @@
 <template>
   <section class="lobby container">
     <div class="principalSection">
-      <div class="mainContainer" :class="store.user?.status == 'online' ? '' : ' hidden'">
+      <div class="mainContainer" :class="store.user?.status != 'inQueue' ? '' : ' hidden'">
         <div>
           <power-slider-component v-model="power" id="powerSlider" />
           <div v-if="!toggleLadder">

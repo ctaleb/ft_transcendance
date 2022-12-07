@@ -135,6 +135,7 @@ export class IPower {
 
   constructor(name: string) {
     this.name = name;
+    this.maxCharge = 0;
     this.currentCharge = 0;
     this.isActive = false;
     this.trigger = false;
@@ -259,20 +260,18 @@ export class PowerExhaust extends IPower {
 export class PowerInvisibility extends IPower {
   constructor(name: string) {
     super(name);
-    this.maxCharge = 1;
+    this.maxCharge = 10;
   }
 
   active() {
     if (this.currentCharge == this.maxCharge) {
       this.isActive = true;
       this.currentCharge = 0;
-      console.log('TRIGGER');
     }
   }
   handle() {
     this.isActive = false;
     this.trigger = true;
-    console.log('ACTIF');
   }
   reset() {
     this.trigger = false;

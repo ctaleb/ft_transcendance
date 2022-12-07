@@ -132,8 +132,6 @@ export class UserService {
   }
 
   async updateStatus(userId: number, newStatus: string) {
-    console.log('Server update');
-    console.log(newStatus);
     await this._usersRepository.update(userId, { status: newStatus });
     return { success: true };
   }
