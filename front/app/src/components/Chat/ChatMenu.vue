@@ -163,3 +163,17 @@ onMounted(() => {
   );
 });
 </script>
+
+<style lang="scss" scoped>
+.menuBottomButtons {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-top: auto;
+  button {
+    width: 100%;
+  }
+}
+</style>
