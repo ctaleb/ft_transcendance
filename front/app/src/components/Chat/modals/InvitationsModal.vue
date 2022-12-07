@@ -22,7 +22,6 @@ const emits = defineEmits<{
 }>();
 
 const store = useStore();
-let socket = store.socket;
 
 const channelInvitations: Ref<Array<Channel>> = ref([]);
 
@@ -37,10 +36,6 @@ const getChannelInvitations = async (): Promise<void> => {
 const declineInvitation = (channel: Channel) => {
   channelInvitations.value.splice(channelInvitations.value.indexOf(channel), 1);
 };
-
-store.$subscribe((mutation, state) => {
-  socket = state.socket;
-});
 
 onMounted(() => {
   getChannelInvitations();

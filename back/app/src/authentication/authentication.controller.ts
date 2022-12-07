@@ -59,12 +59,8 @@ export class AuthenticationController {
   @UseGuards(LocalAuthGuard)
   @Post('login')
   async login(@Request() req) {
-    console.log('CONTROLLER CALLED');
     const token = this._authenticationService.login(req.user);
     this.serverService.newUser((await token).access_token, req.user.nickname);
-    this.serverService.userList.forEach((element) => {
-      console.log(element.name + ' - ' + element.socket);
-    });
     return { token: (await token).access_token, user: req.user };
   }
 }

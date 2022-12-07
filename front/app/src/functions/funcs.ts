@@ -6,7 +6,6 @@ import { io, Socket } from "socket.io-client";
 import { markRaw, shallowReactive } from "vue";
 
 export async function isConnected(token: string): Promise<boolean> {
-  // console.log(token);
   if (token == "" || token == null) return false;
   let ret = await fetchJSONDatas("api/user/profile", "GET")
     .then(() => {
@@ -65,7 +64,6 @@ export async function fetchBlobDatas(path: string, method: "GET" | "PUT" | "POST
     })
     .catch(async (err: Response) => {
       let message = await getErrorMessage(err);
-      console.log(message);
       return Promise.reject(message);
     });
 }
@@ -120,11 +118,9 @@ export function addAlertMessage(message: string, type: number, second: number = 
 
 export function updateStatus(id: number, status: string) {
   const store = useStore();
-  console.log("Status Update");
 
   if (currentUserProfile.value && currentUserProfile.value.id == id) {
     currentUserProfile.value.status = status;
-    console.log("CurrentProfileUpdate");
   }
   let user = store.user?.friends?.find((element) => element.id === id);
   if (user) user.status = status;
