@@ -43,7 +43,7 @@
     </div>
     <div class="friends" :style="toogleMenu ? 'display: none' : ''">
       <ul>
-        <FriendCard v-for="friend of currentFriend" :friend="friend" :currentUserProfile:="(currentUserProfile as User)" />
+        <FriendCard v-for="friend of currentFriend" :friend="friend" :currentUserProfile:="currentUserProfile" />
       </ul>
     </div>
     <div class="summary" :style="toogleMenu ? '' : 'display: none'">
@@ -164,13 +164,14 @@ const invite = async (user: User | undefined) => {
 };
 
 const block = async (user: User | undefined) => {
-  if (user)
+  if (user) {
     await fetchJSONDatas("api/friendship/block", "PUT", { addressee: user.nickname })
       .then(() => {
         currentUserProfileIsBlocked.value = true;
         addAlertMessage("The user has been blocked", 2);
       })
       .catch((err) => {});
+  }
 };
 
 const unblock = async (user: User | undefined) => {
