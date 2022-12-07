@@ -24,11 +24,6 @@ const emits = defineEmits(["joinChannel", "declineInvitation"]);
 
 const store = useStore();
 const passwordField = ref("");
-let socket = store.socket;
-
-store.$subscribe((mutation, state) => {
-  socket = state.socket;
-});
 
 const joinChannel = async (channel: Channel): Promise<void> => {
   if (channel.type === ChannelType.PROTECTED && passwordField.value.length <= 0) return;

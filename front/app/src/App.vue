@@ -27,15 +27,14 @@
 
 <script setup lang="ts">
 import { addAlertMessage, trySetupUser, updateStatus } from "@/functions/funcs";
-import { useStore } from "@/store";
+import { socketLocal, useStore } from "@/store";
 import { Channel, isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
 import { Alert } from "@/types/GameSummary";
 import { Message, transformDate } from "@/types/Message";
-import { getUserByNickname, User } from "@/types/User";
+import { getUserByNickname } from "@/types/User";
 import { onMounted, ref, watch } from "vue";
 import { RouterLink, RouterView, useRoute, useRouter } from "vue-router";
-import dayjs from "dayjs";
 import AlertCard from "./components/AlertCard.vue";
 import CustomInvitation from "./components/CustomInvitation/Modal.vue";
 import FailedInvitation from "./components/FailedInvitation/Modal.vue";
@@ -53,155 +52,73 @@ trySetupUser().catch((err) => {
   console.log("Cant't set up user for now");
 });
 
-let socket = store.socket;
+let socket = socketLocal;
 let alertMessages: Alert[] = store.message;
-
-store.$subscribe((mutation, state) => {
-  if (!state.socket?.hasListeners("updateOneUserStatus")) {
-    state.socket?.on("updateOneUserStatus", (info: any) => {
-      updateStatus(info.id, info.status);
-    });
-  }
-  if (!state.socket?.hasListeners("customInvite")) {
-    state.socket?.on("customInvite", (inviter: string) => {
-      // theRoom = gameRoom;
-      showInvite(true);
-    });
-  }
-  if (!state.socket?.hasListeners("gameConfirmation")) {
-    state.socket?.on("gameConfirmation", (gameRoom: any) => {
-      // theRoom = gameRoom;
-      showConfirmation(true);
-    });
-  }
-  if (!state.socket?.hasListeners("invitation")) {
-    state.socket?.on("invitation", (requester: string) => {
-      invSender.value = requester;
-      showInvite(true);
-    });
-  }
-  if (!state.socket?.hasListeners("gameConfirmationTimeout")) {
-    state.socket?.on("gameConfirmationTimeout", () => {
-      showConfirmation(false);
-      // startButton.value = true;
-      // lobbyStatus.value = "Find Match";
-    });
-  }
-  if (!state.socket?.hasListeners("friendshipInvite")) {
-    state.socket?.on("friendshipInvite", (requester: string) => {
-      getUserByNickname(requester).then((data) => {
-        state.user?.invitations?.push(data!);
-        addAlertMessage(`Incoming friendship request from ${requester}`, 1);
-      });
-    });
-  }
-  if (!state.socket?.hasListeners("acceptInvite")) {
-    state.socket?.on("acceptInvite", (requester: string) => {
-      getUserByNickname(requester).then((data) => {
-        state.user?.friends?.push(data!);
-      });
-    });
-  }
-  if (!state.socket?.hasListeners("removeFriend")) {
-    state.socket?.on("removeFriend", (requester: string) => {
-      getUserByNickname(requester).then((data) => {
-        state.user?.friends?.splice(state.user?.friends?.indexOf(data!), 1);
-      });
-    });
-  }
-  if (!state.socket?.hasListeners("inviteFailure")) {
-    state.socket?.on("inviteFailure", () => {
-      showFailure(true);
-    });
-  }
-});
-
-// //chat listeners
-// if (!store.socket?.hasListeners("Message to the client")) {
-//   store.socket?.on("Message to the client", async (privateMessage: Message) => {
-//     console.log(store.currentChat);
-//     if (privateMessage.author === (<Conversation>store.currentChat)?.other.nickname) {
-//       store.currentChat?.messages?.push(privateMessage);
-//     } else {
-//       console.log("received");
-//       addAlertMessage(`New message from ${privateMessage.author}`, 1);
-//     }
-//   });
-// }
-// if (!store.socket?.hasListeners("messageRecieved")) {
-//   store.socket?.on("messageReceived", (channelId: number, msg: Message) => {
-//     if (isChannel(store.currentChat!) && channelId === store.currentChat!.id) {
-//       store.currentChat?.messages?.push(msg);
-//     } else {
-//       addAlertMessage(`New message from ${msg.author} in channel`, 1);
-//     }
-//   });
-// }
 
 window.addEventListener("keydown", (e) => {
   if (e.key === "ArrowLeft")
-    store.socket?.emit("key", {
+    socket?.value?.emit("key", {
       key: "downLeft",
     });
   else if (e.key === "ArrowRight")
-    store.socket?.emit("key", {
+    socket?.value?.emit("key", {
       key: "downRight",
     });
   if (e.key === "a" || e.key === "A")
-    store.socket?.emit("key", {
+    socket?.value?.emit("key", {
       key: "downA",
     });
   else if (e.key === "d" || e.key === "D")
-    store.socket?.emit("key", {
+    socket?.value?.emit("key", {
       key: "downD",
     });
   else if (e.key === " ") {
-    store.socket?.emit("key", {
+    socket?.value?.emit("key", {
       key: "downSpace",
     });
   }
-  if (e.key === "o") store.socket?.emit("debugging");
-  if (e.key === "i") store.socket?.emit("chatting");
+  if (e.key === "o") socket?.value?.emit("debugging");
+  if (e.key === "i") socket?.value?.emit("chatting");
 });
 
 window.addEventListener("keyup", (e) => {
   if (e.key === "ArrowLeft")
-    store.socket?.emit("key", {
+    socket?.value?.emit("key", {
       key: "upLeft",
     });
   else if (e.key === "ArrowRight")
-    store.socket?.emit("key", {
+    socket?.value?.emit("key", {
       key: "upRight",
     });
   if (e.key === "a")
-    store.socket?.emit("key", {
+    socket?.value?.emit("key", {
       key: "upA",
     });
   else if (e.key === "d")
-    store.socket?.emit("key", {
+    socket?.value?.emit("key", {
       key: "upD",
     });
 });
 
 const confirmGame = () => {
-  store.socket?.emit("playerReady", {}, () => {});
+  socket?.value?.emit("playerReady", {}, () => {});
   showConfirmation(false);
   router.push("/game");
 };
 
 const denyGame = () => {
-  store.socket?.emit("playerNotReady");
+  socket?.value?.emit("playerNotReady");
   showConfirmation(false);
 };
 
 const acceptCustom = () => {
   showInvite(false);
   router.push("/game");
-  store.socket?.emit("settingsInvitee");
+  socket?.value?.emit("settingsInvitee");
 };
 
 const denyCustom = () => {
-  store.socket?.emit("declineCustom");
+  socket?.value?.emit("declineCustom");
   showInvite(false);
 };
 
@@ -212,8 +129,8 @@ const invFailure = () => {
 const logout = () => {
   localStorage.removeItem("token");
   localStorage.removeItem("user");
-  socket?.emit("disco", {});
-  socket?.close();
+  socketLocal.value?.emit("disco", {});
+  socketLocal.value?.close();
 };
 // const changeNotificationValue = (value: boolean) => {
 //   profileNotificationBadge.value = value;
@@ -262,20 +179,76 @@ onMounted(() => {
   // );
 
   watch(
-    () => store.socket,
-    () => {
-      //chat listeners
-      if (!store.socket?.hasListeners("Message to the client")) {
-        store.socket?.on("Message to the client", async (privateMessage: Message) => {
+    () => socketLocal.value,
+    (currentValue, oldValue) => {
+      if (!socket.value?.hasListeners("updateOneUserStatus")) {
+        socket.value?.on("updateOneUserStatus", (obj: { id: number; status: string }) => {
+          updateStatus(obj.id, obj.status);
+        });
+      }
+      if (!socket.value?.hasListeners("customInvite")) {
+        socket.value?.on("customInvite", (inviter: string) => {
+          // theRoom = gameRoom;
+          showInvite(true);
+        });
+      }
+      if (!socket.value?.hasListeners("gameConfirmation")) {
+        socket.value?.on("gameConfirmation", (gameRoom: any) => {
+          // theRoom = gameRoom;
+          showConfirmation(true);
+        });
+      }
+      if (!socket.value?.hasListeners("invitation")) {
+        socket.value?.on("invitation", (requester: string) => {
+          invSender.value = requester;
+          showInvite(true);
+        });
+      }
+      if (!socket.value?.hasListeners("gameConfirmationTimeout")) {
+        socket.value?.on("gameConfirmationTimeout", () => {
+          showConfirmation(false);
+          // startButton.value = true;
+          // lobbyStatus.value = "Find Match";
+        });
+      }
+      if (!socket.value?.hasListeners("friendshipInvite")) {
+        socket.value?.on("friendshipInvite", (requester: string) => {
+          getUserByNickname(requester).then((data) => {
+            store.user?.invitations?.push(data!);
+            addAlertMessage(`Incoming friendship request from ${requester}`, 1);
+          });
+        });
+      }
+      if (!socket.value?.hasListeners("acceptInvite")) {
+        socket.value?.on("acceptInvite", (requester: string) => {
+          getUserByNickname(requester).then((data) => {
+            store.user?.friends?.push(data!);
+          });
+        });
+      }
+      if (!socket.value?.hasListeners("removeFriend")) {
+        socket.value?.on("removeFriend", (requester: string) => {
+          getUserByNickname(requester).then((data) => {
+            store.user?.friends?.splice(store.user?.friends?.indexOf(data!), 1);
+          });
+        });
+      }
+      if (!socket.value?.hasListeners("inviteFailure")) {
+        socket.value?.on("inviteFailure", () => {
+          showFailure(true);
+        });
+      }
+      if (!socketLocal?.value?.hasListeners("Message to the client")) {
+        socketLocal?.value?.on("Message to the client", async (privateMessage: Message) => {
           if (!isChannel(store.currentChat!) && privateMessage.author === (<Conversation>store.currentChat)?.other.nickname) {
-            store.currentChat?.messages?.push(transformDate(privateMessage));
+            store.currentChat?.messages?.push(privateMessage);
           } else {
             addAlertMessage(`New message from ${privateMessage.author}`, 1);
           }
         });
       }
-      if (!store.socket?.hasListeners("messageRecieved")) {
-        store.socket?.on("messageReceived", (channelId: number, channelName: string, msg: Message) => {
+      if (!socketLocal.value?.hasListeners("messageRecieved")) {
+        socketLocal.value?.on("messageReceived", (channelId: number, channelName: string, msg: Message) => {
           if (isChannel(store.currentChat!) && channelId === store.currentChat!.id) {
             store.currentChat?.messages?.push(transformDate(msg));
           } else {
@@ -283,13 +256,13 @@ onMounted(() => {
           }
         });
       }
-      if (!store.socket?.hasListeners("incomingChannelInvitation")) {
-        store.socket?.on("incomingChannelInvitation", (channel: string) => {
+      if (!socketLocal.value?.hasListeners("incomingChannelInvitation")) {
+        socketLocal.value?.on("incomingChannelInvitation", (channel: string) => {
           addAlertMessage(`You've been invited to join "${channel}" channel`, 1);
         });
       }
-      if (!store.socket?.hasListeners("gotBannedFromChannel")) {
-        store.socket?.on("gotBannedFromChannel", (channel: string) => {
+      if (!socketLocal.value?.hasListeners("gotBannedFromChannel")) {
+        socketLocal.value?.on("gotBannedFromChannel", (channel: string) => {
           if (store.currentChat && isChannel(store.currentChat!) && (<Channel>store.currentChat)?.name === channel) {
             store.$patch({
               currentChat: undefined,
@@ -298,8 +271,8 @@ onMounted(() => {
           addAlertMessage(`You've been banned from "${channel}" channel`, 3);
         });
       }
-      if (!store.socket?.hasListeners("gotUnbannedFromChannel")) {
-        store.socket?.on("gotUnbannedFromChannel", (channel: string) => {
+      if (!socketLocal.value?.hasListeners("gotUnbannedFromChannel")) {
+        socketLocal.value?.on("gotUnbannedFromChannel", (channel: string) => {
           addAlertMessage(`You've been unbanned from "${channel}" channel`, 1);
         });
       }

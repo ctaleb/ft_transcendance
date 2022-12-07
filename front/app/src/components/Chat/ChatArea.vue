@@ -49,7 +49,7 @@
 
 <script setup lang="ts">
 import { addAlertMessage, fetchJSONDatas } from "@/functions/funcs";
-import { useStore } from "@/store";
+import { socketLocal, useStore } from "@/store";
 import { Channel, isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
 import { Message, transformDate } from "@/types/Message";
@@ -63,7 +63,6 @@ defaultAvatarImg.src = defaultAvatarUrl;
 const store = useStore();
 
 let currentChannelId = store.currentChat?.id;
-let socket = store.socket;
 
 const messageField = ref("");
 const blockScroll = ref(false);
@@ -81,7 +80,7 @@ const scrollDownMessages = (behavior: ScrollBehavior | undefined) => {
 const sendMessage = () => {
   if (messageField.value.length > 0) {
     if (isChannel(store.currentChat!)) {
-      socket?.emit(
+      socketLocal.value?.emit(
         "sendChannelMessage",
         {
           channelId: store.currentChat!.id,
@@ -95,7 +94,7 @@ const sendMessage = () => {
         }
       );
     } else {
-      socket?.emit(
+      socketLocal.value?.emit(
         "deliverMessage",
         {
           message: messageField.value,
@@ -164,8 +163,6 @@ window.addEventListener("keydown", (e) => {
 });
 
 store.$subscribe((mutation, state) => {
-  socket = state.socket;
-
   if (currentChannelId != state.currentChat?.id) {
     scrollDownMessages("auto");
   } else {
@@ -185,8 +182,8 @@ onMounted(() => {
       if (store.currentChat && store.currentChat!.messages && store.currentChat!.messages!.length < 20) disableLoadMore.value = true;
     }
   );
-  if (!store.socket?.hasListeners("updateChannelMembers")) {
-    store.socket?.on("updateChannelMembers", async (channelId: number) => {
+  if (!socketLocal.value?.hasListeners("updateChannelMembers")) {
+    socketLocal.value?.on("updateChannelMembers", async (channelId: number) => {
       if (store.currentChat && isChannel(store.currentChat) && channelId === store.currentChat.id) {
         await fetchJSONDatas("api/chat/members", "POST", {
           id: store.currentChat!.id,

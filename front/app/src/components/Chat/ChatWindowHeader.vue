@@ -12,7 +12,7 @@
 </template>
 
 <script setup lang="ts">
-import { State, useStore } from "@/store";
+import { useStore } from "@/store";
 import { Channel, isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
 import { onMounted, Ref, ref } from "vue";

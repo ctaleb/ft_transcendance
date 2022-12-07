@@ -1,5 +1,5 @@
 import config from "@/config/config";
-import { useStore } from "@/store";
+import { currentUserProfile, socketLocal, useStore } from "@/store";
 import { Alert } from "@/types/GameSummary";
 import { User } from "@/types/User";
 import { io, Socket } from "socket.io-client";
@@ -90,27 +90,16 @@ export async function trySetupUser(): Promise<void> {
 async function fetchUser(token: string): Promise<void> {
   const store = useStore();
 
-  const response = await fetchJSONDatas("api/user/profile", "GET");
-  store.user = response;
+  fetchJSONDatas("api/user/profile", "GET")
+    .then((data) => (store.user = data))
+    .catch();
 }
 
-function connectSocket(token: string, user: any): void {
-  const store = useStore();
-
-  store.socket = markRaw<Socket>(
-    io("http://" + window.location.hostname + ":3500", {
-      auth: { token: token, user: user },
-      transports: ["websocket"],
-    })
-  );
-
-  //  config.socket = io("http://" + window.location.hostname + ":3500", {
-  //    auth: { token: token, user: user },
-  //    transports: ["websocket"],
-  //  });
-  // console.log(store.socket);
-  //  debugger;
-  // console.log("store socket: " + store.socket.id);
+function connectSocket(token: string, user: any) {
+  socketLocal.value = io("http://" + window.location.hostname + ":3500", {
+    auth: { token: token, user: user },
+    transports: ["websocket"],
+  });
 }
 
 export function addAlertMessage(message: string, type: number, second: number = 5) {
@@ -131,7 +120,12 @@ export function addAlertMessage(message: string, type: number, second: number = 
 
 export function updateStatus(id: number, status: string) {
   const store = useStore();
+  console.log("Status Update");
 
+  if (currentUserProfile.value && currentUserProfile.value.id == id) {
+    currentUserProfile.value.status = status;
+    console.log("CurrentProfileUpdate");
+  }
   let user = store.user?.friends?.find((element) => element.id === id);
   if (user) user.status = status;
   user = store.user?.invitations?.find((element) => element.id === id);
