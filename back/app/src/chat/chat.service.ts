@@ -1,15 +1,13 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { channel } from 'diagnostics_channel';
 import { IChannel } from 'src/chat/chat.types';
 import { UserEntity } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
-import { LessThan, Not } from 'typeorm';
+import { Not } from 'typeorm';
 import { ChangeRoleDto } from './dtos/change-role.dto';
 import { CreateChannelDto } from './dtos/create-channel.dto';
 import { DeclineInvitationDto } from './dtos/decline-invitation.dto';
 import { GetChannelMessagesDto } from './dtos/get-channel-messages.dto';
-import { GetChannelsListDto } from './dtos/get-channels-list.dto';
 import { InviteToChannelDto } from './dtos/invite-to-channel.dto';
 import { JoinChannelDto } from './dtos/join-channel.dto';
 import { LeaveChannelDto } from './dtos/leave-channel.dto';
@@ -350,7 +348,7 @@ export class ChatService {
       channel: { id: getChannelMembersDto.id },
     });
     if (!member) throw new BadRequestException('You are not a channel member');
-    const members: { id: number; nickname: string; avatar: string; role: ChannelRole }[] = [];
+    const members: { id: number; nickname: string; avatar: string; status: string; role: ChannelRole }[] = [];
     await ChannelMemberEntity.find({
       where: { channel: { id: getChannelMembersDto.id } },
       order: { role: 'ASC' },
@@ -360,6 +358,7 @@ export class ChatService {
           id: entry.user.id,
           nickname: entry.user.nickname,
           avatar: entry.user.getAvatarUrl(),
+          status: entry.user.status,
           role: entry.role,
         });
       });
@@ -407,7 +406,7 @@ export class ChatService {
       if (ban.ban.getTime() < Date.now()) await ChannelRestrictionsEntity.remove(ban);
       else throw new BadRequestException(`You are banned till ${ban.ban}`);
     }
-    const members: { id: number; nickname: string; avatar: string; role: ChannelRole }[] = [];
+    const members: { id: number; nickname: string; avatar: string; status: string; role: ChannelRole }[] = [];
     await ChannelMemberEntity.find({
       where: { channel: { id: channel.id } },
       order: { role: 'ASC' },
@@ -417,6 +416,7 @@ export class ChatService {
           id: entry.user.id,
           nickname: entry.user.nickname,
           avatar: entry.user.getAvatarUrl(),
+          status: entry.user.status,
           role: entry.role,
         });
       });

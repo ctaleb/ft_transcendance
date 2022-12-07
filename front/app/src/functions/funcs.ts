@@ -1,7 +1,10 @@
 import config from "@/config/config";
-import { currentUserProfile, socketLocal, useStore } from "@/store";
+import { currentUserProfile, menu, socketLocal, useStore } from "@/store";
+import { Channel, isChannel } from "@/types/Channel";
+import { Conversation } from "@/types/Conversation";
 import { Alert } from "@/types/GameSummary";
 import { User } from "@/types/User";
+import { storeToRefs } from "pinia";
 import { io, Socket } from "socket.io-client";
 import { markRaw, shallowReactive } from "vue";
 
@@ -120,17 +123,36 @@ export function addAlertMessage(message: string, type: number, second: number = 
 
 export function updateStatus(id: number, status: string) {
   const store = useStore();
-  console.log("Status Update");
 
   if (currentUserProfile.value && currentUserProfile.value.id == id) {
     currentUserProfile.value.status = status;
-    console.log("CurrentProfileUpdate");
   }
   let user = store.user?.friends?.find((element) => element.id === id);
   if (user) user.status = status;
   user = store.user?.invitations?.find((element) => element.id === id);
   if (user) user.status = status;
-  // To do Update currentChannel status of members (user[].id) or privChannelUser (other.id)
-  user = store.user;
+  if (store.currentChat && isChannel(store.currentChat)) {
+    user = (<Channel>store.currentChat)?.members?.find((element) => element.id === id);
+    if (user) user.status = status;
+  } else if (store.currentChat) if ((<Conversation>store.currentChat)?.other?.id == id) (<Conversation>store.currentChat)!.other.status = status;
   if (user?.id == id) user.status = status;
 }
+
+export const showUserMenu = (event: any, user: User) => {
+  const store = useStore();
+  if (store.user?.id && user.id != store.user?.id) {
+    const largestHeight: number = window.innerHeight - 30;
+    const largestWidth: number = window.innerWidth - 50;
+
+    menu.value.top = event.clientY;
+    menu.value.left = event.clientX;
+    if (menu.value.top > largestHeight) menu.value.top = largestHeight;
+    if (menu.value.left > largestWidth) menu.value.left = largestWidth;
+    menu.value.user = user;
+    menu.value.view = true;
+  }
+};
+
+export const hideUserMenu = () => {
+  menu.value.view = false;
+};
