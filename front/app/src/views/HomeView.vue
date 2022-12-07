@@ -276,6 +276,9 @@ async function studentLogin(code: string) {
   img {
     width: 100%;
   }
+  @include screen-lg {
+    display: none !important;
+  }
 }
 
 .footer {
@@ -303,6 +306,10 @@ async function studentLogin(code: string) {
   h2 {
     text-align: center;
     color: white;
+  }
+
+  @include screen-lg {
+    display: none !important;
   }
 }
 

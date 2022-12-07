@@ -4,7 +4,7 @@
       <div>
         <h2>{{ title }}</h2>
         <p>{{ detail }}</p>
-        <p style="color: green">status</p>
+        <p v-if="!isChannel(store.currentChat!)" style="color: green">{{(<Conversation>store.currentChat!).other.status}}</p>
       </div>
       <i class="gg-more-o" v-if="isChannel(store.currentChat!)" @click="$emit('toggleChannelInfo')"></i>
     </div>

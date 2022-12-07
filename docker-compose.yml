@@ -5,8 +5,6 @@ services:
     networks:
       - 42network
     init: true
-    # default port but probably not needed in our case, since already exposed for the docker network in the official image
-    # while we work on our own environments, we'll need to keep this open however
     ports:
       - 5432:5432
     restart: unless-stopped
@@ -28,7 +26,7 @@ services:
     # http://localhost:8080/ to access adminer page
     ports:
       - 8080:8080
-  #back:
+  # back:
   #  depends_on:
   #    - database
   #  image: back
@@ -38,7 +36,10 @@ services:
   #  init: true
   #  build: back/.
   #  restart: unless-stopped
-  #front:
+  #  ports:
+  #    - 3000:3000
+  #    - 3500:3500
+  # front:
   #  depends_on:
   #    - back
   #  image: front
@@ -50,10 +51,6 @@ services:
   #  restart: unless-stopped
   #  ports:
   #    - 4000:4000
-# volumes:
-#   db:
-#     name: db
-#     driver: local
 networks:
   42network:
     name: 42network

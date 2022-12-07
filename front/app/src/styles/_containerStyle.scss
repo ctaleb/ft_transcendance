@@ -1,4 +1,7 @@
+@import "mixins/sizes";
+@import "mixins/border";
 .mainContainer {
+  overflow-y: scroll;
   margin-top: 5rem;
   display: flex;
   flex-direction: column;
@@ -13,6 +16,10 @@
   color: #aa9e7d;
   width: 30%;
   text-align: center;
+  @include screen-lg {
+    width: 90% !important;
+    height: 95% !important;
+  }
 }
 
 .principalSection {
@@ -21,5 +28,9 @@
   justify-content: space-around;
   align-items: center;
   width: 100vw;
-  height: 75vh;
+  height: 65vh;
+  @include screen-lg {
+    width: 100% !important;
+    height: 95vh;
+  }
 }

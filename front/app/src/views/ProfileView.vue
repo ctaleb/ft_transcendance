@@ -4,7 +4,7 @@
   </svg>
   <section v-if="currentUserProfile !== undefined" id="profile" class="container">
     <div class="current-user">
-      <div>
+      <div class="sideInfo">
         <img class="sideIcons" src="../assets/profileEloIcon.svg" alt="" />
         <h3>{{ currentUserProfile?.elo }}</h3>
       </div>
@@ -14,7 +14,7 @@
           {{ currentUserProfile?.nickname }} <i v-if="currentUserProfile === store.user" class="gg-edit-markup" @click="redirectToEdit()"></i>
         </h3>
       </div>
-      <div>
+      <div class="sideInfo">
         <img class="sideIcons" src="../assets/profileStatusIcon.svg" alt="" />
         <h3>{{ currentUserProfile.status }}</h3>
       </div>

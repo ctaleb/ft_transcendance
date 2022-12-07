@@ -75,6 +75,10 @@ onMounted(() => {
     color: $primary;
   }
   .radioBundle {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    width: 50%;
     margin-top: 10px;
     margin-bottom: 10px;
   }

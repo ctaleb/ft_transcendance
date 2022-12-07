@@ -2,6 +2,7 @@
   <div class="overlay"></div>
   <div class="modal all-chan-modal">
     <span @click="$emit('closeAllChannelsModal')" class="close-modal"><i class="gg-close-o"></i></span>
+    <h2 v-if="allChannels.length == 0">No channels yet</h2>
     <template v-for="channel in allChannels">
       <ChannelInModal @join-channel="(channel) => $emit('joinChannel', channel)" :channel="channel" />
     </template>

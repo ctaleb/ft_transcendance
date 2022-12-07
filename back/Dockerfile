@@ -15,5 +15,5 @@ EXPOSE 3000:3000
 # 	&& npm run typeorm
 # ENTRYPOINT ["node"]
 # CMD ["dist/main.js"]
-#CMD ["npx", "nest", "start", "watch"]
- CMD ["sleep", "infinity"]
+CMD ["npx", "nest", "start", "watch"]
+#  CMD ["sleep", "infinity"]

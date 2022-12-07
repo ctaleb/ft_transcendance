@@ -1,32 +1,36 @@
 <template>
-  <div>
-    <nav class="navbar" v-if="$route.path != '/' && $route.path != '/signup'">
-      <img src="./assets/navbarLogo.gif" width="85" height="85" alt="" />
-      <div class="links">
-        <router-link to="/profile" class="link">Profile </router-link>
-        <router-link to="/game" class="link"> PLAY </router-link>
-        <router-link to="/chat" class="link">Chat</router-link>
-        <router-link to="/" class="link" v-on:click.prevent="logout()">Logout</router-link>
+  <ChatContextMenu />
+  <div @click="hideUserMenu()">
+    <div>
+      <nav class="navbar" v-if="$route.path != '/' && $route.path != '/signup'">
+        <img src="./assets/navbarLogo.gif" width="85" height="85" alt="" />
+        <div class="links">
+          <router-link to="/profile" class="link">Profile </router-link>
+          <router-link to="/game" class="link"> PLAY </router-link>
+          <router-link to="/chat" class="link">Chat</router-link>
+          <router-link to="/" class="link" v-on:click.prevent="logout()">Logout</router-link>
+        </div>
+      </nav>
+      <router-view :key="$route.fullPath" />
+      <div v-if="gameConfirmation" class="overlay">
+        <GameConfirmation @confirmGame="confirmGame()" @denyGame="denyGame()"></GameConfirmation>
       </div>
-    </nav>
-    <router-view :key="$route.fullPath" />
-    <div v-if="gameConfirmation" class="overlay">
-      <GameConfirmation @confirmGame="confirmGame()" @denyGame="denyGame()"></GameConfirmation>
-    </div>
-    <div v-if="customInvitation" class="overlay">
-      <CustomInvitation :inviter="invSender" @acceptCustom="acceptCustom()" @denyCustom="denyCustom()"></CustomInvitation>
-    </div>
-    <div v-if="failedInvitation" class="overlay">
-      <FailedInvitation @invFailure="invFailure()"></FailedInvitation>
-    </div>
-    <div class="alertFlex">
-      <AlertCard v-for="message of alertMessages" :message="message" />
+      <div v-if="customInvitation" class="overlay">
+        <CustomInvitation :inviter="invSender" @acceptCustom="acceptCustom()" @denyCustom="denyCustom()"></CustomInvitation>
+      </div>
+      <div v-if="failedInvitation" class="overlay">
+        <FailedInvitation @invFailure="invFailure()"></FailedInvitation>
+      </div>
+      <div class="alertFlex">
+        <AlertCard v-for="message of alertMessages" :message="message" />
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { addAlertMessage, trySetupUser, updateStatus } from "@/functions/funcs";
+import { addAlertMessage, trySetupUser, updateStatus, hideUserMenu } from "@/functions/funcs";
+import ChatContextMenu from "@/components/chat/ChatContextMenu.vue";
 import { socketLocal, useStore } from "@/store";
 import { Channel, isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
@@ -279,7 +283,11 @@ body {
 }
 
 .navbar {
-  height: 7vh;
+  height: 100px;
+  @include screen-md {
+    height: 130px;
+  }
+  width: 100vw;
   background: $secondary;
   display: flex;
   justify-content: center;
@@ -291,6 +299,18 @@ body {
   }
   .links {
     width: 20%;
+    @include screen-lg {
+      width: 40%;
+    }
+    @include screen-md {
+      width: 60%;
+    }
+    @include screen-sm {
+      width: 70%;
+    }
+    @include screen-xs {
+      width: 80%;
+    }
     display: flex;
     flex-direction: row;
     justify-content: space-around;

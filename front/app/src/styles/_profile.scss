@@ -2,7 +2,7 @@
 @import "mixins/_border";
 @import "variables";
 @import "svgStyles";
-@import "inputsAndbuttons";
+@import "inputsAndButtons";
 
 .debug-border {
   border: 1px solid rgb(0, 119, 123);
@@ -62,14 +62,20 @@
     flex-direction: row;
     justify-content: space-around;
     align-items: center;
+    .sideInfo {
+      width: 10%;
+      @include screen-xs {
+        width: 10%;
+      }
+    }
     .user-image {
       width: 180px;
       height: 180px;
       border: 1px solid $secondary;
     }
     .sideIcons {
-      width: 130px;
-      height: 130px;
+      width: 100%;
+      height: 100%;
     }
 
     div {
@@ -127,6 +133,10 @@
     justify-content: space-around;
     height: 5%;
     width: 50%;
+    @include screen-sm {
+      flex-wrap: wrap;
+      width: 80%;
+    }
 
     .searchIcon {
       position: relative;
@@ -138,19 +148,29 @@
       flex-direction: row;
       align-items: center;
       width: 80%;
+      @include screen-sm {
+        width: 100%;
+      }
     }
     .button {
       width: 15%;
+      @include screen-sm {
+        width: 100%;
+        margin-top: 6px;
+      }
     }
   }
 
   & > .invitations {
     ul {
       display: flex;
-      flex-wrap: nowrap;
+      flex-wrap: wrap;
       margin: 0;
       padding: 0;
-
+      @include screen-md {
+        display: flex;
+        justify-content: center;
+      }
       img {
         width: 120px;
         height: 120px;
@@ -159,7 +179,8 @@
       }
 
       li {
-        margin-inline: 15px;
+        margin-right: 7px;
+        margin-left: 7px;
         margin-top: 1rem;
         width: 20%;
         background-color: $background;
@@ -238,10 +259,13 @@
   & > .friends {
     ul {
       display: flex;
-      flex-wrap: nowrap;
+      flex-wrap: wrap;
       margin: 0;
       padding: 0;
-
+      @include screen-md {
+        display: flex;
+        justify-content: center;
+      }
       img {
         width: 120px;
         height: 120px;
@@ -250,7 +274,11 @@
       }
 
       li {
-        margin-inline: 15px;
+        @include screen-xs {
+          margin: 5rem 0 0 0;
+        }
+        margin-right: 7px;
+        margin-left: 7px;
         margin-top: 4rem;
         width: 20%;
         background-color: $background;
