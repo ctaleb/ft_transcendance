@@ -85,9 +85,16 @@ const mute = async () => {
   .radioBundle {
     display: flex;
     flex-direction: column;
+    justify-content: center;
     div {
+      display: flex;
+      align-items: center;
       margin-top: 8px;
       margin-bottom: 8px;
+      input {
+        margin: 0;
+        margin-right: 5px;
+      }
     }
   }
   .button {

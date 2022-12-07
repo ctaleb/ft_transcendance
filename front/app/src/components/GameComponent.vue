@@ -1,7 +1,7 @@
 <template>
   <section class="lobby container">
     <div class="principalSection">
-      <div class="mainContainer" :class="lobbyStatus == 'Find match' ? '' : ' hidden'">
+      <div class="mainContainer" :class="store.user?.status == 'online' ? '' : ' hidden'">
         <div>
           <power-slider-component v-model="power" id="powerSlider" />
           <div v-if="!toggleLadder">
@@ -67,10 +67,10 @@
           </div>
         </div>
       </div>
-      <div :class="lobbyStatus == 'Find match' ? '' : ' hidden'" class="svgSection">
+      <div :class="store.user?.status == 'online' ? '' : ' hidden'" class="svgSection">
         <img src="../assets/playGame.gif" alt="" class="playButton" @click="findMatch()" />
       </div>
-      <div :class="lobbyStatus == 'Looking for an opponent...' ? '' : ' hidden'" class="loadingDiv">
+      <div :class="store.user?.status == 'inQueue' ? '' : ' hidden'" class="loadingDiv">
         <img src="../assets/loadingGameIllustration.gif" alt="" class="loadingImage" />
       </div>
     </div>
@@ -753,121 +753,174 @@ const customInvitation = () => {};
 @import "../styles/containerStyle";
 @import "../styles/svgStyles";
 @import "../styles/variables";
+//.eloBanner {
+//  height: 50%;
+//  width: 50%;
+//  display: flex;
+//  justify-content: center;
+//  align-items: center;
+//  h1 {
+//    font-size: 45px;
+//    position: absolute;
 
-.mainContainer {
-  justify-content: space-around;
-  z-index: 1;
-  .inviter {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    .setting {
+//    margin: 0;
+//    color: white;
+//    span {
+//      color: $secondary;
+//    }
+//  }
+//  img {
+//    width: 100%;
+//    height: 100%;
+//  }
+//}
+
+.principalSection {
+  flex-wrap: wrap;
+  .mainContainer {
+    justify-content: space-around;
+    z-index: 1;
+    width: 40%;
+    height: 50% !important;
+    margin-top: 0;
+    @include screen-xl {
+      width: 50%;
+      height: 50% !important;
+      margin-top: 0;
+    }
+    @include screen-lg {
+      width: 100%;
+      height: 30% !important;
+    }
+    @include screen-md {
+      width: 100%;
+      height: 40% !important;
+    }
+    .inviter {
       display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: space-around;
-      label {
-        width: 30%;
-        text-align: left;
-      }
-      h4 {
-        width: 15%;
-      }
-      input[type="range"] {
-        overflow: hidden;
-        -webkit-appearance: none;
-        border-radius: 10px;
-        background-color: $secondary;
-      }
-      input[type="range"]::-webkit-slider-runnable-track {
-        -webkit-appearance: none;
-        color: $primary;
-      }
-      input[type="range"]::-webkit-slider-thumb {
-        width: 20px;
-        -webkit-appearance: none;
-        height: 20px;
-        cursor: pointer;
-        background: #524e9b;
-        border-radius: 100%;
-        box-shadow: -80px 0 0 70px $primary;
-      }
-      input[type="range"]:disabled {
-        opacity: 0.6;
-      }
-      .checkbox {
+      flex-direction: column;
+      width: 100%;
+      .setting {
         display: flex;
-        margin-top: 10px;
         flex-direction: row;
         align-items: center;
-        input[type="checkbox"] {
+        justify-content: space-around;
+        label {
+          width: 30%;
+          text-align: left;
+        }
+        h4 {
+          width: 15%;
+        }
+        input[type="range"] {
+          overflow: hidden;
+          -webkit-appearance: none;
+          border-radius: 10px;
+          background-color: $secondary;
+        }
+        input[type="range"]::-webkit-slider-runnable-track {
+          -webkit-appearance: none;
+          color: $primary;
+        }
+        input[type="range"]::-webkit-slider-thumb {
           width: 20px;
+          -webkit-appearance: none;
           height: 20px;
-          accent-color: #524e9b;
+          cursor: pointer;
+          background: #524e9b;
+          border-radius: 100%;
+          box-shadow: -80px 0 0 70px $primary;
+        }
+        input[type="range"]:disabled {
+          opacity: 0.6;
+        }
+        .checkbox {
+          display: flex;
+          margin-top: 10px;
+          flex-direction: row;
+          align-items: center;
+          input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: #524e9b;
+          }
         }
       }
     }
-  }
-  .button {
-    margin: 25px 0 25px 0;
-  }
-}
-.playButton {
-  &:hover {
-    cursor: pointer;
-  }
-}
-.svgSection {
-  width: 30%;
-  img {
-    width: 100%;
-  }
-  .playButton {
-    opacity: 0.8;
-    &:hover {
-      opacity: 1;
+    .button {
+      margin: 25px 0 25px 0;
     }
   }
-}
-.loadingDiv {
-  width: 100vw;
-  height: 90vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: -1;
-  .loadingImage {
-    width: 400px;
-    height: 400px;
+  .playButton {
+    &:hover {
+      cursor: pointer;
+    }
+  }
+  .svgSection {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 30%;
+    @include screen-lg {
+      width: 70%;
+    }
+    img {
+      width: 100%;
+    }
+
+    .playButton {
+      opacity: 0.8;
+      &:hover {
+        opacity: 1;
+      }
+    }
+  }
+  .loadingDiv {
+    width: 100vw;
+    height: 90vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: -1;
+    .loadingImage {
+      width: 400px;
+      height: 400px;
+    }
+  }
+  .hidden {
+    display: none;
+  }
+  .modal {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 70%;
+    background-color: white;
+    padding: 3rem;
+    border-radius: 5px;
+    box-shadow: 0 3rem 5rem rgba(0, 0, 0, 0.3);
+    z-index: 10;
+  }
+  .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(3px);
+    z-index: 5;
+  }
+  .power {
+    position: absolute;
+    bottom: 0;
   }
 }
-.hidden {
-  display: none;
-}
-.modal {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 70%;
-  background-color: white;
-  padding: 3rem;
-  border-radius: 5px;
-  box-shadow: 0 3rem 5rem rgba(0, 0, 0, 0.3);
-  z-index: 10;
-}
-.overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(3px);
-  z-index: 5;
-}
-.power {
-  position: absolute;
-  bottom: 0;
+.bottomSvg {
+  @include screen-lg {
+    display: none;
+  }
 }
 </style>

@@ -2,6 +2,7 @@
   <div class="overlay"></div>
   <div class="modal all-chan-modal">
     <span @click="$emit('closeInvitationsModal')" class="close-modal"><i class="gg-close-o"></i></span>
+    <h2 v-if="channelInvitations.length == 0">No invitations yet</h2>
     <template v-for="channel in channelInvitations">
       <ChannelInModal @join-channel="(channel) => $emit('joinPrivateChannel', channel)" @decline-invitation="declineInvitation" :channel="channel" />
     </template>
