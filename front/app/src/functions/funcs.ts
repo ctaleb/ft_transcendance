@@ -1,5 +1,5 @@
 import config from "@/config/config";
-import { socketLocal, useStore } from "@/store";
+import { currentUserProfile, socketLocal, useStore } from "@/store";
 import { Alert } from "@/types/GameSummary";
 import { User } from "@/types/User";
 import { io, Socket } from "socket.io-client";
@@ -121,6 +121,7 @@ export function addAlertMessage(message: string, type: number, second: number = 
 export function updateStatus(id: number, status: string) {
   const store = useStore();
 
+  if (currentUserProfile.value && currentUserProfile.value.id == id) currentUserProfile.value.status = status;
   let user = store.user?.friends?.find((element) => element.id === id);
   if (user) user.status = status;
   user = store.user?.invitations?.find((element) => element.id === id);
