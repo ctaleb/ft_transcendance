@@ -14,6 +14,7 @@ interface State {
 }
 
 export interface Menu {
+  requester?: ChannelUser;
   user?: User | ChannelUser;
   top: number;
   left: number;
@@ -35,6 +36,7 @@ export const socketLocal = shallowRef<Socket>();
 export const currentUserProfile = ref<User>();
 
 export const menu = ref<Menu>({
+  requester: undefined,
   user: undefined,
   top: 0,
   left: 0,

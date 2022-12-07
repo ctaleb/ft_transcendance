@@ -2,6 +2,7 @@
   <div class="chat-menu">
     <CollapseList :toggleMode="true" title="Conversations" :data="convs" v-slot="{ element }: { element: Conversation }">
       <ChatMenuItem
+        @contextmenu.prevent="showUserMenu($event, element.other)"
         @set-current-chat-window="setCurrentChatWindow(element)"
         :title="Conversation.getName(element)"
         :picture="Conversation.getAvatar(element)"
@@ -12,6 +13,7 @@
     </CollapseList>
     <CollapseList :toggleMode="false" title="Friends" :data="friends" v-slot="{ element }: { element: User }">
       <ChatMenuItem
+        @contextmenu.prevent="showUserMenu($event, element)"
         @click="createConversation(element)"
         :title="User.getName(element)"
         :picture="User.getAvatar(element)"
