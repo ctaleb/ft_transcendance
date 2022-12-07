@@ -16,6 +16,10 @@ import { onMounted, Ref, ref, watch } from "vue";
 const store = useStore();
 const me: Ref<ChannelUser> = ref((<Channel>store.currentChat!).members!.find((member) => member.id === store.user!.id)!);
 
+store.$subscribe((mutation, state) => {
+  me.value = (<Channel>store.currentChat!).members!.find((member) => member.id === store.user!.id)!;
+});
+
 onMounted(() => {
   watch(
     () => store.currentChat!.id,
