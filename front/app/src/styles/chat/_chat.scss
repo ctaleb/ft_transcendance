@@ -4,7 +4,7 @@
 #chat {
   overflow-x: hidden;
   display: flex;
-  height: calc(93vh - 1px);
+  height: calc(100vh - 101px);
   width: 100vw;
   .default-chat-window {
     display: flex;
@@ -81,8 +81,8 @@
         height: 95%;
         padding: 10px;
         overflow-y: auto;
-        background: rgb(55, 46, 31);
-        background: radial-gradient(circle, rgba(55, 46, 31, 1) 0%, rgba(37, 31, 19, 1) 100%);
+        background: rgb(46, 35, 18);
+        background: radial-gradient(circle, rgba(46, 35, 18, 1) 0%, rgba(37, 31, 19, 1) 100%);
 
         .button {
           margin-top: 5px;
@@ -183,6 +183,19 @@
           width: 100%;
         }
       }
+    }
+  }
+  input[type="radio"] {
+    appearance: none;
+    background-color: $secondary;
+    font: inherit;
+    color: currentColor;
+    width: 1.15em;
+    height: 1.15em;
+    border: 0.09em solid currentColor;
+    border-radius: 50%;
+    &:checked {
+      background-color: $primary;
     }
   }
 }

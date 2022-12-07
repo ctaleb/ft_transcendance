@@ -299,7 +299,11 @@ body {
 }
 
 .navbar {
-  height: 7vh;
+  height: 100px;
+  @include screen-md {
+    height: 130px;
+  }
+  width: 100vw;
   background: $secondary;
   display: flex;
   justify-content: center;
@@ -311,6 +315,18 @@ body {
   }
   .links {
     width: 20%;
+    @include screen-lg {
+      width: 40%;
+    }
+    @include screen-md {
+      width: 60%;
+    }
+    @include screen-sm {
+      width: 70%;
+    }
+    @include screen-xs {
+      width: 80%;
+    }
     display: flex;
     flex-direction: row;
     justify-content: space-around;

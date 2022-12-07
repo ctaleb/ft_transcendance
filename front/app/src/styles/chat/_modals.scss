@@ -11,6 +11,11 @@
   min-width: 60%;
   z-index: 9;
   padding: 20px;
+  h2 {
+    text-align: center;
+    width: 100%;
+    color: $primary;
+  }
   .channel-in-modal {
     display: flex;
     flex-direction: column;
