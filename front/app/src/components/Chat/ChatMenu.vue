@@ -11,7 +11,11 @@
       <ChatMenuItem @set-current-chat-window="setCurrentChatWindow(element)" :title="Channel.getName(element)" />
     </CollapseList>
     <CollapseList :toggleMode="false" title="Friends" :data="friends" v-slot="{ element }: { element: User }">
-      <ChatMenuItem @click="createConversation(element)" :title="User.getName(element)" :picture="User.getAvatar(element)" />
+      <ChatMenuItem
+        @click="createConversation(element)"
+        :title="User.getName(element)"
+        :picture="User.getAvatar(element)"
+      />
     </CollapseList>
     <div class="menuBottomButtons">
       <button class="button" @click="showAllChannelsModal = true">All Channels</button>
@@ -30,7 +34,7 @@ import CollapseList from "@/components/common/CollapseList.vue";
 import InvitationsModal from "@/components/chat/modals/InvitationsModal.vue";
 import AllChannelsModal from "@/components/chat/modals/AllChannelsModal.vue";
 import ChannelCreateFormModal from "@/components/chat/modals/ChannelCreateFormModal.vue";
-import { fetchJSONDatas } from "@/functions/funcs";
+import { fetchJSONDatas, showUserMenu } from "@/functions/funcs";
 import { socketLocal, useStore } from "@/store";
 import { Channel, ChannelType, isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";

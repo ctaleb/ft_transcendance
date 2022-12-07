@@ -1,5 +1,5 @@
 <template>
-  <div class="member-controll" @click="toggleMemberAction()">
+  <div class="member-controll" @click="toggleMemberAction()" @contextmenu.prevent="showUserMenu($event, member)">
     <div v-if="me.role !== ChannelRole.MEMBER && member.role !== ChannelRole.OWNER && toggleMode" class="member-action">
       <button class="primary-btn" @click="showMuteModal = true"><i class="gg-mic"></i></button>
       <button class="primary-btn" @click="showBanModal = true"><i class="gg-thermostat"></i></button>
@@ -17,6 +17,7 @@
       <h4 v-else>
         {{ member.nickname }}
       </h4>
+      <h4>{{ member.status }}</h4>
     </div>
   </div>
   <MuteModal v-if="showMuteModal" @close-mute-modal="showMuteModal = false" :member="member" />
@@ -26,7 +27,7 @@
 <script setup lang="ts">
 import BanModal from "@/components/chat/modals/BanModal.vue";
 import MuteModal from "@/components/chat/modals/MuteModal.vue";
-import { addAlertMessage, fetchJSONDatas } from "@/functions/funcs";
+import { addAlertMessage, fetchJSONDatas, showUserMenu } from "@/functions/funcs";
 import { socketLocal, useStore } from "@/store";
 import { ChannelRole, ChannelUser } from "@/types/Channel";
 import { User } from "@/types/User";

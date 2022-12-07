@@ -3,7 +3,7 @@ import { Alert } from "@/types/GameSummary";
 import { defineStore } from "pinia";
 import { Socket } from "socket.io-client";
 import { Conversation } from "@/types/Conversation";
-import { Channel } from "@/types/Channel";
+import { Channel, ChannelUser } from "@/types/Channel";
 import { ref, shallowRef } from "vue";
 
 interface State {
@@ -11,6 +11,13 @@ interface State {
   message: Alert[];
   token?: string;
   currentChat?: Channel | Conversation;
+}
+
+export interface Menu {
+  user?: User | ChannelUser;
+  top: number;
+  left: number;
+  view: boolean;
 }
 
 export const useStore = defineStore("default", {
@@ -26,3 +33,10 @@ export const useStore = defineStore("default", {
 
 export const socketLocal = shallowRef<Socket>();
 export const currentUserProfile = ref<User>();
+
+export const menu = ref<Menu>({
+  user: undefined,
+  top: 0,
+  left: 0,
+  view: false,
+});
