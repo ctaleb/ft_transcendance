@@ -8,10 +8,10 @@
 </template>
 
 <script lang="ts" setup>
-import { Message } from "@/types/GameSummary";
+import { Alert } from "@/types/GameSummary";
 
 const props = defineProps<{
-  message: Message;
+  message: Alert;
 }>();
 
 function close() {}

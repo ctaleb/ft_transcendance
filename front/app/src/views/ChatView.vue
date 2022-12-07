@@ -2,19 +2,7 @@
   <div id="chat">
     <ChatMenu :channels="myChannels" :convs="privateConvs" />
     <ChatWindow @update-channels-list="updateChannelsList()" />
-
-    <div v-if="showInvitationModal" class="overlay">
-      <div class="modal">
-        <button class="close" @click="closeInvitation()">&times;</button>
-        <h2>Invite to channel</h2>
-        <div class="searchBar">
-          <input type="text" class="searchField" placeholder="Username" v-model="inviteUser" required />
-        </div>
-        <button class="modalBtn" @click="inviteToChannel()">Submit</button>
-      </div>
-    </div>
   </div>
-  <friend-alert :requester-name="incomingFriendRequest" />
 </template>
 
 <script setup lang="ts">
@@ -22,340 +10,31 @@ import ChatMenu from "@/components/chat/ChatMenu.vue";
 import ChatWindow from "@/components/chat/ChatWindow.vue";
 import FriendAlert from "@/components/FriendAlert.vue";
 import { addAlertMessage, fetchJSONDatas } from "@/functions/funcs";
-import { useStore } from "@/store";
+import { socketLocal, useStore } from "@/store";
 import { Channel, ChannelRole, ChannelType, ChannelUser, isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
-import { Message } from "@/types/Message";
-import { User } from "@/types/User";
-import { onMounted, onUpdated, ref, Ref, watch } from "vue";
+import { onMounted, ref, Ref } from "vue";
 
-const store = useStore();
-let socket = store.socket;
-
-store.$subscribe((mutation, state) => {
-  socket = state.socket;
-});
+defineEmits(["updateChannelsList"]);
 
 const privateConvs: Ref<Array<Conversation>> = ref([]);
-const messagesToDisplay: Ref<Array<Message>> = ref([]);
-const messagesBoxRef = ref<HTMLDivElement | null>(null);
-let currentConv = ref<Conversation>();
-let isLoadMore = false;
-
-defineProps(["incomingFriendRequest"]);
-defineEmits(["notification", "updateChannelsList"]);
-
 const myChannels: Ref<Array<Channel>> = ref([]);
-const channelMembers: Ref<Array<ChannelUser>> = ref([]);
-const channelMessageSkip = ref(0);
-const show = ref(0);
-const picked = ref("public");
-const channelName = ref("");
-const channelPassword = ref("");
-const showInvitationModal = ref(false);
-const inviteUser = ref("");
-const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 const updateChannelsList = () => {
   getMyChannels();
 };
 
-onUpdated(() => {
-  // if (isLoadMore == false) scrollDownMessages();
-  // isLoadMore = false;
-});
-
 onMounted(async () => {
   await getMyChannels();
   await getAllConvs();
-
-  // var audio = new Audio(require("../assets/adelsol.mp3"));
-  // socket?.on("Message to the client", async (privateMessage: { author: string; text: string }) => {
-  //   if (privateMessage.author == friendNickname.value) messagesToDisplay.value.push(privateMessage);
-  //   else {
-  //     await getAllConvs();
-  //     organizeFriends();
-  //     notifConv(privateMessage.author);
-  //     audio.play();
-  //   }
-  // });
-  // socket?.on("messageReceived", (channelId: number, msg: Message) => {
-  //   if (thisChannel.value && channelId === thisChannel.value.id) {
-  //     msg.date = moment(msg.date).tz(timezone).add(1, "hours").format("MMMM Do YYYY, h:mm:ss a");
-  //     messagesToDisplay.value.push(msg);
-  //     channelMessageSkip.value++;
-  //   } else {
-  //     console.log("incoming message");
-  //   }
-  // });
-  // socket?.on("updateChannelMembers", async (channelId: number) => {
-  //   if (thisChannel.value && channelId === thisChannel.value.id) {
-  //     let data = await fetchJSONDatas("api/chat/members", "POST", {
-  //       id: thisChannel.value.id,
-  //     });
-  //     channelMembers.value.forEach(await fetchUserAvatarURL);
-  //     channelMembers.value = data;
-  //   }
-  // });
-  // socket?.on("Update conv list", (convData: { conv: privateConv }) => {
-  //   console.log("UPDATE");
-  // });
-
-  // store.$subscribe((mutation, state) => {
-  //   if (!state.socket?.hasListeners("Message to the client")) {
-  //     state.socket?.on("Message to the client", async (privateMessage: { author: string; text: string }) => {
-  //       console.log(1);
-
-  //       if (privateMessage.author == friendNickname.value) messagesToDisplay.value.push(privateMessage);
-  //       else {
-  //         await getAllConvs();
-  //         organizeFriends();
-  //         notifConv(privateMessage.author);
-  //         audio.play();
-  //       }
-  //     });
-  //   }
-
-  //   if (!state.socket?.hasListeners("Update conv list")) {
-  //     state.socket?.on("Update conv list", (convData: { conv: privateConv }) => {
-  //       console.log("UPDATE");
-
-  //       let convIndex = privateConvs.value.findIndex((conv) => conv.uuid === convData.conv.uuid);
-  //       const convToTop = privateConvs.value.splice(convIndex, 1)[0];
-  //       privateConvs.value.splice(0, 0, convToTop);
-  //     });
-  //   }
-  // });
-  // if (store.user?.friends) friends.value = JSON.parse(JSON.stringify(store.user?.friends)); what is this
-  // organizeFriends();
 });
 
 const getMyChannels = async (): Promise<void> => {
   myChannels.value = await fetchJSONDatas("api/chat", "GET").catch(() => {});
 };
 
-function initConv(convs: Array<Conversation>) {
-  convs.forEach((conv) => {
-    conv.notif = false;
-  });
-}
-
-const loadDefaultPage = () => {
-  thisChannel.value = null;
-  const conversations = document.querySelectorAll(".channelButton");
-  conversations.forEach((conversation) => {
-    conversation.classList.remove("inactiveConv");
-  });
-  show.value = 0;
-};
-
-const showInvitation = () => {
-  inviteUser.value = "";
-  showInvitationModal.value = true;
-};
-
-const closeInvitation = () => {
-  showInvitationModal.value = false;
-};
-
-const createChannel = async (): Promise<void> => {
-  if (channelName.value.length <= 0 || (picked.value == "protected" && channelPassword.value.length <= 0)) {
-    return;
-  }
-  let channelType = <ChannelType>picked.value;
-  let data: Channel = await fetchJSONDatas("api/chat/create-channel", "POST", {
-    name: channelName.value,
-    type: channelType,
-    password: channelPassword.value,
-  });
-  myChannels.value.push(data);
-  socket?.emit("joinChannelRoom", { id: data.id });
-  channelCreationForm();
-};
-
-const channelCreationForm = () => {
-  thisChannel.value = null;
-  channelName.value = "";
-  channelPassword.value = "";
-  const conversations = document.querySelectorAll(".channelButton");
-  conversations.forEach((conversation) => {
-    conversation.classList.remove("inactiveConv");
-  });
-  show.value = 3;
-};
-
-const updateChannel = async (): Promise<void> => {
-  await fetchJSONDatas("api/chat/update-channel", "PUT", {
-    id: 22,
-    type: "protected",
-    password: "password",
-  });
-};
-
-const joinChannel = async (channel: Channel): Promise<void> => {
-  let password = channel.passwordField;
-  channel.passwordField = "";
-
-  let data: Channel = await fetchJSONDatas("api/chat/join-channel", "POST", {
-    id: channel.id,
-    password: password,
-  });
-  myChannels.value.push(data);
-  allChannels.value.splice(allChannels.value.indexOf(channel), 1);
-  socket.emit("joinChannelRoom", { id: data.id });
-};
-
-const loadAllChannels = () => {
-  thisChannel.value = null;
-  channelsNum.value = 0;
-  allChannels.value = [];
-  const conversations = document.querySelectorAll(".channelButton");
-  conversations.forEach((conversation) => {
-    conversation.classList.remove("inactiveConv");
-  });
-  getAllChannels();
-  show.value = 1;
-};
-
 const getAllConvs = async (): Promise<void> => {
-  privateConvs.value = await fetchJSONDatas("api/privateConv/getAllConvs", "GET");
-  initConv(privateConvs.value);
-};
-
-const leaveChannel = async (): Promise<void> => {
-  let data: Channel = await fetchJSONDatas("api/chat/leave-channel", "DELETE", {
-    id: thisChannel.value!.id,
-  });
-  myChannels.value = myChannels.value.filter((elem) => elem.id != data.id);
-  socket.emit("leaveChannelRoom", { id: data.id });
-  loadDefaultPage();
-};
-
-const inviteToChannel = async (): Promise<void> => {
-  if (inviteUser.value.length > 0) {
-    let username = inviteUser.value;
-    inviteUser.value = "";
-    await fetchJSONDatas("api/chat/invite-to-channel", "POST", {
-      channelId: thisChannel.value!.id,
-      username: username,
-    });
-  }
-};
-
-const declineChannelInvitation = async (channel: Channel): Promise<void> => {
-  await fetchJSONDatas("api/chat/decline-invitation", "DELETE", {
-    id: channel.id,
-  }).then(() => {
-    allChannels.value = allChannels.value.filter((x) => x.id != channel.id);
-    if (channelsNum.value > 0) channelsNum.value--;
-  });
-};
-
-const ban = async (): Promise<void> => {
-  await fetchJSONDatas("api/chat/ban", "POST", {
-    id: 23,
-    username: "Ah Sahm",
-    minutes: 1500,
-  });
-};
-
-// const organizeFriends = () => {
-//   for (let i = 0; i < privateConvs.value.length; i++) {
-//     for (let j = 0; j < friends.value.length; j++) {
-//       if (privateConvs.value[i].user1.nickname == friends.value[j].nickname || privateConvs.value[i].user2.nickname == friends.value[j].nickname)
-//         friends.value.splice(j, 1);
-//     }
-//   }
-// };
-
-const scrollDownMessages = () => {
-  messagesBoxRef.value?.scrollIntoView({ behavior: "smooth", block: "end" });
-};
-
-const displayMessages = async (conv: Conversation, event: any): Promise<void> => {
-  thisChannel.value = null;
-  const conversations = document.querySelectorAll(".channelButton");
-  conversations.forEach((conversation) => {
-    conversation.classList.add("inactiveConv");
-  });
-  event.target.classList.remove("inactiveConv");
-  conv.user1.nickname == clientNickname ? (friendNickname.value = conv.user2.nickname) : (friendNickname.value = conv.user1.nickname);
-  let data: Message[] = await fetchJSONDatas(`api/privateConv/getMessages/${conv.uuid}/${conv.offset}`, "GET");
-  //if currentConv == conv, the user clicked on load more, so we just need to append older messages at the beginning of the array
-  if (conv == currentConv.value && isLoadMore) messagesToDisplay.value.splice(0, 0, ...data);
-  else {
-    //Otherwise, the user is changing conversation so we need to replace our array of messages with the new array, and finally set the offset of the previous conv to 0
-    messagesToDisplay.value = data;
-    if (currentConv.value) currentConv.value.offset = 0;
-    currentConv.value = conv;
-  }
-  show.value = 2;
-};
-
-const loadChannel = async (channel: Channel, event: any): Promise<void> => {
-  const conversations = document.querySelectorAll(".channelButton");
-  conversations.forEach((conversation) => {
-    conversation.classList.add("inactiveConv");
-  });
-  event.target.classList.remove("inactiveConv");
-  channelMessageSkip.value = 0;
-  channelMembers.value = [];
-  thisChannel.value = null;
-  show.value = 2;
-  let data = await fetchJSONDatas("api/chat/load-channel", "POST", {
-    id: channel.id,
-  });
-  thisChannel.value = channel;
-  channelMembers.value = data.members;
-  messagesToDisplay.value = data.messages;
-  messagesToDisplay.value.forEach((elem) => {
-    elem.date = moment(elem.date).tz(timezone).add(1, "hours").format("MMMM Do YYYY, h:mm:ss a");
-  });
-  channelMessageSkip.value = data.messages.length;
-  channelMembers.value.forEach(await fetchUserAvatarURL);
-};
-
-const loadChannelMessages = async (channel: Channel): Promise<void> => {
-  let data = await fetchJSONDatas("api/chat/messages", "POST", {
-    id: channel.id,
-    skip: channelMessageSkip.value,
-  });
-  data.date = moment(data.date).tz(timezone).add(1, "hours").format("MMMM Do YYYY, h:mm:ss a");
-  messagesToDisplay.value.push(data);
-  channelMessageSkip.value += data.length;
-};
-
-const sendChannelMessage = () => {
-  if (messageInput.value != "") {
-    socket.emit(
-      "sendChannelMessage",
-      {
-        channelId: thisChannel.value!.id,
-        content: messageInput.value,
-      },
-      (response: Message) => {
-        if (!response.author) {
-          // TODO new notification message
-        }
-      }
-    );
-    messageInput.value = "";
-  }
-};
-
-const sendPrivateMessage = (nickname: string): void => {
-  if (messageInput.value != "") {
-    socket.emit("deliverMessage", {
-      message: messageInput.value,
-      friendNickname: nickname,
-    });
-    messagesToDisplay.value.push({
-      author: clientNickname,
-      text: messageInput.value,
-      date: moment(new Date()).tz(timezone).format("MMMM Do YYYY, h:mm:ss a"),
-    });
-    messageInput.value = "";
-  }
+  privateConvs.value = await fetchJSONDatas("api/privateConv/getAllConvs", "GET").catch(() => {});
 };
 </script>
 

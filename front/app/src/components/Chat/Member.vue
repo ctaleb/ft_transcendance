@@ -27,7 +27,7 @@
 import BanModal from "@/components/chat/modals/BanModal.vue";
 import MuteModal from "@/components/chat/modals/MuteModal.vue";
 import { addAlertMessage, fetchJSONDatas } from "@/functions/funcs";
-import { useStore } from "@/store";
+import { socketLocal, useStore } from "@/store";
 import { ChannelRole, ChannelUser } from "@/types/Channel";
 import { User } from "@/types/User";
 import { onMounted, ref, watch } from "vue";
@@ -56,7 +56,7 @@ const giveTakeAdmin = async () => {
     } else {
       await takeAdmin(props.member);
     }
-    socket?.emit("updateChannelMembers", { id: store.currentChat!.id });
+    socketLocal.value?.emit("updateChannelMembers", { id: store.currentChat!.id });
   } else {
     addAlertMessage("You have no right to change channel members role", 3);
   }
@@ -75,12 +75,6 @@ const takeAdmin = async (member: ChannelUser): Promise<void> => {
     username: member.nickname,
   }).catch(() => {});
 };
-
-let socket = store.socket;
-
-store.$subscribe((mutation, state) => {
-  socket = state.socket;
-});
 
 onMounted(() => {
   watch(

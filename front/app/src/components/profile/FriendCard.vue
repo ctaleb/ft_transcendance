@@ -9,12 +9,8 @@
     </svg>
     <img class="user-image" :src="User.getAvatar(friend)" alt="" />
     <h3>{{ friend.nickname }}</h3>
-    <h4 style="color: greenyellow; text-align: center">{{ "en ligne" }}</h4>
+    <h4 style="color: greenyellow; text-align: center">{{ friend.status }}</h4>
     <div class="socialIcons">
-      <!--<button @click="unfriend()">Remove</button>
-      <button @click="watchProfile()">Profile</button>
-      <button @click="spectateGame(friend.nickname)">Spectate</button>
-      <button @click="inviteCustom(friend.nickname)">Invite</button>-->
       <i title="Spectate your friend" class="gg-eye" @click="spectateGame(friend.nickname)"></i>
       <i title="Go to profile" class="gg-profile" @click="watchProfile()"></i>
       <i title="Delete friend" class="gg-close-o" @click="unfriend()"></i>
@@ -25,7 +21,7 @@
 
 <script lang="ts" setup>
 import { fetchJSONDatas } from "@/functions/funcs";
-import { useStore } from "@/store";
+import { socketLocal, useStore } from "@/store";
 import { User } from "@/types/User";
 import { useRouter } from "vue-router";
 
@@ -35,17 +31,12 @@ const props = defineProps<{
 
 const router = useRouter();
 const store = useStore();
-let socket = store.socket;
-
-store.$subscribe((mutation, state) => {
-  socket = state.socket;
-});
 
 const unfriend = async () => {
   await fetchJSONDatas("api/friendship/unfriend", "DELETE", { addressee: props.friend.nickname })
     .then((data) => {
       store.user?.friends!.splice(store.user?.friends!.indexOf(props.friend), 1);
-      socket?.emit("unfriend", { id: store.user?.id, addresseeId: props.friend.id, target: props.friend.nickname, requester: store.user?.nickname });
+      socketLocal.value?.emit("unfriend", { id: store.user?.id, addresseeId: props.friend.id, target: props.friend.nickname, requester: store.user?.nickname });
     })
     .catch(() => {});
 };
@@ -55,24 +46,24 @@ const watchProfile = () => {
 };
 
 const spectateGame = (friendName: string) => {
-  socket?.emit("spectate", { friend: friendName }, (response: string) => {
+  socketLocal.value?.emit("spectate", { friend: friendName }, (response: string) => {
     if (response == "ingame") {
       router.push("game");
-      socket?.emit("readySpectate", { friend: friendName });
+      socketLocal.value?.emit("readySpectate", { friend: friendName });
     }
   });
 };
 
 const inviteCustom = (friendName: string) => {
   let accepted = "yes";
-  socket?.emit("customInvite", { friend: friendName }, (response: string) => {
+  socketLocal.value?.emit("customInvite", { friend: friendName }, (response: string) => {
     if (response != "accepted") {
       accepted = "no";
     }
   });
   if (accepted === "no") return;
   router.push("game");
-  socket?.emit("settingsInviter", { friend: friendName });
+  socketLocal.value?.emit("settingsInviter", { friend: friendName });
 };
 </script>
 

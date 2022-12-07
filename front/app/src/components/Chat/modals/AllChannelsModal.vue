@@ -22,9 +22,6 @@ const emits = defineEmits<{
   (e: "joinChannel"): void;
 }>();
 
-const store = useStore();
-let socket = store.socket;
-
 const getAllChannels = async (): Promise<void> => {
   await fetchJSONDatas("api/chat/list", "GET")
     .then((data) => {
@@ -32,10 +29,6 @@ const getAllChannels = async (): Promise<void> => {
     })
     .catch(() => {});
 };
-
-store.$subscribe((mutation, state) => {
-  socket = state.socket;
-});
 
 onMounted(() => {
   getAllChannels();

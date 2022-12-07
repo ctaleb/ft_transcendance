@@ -83,8 +83,6 @@
       <div v-if="noFriends" class="overlay">
         <Denial :inviter="friendName" @sadStory="showDenial(false)"></Denial>
       </div>
-      <!-- <div class="power">Selected power: {{ power }}</div>
-      <div class="power">Selected power: {{ power }}</div> -->
     </div>
     <div v-else class="custom"></div>
     <svg preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" :class="!displayLoading ? 'bottomSvg' : ' hidden'">
@@ -98,12 +96,10 @@
 </template>
 
 <script setup lang="ts">
-import { useStore } from "@/store";
+import { socketLocal, useStore } from "@/store";
+import { GameOptions, GameRoom, GameState, IBar, IPoint, particleSet } from "@/types/Game";
 import { GameSummaryData } from "@/types/GameSummary";
-import { Socket } from "engine.io-client";
-import { onMounted, onUnmounted, reactive, ref } from "vue";
-import { GameOptions, GameRoom, GameState, IBar, particleSet, particle, IPoint } from "@/types/Game";
-import { User } from "@/types/User";
+import { onMounted, onUnmounted, reactive, ref, watch } from "vue";
 import ballUrl from "../assets/ball.png";
 import energyUrl from "../assets/energy.png";
 import paddleEnergyUrl from "../assets/energy_paddle_grec.png";
@@ -119,17 +115,11 @@ import fillRedUrl from "../assets/slot_fill_enemy.png";
 import Denial from "./InviteDenied/Modal.vue";
 import PowerSliderComponent from "./PowerSliderComponent.vue";
 import Modal from "./Summary/Modal.vue";
-import { ElementTypes } from "@vue/compiler-core";
 //import { SCOPABLE_TYPES } from "@babel/types";
 
 const store = useStore();
-let socket = store.socket;
 
-store.$subscribe((mutation, state) => {
-  socket = state.socket;
-});
-
-console.log("config " + socket?.id);
+console.log("config " + socketLocal?.value?.id);
 const ballImg = new Image();
 ballImg.src = ballUrl;
 const powerChargeImg = new Image();
@@ -202,10 +192,12 @@ let loadPercent = 120;
 let kickOff = false;
 let cSmashingPercent = 0;
 let hSmashingPercent = 0;
+let ballBouncedSide = 0;
+let ballBouncedBar = 0;
 const particles: particleSet[] = [];
 
-let start: Date;
-let end: Date;
+let start: Date = new Date();
+let end: Date = new Date();
 
 let theRoom: GameRoom;
 const gameSummary = reactive<GameSummaryData>({
@@ -243,7 +235,7 @@ function findMatch() {
   startButton.value = true;
   lobbyStatus.value = "Looking for an opponent...";
   powers.value = false;
-  socket?.emit("joinQueue", {
+  socketLocal?.value?.emit("joinQueue", {
     power: power.value,
   });
 }
@@ -252,12 +244,12 @@ function readyUp() {
   readyButton.value = true;
   customReady.value = "Waiting for " + friendName.value;
   if (toggleInvited.value) {
-    socket?.emit("readyInvitee", {
+    socketLocal?.value?.emit("readyInvitee", {
       power: power.value,
     });
   } else {
     updateOpts();
-    socket?.emit("readyInviter", {
+    socketLocal?.value?.emit("readyInviter", {
       gameOpts,
       power: power.value,
     });
@@ -285,17 +277,6 @@ function toggleGameQueue() {
 function toggleInvitedMode() {
   toggleInvited.value = toggleInvited.value ? false : true;
 }
-
-// function confirmGame() {
-//   socket.emit("playerReady", {}, () => {});
-//   document.getElementById("powerSlider")?.classList.add("hidden");
-//   showModal(false);
-// }
-
-// function denyGame() {
-//   socket.emit("playerNotReady", {}, () => {});
-//   showModal(false);
-// }
 
 function kickoffLoading(ctx: any) {
   if (kickOff) {
@@ -348,13 +329,8 @@ function drawPlayground(ctx: CanvasRenderingContext2D) {
 function addParticle(ctx: CanvasRenderingContext2D, gameState: GameState) {
   const hit: particleSet = { particles: [], reach: false };
   let ab: IPoint = { x: gameState.ball.pos.x - gameState.hit.x, y: gameState.ball.pos.y - gameState.hit.y };
-  let end1: IPoint = { x: gameState.hit.x < 250 ? 10 : 490, y: ab.x };
-  let end2: IPoint = { x: gameState.hit.x < 250 ? 10 : 490, y: -ab.x };
-
-  console.log("HIT");
-  console.log(end1);
-  console.log(end2);
-  console.log(gameState.hit);
+  let end1: IPoint = { x: gameState.hit.x < 250 ? 10 : 490, y: 1.3 * ab.x };
+  let end2: IPoint = { x: gameState.hit.x < 250 ? 10 : 490, y: 1.3 * -ab.x };
 
   //left
   hit.particles.push({
@@ -422,7 +398,6 @@ function drawParticle(ctx: CanvasRenderingContext2D, gameState: GameState) {
         ctx.fillStyle = "#edd199";
         ctx.arc(element.x, element.y, 1, 0, 2 * Math.PI);
         ctx.fill();
-        // ctx.drawImage(ballImg, element.x, element.y, 3, 3);
         ctx.globalAlpha = 1;
       });
     });
@@ -477,6 +452,54 @@ function drawPowerCharge(ctx: CanvasRenderingContext2D, gameState: GameState) {
   }
 }
 
+function drawBall(ctx: CanvasRenderingContext2D, gameState: GameState) {
+  if (gameState.hit.hit) {
+    ballBouncedSide = 3;
+    ctx.drawImage(
+      ballImg,
+      gameState.ball.pos.x - gameState.ball.size * scale,
+      gameState.ball.pos.y - gameState.ball.size * scale,
+      gameState.ball.size * 2 * scale * 0.7,
+      gameState.ball.size * 2 * scale
+    );
+  } else if (ballBouncedSide > 0) {
+    ctx.drawImage(
+      ballImg,
+      gameState.ball.pos.x - gameState.ball.size * scale,
+      gameState.ball.pos.y - gameState.ball.size * scale,
+      gameState.ball.size * 2 * scale * 0.8 + 0.1 * (3 - ballBouncedSide),
+      gameState.ball.size * 2 * scale
+    );
+    ballBouncedSide--;
+  } else {
+    ctx.drawImage(
+      ballImg,
+      gameState.ball.pos.x - gameState.ball.size * scale,
+      gameState.ball.pos.y - gameState.ball.size * scale,
+      gameState.ball.size * 2 * scale,
+      gameState.ball.size * 2 * scale
+    );
+  }
+  // } else if (gameState.hit.hit == 2) {
+  //   ballBouncedBar = 3;
+  //   ctx.drawImage(
+  //     ballImg,
+  //     gameState.ball.pos.x - gameState.ball.size * scale,
+  //     gameState.ball.pos.y - gameState.ball.size * scale,
+  //     gameState.ball.size * 2 * scale * 0.7,
+  //     gameState.ball.size * 2 * scale
+  //   );
+  // } else if (ballBouncedBar > 0) {
+  //   ctx.drawImage(
+  //     ballImg,
+  //     gameState.ball.pos.x - gameState.ball.size * scale,
+  //     gameState.ball.pos.y - gameState.ball.size * scale,
+  //     gameState.ball.size * 2 * scale * 0.8 + 0.1 * (3 - ballBouncedBar),
+  //     gameState.ball.size * 2 * scale
+  //   );
+  //   ballBouncedBar--;}
+}
+
 function updateSummary(summary: GameSummaryData) {
   gameSummary.host = summary.host;
   gameSummary.client = summary.client;
@@ -499,7 +522,7 @@ function test(ctx: CanvasRenderingContext2D | null | undefined, gameState: GameS
       drawPlayground(ctx);
       drawScore(ctx, gameState);
       kickoffLoading(ctx);
-      ctx.drawImage(ballImg, ball.pos.x - ball.size * scale, ball.pos.y - ball.size * scale, ball.size * 2 * scale, ball.size * 2 * scale);
+      drawBall(ctx, gameState);
       ctx.fillStyle = "black";
       drawSmashingEffect(gameState.clientBar, cSmashingPercent, ctx);
       drawSmashingEffect(gameState.hostBar, hSmashingPercent, ctx);
@@ -547,66 +570,54 @@ function resizeCanvas() {
 
 onMounted(() => {
   ctx = canvas.value?.getContext("2d");
-  console.log("ctx " + ctx);
+  // console.log("ctx " + ctx);
   ctx?.drawImage(plateauImg, 0, 0, cWidth, cHeight);
-
   scaling(ctx);
+  registerSockets(socketLocal);
 
-  registerSockets(store.socket as any);
-  store.$subscribe((mutation, state) => {
-    //   socket.on("gameConfirmation", (gameRoom: GameRoom) => {
-    //     theRoom = gameRoom;
-    //     showModal(true);
-    //   });
-
-    //   socket.on("gameConfirmationTimeout", () => {
-    //     showModal(false);
-    //     startButton.value = true;
-    //     lobbyStatus.value = "Find Match";
-    //   });
-
-    if (state.socket) {
-      registerSockets(state.socket as any);
+  watch(
+    () => socketLocal.value,
+    () => {
+      registerSockets(socketLocal);
     }
-  });
-
+  );
   //needs to be moved
   //window.removeEventListener("resize", resizeCanvas);
   window.addEventListener("resize", resizeCanvas);
 });
 
 onUnmounted(() => {
-  unregisterSockets(store.socket as any);
+  unregisterSockets(socketLocal);
 });
 
-const registerSockets = (state: Socket) => {
-  !socket?.hasListeners("customInviter") && socket?.on("customInviter", customInviter);
-  !socket?.hasListeners("customInvitee") && socket?.on("customInvitee", customInvitee);
-  !socket?.hasListeners("foreverAlone") && socket?.on("foreverAlone", foreverAlone);
-  !socket?.hasListeners("spectating") && socket?.on("spectating", spectating);
-  !socket?.hasListeners("reconnect") && socket?.on("reconnect", reconnect);
-  !socket?.hasListeners("kickOff") && socket?.on("kickOff", kickOfff);
-  !socket?.hasListeners("play") && socket?.on("play", play);
-  !socket?.hasListeners("ServerUpdate") && socket?.on("ServerUpdate", ServerUpdate);
-  !socket?.hasListeners("Win") && socket?.on("Win", Win);
-  !socket?.hasListeners("Lose") && socket?.on("Lose", Lose);
-  !socket?.hasListeners("startGame") && socket?.on("startGame", startGame);
-  !socket?.hasListeners("customInvitation") && socket?.on("customInvitation", customInvitation);
+const registerSockets = (socket: any) => {
+  !socket?.value?.hasListeners("customInviter") && socket?.value?.on("customInviter", customInviter);
+  !socket?.value?.hasListeners("customInvitee") && socket?.value?.on("customInvitee", customInvitee);
+  !socket?.value?.hasListeners("foreverAlone") && socket?.value?.on("foreverAlone", foreverAlone);
+  !socket?.value?.hasListeners("spectating") && socket?.value?.on("spectating", spectating);
+  !socket?.value?.hasListeners("reconnect") && socket?.value?.on("reconnect", reconnect);
+  !socket?.value?.hasListeners("kickOff") && socket?.value?.on("kickOff", kickOfff);
+  !socket?.value?.hasListeners("play") && socket?.value?.on("play", play);
+  !socket?.value?.hasListeners("ServerUpdate") && socket?.value?.on("ServerUpdate", ServerUpdate);
+  !socket?.value?.hasListeners("Win") && socket?.value?.on("Win", Win);
+  !socket?.value?.hasListeners("Lose") && socket?.value?.on("Lose", Lose);
+  !socket?.value?.hasListeners("startGame") && socket?.value?.on("startGame", startGame);
+  !socket?.value?.hasListeners("customInvitation") && socket?.value?.on("customInvitation", customInvitation);
 };
 
-const unregisterSockets = (state: Socket) => {
-  socket?.removeListener("customInviter");
-  socket?.removeListener("customInvitee");
-  socket?.removeListener("foreverAlone");
-  socket?.removeListener("spectating");
-  socket?.removeListener("reconnect");
-  socket?.removeListener("kickOff");
-  socket?.removeListener("play");
-  socket?.removeListener("ServerUpdate");
-  socket?.removeListener("Win");
-  socket?.removeListener("Lose");
-  socket?.removeListener("startGame");
-  socket?.removeListener("customInvitation");
+const unregisterSockets = (socket: any) => {
+  socket?.value?.removeListener("customInviter");
+  socket?.value?.removeListener("customInvitee");
+  socket?.value?.removeListener("foreverAlone");
+  socket?.value?.removeListener("spectating");
+  socket?.value?.removeListener("reconnect");
+  socket?.value?.removeListener("kickOff");
+  socket?.value?.removeListener("play");
+  socket?.value?.removeListener("ServerUpdate");
+  socket?.value?.removeListener("Win");
+  socket?.value?.removeListener("Lose");
+  socket?.value?.removeListener("startGame");
+  socket?.value?.removeListener("customInvitation");
 };
 
 const customInviter = (friend: string) => {
@@ -663,7 +674,6 @@ const ServerUpdate = (gameState: GameState) => {
   gState = gameState;
   scalePosition(gameState);
   if (theRoom) {
-    let ball = gameState.ball;
     clientScore.value = gameState.score.client;
     hostScore.value = gameState.score.host;
     if (gameState.clientBar.smashing && cSmashingPercent < 100 && !kickOff) {
@@ -678,7 +688,7 @@ const ServerUpdate = (gameState: GameState) => {
       drawScore(ctx, gameState);
       drawPowerCharge(ctx, gameState);
       kickoffLoading(ctx);
-      ctx.drawImage(ballImg, ball.pos.x - ball.size * scale, ball.pos.y - ball.size * scale, ball.size * 2 * scale, ball.size * 2 * scale);
+      drawBall(ctx, gameState);
       ctx.fillStyle = "black";
       drawSmashingEffect(gameState.clientBar, cSmashingPercent, ctx);
       drawSmashingEffect(gameState.hostBar, hSmashingPercent, ctx);

@@ -39,7 +39,6 @@
     <!--<div>
       <h4>Two factor authentication</h4>
       <h6 :class="{ twoFaTitleActive: twoFactorEnabled }">You will receive an sms code during your future connections</h6>
-      <friend-alert :requester-name="incomingFriendRequest" />
     </div>-->
   </div>
 
@@ -57,11 +56,9 @@ import { trySetupUser } from "@/functions/funcs";
 import { useStore } from "@/store";
 import { getUserById } from "@/types/User";
 import { defineComponent, ref } from "vue";
-import FriendAlert from "../components/FriendAlert.vue";
 let funcs = require("../functions/funcs");
 
 export default defineComponent({
-  props: ["incomingFriendRequest"],
   data() {
     return {
       store: useStore(),
@@ -81,14 +78,12 @@ export default defineComponent({
       avatarUrl: ref(""),
     };
   },
-  emits: ["notification"],
   async mounted() {
     this.initTwoFactorToggle();
     const _user = await getUserById(this.user.id);
     this.avatar = _user.avatar;
     this.avatarUrl = this.getUserAvatar();
   },
-  components: { FriendAlert },
   methods: {
     async updateNickname() {
       if (this.nickname.length < 1) return;
