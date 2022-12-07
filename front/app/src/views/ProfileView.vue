@@ -43,7 +43,7 @@
     </div>
     <div class="friends" :style="toogleMenu ? 'display: none' : ''">
       <ul>
-        <FriendCard v-for="friend of currentFriend" :friend="friend" :currentUserProfile:="currentUserProfile" />
+        <FriendCard v-for="friend of currentFriend" :friend="friend" />
       </ul>
     </div>
     <div class="summary" :style="toogleMenu ? '' : 'display: none'">

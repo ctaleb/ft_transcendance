@@ -97,6 +97,7 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       if (this.serverService.playerQueue.find((element) => element === player)) {
         this.serverService.playerQueue.splice(this.serverService.playerQueue.indexOf(player), 1);
         this.serverService.userList.splice(this.serverService.userList.indexOf(player), 1);
+        this.serverService.updateStatus(player.id, 'offline');
       } else {
         this.serverService.games.forEach((element) => {
           if (
@@ -112,10 +113,8 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
             ingame = true;
           }
         });
-        // if (!ingame) {
         this.serverService.updateStatus(player.id, 'offline');
         this.serverService.userList.splice(this.serverService.userList.indexOf(player), 1);
-        // }
       }
     }
     client.disconnect();

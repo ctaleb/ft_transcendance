@@ -27,7 +27,6 @@ import { useRouter } from "vue-router";
 
 const props = defineProps<{
   friend: User;
-  currentUser: User;
 }>();
 
 const router = useRouter();

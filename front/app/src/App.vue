@@ -183,9 +183,6 @@ onMounted(() => {
     (currentValue, oldValue) => {
       if (!socket.value?.hasListeners("updateOneUserStatus")) {
         socket.value?.on("updateOneUserStatus", (obj: { id: number; status: string }) => {
-          console.log("Update status");
-          console.log(obj.id);
-          console.log(obj.status);
           updateStatus(obj.id, obj.status);
         });
       }
@@ -218,6 +215,7 @@ onMounted(() => {
         socket.value?.on("friendshipInvite", (requester: string) => {
           getUserByNickname(requester).then((data) => {
             store.user?.invitations?.push(data!);
+            addAlertMessage(`Incoming friendship request from ${requester}`, 1);
           });
         });
       }

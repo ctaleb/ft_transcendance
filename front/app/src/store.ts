@@ -4,7 +4,7 @@ import { defineStore } from "pinia";
 import { Socket } from "socket.io-client";
 import { Conversation } from "@/types/Conversation";
 import { Channel } from "@/types/Channel";
-import { shallowRef } from "vue";
+import { ref, shallowRef } from "vue";
 
 interface State {
   user?: User;
@@ -25,4 +25,4 @@ export const useStore = defineStore("default", {
 });
 
 export const socketLocal = shallowRef<Socket>();
-export const currentUserProfile = shallowRef<User>();
+export const currentUserProfile = ref<User>();

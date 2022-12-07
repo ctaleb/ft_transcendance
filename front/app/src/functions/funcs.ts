@@ -120,8 +120,12 @@ export function addAlertMessage(message: string, type: number, second: number = 
 
 export function updateStatus(id: number, status: string) {
   const store = useStore();
+  console.log("Status Update");
 
-  if (currentUserProfile.value && currentUserProfile.value.id == id) currentUserProfile.value.status = status;
+  if (currentUserProfile.value && currentUserProfile.value.id == id) {
+    currentUserProfile.value.status = status;
+    console.log("CurrentProfileUpdate");
+  }
   let user = store.user?.friends?.find((element) => element.id === id);
   if (user) user.status = status;
   user = store.user?.invitations?.find((element) => element.id === id);
