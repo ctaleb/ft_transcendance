@@ -11,4 +11,9 @@ export class ProfileController {
   async matchHistory(@Request() req, @Param('name') name: string) {
     return await this._serverService.getMatchHistory(name);
   }
+
+  @Get('/summary')
+  async matchOwnHistory(@Request() req) {
+    return await this._serverService.getMatchHistory(req.user.payload.nickname);
+  }
 }

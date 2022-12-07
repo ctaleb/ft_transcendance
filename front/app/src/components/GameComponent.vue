@@ -196,8 +196,8 @@ let ballBouncedSide = 0;
 let ballBouncedBar = 0;
 const particles: particleSet[] = [];
 
-let start: Date;
-let end: Date;
+let start: Date = new Date();
+let end: Date = new Date();
 
 let theRoom: GameRoom;
 const gameSummary = reactive<GameSummaryData>({
@@ -570,7 +570,7 @@ function resizeCanvas() {
 
 onMounted(() => {
   ctx = canvas.value?.getContext("2d");
-  console.log("ctx " + ctx);
+  // console.log("ctx " + ctx);
   ctx?.drawImage(plateauImg, 0, 0, cWidth, cHeight);
   scaling(ctx);
   registerSockets(socketLocal);

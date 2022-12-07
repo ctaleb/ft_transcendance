@@ -54,7 +54,6 @@
     <img src="../assets/profileConfettis.svg" class="leftBottomSvg" alt="" />
   </section>
   <h4 v-else>User not found T_T</h4>
-  <!-- <friend-alert :requester-name="incomingFriendRequest" /> -->
 </template>
 
 <script lang="ts" setup>
