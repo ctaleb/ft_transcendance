@@ -132,6 +132,10 @@ const setCurrentChatWindow = async (target: Channel | Conversation) => {
   }
 };
 
+store.$subscribe((mutation, state) => {
+  friends.value = store.user?.friends?.filter((user) => !props.convs.find((conv) => conv.other.id === user.id));
+});
+
 onMounted(() => {
   watch(
     () => props.convs,

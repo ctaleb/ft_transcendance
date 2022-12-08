@@ -34,6 +34,7 @@ export const useStore = defineStore("default", {
 
 export const socketLocal = shallowRef<Socket>();
 export const currentUserProfile = ref<User>();
+export const privateConvs = ref<Conversation[]>([]);
 
 export const menu = ref<Menu>({
   requester: undefined,

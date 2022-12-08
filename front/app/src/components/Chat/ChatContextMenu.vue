@@ -3,22 +3,14 @@
     <div class="name">{{ menu.user!.nickname }}</div>
     <div class="status">{{ menu.user!.status }}</div>
     <button @click="watchProfile()">Profile</button>
-    <button v-if="menu.user!.status == 'inGame'" @click="spectateGame()">Spectate</button>
-    <button v-else-if="menu.user!.status == 'online'" @click="inviteCustom()">Invite</button>
+    <button v-if="menu.user!.status == 'inGame'" @click="User.spectateGame(router, menu.user)">Spectate</button>
+    <button v-else-if="menu.user!.status == 'online'" @click="User.inviteCustom(router, menu.user)">Invite</button>
     <button v-if="!isBlocked" @click="block()">Block</button>
     <button v-else title="Unblock user" @click="unblock()">Unblock</button>
-    <button
-      v-if="menu.requester && menu.requester!.role !== ChannelRole.MEMBER && (<ChannelUser>menu.user)!.role === ChannelRole.MEMBER"
-      @click="showMuteModal = true"
-    >
-      Mute
-    </button>
-    <button
-      v-if="menu.requester && menu.requester!.role !== ChannelRole.MEMBER && (<ChannelUser>menu.user)!.role === ChannelRole.MEMBER"
-      @click="showBanModal = true"
-    >
-      Ban
-    </button>
+    <template v-if="menu.requester && menu.requester!.role !== ChannelRole.MEMBER && (<ChannelUser>menu.user)!.role === ChannelRole.MEMBER">
+      <button @click="showMuteModal = true">Mute</button>
+      <button @click="showBanModal = true">Ban</button>
+    </template>
     <button v-if="menu.requester && menu.requester!.role === ChannelRole.OWNER && (<ChannelUser>menu.user)!.role === ChannelRole.MEMBER" @click="giveTakeAdmin">
       Give admin
     </button>
@@ -70,45 +62,12 @@ const watchProfile = () => {
   router.push("/profile/" + menu.value.user?.nickname);
 };
 
-const spectateGame = () => {
-  socketLocal.value?.emit("spectate", { friend: menu.value.user?.nickname }, (response: string) => {
-    if (response == "ingame") {
-      router.push("game");
-      socketLocal.value?.emit("readySpectate", { friend: menu.value.user?.nickname });
-    }
-  });
-};
-
-const inviteCustom = () => {
-  let accepted = "yes";
-  socketLocal.value?.emit("customInvite", { friend: menu.value.user?.nickname }, (response: string) => {
-    if (response != "accepted") {
-      accepted = "no";
-    }
-  });
-  if (accepted === "no") return;
-  router.push("game");
-  socketLocal.value?.emit("settingsInviter", { friend: menu.value.user?.nickname });
-};
-
 const block = async () => {
-  if (menu.value.user)
-    await fetchJSONDatas("api/friendship/block", "PUT", { addressee: menu.value.user?.nickname })
-      .then(() => {
-        isBlocked.value = true;
-        addAlertMessage("The user has been blocked", 2);
-      })
-      .catch(() => {});
+  if ((await User.block(menu.value.user)) === true) isBlocked.value = true;
 };
 
 const unblock = async () => {
-  if (menu.value.user)
-    await fetchJSONDatas("api/friendship/unblock", "PUT", { addressee: menu.value.user?.nickname })
-      .then(() => {
-        isBlocked.value = false;
-        addAlertMessage("The user has been unblocked", 2);
-      })
-      .catch((err) => {});
+  if ((await User.unblock(menu.value.user)) === true) isBlocked.value = false;
 };
 
 const giveTakeAdmin = async () => {

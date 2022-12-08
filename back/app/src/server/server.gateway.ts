@@ -273,7 +273,7 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   spectate(@MessageBody('friend') friend: string, @ConnectedSocket() client: Socket) {
     let response = 'na';
     this.serverService.games.forEach((element) => {
-      if (element.client.name == friend || element.host.name == friend) response = 'ingame';
+      if (element.client.name == friend || element.host.name == friend) response = 'inGame';
     });
     return response;
   }

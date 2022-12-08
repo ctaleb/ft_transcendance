@@ -131,7 +131,7 @@ export class FriendshipService {
     const duplicate = await FriendshipEntity.findOneBy({ requester: { id: req.id }, addressee: { id: adr.id }, status: 'blocked' });
     if (duplicate) throw new BadRequestException('The user is already blocked');
     const friendship = await this.findFriendship(req.id, adr.id);
-    if (friendship && friendship.status !== 'blocked') {
+    if (friendship && friendship.status === 'invitation') {
       FriendshipEntity.remove(friendship);
       const blocked = FriendshipEntity.create({
         requester: req,
@@ -139,6 +139,8 @@ export class FriendshipService {
         status: 'blocked',
       });
       result = FriendshipEntity.save(blocked);
+    } else if (friendship && friendship.status === 'friend') {
+      throw new BadRequestException("Can't block a friend");
     } else if (friendship === null) {
       const blocked = FriendshipEntity.create({
         requester: req,

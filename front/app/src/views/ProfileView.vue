@@ -11,7 +11,7 @@
       <div>
         <img class="border-gold user-image" :src="User.getAvatar(currentUserProfile)" alt="" />
         <h3 class="playerName">
-          {{ currentUserProfile?.nickname }} <i v-if="currentUserProfile === store.user" class="gg-edit-markup" @click="redirectToEdit()"></i>
+          {{ currentUserProfile?.nickname }} <i v-if="currentUserProfile.id === store.user?.id" class="gg-edit-markup" @click="redirectToEdit()"></i>
         </h3>
       </div>
       <div class="sideInfo">
@@ -19,11 +19,21 @@
         <h3>{{ currentUserProfile.status }}</h3>
       </div>
     </div>
-    <div class="buttonProfile" v-if="currentUserProfile != store.user">
-      <i title="Add friend" class="gg-user-add" @click="invite(currentUserProfile)"></i>
-      <i v-if="currentUserProfileIsBlocked == false" title="Block user" class="gg-block" @click="block(currentUserProfile)"></i>
+    <div class="buttonProfile" v-if="currentUserProfile?.id !== store.user?.id">
+      <i
+        v-if="!store.user?.friends?.find((friend) => friend.id === currentUserProfile?.id)"
+        title="Add friend"
+        class="gg-user-add"
+        @click="invite(currentUserProfile)"
+      ></i>
+      <template v-else>
+        <i title="Delete friend" class="gg-close-o" @click="unfriend(currentUserProfile)"></i>
+        <i v-if="currentUserProfile.status === 'online'" title="Invite in game" class="gg-games" @click="User.inviteCustom(router, currentUserProfile)"></i>
+      </template>
+      <i title="Chat" class="gg-comment" @click="startConversation(currentUserProfile)"></i>
+      <i v-if="currentUserProfileIsBlocked === false" title="Block user" class="gg-block" @click="block(currentUserProfile)"></i>
       <i v-else title="Unblock user" class="gg-unblock" @click="unblock(currentUserProfile)"></i>
-      <i title="Spectate your friend" class="gg-eye" @click=""></i>
+      <i v-if="currentUserProfile.status === 'inGame'" title="Spectate your friend" class="gg-eye" @click="User.spectateGame(router, currentUserProfile)"></i>
     </div>
     <div class="subMenu">
       <button class="darkButton pulse" :style="toogleMenu ? '' : 'border: 1px solid white'" @click="watchFriend()">Friend</button>
@@ -34,9 +44,9 @@
         <div class="searchIcon"><i class="gg-search"></i></div>
         <input type="text" class="input" name="searchFriend" v-model="searchFriend" placeholder="Player name" />
       </div>
-      <button class="button pulse" @click="router.push('/profile/' + searchFriend)">Search Profile</button>
+      <button class="button pulse" @click="searchProfile()">Search Profile</button>
     </div>
-    <div v-if="currentUserProfile === store.user" class="invitations" :style="toogleMenu ? 'display: none' : ''">
+    <div v-if="currentUserProfile.id === store.user?.id" class="invitations" :style="toogleMenu ? 'display: none' : ''">
       <ul>
         <InvitationCard v-for="invitation of store.user?.invitations" :invitation="invitation" />
       </ul>
@@ -95,7 +105,7 @@ onMounted(async () => {
           currentSummary.value = data;
         })
         .catch(() => {});
-      if (store.user?.id != currentUserProfile.value!.id) {
+      if (currentUserProfile.value && store.user?.id != currentUserProfile.value!.id) {
         fetchJSONDatas(`api/friendship/isBlocked/${currentUserProfile.value?.id}`, "GET")
           .then((data) => {
             currentUserProfileIsBlocked.value = data;
@@ -106,7 +116,7 @@ onMounted(async () => {
   );
 
   if (nick) {
-    currentUserProfile.value = await getUserByNickname(nick).catch((err) => {
+    currentUserProfile.value = await getUserByNickname(nick).catch(() => {
       return undefined;
     });
 
@@ -152,7 +162,7 @@ const watchHistory = () => {
   toogleMenu.value = true;
 };
 
-const invite = async (user: User | undefined) => {
+const invite = async (user?: User) => {
   if (user)
     await fetchJSONDatas("api/friendship/invite", "POST", { addressee: user?.nickname })
       .then((data) => {
@@ -162,28 +172,40 @@ const invite = async (user: User | undefined) => {
       .catch((err) => {});
 };
 
-const block = async (user: User | undefined) => {
-  if (user) {
-    await fetchJSONDatas("api/friendship/block", "PUT", { addressee: user.nickname })
-      .then(() => {
-        currentUserProfileIsBlocked.value = true;
-        addAlertMessage("The user has been blocked", 2);
-      })
-      .catch((err) => {});
+const block = async (user?: User) => {
+  if ((await User.block(user)) === true) currentUserProfileIsBlocked.value = true;
+};
+
+const unfriend = async (user?: User) => {
+  if ((await User.unfriend(user)) === true) {
+    store.user?.friends!.splice(store.user?.friends!.indexOf(user!), 1);
+    socketLocal.value?.emit("unfriend", { id: store.user?.id, addresseeId: user!.id, target: user!.nickname, requester: store.user?.nickname });
   }
 };
 
-const unblock = async (user: User | undefined) => {
-  if (user)
-    await fetchJSONDatas("api/friendship/unblock", "PUT", { addressee: user.nickname })
+const unblock = async (user?: User) => {
+  if ((await User.unblock(user)) === true) currentUserProfileIsBlocked.value = false;
+};
+
+const startConversation = (user?: User) => {
+  if (user) {
+    User.createConversation(user).then(() => {
+      router.push("/chat");
+    });
+  }
+};
+
+const searchProfile = async () => {
+  if (searchFriend.value.length > 0)
+    await getUserByNickname(searchFriend.value)
       .then(() => {
-        currentUserProfileIsBlocked.value = false;
-        addAlertMessage("The user has been unblocked", 2);
+        router.push("/profile/" + searchFriend.value);
       })
-      .catch((err) => {});
+      .catch(() => {});
+  searchFriend.value = "";
 };
 
 function redirectToEdit() {
-  window.location.href = "/edit";
+  router.push("/edit");
 }
 </script>
