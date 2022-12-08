@@ -1,13 +1,13 @@
 <template>
   <section class="lobby container">
     <div class="principalSection">
-      <div class="mainContainer" :class="store.user?.status == 'online' ? '' : ' hidden'">
+      <div class="mainContainer" :class="store.user?.status == 'online' || store.user?.status == 'inLobby' ? '' : ' hidden'">
         <div>
-          <power-slider-component v-model="power" id="powerSlider" />
+          <power-slider-component v-model="power" id="powerSlider" v-if="store.user?.status == 'online'" />
           <div v-if="!toggleLadder">
             <div>
               <h1>Custom Game with {{ friendName }}</h1>
-              <div v-if="!toggleInvited" class="inviter">
+              <div v-if="!toggleInvited && store.user?.status == 'inLobby'" class="inviter">
                 <div>
                   <div class="setting">
                     <label for="score">Max Score</label>
@@ -781,20 +781,20 @@ const customInvitation = () => {};
     justify-content: space-around;
     z-index: 1;
     width: 40%;
-    height: 50% !important;
+    //height: 50% !important;
     margin-top: 0;
     @include screen-xl {
       width: 50%;
-      height: 50% !important;
+      //  height: 50% !important;
       margin-top: 0;
     }
     @include screen-lg {
       width: 100%;
-      height: 30% !important;
+      //  height: 30% !important;
     }
     @include screen-md {
       width: 100%;
-      height: 40% !important;
+      //  height: 40% !important;
     }
     .inviter {
       display: flex;
