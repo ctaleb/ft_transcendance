@@ -74,7 +74,7 @@ const spectateGame = () => {
   socketLocal.value?.emit("spectate", { friend: menu.value.user?.nickname }, (response: string) => {
     if (response == "ingame") {
       router.push("game");
-      socketLocal.value?.emit("readySpectate", menu.value.user?.nickname);
+      socketLocal.value?.emit("readySpectate", { friend: menu.value.user?.nickname });
     }
   });
 };
@@ -88,16 +88,7 @@ const inviteCustom = () => {
   });
   if (accepted === "no") return;
   router.push("game");
-  socketLocal.value?.emit("settingsInviter", menu.value.user?.nickname);
-};
-
-const invite = async () => {
-  if (menu.value.user)
-    await fetchJSONDatas("api/friendship/invite", "POST", { addressee: menu.value.user?.nickname })
-      .then(() => {
-        addAlertMessage("The user has been invited", 2);
-      })
-      .catch(() => {});
+  socketLocal.value?.emit("settingsInviter", { friend: menu.value.user?.nickname });
 };
 
 const block = async () => {
