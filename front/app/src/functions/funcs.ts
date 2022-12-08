@@ -1,6 +1,6 @@
 import config from "@/config/config";
 import { currentUserProfile, menu, socketLocal, useStore } from "@/store";
-import { Channel, isChannel } from "@/types/Channel";
+import { Channel, ChannelUser, isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
 import { Alert } from "@/types/GameSummary";
 import { User } from "@/types/User";
@@ -9,7 +9,6 @@ import { io, Socket } from "socket.io-client";
 import { markRaw, shallowReactive } from "vue";
 
 export async function isConnected(token: string): Promise<boolean> {
-  // console.log(token);
   if (token == "" || token == null) return false;
   let ret = await fetchJSONDatas("api/user/profile", "GET")
     .then(() => {
@@ -68,7 +67,6 @@ export async function fetchBlobDatas(path: string, method: "GET" | "PUT" | "POST
     })
     .catch(async (err: Response) => {
       let message = await getErrorMessage(err);
-      console.log(message);
       return Promise.reject(message);
     });
 }
@@ -138,7 +136,7 @@ export function updateStatus(id: number, status: string) {
   if (user?.id == id) user.status = status;
 }
 
-export const showUserMenu = (event: any, user: User) => {
+export const showUserMenu = (event: any, user: User, requester?: ChannelUser) => {
   const store = useStore();
   if (store.user?.id && user.id != store.user?.id) {
     const largestHeight: number = window.innerHeight - 30;
@@ -150,6 +148,7 @@ export const showUserMenu = (event: any, user: User) => {
     if (menu.value.left > largestWidth) menu.value.left = largestWidth;
     menu.value.user = user;
     menu.value.view = true;
+    menu.value.requester = requester;
   }
 };
 

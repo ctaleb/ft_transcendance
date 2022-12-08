@@ -68,7 +68,6 @@ const decline = (invitation: User) => {
     })
     .then((data) => {
       store.user?.invitations?.splice(store.user?.invitations?.indexOf(invitation), 1);
-      // checkNotificationBadge();
     })
     .catch((err) => console.log(err));
 };

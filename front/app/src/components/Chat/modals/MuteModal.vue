@@ -51,13 +51,8 @@ const emits = defineEmits<{
 }>();
 
 const store = useStore();
-let socket = store.socket;
 
 const picked = ref(0);
-
-store.$subscribe((mutation, state) => {
-  socket = state.socket;
-});
 
 const mute = async () => {
   await fetchJSONDatas("api/chat/mute", "POST", {

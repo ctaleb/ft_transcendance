@@ -12,7 +12,7 @@
 
 <script setup lang="ts">
 import { addAlertMessage, fetchJSONDatas } from "@/functions/funcs";
-import { useStore } from "@/store";
+import { socketLocal, useStore } from "@/store";
 import { ref } from "vue";
 
 const emits = defineEmits<{
@@ -20,13 +20,8 @@ const emits = defineEmits<{
 }>();
 
 const store = useStore();
-let socket = store.socket;
 
 const nickname = ref("");
-
-store.$subscribe((mutation, state) => {
-  socket = state.socket;
-});
 
 const inviteToChannel = async (): Promise<void> => {
   if (nickname.value.length > 0) {
@@ -36,8 +31,7 @@ const inviteToChannel = async (): Promise<void> => {
     })
       .then((data) => {
         addAlertMessage("Invitation successfully sent", 1);
-        console.log(data);
-        socket?.emit("privateChannelInvite", { nickname: data.target, channel: data.channel });
+        socketLocal.value?.emit("privateChannelInvite", { nickname: data.target, channel: data.channel });
         emits("closeInviteModal");
       })
       .catch(() => {});

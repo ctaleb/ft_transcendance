@@ -33,7 +33,6 @@ const props = defineProps<{
 const emits = defineEmits(["closeChannelModal", "updateChannel"]);
 
 const store = useStore();
-let socket = store.socket;
 
 const picked = ref("public");
 const channelPassword = ref("");
@@ -55,10 +54,6 @@ const updateChannel = async (): Promise<void> => {
     })
     .catch(() => {});
 };
-
-store.$subscribe((mutation, state) => {
-  socket = state.socket;
-});
 
 onMounted(() => {
   picked.value = <string>props.channel.type;

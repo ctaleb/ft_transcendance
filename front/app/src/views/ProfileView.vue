@@ -22,7 +22,7 @@
     <div class="buttonProfile" v-if="currentUserProfile != store.user">
       <i title="Add friend" class="gg-user-add" @click="invite(currentUserProfile)"></i>
       <i v-if="currentUserProfileIsBlocked == false" title="Block user" class="gg-block" @click="block(currentUserProfile)"></i>
-      <i v-else title="Unblock user" class="gg-block" @click="unblock(currentUserProfile)"></i>
+      <i v-else title="Unblock user" class="gg-unblock" @click="unblock(currentUserProfile)"></i>
       <i title="Spectate your friend" class="gg-eye" @click=""></i>
     </div>
     <div class="subMenu">

@@ -1,4 +1,4 @@
-import { Injectable, HttpStatus, HttpException, forwardRef, Inject, UnauthorizedException } from '@nestjs/common';
+import { Injectable, HttpStatus, HttpException, forwardRef, Inject, UnauthorizedException, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from 'src/user/user.entity';
 import { CreateUserDto } from 'src/user/user.dto';
@@ -12,7 +12,7 @@ import { FriendshipEntity } from 'src/friendship/entities/friendship.entity';
 import { ServerService } from 'src/server/server.service';
 
 @Injectable()
-export class UserService {
+export class UserService implements OnModuleInit {
   static setAvatar: any;
   constructor(
     @InjectRepository(UserEntity)
@@ -22,6 +22,10 @@ export class UserService {
     private _imageService: ImageService,
     private _jwtService: JwtService,
   ) {}
+
+  onModuleInit() {
+    this._usersRepository.update({}, { status: 'offline' });
+  }
 
   getAllUsers() {
     return this._usersRepository.find();
@@ -132,8 +136,6 @@ export class UserService {
   }
 
   async updateStatus(userId: number, newStatus: string) {
-    console.log('Server update');
-    console.log(newStatus);
     await this._usersRepository.update(userId, { status: newStatus });
     return { success: true };
   }

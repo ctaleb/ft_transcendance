@@ -119,7 +119,6 @@ import Modal from "./Summary/Modal.vue";
 
 const store = useStore();
 
-console.log("config " + socketLocal?.value?.id);
 const ballImg = new Image();
 ballImg.src = ballUrl;
 const powerChargeImg = new Image();
@@ -570,7 +569,6 @@ function resizeCanvas() {
 
 onMounted(() => {
   ctx = canvas.value?.getContext("2d");
-  // console.log("ctx " + ctx);
   ctx?.drawImage(plateauImg, 0, 0, cWidth, cHeight);
   scaling(ctx);
   registerSockets(socketLocal);

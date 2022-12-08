@@ -131,8 +131,7 @@ const loadChannelMessages = async (channel: Channel): Promise<void> => {
     disableLoadMore.value = true;
     return;
   }
-  for (let i = 0; i < data.length; i++)
-    data[i] = transformDate(data[i]);
+  for (let i = 0; i < data.length; i++) data[i] = transformDate(data[i]);
   store.$patch({
     currentChat: {
       messages: [...data, ...store.currentChat?.messages!],
@@ -147,8 +146,7 @@ const loadPrivateMessages = async (conv: Conversation): Promise<void> => {
     disableLoadMore.value = true;
     return;
   }
-  for (let i = 0; i < data.length; i++)
-    data[i] = transformDate(data[i]);
+  for (let i = 0; i < data.length; i++) data[i] = transformDate(data[i]);
   store.$patch({
     currentChat: {
       messages: [...data, ...store.currentChat?.messages!],
@@ -200,5 +198,28 @@ onMounted(() => {
       }
     });
   }
+  watch(
+    () => socketLocal.value,
+    () => {
+      if (!socketLocal.value?.hasListeners("updateChannelMembers")) {
+        socketLocal.value?.on("updateChannelMembers", async (channelId: number) => {
+          if (store.currentChat && isChannel(store.currentChat) && channelId === store.currentChat.id) {
+            await fetchJSONDatas("api/chat/members", "POST", {
+              id: store.currentChat!.id,
+            })
+              .then((data) => {
+                store.currentChat?.messages?.forEach((msg) => {
+                  if (!data.find((member: any) => member.nickname === msg.author)) msg.author = "UNKNOWN";
+                });
+                store.$patch({
+                  currentChat: { members: data },
+                });
+              })
+              .catch(() => {});
+          }
+        });
+      }
+    }
+  );
 });
 </script>

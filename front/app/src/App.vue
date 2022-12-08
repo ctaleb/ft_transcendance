@@ -153,34 +153,14 @@ function showFailure(show: boolean) {
 }
 
 onMounted(() => {
-  // watch(
-  //   () => route.path,
-  //   (currentValue, oldValue) => {
-  //     store.$patch({
-  //       currentChat: undefined,
-  //     });
-  //     if (currentValue != "/game") store.socket?.emit("watchPath");
-
-  //     if (localStorage.getItem("token") && profileNotificationBadge.value === false) {
-  //       fetch("http://" + window.location.hostname + ":3000/api/friendship/has-invitations", {
-  //         method: "GET",
-  //         headers: {
-  //           Authorization: "Bearer " + localStorage.getItem("token"),
-  //         },
-  //       })
-  //         .then((res) => {
-  //           return res.json();
-  //         })
-  //         .then((data) => {
-  //           profileNotificationBadge.value = data;
-  //         })
-  //         .catch((err) => {
-  //           console.log(err);
-  //           profileNotificationBadge.value = false;
-  //         });
-  //     }
-  //   }
-  // );
+  watch(
+    () => route.path,
+    (currentValue, oldValue) => {
+      store.$patch({
+        currentChat: undefined,
+      });
+    }
+  );
 
   watch(
     () => socketLocal.value,

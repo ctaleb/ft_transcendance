@@ -193,15 +193,4 @@ export class FriendshipService {
     if (status) return true;
     return false;
   }
-
-  async hasPendingInvitations(username: string) {
-    //   const user: UserEntity = await this._userService.getUserByNickname(
-    //     username,
-    //   );
-    //   return (await this.findInvitationsOf(user)).length === 0 ? false : true;
-    // } catch (error) {
-    //   console.log(error);
-    // }
-    return false;
-  }
 }
