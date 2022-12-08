@@ -342,7 +342,7 @@ export class ServerService {
   PlayerToSocket(username: string) {
     const player = this.userList.find((element) => element.name === username);
     if (player) return player.socket;
-    return;
+    return undefined;
   }
 
   async summarize(game: Game, elo: number) {
@@ -398,6 +398,7 @@ export class ServerService {
           client: { nickname: name },
         },
       ],
+      order: { createdAt: 'DESC' },
     });
   }
 

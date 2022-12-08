@@ -1,32 +1,36 @@
 <template>
-  <div>
-    <nav class="navbar" v-if="$route.path != '/' && $route.path != '/signup'">
-      <img src="./assets/navbarLogo.gif" width="85" height="85" alt="" />
-      <div class="links">
-        <router-link to="/profile" class="link">Profile </router-link>
-        <router-link to="/game" class="link"> PLAY </router-link>
-        <router-link to="/chat" class="link">Chat</router-link>
-        <router-link to="/" class="link" v-on:click.prevent="logout()">Logout</router-link>
+  <ChatContextMenu />
+  <div @click="hideUserMenu()">
+    <div>
+      <nav class="navbar" v-if="$route.path != '/' && $route.path != '/signup'">
+        <img src="./assets/navbarLogo.gif" width="85" height="85" alt="" />
+        <div class="links">
+          <router-link to="/profile" class="link">Profile </router-link>
+          <router-link to="/game" class="link"> PLAY </router-link>
+          <router-link to="/chat" class="link">Chat</router-link>
+          <router-link to="/" class="link" v-on:click.prevent="logout()">Logout</router-link>
+        </div>
+      </nav>
+      <router-view :key="$route.fullPath" />
+      <div v-if="gameConfirmation" class="overlay">
+        <GameConfirmation @confirmGame="confirmGame()" @denyGame="denyGame()"></GameConfirmation>
       </div>
-    </nav>
-    <router-view :key="$route.fullPath" />
-    <div v-if="gameConfirmation" class="overlay">
-      <GameConfirmation @confirmGame="confirmGame()" @denyGame="denyGame()"></GameConfirmation>
-    </div>
-    <div v-if="customInvitation" class="overlay">
-      <CustomInvitation :inviter="invSender" @acceptCustom="acceptCustom()" @denyCustom="denyCustom()"></CustomInvitation>
-    </div>
-    <div v-if="failedInvitation" class="overlay">
-      <FailedInvitation @invFailure="invFailure()"></FailedInvitation>
-    </div>
-    <div class="alertFlex">
-      <AlertCard v-for="message of alertMessages" :message="message" />
+      <div v-if="customInvitation" class="overlay">
+        <CustomInvitation :inviter="invSender" @acceptCustom="acceptCustom()" @denyCustom="denyCustom()"></CustomInvitation>
+      </div>
+      <div v-if="failedInvitation" class="overlay">
+        <FailedInvitation @invFailure="invFailure()"></FailedInvitation>
+      </div>
+      <div class="alertFlex">
+        <AlertCard v-for="message of alertMessages" :message="message" />
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { addAlertMessage, trySetupUser, updateStatus } from "@/functions/funcs";
+import { addAlertMessage, trySetupUser, updateStatus, hideUserMenu } from "@/functions/funcs";
+import ChatContextMenu from "@/components/chat/ChatContextMenu.vue";
 import { socketLocal, useStore } from "@/store";
 import { Channel, isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
@@ -149,34 +153,14 @@ function showFailure(show: boolean) {
 }
 
 onMounted(() => {
-  // watch(
-  //   () => route.path,
-  //   (currentValue, oldValue) => {
-  //     store.$patch({
-  //       currentChat: undefined,
-  //     });
-  //     if (currentValue != "/game") store.socket?.emit("watchPath");
-
-  //     if (localStorage.getItem("token") && profileNotificationBadge.value === false) {
-  //       fetch("http://" + window.location.hostname + ":3000/api/friendship/has-invitations", {
-  //         method: "GET",
-  //         headers: {
-  //           Authorization: "Bearer " + localStorage.getItem("token"),
-  //         },
-  //       })
-  //         .then((res) => {
-  //           return res.json();
-  //         })
-  //         .then((data) => {
-  //           profileNotificationBadge.value = data;
-  //         })
-  //         .catch((err) => {
-  //           console.log(err);
-  //           profileNotificationBadge.value = false;
-  //         });
-  //     }
-  //   }
-  // );
+  watch(
+    () => route.path,
+    (currentValue, oldValue) => {
+      store.$patch({
+        currentChat: undefined,
+      });
+    }
+  );
 
   watch(
     () => socketLocal.value,
