@@ -84,8 +84,8 @@ export class ServerService {
         RoomList: [],
       },
     };
-    this.userList.push(newUser);
     this.updateStatus(newUser.id, 'online');
+    this.userList.push(newUser);
   }
 
   //status stuff
