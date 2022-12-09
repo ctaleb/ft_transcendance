@@ -32,11 +32,15 @@
   .chat-window-header {
     display: flex;
     position: relative;
-    //height: 10%;
+    height: 5%;
     width: 100%;
     color: $chat-primary-color;
     border-bottom: solid $primary;
     align-items: center;
+    @include screen-md {
+      height: 8%;
+      padding: 4px 0 4px 0;
+    }
 
     button {
       background: none;
@@ -46,24 +50,28 @@
     }
 
     .chat-window-header-info {
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
-      align-items: center;
       padding: 0 5%;
       width: 100%;
       height: 100%;
-      @include screen-md {
+      display: flex;
+      flex-direction: row;
+
+      div {
+        width: 100%;
+        height: 100%;
+        display: flex;
         flex-direction: row;
+        justify-content: flex-start;
         align-items: center;
-        justify-content: space-around;
       }
+
       h2 {
-        margin: 0;
+        margin: 0 8px 0 0;
       }
       i {
-        margin-left: auto;
+        //margin-left: auto;
         color: $primary;
+        margin-left: auto;
         --ggs: 1.3;
         &:hover {
           cursor: pointer;
@@ -78,7 +86,7 @@
     }
   }
   .chat-body {
-    height: 90%;
+    height: 95%;
     width: 100%;
     display: flex;
     flex-direction: row;
@@ -197,6 +205,16 @@
     }
     .channel-info {
       width: 15%;
+      @include screen-md {
+        z-index: 1;
+        width: 100%;
+        left: 0;
+        -webkit-backdrop-filter: blur(15px); /* assure la compatibilité avec safari */
+        backdrop-filter: blur(25px);
+        background-color: rgba(24, 26, 28, 0.482);
+        position: absolute;
+        overflow-y: scroll;
+      }
       .channel-options {
         .button {
           width: 100%;

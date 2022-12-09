@@ -1,10 +1,12 @@
 <template>
   <div class="chat-window-header">
     <div class="chat-window-header-info">
-        <h2>{{ title }}</h2>
-        <p>{{ detail }}</p>
-        <p v-if="!isChannel(store.currentChat!)" style="color: green">{{(<Conversation>store.currentChat!).other.status}}</p>
-      <i class="gg-more-o" v-if="isChannel(store.currentChat!)" @click="$emit('toggleChannelInfo')"></i>
+		<div>
+			<h2>{{ title }}</h2>
+			<p>{{ detail }}</p>
+			<p v-if="!isChannel(store.currentChat!)" style="color: green">{{(<Conversation>store.currentChat!).other.status}}</p>
+			<i class="gg-more-o" v-if="isChannel(store.currentChat!)" @click="$emit('toggleChannelInfo')"></i>
+		</div>
     </div>
   </div>
 </template>
