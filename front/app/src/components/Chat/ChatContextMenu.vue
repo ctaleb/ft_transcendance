@@ -1,12 +1,18 @@
 <template>
   <div @click="hideUserMenu()" class="contextMenu" v-if="menu.view" v-bind:style="{ top: menu.top.toString() + 'px', left: menu.left.toString() + 'px' }">
-    <div class="name">{{ menu.user!.nickname }}</div>
-    <div class="status">{{ menu.user!.status }}</div>
-    <button @click="watchProfile()">Profile</button>
-    <button v-if="menu.user!.status == 'inGame'" @click="spectateGame()">Spectate</button>
-    <button v-else-if="menu.user!.status == 'online'" @click="inviteCustom()">Invite</button>
-    <button v-if="!isBlocked" @click="block()">Block</button>
-    <button v-else title="Unblock user" @click="unblock()">Unblock</button>
+    <div class="header">
+      <div class="name">{{ menu.user!.nickname }}</div>
+      <div class="status">
+        <i class="gg-shape-rhombus"></i>
+        {{ menu.user!.status }}
+      </div>
+    </div>
+    <hr />
+    <button class="button" @click="watchProfile()">Profile</button>
+    <button class="button" v-if="menu.user!.status == 'inGame'" @click="spectateGame()">Spectate</button>
+    <button class="button" v-else-if="menu.user!.status == 'online'" @click="inviteCustom()">Invite</button>
+    <button class="button" v-if="!isBlocked" @click="block()">Block</button>
+    <button class="button" v-else title="Unblock user" @click="unblock()">Unblock</button>
     <button
       v-if="menu.requester && menu.requester!.role !== ChannelRole.MEMBER && (<ChannelUser>menu.user)!.role === ChannelRole.MEMBER"
       @click="showMuteModal = true"
@@ -142,7 +148,8 @@ const takeAdmin = async (member: ChannelUser): Promise<void> => {
 <style lang="scss" scoped>
 @import "@/styles/variables";
 .contextMenu {
-  background-color: $background;
+  background-color: rgb(48, 48, 68);
+  border-radius: 10px;
   z-index: 50;
   position: absolute;
   display: flex;
@@ -150,25 +157,42 @@ const takeAdmin = async (member: ChannelUser): Promise<void> => {
   text-align: center;
   justify-content: center;
   flex-direction: column;
-  width: 60px;
+  padding: 10px;
 
+  hr {
+    margin: 0;
+    width: 95%;
+    border: 1px solid $primary;
+    margin-bottom: 2px;
+  }
+  .button {
+    width: 100%;
+    height: 2%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: none;
+    &:hover {
+      background: rgb(85, 85, 114);
+    }
+  }
   .name {
     color: $primary;
   }
-  .status {
+  .header {
     color: $victory;
-  }
-  button {
-    background-color: $background;
-    color: $primary;
-    border: 1px solid lighten($background, 20%);
-    height: 20px;
-    width: 60px;
-    transition: all 0.5s ease;
-
-    &:hover {
-      background-color: lighten($background, 20%);
-      border: 1px solid $primary;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    width: 80%;
+    .status {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-left: 5px;
+      i {
+        --ggs: 0.6;
+      }
     }
   }
 }

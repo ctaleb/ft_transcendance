@@ -194,7 +194,11 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
+@import "../../styles/mixins/sizes";
 .menuBottomButtons {
+  @include screen-md {
+    display: none;
+  }
   width: 100%;
   display: flex;
   flex-direction: column;

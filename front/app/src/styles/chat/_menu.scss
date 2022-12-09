@@ -1,6 +1,9 @@
 @import "../variables";
 
 #chat {
+  @include screen-md {
+    flex-wrap: wrap;
+  }
   .chat-menu {
     display: flex;
     flex-direction: column;
@@ -11,8 +14,18 @@
     border-right: 1px solid $primary;
     overflow-x: hidden;
     overflow-y: auto;
+    @include screen-md {
+      width: 100%;
+      flex-direction: row;
+      height: 70px;
+      overflow-x: scroll;
+      align-items: center;
+    }
 
     ul {
+      @include screen-md {
+        flex-direction: row;
+      }
       list-style-type: none;
       padding: 0;
       margin: 0;

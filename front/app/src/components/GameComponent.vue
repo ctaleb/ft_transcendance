@@ -779,6 +779,9 @@ const customInvitation = () => {};
     justify-content: space-around;
     z-index: 1;
     width: 40%;
+    overflow-y: hidden;
+    overflow-x: hidden;
+    padding: 25px;
     //height: 50% !important;
     margin-top: 0;
     @include screen-xl {
