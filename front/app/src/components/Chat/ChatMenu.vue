@@ -2,6 +2,7 @@
   <div class="chat-menu">
     <CollapseList :toggleMode="true" title="Conversations" :data="convs" v-slot="{ element }: { element: Conversation }">
       <ChatMenuItem
+        @contextmenu.prevent="showUserMenu($event, element.other)"
         @set-current-chat-window="setCurrentChatWindow(element)"
         :title="Conversation.getName(element)"
         :picture="Conversation.getAvatar(element)"
@@ -12,6 +13,7 @@
     </CollapseList>
     <CollapseList :toggleMode="false" title="Friends" :data="friends" v-slot="{ element }: { element: User }">
       <ChatMenuItem
+        @contextmenu.prevent="showUserMenu($event, element)"
         @click="createConversation(element)"
         :title="User.getName(element)"
         :picture="User.getAvatar(element)"
@@ -83,8 +85,8 @@ const joiningNewPrivateChannel = (channel: any) => {
 
 const joiningNewChannel = (channel: any) => {
   const data: Channel = channel;
-  props.channels.push(data);
   socketLocal.value?.emit("joinChannelRoom", { id: data.id });
+  props.channels.push(data);
   showAllChannelsModal.value = false;
 };
 
@@ -112,7 +114,7 @@ const setCurrentChatWindow = async (target: Channel | Conversation) => {
         });
       });
   } else {
-    const conversation = <Conversation>target;
+    const conversation: Conversation = <Conversation>target;
     await fetchJSONDatas(`api/privateConv/getMessages/${conversation.id}/0`, "GET")
       .then((data) => {
         if (data.length > 0) conversation.messages = data;
@@ -130,6 +132,10 @@ const setCurrentChatWindow = async (target: Channel | Conversation) => {
   }
 };
 
+store.$subscribe((mutation, state) => {
+  friends.value = store.user?.friends?.filter((user) => !props.convs.find((conv) => conv.other.id === user.id));
+});
+
 onMounted(() => {
   watch(
     () => props.convs,
@@ -137,6 +143,29 @@ onMounted(() => {
       friends.value = store.user?.friends?.filter((user) => !props.convs.find((conv) => conv.other.id === user.id));
     }
   );
+  if (!socketLocal.value?.hasListeners("friendTooConv")) {
+    socketLocal.value?.on("friendTooConv", async (friendId: number) => {
+      const data = await fetchJSONDatas(`api/privateConv/create/${friendId}`, "GET").catch(() => {});
+      props.convs.unshift(data.conv);
+      friends.value = store.user?.friends?.filter((user) => !props.convs.find((conv) => conv.other.id === user.id));
+    });
+  }
+  if (!socketLocal.value?.hasListeners("Update conv list")) {
+    socketLocal.value?.on("Update conv list", (convData: { conv: Conversation }) => {
+      const convIndex = props.convs.findIndex((conv) => conv.id === convData.conv.id);
+      const convToTop = props.convs.splice(convIndex, 1)[0];
+      props.convs.splice(0, 0, convToTop);
+      friends.value = store.user?.friends?.filter((user) => !props.convs.find((conv) => conv.other.id === user.id));
+    });
+  }
+  if (!socketLocal.value?.hasListeners("channelUpdatd")) {
+    socketLocal.value?.on("channelUpdatd", (data: { id: number; name: string; type: ChannelType }) => {
+      const index = props.channels.findIndex((el) => el.id === data.id);
+      if (index !== -1) {
+        props.channels[index].type = data.type;
+      }
+    });
+  }
   watch(
     () => socketLocal.value,
     () => {

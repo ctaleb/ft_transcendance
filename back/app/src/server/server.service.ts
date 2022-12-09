@@ -338,6 +338,7 @@ export class ServerService {
           client: { nickname: name },
         },
       ],
+      order: { createdAt: 'DESC' },
     });
   }
 

@@ -23,14 +23,13 @@
 
 <script setup lang="ts">
 import { addAlertMessage, fetchJSONDatas } from "@/functions/funcs";
-import { useStore } from "@/store";
+import { socketLocal, useStore } from "@/store";
 import { Channel, ChannelType } from "@/types/Channel";
 import { ref } from "vue";
 
 const emits = defineEmits(["closeChannelModal", "createNewChannel"]);
 
 const store = useStore();
-let socket = store.socket;
 
 const channelName = ref("");
 const picked = ref("public");
@@ -48,16 +47,12 @@ const createChannel = async (): Promise<void> => {
   })
     .then((data: Channel) => {
       emits("createNewChannel", data);
-      socket?.emit("joinChannelRoom", { id: data.id });
+      socketLocal.value?.emit("joinChannelRoom", { id: data.id });
       addAlertMessage("Channel successfully created", 1);
       emits("closeChannelModal");
     })
     .catch(() => {});
 };
-
-store.$subscribe((mutation, state) => {
-  socket = state.socket;
-});
 </script>
 
 <style lang="scss" scoped>

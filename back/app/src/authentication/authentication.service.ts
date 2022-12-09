@@ -16,7 +16,6 @@ export class AuthenticationService {
   constructor(private readonly _userService: UserService, private readonly _dataSource: DataSource, private jwtService: JwtService) {}
 
   async registration(registrationDto: RegistrationDto, imageDto: ImageDto): Promise<UserEntity> {
-    console.log(imageDto);
     let user: UserEntity;
     const queryRunner = this._dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -27,11 +26,9 @@ export class AuthenticationService {
       await queryRunner.commitTransaction();
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      console.log(error);
       if (imageDto && imageDto.filename != 'pizz.jpeg') {
         unlink(imageDto.path, (err) => {
           if (err) throw err;
-          console.log(imageDto.path + ' has been deleted');
         });
       }
       if (error?.code === PostgresErrorCode.UniqueViolation) {

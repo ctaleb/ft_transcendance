@@ -16,7 +16,7 @@ const store = useStore();
 const me: Ref<ChannelUser> = ref((<Channel>store.currentChat!).members!.find((member) => member.id === store.user!.id)!);
 
 store.$subscribe((mutation, state) => {
-  me.value = (<Channel>store.currentChat!).members!.find((member) => member.id === store.user!.id)!;
+  if ((<Channel>state.currentChat)?.members) me.value = (<Channel>store.currentChat!).members!.find((member) => member.id === store.user!.id)!;
 });
 
 onMounted(() => {

@@ -1,6 +1,6 @@
 import config from "@/config/config";
-import { currentUserProfile, menu, socketLocal, useStore } from "@/store";
-import { Channel, isChannel } from "@/types/Channel";
+import { currentUserProfile, menu, privateConvs, socketLocal, useStore } from "@/store";
+import { Channel, ChannelUser, isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
 import { Alert } from "@/types/GameSummary";
 import { User } from "@/types/User";
@@ -9,7 +9,6 @@ import { io, Socket } from "socket.io-client";
 import { markRaw, shallowReactive } from "vue";
 
 export async function isConnected(token: string): Promise<boolean> {
-  // console.log(token);
   if (token == "" || token == null) return false;
   let ret = await fetchJSONDatas("api/user/profile", "GET")
     .then(() => {
@@ -68,7 +67,6 @@ export async function fetchBlobDatas(path: string, method: "GET" | "PUT" | "POST
     })
     .catch(async (err: Response) => {
       let message = await getErrorMessage(err);
-      console.log(message);
       return Promise.reject(message);
     });
 }
@@ -124,21 +122,22 @@ export function addAlertMessage(message: string, type: number, second: number = 
 export function updateStatus(id: number, status: string) {
   const store = useStore();
 
-  if (currentUserProfile.value && currentUserProfile.value.id == id) {
+  if (currentUserProfile.value && currentUserProfile.value.id === id) {
     currentUserProfile.value.status = status;
   }
   let user = store.user?.friends?.find((element) => element.id === id);
   if (user) user.status = status;
   user = store.user?.invitations?.find((element) => element.id === id);
   if (user) user.status = status;
+  user = privateConvs.value.find((element) => element.other.id === id)?.other;
+  if (user) user.status = status;
   if (store.currentChat && isChannel(store.currentChat)) {
     user = (<Channel>store.currentChat)?.members?.find((element) => element.id === id);
     if (user) user.status = status;
-  } else if (store.currentChat) if ((<Conversation>store.currentChat)?.other?.id == id) (<Conversation>store.currentChat)!.other.status = status;
-  if (user?.id == id) user.status = status;
+  }
 }
 
-export const showUserMenu = (event: any, user: User) => {
+export const showUserMenu = (event: any, user: User, requester?: ChannelUser) => {
   const store = useStore();
   if (store.user?.id && user.id != store.user?.id) {
     const largestHeight: number = window.innerHeight - 30;
@@ -150,6 +149,7 @@ export const showUserMenu = (event: any, user: User) => {
     if (menu.value.left > largestWidth) menu.value.left = largestWidth;
     menu.value.user = user;
     menu.value.view = true;
+    menu.value.requester = requester;
   }
 };
 

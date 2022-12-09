@@ -8,8 +8,8 @@
         <label for="0">unban</label>
       </div>
       <div>
-        <input type="radio" name="0.05" value="0.05" v-model="picked" />
-        <label for="0.05">some min</label>
+        <input type="radio" name="12" value="12" v-model="picked" />
+        <label for="12">12 h</label>
       </div>
       <div>
         <input type="radio" name="24" value="24" v-model="picked" />
@@ -43,7 +43,7 @@
 <script setup lang="ts">
 import ChannelInModal from "@/components/chat/modals/ChannelInModal.vue";
 import { addAlertMessage, fetchJSONDatas } from "@/functions/funcs";
-import { useStore } from "@/store";
+import { socketLocal, useStore } from "@/store";
 import { Channel, ChannelUser } from "@/types/Channel";
 import { memberExpression, numberLiteralTypeAnnotation } from "@babel/types";
 import { onMounted, ref, Ref } from "vue";
@@ -57,13 +57,8 @@ const emits = defineEmits<{
 }>();
 
 const store = useStore();
-let socket = store.socket;
 
 const picked = ref(0);
-
-store.$subscribe((mutation, state) => {
-  socket = state.socket;
-});
 
 const ban = async () => {
   await fetchJSONDatas("api/chat/ban", "POST", {
@@ -73,10 +68,14 @@ const ban = async () => {
   })
     .then(() => {
       if (+picked.value == 0) {
-        socket?.emit("memberGotUnbanned", { id: store.currentChat?.id, channel: (<Channel>store.currentChat)?.name, nickname: props.member.nickname });
+        socketLocal.value?.emit("memberGotUnbanned", {
+          id: store.currentChat?.id,
+          channel: (<Channel>store.currentChat)?.name,
+          nickname: props.member.nickname,
+        });
         addAlertMessage(`${props.member.nickname} has successfully been unbanned`, 1);
       } else {
-        socket?.emit("memberGotBanned", { id: store.currentChat?.id, channel: (<Channel>store.currentChat)?.name, nickname: props.member.nickname });
+        socketLocal.value?.emit("memberGotBanned", { id: store.currentChat?.id, channel: (<Channel>store.currentChat)?.name, nickname: props.member.nickname });
         addAlertMessage(`${props.member.nickname} has successfully been banned`, 1);
       }
       emits("closeBanModal");

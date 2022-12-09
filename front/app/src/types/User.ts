@@ -1,7 +1,8 @@
-import { fetchJSONDatas } from "@/functions/funcs";
+import { addAlertMessage, fetchJSONDatas } from "@/functions/funcs";
+import { socketLocal, useStore } from "@/store";
 import { Channel, isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
-import { storeToRefs } from "pinia";
+import { Router } from "vue-router";
 
 export interface User {
   id: number;
@@ -36,8 +37,72 @@ export namespace User {
   }
 
   export async function createConversation(other: User): Promise<void> {
-    let data = await fetchJSONDatas(`api/privateConv/create/${other.id}`, "GET");
+    const data = await fetchJSONDatas(`api/privateConv/create/${other.id}`, "GET");
     return data;
+  }
+
+  export async function block(user?: User) {
+    if (user) {
+      return await fetchJSONDatas("api/friendship/block", "PUT", { addressee: user.nickname })
+        .then(() => {
+          addAlertMessage("The user has been blocked", 2);
+          return true;
+        })
+        .catch(() => {
+          return false;
+        });
+    }
+  }
+
+  export async function unfriend(user?: User) {
+    if (user) {
+      return await fetchJSONDatas("api/friendship/unfriend", "DELETE", { addressee: user.nickname })
+        .then(() => {
+          addAlertMessage("The user has been removed from friend list", 2);
+          return true;
+        })
+        .catch(() => {
+          return false;
+        });
+    }
+  }
+
+  export async function unblock(user?: User) {
+    if (user) {
+      return await fetchJSONDatas("api/friendship/unblock", "PUT", { addressee: user.nickname })
+        .then(() => {
+          addAlertMessage("The user has been unblocked", 2);
+          return true;
+        })
+        .catch(() => {
+          return false;
+        });
+    }
+  }
+
+  export function spectateGame(router: Router, user?: User) {
+    if (user) {
+      socketLocal.value?.emit("spectate", { friend: user.nickname }, (response: string) => {
+        if (response == "inGame") {
+          router.push("/game");
+          socketLocal.value?.emit("readySpectate", { friend: user.nickname });
+        }
+      });
+    }
+  }
+
+  export function inviteCustom(router: Router, user?: User) {
+    if (user) {
+      let accepted = "yes";
+      socketLocal.value?.emit("customInvite", { friend: user.nickname }, (response: string) => {
+        if (response != "accepted") {
+          accepted = "no";
+        }
+      });
+      if (accepted === "no") return;
+      router.push("/game");
+      socketLocal.value?.emit("settingsInviter", { friend: user.nickname });
+    }
   }
 }
 

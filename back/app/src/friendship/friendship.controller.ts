@@ -48,11 +48,6 @@ export class FriendshipController {
     return await this._friendshipService.getRelationsOf(name);
   }
 
-  @Get('has-invitations')
-  async hasInvitations(@Request() req) {
-    return await this._friendshipService.hasPendingInvitations(req.user.payload.nickname);
-  }
-
   @Get('isBlocked/:id')
   async isBlocked(@Request() req, @Param('id', ParseIntPipe) id: number) {
     return await this._friendshipService.getBlockedStatus(req.user.payload.id, id);

@@ -47,12 +47,10 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     const user = this.serverService.userList.find((element) => element.name === hsNick);
     if (user && user.token === hsToken) {
       user.socket = client;
-      console.log(user.name + ' rejoining ' + user.status);
       this.serverService.reconnect(user);
     } else {
       this.serverService.newUser(hsToken, hsNick, client);
     }
-    console.log('Socket ' + client.id + ' successfully connected');
     // New stuff
     this.serverService.joinAllChannels(client, client.handshake.auth.user.id);
   }
@@ -271,10 +269,7 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   spectate(@MessageBody('friend') friend: string, @ConnectedSocket() client: Socket) {
     let response = 'na';
     this.serverService.games.forEach((element) => {
-      console.log(element.host.name);
-      console.log(element.client.name);
-      console.log(friend);
-      if (element.client.name == friend || element.host.name == friend) response = 'ingame';
+      if (element.client.name == friend || element.host.name == friend) response = 'inGame';
     });
     return response;
   }
@@ -321,7 +316,6 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   }
   @SubscribeMessage('readyInviter')
   readyInviter(@MessageBody('gameOpts') gameOpts: GameOptions, @MessageBody('power') power: string, @ConnectedSocket() client: Socket) {
-    console.log('inviter is ready');
     const usr = this.serverService.SocketToPlayer(client);
     if (!usr) return;
     const game = this.serverService.games.find((element) => element.host === usr);
@@ -363,7 +357,6 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   }
   @SubscribeMessage('readyInvitee')
   readyInvitee(@MessageBody('power') power: string, @ConnectedSocket() client: Socket) {
-    console.log('invitee is ready');
     const usr = this.serverService.SocketToPlayer(client);
     if (!usr) return;
     const game = this.serverService.games.find((element) => element.client === usr);
@@ -450,7 +443,8 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
 
   @SubscribeMessage('friendToConv')
   friendToConv(@ConnectedSocket() client: Socket, @MessageBody('target') nickname: string) {
-    this.server.to(this.serverService.PlayerToSocket(nickname).id).emit('friendTooConv', client.handshake.auth.user.id);
+    const target = this.serverService.PlayerToSocket(nickname);
+    if (target) this.server.to(target.id).emit('friendTooConv', client.handshake.auth.user.id);
   }
 
   @SubscribeMessage('updateChannelMembers')
@@ -476,7 +470,8 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
 
   @SubscribeMessage('privateChannelInvite')
   async privateChannelInvite(@ConnectedSocket() client: Socket, @MessageBody('nickname') nickname: string, @MessageBody('channel') channel: string) {
-    this.server.to(this.serverService.PlayerToSocket(nickname).id).emit('incomingChannelInvitation', channel);
+    const target = this.serverService.PlayerToSocket(nickname);
+    if (target) this.server.to(target.id).emit('incomingChannelInvitation', channel);
   }
 
   @SubscribeMessage('friendship-invite')
@@ -488,8 +483,9 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     @MessageBody('requester') requester: string,
   ) {
     const friendship = await this.friendshipService.findFriendship(id, addresseeId);
-    if (friendship && friendship.status === 'invitation' && friendship.addresseeId === addresseeId) {
-      this.server.to(this.serverService.PlayerToSocket(target).id).emit('friendshipInvite', requester);
+    const socket = this.serverService.PlayerToSocket(target);
+    if (socket && friendship && friendship.status === 'invitation' && friendship.addresseeId === addresseeId) {
+      this.server.to(socket.id).emit('friendshipInvite', requester);
     }
   }
 
@@ -502,8 +498,9 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     @MessageBody('requester') requester: string,
   ) {
     const friendship = await this.friendshipService.findFriendship(id, addresseeId);
-    if (friendship && friendship.status === 'friend') {
-      this.server.to(this.serverService.PlayerToSocket(target).id).emit('acceptInvite', requester);
+    const socket = this.serverService.PlayerToSocket(target);
+    if (socket && friendship && friendship.status === 'friend') {
+      this.server.to(socket.id).emit('acceptInvite', requester);
     }
   }
 
@@ -516,8 +513,9 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     @MessageBody('requester') requester: string,
   ) {
     const friendship = await this.friendshipService.findFriendship(id, addresseeId);
-    if (!friendship) {
-      this.server.to(this.serverService.PlayerToSocket(target).id).emit('removeFriend', requester);
+    const socket = this.serverService.PlayerToSocket(target);
+    if (socket && !friendship) {
+      this.server.to(socket.id).emit('removeFriend', requester);
     }
   }
 
@@ -528,7 +526,7 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     @MessageBody('channel') channel: string,
     @MessageBody('nickname') nickname: string,
   ) {
-    const targetSocket: Socket = this.serverService.PlayerToSocket(nickname);
+    const targetSocket = this.serverService.PlayerToSocket(nickname);
     if (targetSocket) {
       targetSocket.leave(`${id}`);
       this.server.to(targetSocket.id).emit('gotBannedFromChannel', channel);
@@ -542,7 +540,7 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     @MessageBody('channel') channel: string,
     @MessageBody('nickname') nickname: string,
   ) {
-    const targetSocket: Socket = this.serverService.PlayerToSocket(nickname);
+    const targetSocket = this.serverService.PlayerToSocket(nickname);
     if (targetSocket) {
       targetSocket.join(`${id}`);
       this.server.to(targetSocket.id).emit('gotUnbannedFromChannel', channel);
