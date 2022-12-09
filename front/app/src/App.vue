@@ -31,7 +31,7 @@
 <script setup lang="ts">
 import { addAlertMessage, trySetupUser, updateStatus, hideUserMenu } from "@/functions/funcs";
 import ChatContextMenu from "@/components/chat/ChatContextMenu.vue";
-import { socketLocal, useStore } from "@/store";
+import { currentUserProfile, privateConvs, socketLocal, useStore } from "@/store";
 import { Channel, isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
 import { Alert } from "@/types/GameSummary";
@@ -136,9 +136,6 @@ const logout = () => {
   socketLocal.value?.emit("disco", {});
   socketLocal.value?.close();
 };
-// const changeNotificationValue = (value: boolean) => {
-//   profileNotificationBadge.value = value;
-// };
 
 function showConfirmation(show: boolean) {
   gameConfirmation.value = show;
@@ -155,16 +152,19 @@ function showFailure(show: boolean) {
 onMounted(() => {
   watch(
     () => route.path,
-    (currentValue, oldValue) => {
-      store.$patch({
-        currentChat: undefined,
-      });
+    () => {
+      if (route.path != "/chat") {
+        privateConvs.value = [];
+        store.$patch({
+          currentChat: undefined,
+        });
+      }
     }
   );
 
   watch(
     () => socketLocal.value,
-    (currentValue, oldValue) => {
+    () => {
       if (!socket.value?.hasListeners("updateOneUserStatus")) {
         socket.value?.on("updateOneUserStatus", (obj: { id: number; status: string }) => {
           updateStatus(obj.id, obj.status);
@@ -225,7 +225,7 @@ onMounted(() => {
       if (!socketLocal?.value?.hasListeners("Message to the client")) {
         socketLocal?.value?.on("Message to the client", async (privateMessage: Message) => {
           if (!isChannel(store.currentChat!) && privateMessage.author === (<Conversation>store.currentChat)?.other.nickname) {
-            store.currentChat?.messages?.push(privateMessage);
+            store.currentChat?.messages?.push(transformDate(privateMessage));
           } else {
             addAlertMessage(`New message from ${privateMessage.author}`, 1);
           }

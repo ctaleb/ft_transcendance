@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { instanceToPlain } from 'class-transformer';
 import { PrivateMessageEntity } from 'src/private_conv/entities/privateMessage.entity';
 import { UserEntity } from 'src/user/user.entity';
@@ -40,6 +40,8 @@ export class PrivateConvService {
   }
 
   async createConv(user1Id: number, user2Id: number): Promise<PrivateConvEntity> {
+    if (user1Id === user2Id)
+      throw new BadRequestException("Can't create conversation with yourself");
     const ToSave = PrivateConvEntity.create({
       user1: { id: user1Id },
       user2: { id: user2Id },
