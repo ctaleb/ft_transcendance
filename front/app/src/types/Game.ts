@@ -1,3 +1,5 @@
+import { User } from "@/types/User";
+
 export interface IPoint {
   x: number;
   y: number;
@@ -71,6 +73,7 @@ export interface GameRoom {
   name: string;
   hostName: string;
   clientName: string;
+  opponent: User;
   status: string;
   kickOff: boolean;
   barCollide: boolean;

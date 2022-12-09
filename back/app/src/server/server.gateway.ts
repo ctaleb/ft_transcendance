@@ -8,6 +8,8 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
+import { instanceToPlain } from 'class-transformer';
+import { hostname } from 'os';
 import { Server, Socket } from 'socket.io';
 import { FriendshipService } from 'src/friendship/friendship.service';
 import { UserEntity } from 'src/user/user.entity';
@@ -173,11 +175,9 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   }
 
   gameLoop = (game: Game) => {
-    // this.server.to(game.room.name).emit('ServerUpdate', game.gameState);
-    game.client.socket.emit('ServerUpdate', this.serverService.inverseState(game.gameState, game));
     game.host.socket.emit('ServerUpdate', this.serverService.sendState(game.gameState, game));
+    game.client.socket.emit('ServerUpdate', this.serverService.inverseState(game.gameState, game));
     this.server.to(game.theatre.name).emit('ServerUpdate', this.serverService.sendState(game.gameState, game));
-    // this.server.to(game.room.name).emit('gameConfirmation', game.room);
 
     const loopTimer = setTimeout(() => {
       if (game.gameState.score.client >= game.room.options.scoreMax || game.gameState.score.host >= game.room.options.scoreMax) {
@@ -204,8 +204,6 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     @ConnectedSocket()
     client: Socket,
   ) {
-    // const player = this.serverService.SocketToPlayer(client);
-    // if (player && player.gameData.status != 'idle')
     this.serverService.storeInput(client, key);
   }
 
@@ -218,16 +216,22 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     const game = this.serverService.joinQueue(client, power);
     if (game) {
       this.server.to(game.room.name).emit('gameConfirmation', game.room);
-      setTimeout(() => {
+      setTimeout(async () => {
         if (game.host.gameData.status === 'ready' && game.client.gameData.status === 'ready') {
           game.room.status = 'playing';
           game.room.hostName = game.host.name;
           game.room.clientName = game.client.name;
-          this.server.to(game.room.name).emit('startGame', game.room);
+          const host = instanceToPlain(await this.userService.getUserByNickname(game.client.name));
+          game.room.opponent = host;
+          game.host.socket.emit('startGame', game.room);
+          const client = instanceToPlain(await this.userService.getUserByNickname(game.host.name));
+          game.room.opponent = client;
+          game.client.socket.emit('startGame', game.room);
+          // this.server.to(game.room.name).emit('startGame', game.room);
           this.serverService.startRound(game.room);
-          this.gameLoop(game);
           this.serverService.updateStatus(game.host.id, 'inGame');
           this.serverService.updateStatus(game.client.id, 'inGame');
+          this.gameLoop(game);
         } else {
           if (game.host.gameData.status === 'ready') {
             game.host.gameData.status = 'inQueue';

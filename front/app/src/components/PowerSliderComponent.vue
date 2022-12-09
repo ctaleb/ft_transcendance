@@ -45,9 +45,9 @@ const powers: Power[] = [
     power: "Every 10 rounds, a bigger bar during 3 hit",
   },
   {
-    name: "Shield",
+    name: "Smasher",
     image: shieldUrl,
-    power: "Every 10 rounds, your field is protected",
+    power: "Every 6 rounds, you can Smash hard",
   },
   {
     name: "Minimo",
@@ -69,6 +69,7 @@ function gotoPrev() {
   anim.value = 2;
   setTimeout(() => {
     current.value > 0 ? current.value-- : (current.value = 4);
+    emit("update:modelValue", powers[current.value].name);
   }, 750);
   setTimeout(() => {
     anim.value = 0;
@@ -79,6 +80,7 @@ function gotoNext() {
   anim.value = 1;
   setTimeout(() => {
     current.value < 4 ? current.value++ : (current.value = 0);
+    emit("update:modelValue", powers[current.value].name);
   }, 750);
   setTimeout(() => {
     anim.value = 0;

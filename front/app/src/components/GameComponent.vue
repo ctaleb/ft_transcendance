@@ -1,7 +1,7 @@
 <template>
   <section class="lobby container">
     <div class="principalSection">
-      <div class="mainContainer" :class="store.user?.status == 'online' ? '' : ' hidden'">
+      <div class="mainContainer" :class="store.user?.status != 'inQueue' ? '' : ' hidden'">
         <div>
           <power-slider-component v-model="power" id="powerSlider" />
           <div v-if="!toggleLadder">
@@ -96,9 +96,11 @@
 </template>
 
 <script setup lang="ts">
+import { fetchJSONDatas } from "@/functions/funcs";
 import { socketLocal, useStore } from "@/store";
 import { GameOptions, GameRoom, GameState, IBar, IPoint, particleSet } from "@/types/Game";
 import { GameSummaryData } from "@/types/GameSummary";
+import { getUserByNickname, User } from "@/types/User";
 import { onMounted, onUnmounted, reactive, ref, watch } from "vue";
 import ballUrl from "../assets/ball.png";
 import energyUrl from "../assets/energy.png";
@@ -144,6 +146,9 @@ fillImg.src = fillUrl;
 const fillRedImg = new Image();
 fillRedImg.src = fillRedUrl;
 
+const userImg = new Image();
+const opponentImg = new Image();
+
 const canvas = ref<HTMLCanvasElement | null>(null);
 let ctx: CanvasRenderingContext2D | null | undefined;
 let cHeight = 0;
@@ -159,8 +164,6 @@ const hostName = ref("Host");
 const clientName = ref("Client");
 const color = ref("white");
 const sumTitle = ref("Placeholder");
-// const sumDate = ref("");
-// const sumTime = ref(0);
 
 const noFriends = ref(false);
 const summary = ref(false);
@@ -216,10 +219,6 @@ const gameSummary = reactive<GameSummaryData>({
   },
   gameMode: "",
 });
-
-// function Confirmation(show: boolean) {
-//   confirmation.value = show;
-// }
 
 function showSummary(show: boolean) {
   summary.value = show;
@@ -430,6 +429,15 @@ function drawScore(ctx: CanvasRenderingContext2D, gameState: GameState) {
   }
 }
 
+function drawPlayerInfo(ctx: CanvasRenderingContext2D, gameState: GameState) {
+  ctx.drawImage(opponentImg, 100, 100, 70, 70);
+  ctx.drawImage(userImg, 100, 200, 70, 70);
+  // console.log(opponentImg);
+  // console.log(userImg);
+  // console.log(opponentImg.src);
+  // console.log(userImg.src);0
+}
+
 function drawPowerCharge(ctx: CanvasRenderingContext2D, gameState: GameState) {
   for (let i = 0; i < gameState.clientPower.currentCharge; i++) {
     ctx.drawImage(
@@ -479,24 +487,6 @@ function drawBall(ctx: CanvasRenderingContext2D, gameState: GameState) {
       gameState.ball.size * 2 * scale
     );
   }
-  // } else if (gameState.hit.hit == 2) {
-  //   ballBouncedBar = 3;
-  //   ctx.drawImage(
-  //     ballImg,
-  //     gameState.ball.pos.x - gameState.ball.size * scale,
-  //     gameState.ball.pos.y - gameState.ball.size * scale,
-  //     gameState.ball.size * 2 * scale * 0.7,
-  //     gameState.ball.size * 2 * scale
-  //   );
-  // } else if (ballBouncedBar > 0) {
-  //   ctx.drawImage(
-  //     ballImg,
-  //     gameState.ball.pos.x - gameState.ball.size * scale,
-  //     gameState.ball.pos.y - gameState.ball.size * scale,
-  //     gameState.ball.size * 2 * scale * 0.8 + 0.1 * (3 - ballBouncedBar),
-  //     gameState.ball.size * 2 * scale
-  //   );
-  //   ballBouncedBar--;}
 }
 
 function updateSummary(summary: GameSummaryData) {
@@ -579,8 +569,6 @@ onMounted(() => {
       registerSockets(socketLocal);
     }
   );
-  //needs to be moved
-  //window.removeEventListener("resize", resizeCanvas);
   window.addEventListener("resize", resizeCanvas);
 });
 
@@ -669,6 +657,8 @@ const play = () => {
 };
 
 const ServerUpdate = (gameState: GameState) => {
+  if (gameState.hit.hit) console.log(gameState);
+
   gState = gameState;
   scalePosition(gameState);
   if (theRoom) {
@@ -691,6 +681,7 @@ const ServerUpdate = (gameState: GameState) => {
       drawSmashingEffect(gameState.clientBar, cSmashingPercent, ctx);
       drawSmashingEffect(gameState.hostBar, hSmashingPercent, ctx);
       drawParticle(ctx, gameState);
+      drawPlayerInfo(ctx, gameState);
     }
   }
 };
@@ -737,10 +728,9 @@ const startGame = (gameRoom: GameRoom) => {
   theRoom = gameRoom;
   hostName.value = theRoom.hostName;
   clientName.value = theRoom.clientName;
+  userImg.src = User.getAvatar(store.user!);
+  opponentImg.src = User.getAvatar(gameRoom.opponent);
   start = new Date();
-  //   gameBoard.value = true;
-  console.log(gameBoard.value);
-  console.log(canvas.value);
   document.querySelector(".canvas")?.classList.remove("hidden");
 };
 
