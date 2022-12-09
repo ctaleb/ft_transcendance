@@ -31,11 +31,11 @@ let debugPower = false;
 const chargeMax = 1;
 const ballSize = 16;
 const defaultGameOptions: GameOptions = {
-  scoreMax: 1,
+  scoreMax: 2,
   ballSpeed: 1,
   ballSize: 1,
   barSpeed: 1,
-  barSize: 2,
+  barSize: 1,
   smashStrength: 1,
   effects: true,
   powers: true,
@@ -96,12 +96,17 @@ export class ServerService {
 
   //game stuff
   async elo_calc(winner: User, loser: User) {
-    const elo = 20;
-    winner.gameData.elo += elo;
+    const oldElo = winner.gameData.elo;
+    const Kfactor = 20;
+    const R1 = Math.pow(10, winner.gameData.elo / 300);
+    const R2 = Math.pow(10, loser.gameData.elo / 300);
+    const E1 = R1 / (R1 + R2);
+    const E2 = R2 / (R1 + R2);
+    winner.gameData.elo = Math.floor(winner.gameData.elo + Kfactor * (1 - E1));
+    loser.gameData.elo = Math.floor(loser.gameData.elo + Kfactor * (0 - E1));
     this._userService.updateElo(winner.gameData.elo, winner.id);
-    loser.gameData.elo -= elo;
     this._userService.updateElo(loser.gameData.elo, loser.id);
-    return elo;
+    return winner.gameData.elo - oldElo;
   }
 
   inverseSummary(summary: GameSummaryData) {

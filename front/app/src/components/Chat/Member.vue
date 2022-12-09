@@ -15,11 +15,10 @@
 </template>
 
 <script setup lang="ts">
-import { addAlertMessage, fetchJSONDatas, showUserMenu } from "@/functions/funcs";
-import { socketLocal, useStore } from "@/store";
+import { showUserMenu } from "@/functions/funcs";
+import { useStore } from "@/store";
 import { ChannelRole, ChannelUser } from "@/types/Channel";
 import { User } from "@/types/User";
-import { onMounted, ref, watch } from "vue";
 
 const props = defineProps<{
   member: ChannelUser;

@@ -36,8 +36,8 @@ export namespace User {
     return `http://${window.location.hostname}:3000${avatar}`;
   }
 
-  export async function createConversation(other: User): Promise<void> {
-    const data = await fetchJSONDatas(`api/privateConv/create/${other.id}`, "GET");
+  export async function createConversation(other: User): Promise<any> {
+    const data = await fetchJSONDatas(`api/privateConv/create/${other.id}`, "GET").catch(() => {});
     return data;
   }
 
