@@ -7,7 +7,8 @@
   height: calc(100vh - 101px);
   width: 100vw;
   @include screen-md {
-    height: calc(100vh - 130px);
+    flex-direction: column;
+    min-height: calc(100vh - 130px);
     align-items: flex-start;
   }
   .default-chat-window {
@@ -21,10 +22,9 @@
   .chat-window {
     width: 85%;
     @include screen-md {
-      height: calc(100vh - 200px);
       width: 100%;
+      height: 70%;
     }
-    height: 100%;
     background-color: $secondary;
     display: flex;
     flex-direction: column;
@@ -47,12 +47,15 @@
 
     .chat-window-header-info {
       display: flex;
-      flex-direction: row;
+      flex-direction: column;
       justify-content: flex-start;
       align-items: center;
       padding: 0 5%;
       width: 100%;
       height: 100%;
+      @include screen-md {
+        flex-direction: row;
+      }
       h2 {
         margin: 0;
       }
@@ -78,7 +81,7 @@
     display: flex;
     flex-direction: row;
     @include screen-md {
-      height: calc(80% - 130px);
+      //  height: calc(80% - 130px);
     }
     .chat-area {
       height: 100%;
@@ -157,7 +160,7 @@
         }
       }
       .chat-input {
-        height: 5%;
+        height: 10%;
         width: 100%;
         display: flex;
         align-items: flex-end;

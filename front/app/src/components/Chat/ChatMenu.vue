@@ -25,6 +25,11 @@
       <button class="button" @click="showChannelModal = true">Create new channel</button>
     </div>
   </div>
+  <div class="responsiveMenuBottomButtons">
+    <button class="button" @click="showAllChannelsModal = true">All Channels</button>
+    <button class="button" @click="showInvitationsModal = true">Invitations</button>
+    <button class="button" @click="showChannelModal = true">Create new channel</button>
+  </div>
   <AllChannelsModal v-if="showAllChannelsModal" @close-all-channels-modal="showAllChannelsModal = false" @join-channel="joiningNewChannel" />
   <InvitationsModal v-if="showInvitationsModal" @join-private-channel="joiningNewPrivateChannel" @close-invitations-modal="showInvitationsModal = false" />
   <ChannelCreateFormModal v-if="showChannelModal" @close-channel-modal="showChannelModal = false" @create-new-channel="createNewChannel" />
@@ -198,6 +203,7 @@ onMounted(() => {
 .menuBottomButtons {
   @include screen-md {
     display: none;
+    width: 100%;
   }
   width: 100%;
   display: flex;
@@ -205,6 +211,28 @@ onMounted(() => {
   justify-content: center;
   align-items: center;
   margin-top: auto;
+  button {
+    width: 100%;
+  }
+}
+.responsiveMenuBottomButtons {
+  @include screen-md {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow-y: scroll;
+    width: 100%;
+    height: 5%;
+  }
+  @include screen-xs {
+    width: 100%;
+    height: 5%;
+    .button {
+      widows: 30%;
+    }
+  }
+  width: 100%;
+  display: none;
   button {
     width: 100%;
   }

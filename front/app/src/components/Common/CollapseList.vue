@@ -62,6 +62,10 @@ nav {
       display: flex;
       flex-direction: row;
     }
+    li {
+      display: flex;
+      align-items: center;
+    }
   }
 }
 </style>

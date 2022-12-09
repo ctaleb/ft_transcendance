@@ -1,9 +1,6 @@
 @import "../variables";
 
 #chat {
-  @include screen-md {
-    flex-wrap: wrap;
-  }
   .chat-menu {
     display: flex;
     flex-direction: column;
@@ -17,9 +14,10 @@
     @include screen-md {
       width: 100%;
       flex-direction: row;
-      height: 70px;
+      height: 10%;
       overflow-x: scroll;
       align-items: center;
+      border: none;
     }
 
     ul {
