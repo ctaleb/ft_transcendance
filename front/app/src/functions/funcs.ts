@@ -135,6 +135,9 @@ export function updateStatus(id: number, status: string) {
     user = (<Channel>store.currentChat)?.members?.find((element) => element.id === id);
     if (user) user.status = status;
   }
+  if (store.user) {
+    if (store.user.id == id) store.user.status = status;
+  }
 }
 
 export const showUserMenu = (event: any, user: User, requester?: ChannelUser) => {
