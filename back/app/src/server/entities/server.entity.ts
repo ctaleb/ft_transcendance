@@ -162,7 +162,7 @@ export class PowerElastico extends IPower {
 
   constructor(bar: IBar, name: string) {
     super(name);
-    this.maxCharge = 7;
+    this.maxCharge = 3;
     this.timeLeft = 0;
     this.initialBarSize = bar.size.x;
     this.bar = bar;
@@ -230,7 +230,7 @@ export class PowerExhaust extends IPower {
 
   constructor(bar: IBar, name: string) {
     super(name);
-    this.maxCharge = 10;
+    this.maxCharge = 4;
     this.timeLeft = 0;
     this.initialBarSpeed = JSON.parse(JSON.stringify(bar.maxSpeed));
     this.bar = bar;
@@ -260,7 +260,7 @@ export class PowerExhaust extends IPower {
 export class PowerInvisibility extends IPower {
   constructor(name: string) {
     super(name);
-    this.maxCharge = 10;
+    this.maxCharge = 5;
   }
 
   active() {
@@ -275,6 +275,31 @@ export class PowerInvisibility extends IPower {
   }
   reset() {
     this.trigger = false;
+    this.isActive = false;
+  }
+}
+
+export class PowerSmasher extends IPower {
+  ball: IBall;
+
+  constructor(ball: IBall, name: string) {
+    super(name);
+    this.maxCharge = 2;
+    this.ball = ball;
+  }
+
+  active() {
+    if (this.currentCharge == this.maxCharge) {
+      this.isActive = true;
+      this.currentCharge = 0;
+    }
+  }
+  handle() {
+    this.isActive = false;
+    this.ball.speed.x *= 2;
+    this.ball.speed.y *= 2;
+  }
+  reset() {
     this.isActive = false;
   }
 }

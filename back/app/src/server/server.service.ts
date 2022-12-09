@@ -23,18 +23,19 @@ import {
   PowerExhaust,
   PowerInvisibility,
   PowerMinimo,
+  PowerSmasher,
   User,
 } from './entities/server.entity';
 
+let debugPower = false;
 const chargeMax = 1;
 const ballSize = 16;
-const barSize: IPoint = { x: 50, y: 10 };
 const defaultGameOptions: GameOptions = {
   scoreMax: 10,
   ballSpeed: 1,
   ballSize: 1,
   barSpeed: 1,
-  barSize: 1,
+  barSize: 3,
   smashStrength: 1,
   effects: true,
   powers: true,
@@ -87,57 +88,8 @@ export class ServerService {
     this.updateStatus(newUser.id, 'online');
   }
 
-  //   reloadUser(token: string, user: string, sock: Socket) {
-  //     const player: Player = {
-  //       token: token,
-  //       input: [],
-  //       left: false,
-  //       right: false,
-  //       name: user,
-  //       socket: sock,
-  //       elo: 0,
-  //       status: 'idle',
-  //       smashLeft: 0,
-  //       smashRight: 0,
-  //       power: '',
-  //     };
-  //     this.userList.push(player);
-  //   }
-
-  //chat stuff
-  identify(name: string, clientId: string, room: string) {
-    this.clientToUser[clientId] = name;
-    if (this.rooms.find((element) => element.name === room) === undefined) this.rooms.push({ name: room, messages: [], userList: [] });
-    this.rooms.find((element) => element.name === room).userList.push(name);
-    return Object.values(this.clientToUser);
-  }
-
-  getClientName(clientId: string, room: string) {
-    return this.clientToUser[clientId];
-  }
-
-  create(createMessageDto: CreateMessageDto, clientId: string, room: string) {
-    const message = {
-      name: this.clientToUser[clientId],
-      message: createMessageDto.message,
-    };
-    this.rooms.find((element) => element.name === room).messages.push(message);
-
-    return message;
-  }
-
-  findAll(room: string) {
-    return this.rooms.find((element) => element.name === room).messages;
-  }
-
-  findUsers(room: string) {
-    // console.log(this.rooms.find((element) => element.name === room).userList);
-    return this.rooms.find((element) => element.name === room).userList;
-  }
-
   //status stuff
   async updateStatus(id: number, status: string) {
-    console.log(status);
     await this._userService.updateStatus(id, status);
     this.server.emit('updateOneUserStatus', { id, status });
   }
@@ -153,14 +105,6 @@ export class ServerService {
   }
 
   inverseSummary(summary: GameSummaryData) {
-    //   const inversedSummary: GameSummaryData = JSON.parse(
-    //     JSON.stringify(summary),
-    //   );
-    //   // const player: PlayerInfoData = inversedSummary.host;
-    //   inversedSummary.host = inversedSummary.client;
-    //   inversedSummary.client = player;
-    //   inversedSummary.gameMode = summary.gameMode;
-    //   inversedSummary.eloChange = summary.eloChange;
     const inversedSummary: GameSummaryData = {
       client: {
         name: summary.host.name,
@@ -326,13 +270,7 @@ export class ServerService {
     else if (user.gameData.power.name == 'Exhaust') user.gameData.power = new PowerExhaust(opponentBar, user.gameData.power.name);
     else if (user.gameData.power.name == 'Minimo') user.gameData.power = new PowerMinimo(opponentBar, user.gameData.power.name);
     else if (user.gameData.power.name == 'Ghost') user.gameData.power = new PowerInvisibility(user.gameData.power.name);
-
-    console.log(user.gameData.power);
-  }
-
-  handlePower(game: Game) {
-    game.client.gameData.power.handle();
-    game.host.gameData.power.handle();
+    else if (user.gameData.power.name == 'Smasher') user.gameData.power = new PowerSmasher(gameState.ball, user.gameData.power.name);
   }
 
   SocketToPlayer(socket: Socket) {
@@ -406,6 +344,7 @@ export class ServerService {
   joinQueue(socket: Socket, powerName: string) {
     const player = this.userList.find((element) => element.socket === socket);
     if (!player) return;
+    console.log(powerName);
     player.gameData.power = new IPower(powerName);
     if (this.playerQueue.find((element) => element === player)) this.playerQueue.splice(this.playerQueue.indexOf(player), 1);
     if (this.playerQueue.length < 1) {
@@ -436,8 +375,10 @@ export class ServerService {
 
   updateMoveStatus(player: User, bar: IBar, playerType: string, gameOptions: GameOptions) {
     player.gameData.input.forEach((input) => {
-      if (input === 'downSpace') player.gameData.power.active();
-      else if (input === 'downRight') playerType === 'host' ? (player.gameData.right = true) : (player.gameData.left = true);
+      if (input === 'downSpace') {
+        player.gameData.power.active();
+        debugPower = true;
+      } else if (input === 'downRight') playerType === 'host' ? (player.gameData.right = true) : (player.gameData.left = true);
       else if (input === 'downLeft') playerType === 'host' ? (player.gameData.left = true) : (player.gameData.right = true);
       else if (input === 'upRight') playerType === 'host' ? (player.gameData.right = false) : (player.gameData.left = false);
       else if (input === 'upLeft') playerType === 'host' ? (player.gameData.left = false) : (player.gameData.right = false);
@@ -487,7 +428,6 @@ export class ServerService {
   }
 
   barBallCollision(hostBar: IBar, clientBar: IBar, ball: IBall, room: GameRoom, host: User, client: User) {
-    const M = Math.sqrt(Math.pow(ball.speed.x, 2) + Math.pow(ball.speed.y, 2)) / Math.sqrt(2);
     if (!room.barCollide) {
       if (ball.pos.y - ball.size <= clientBar.pos.y + clientBar.size.y && ball.pos.y > clientBar.pos.y + clientBar.size.y) {
         if (ball.pos.x < clientBar.pos.x + clientBar.size.x + ball.size && ball.pos.x > clientBar.pos.x - clientBar.size.x - ball.size) {
@@ -495,8 +435,8 @@ export class ServerService {
             client.gameData.power.handle();
           } else if (room.options.powers) {
             client.gameData.power.chargeUp();
-            console.log(`ici ${client.gameData.power.maxCharge}`);
           }
+          const M = (Math.sqrt(Math.pow(ball.speed.x, 2) + Math.pow(ball.speed.y, 2)) / Math.sqrt(2)) * 1.1;
           if (room.options.smashes) {
             if (client.gameData.smashLeft > 0) {
               ball.speed.x = 1 * M + client.gameData.smashLeft;
@@ -520,6 +460,7 @@ export class ServerService {
           if (host.gameData.power.isActive) {
             host.gameData.power.handle();
           } else if (room.options.powers) host.gameData.power.chargeUp();
+          const M = (Math.sqrt(Math.pow(ball.speed.x, 2) + Math.pow(ball.speed.y, 2)) / Math.sqrt(2)) * 1.1;
           if (room.options.smashes) {
             if (host.gameData.smashLeft > 0) {
               ball.speed.x = -1 * M - host.gameData.smashLeft;
@@ -699,11 +640,10 @@ export class ServerService {
         smashing: gameState.clientBar.smashing,
         maxSpeed: gameState.clientBar.maxSpeed,
       },
-      score: { host: gameState.score.client, client: gameState.score.host },
+      score: { host: gameState.score.host, client: gameState.score.client },
       hit: { x: gameState.hit.x, y: gameState.hit.y, hit: gameState.hit.hit },
     };
     if (game.client.gameData.power.name == 'invisibility' && game.client.gameData.power.trigger == true) {
-      console.log('invis client');
       State.ball.pos.x = -5000;
       State.ball.pos.y = 250;
     }
@@ -830,6 +770,10 @@ export class ServerService {
 
       this.goal(game);
       this.setPowerInfo(game);
+      if (debugPower) {
+        console.log(gameState);
+        debugPower = false;
+      }
     }
   }
 
@@ -882,5 +826,35 @@ export class ServerService {
     if (channel) {
       this.server.to(`${channel.id}`).emit('channelUpdatd', { id: channel.id, name: channel.name, type: channel.type });
     }
+  }
+  //chat stuff
+  identify(name: string, clientId: string, room: string) {
+    this.clientToUser[clientId] = name;
+    if (this.rooms.find((element) => element.name === room) === undefined) this.rooms.push({ name: room, messages: [], userList: [] });
+    this.rooms.find((element) => element.name === room).userList.push(name);
+    return Object.values(this.clientToUser);
+  }
+
+  getClientName(clientId: string, room: string) {
+    return this.clientToUser[clientId];
+  }
+
+  create(createMessageDto: CreateMessageDto, clientId: string, room: string) {
+    const message = {
+      name: this.clientToUser[clientId],
+      message: createMessageDto.message,
+    };
+    this.rooms.find((element) => element.name === room).messages.push(message);
+
+    return message;
+  }
+
+  findAll(room: string) {
+    return this.rooms.find((element) => element.name === room).messages;
+  }
+
+  findUsers(room: string) {
+    // console.log(this.rooms.find((element) => element.name === room).userList);
+    return this.rooms.find((element) => element.name === room).userList;
   }
 }
