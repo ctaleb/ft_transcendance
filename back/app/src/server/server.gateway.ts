@@ -173,11 +173,9 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   }
 
   gameLoop = (game: Game) => {
-    // this.server.to(game.room.name).emit('ServerUpdate', game.gameState);
-    game.client.socket.emit('ServerUpdate', this.serverService.inverseState(game.gameState, game));
     game.host.socket.emit('ServerUpdate', this.serverService.sendState(game.gameState, game));
+    game.client.socket.emit('ServerUpdate', this.serverService.inverseState(game.gameState, game));
     this.server.to(game.theatre.name).emit('ServerUpdate', this.serverService.sendState(game.gameState, game));
-    // this.server.to(game.room.name).emit('gameConfirmation', game.room);
 
     const loopTimer = setTimeout(() => {
       if (game.gameState.score.client >= game.room.options.scoreMax || game.gameState.score.host >= game.room.options.scoreMax) {
@@ -204,8 +202,6 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     @ConnectedSocket()
     client: Socket,
   ) {
-    // const player = this.serverService.SocketToPlayer(client);
-    // if (player && player.gameData.status != 'idle')
     this.serverService.storeInput(client, key);
   }
 
@@ -225,9 +221,9 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
           game.room.clientName = game.client.name;
           this.server.to(game.room.name).emit('startGame', game.room);
           this.serverService.startRound(game.room);
-          this.gameLoop(game);
           this.serverService.updateStatus(game.host.id, 'inGame');
           this.serverService.updateStatus(game.client.id, 'inGame');
+          this.gameLoop(game);
         } else {
           if (game.host.gameData.status === 'ready') {
             game.host.gameData.status = 'inQueue';

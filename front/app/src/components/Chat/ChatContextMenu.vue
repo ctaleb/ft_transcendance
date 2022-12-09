@@ -96,33 +96,6 @@ const takeAdmin = async (member: ChannelUser): Promise<void> => {
     username: member.nickname,
   }).catch(() => {});
 };
-
-const giveTakeAdmin = async () => {
-  if (menu.value.user && menu.value.requester && menu.value.requester.role === ChannelRole.OWNER) {
-    if ((<ChannelUser>menu.value.user).role === ChannelRole.MEMBER) {
-      await giveAdmin(<ChannelUser>menu.value.user);
-    } else {
-      await takeAdmin(<ChannelUser>menu.value.user);
-    }
-    socketLocal.value?.emit("updateChannelMembers", { id: store.currentChat!.id });
-  } else {
-    addAlertMessage("You have no right to change channel members role", 3);
-  }
-};
-
-const giveAdmin = async (member: ChannelUser): Promise<void> => {
-  await fetchJSONDatas("api/chat/give-admin", "PUT", {
-    id: store.currentChat!.id,
-    username: member.nickname,
-  }).catch(() => {});
-};
-
-const takeAdmin = async (member: ChannelUser): Promise<void> => {
-  await fetchJSONDatas("api/chat/take-admin", "PUT", {
-    id: store.currentChat!.id,
-    username: member.nickname,
-  }).catch(() => {});
-};
 </script>
 
 <style lang="scss" scoped>

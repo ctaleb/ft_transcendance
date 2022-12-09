@@ -1,7 +1,7 @@
 <template>
   <section class="lobby container">
     <div class="principalSection">
-      <div class="mainContainer" :class="store.user?.status == 'online' ? '' : ' hidden'">
+      <div class="mainContainer" :class="store.user?.status != 'inQueue' ? '' : ' hidden'">
         <div>
           <power-slider-component v-model="power" id="powerSlider" />
           <div v-if="!toggleLadder">
@@ -159,8 +159,6 @@ const hostName = ref("Host");
 const clientName = ref("Client");
 const color = ref("white");
 const sumTitle = ref("Placeholder");
-// const sumDate = ref("");
-// const sumTime = ref(0);
 
 const noFriends = ref(false);
 const summary = ref(false);
@@ -216,10 +214,6 @@ const gameSummary = reactive<GameSummaryData>({
   },
   gameMode: "",
 });
-
-// function Confirmation(show: boolean) {
-//   confirmation.value = show;
-// }
 
 function showSummary(show: boolean) {
   summary.value = show;
@@ -579,8 +573,6 @@ onMounted(() => {
       registerSockets(socketLocal);
     }
   );
-  //needs to be moved
-  //window.removeEventListener("resize", resizeCanvas);
   window.addEventListener("resize", resizeCanvas);
 });
 
@@ -669,6 +661,8 @@ const play = () => {
 };
 
 const ServerUpdate = (gameState: GameState) => {
+  if (gameState.hit.hit) console.log(gameState);
+
   gState = gameState;
   scalePosition(gameState);
   if (theRoom) {
@@ -738,9 +732,6 @@ const startGame = (gameRoom: GameRoom) => {
   hostName.value = theRoom.hostName;
   clientName.value = theRoom.clientName;
   start = new Date();
-  //   gameBoard.value = true;
-  console.log(gameBoard.value);
-  console.log(canvas.value);
   document.querySelector(".canvas")?.classList.remove("hidden");
 };
 
