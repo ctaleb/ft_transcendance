@@ -55,6 +55,8 @@
       height: 100%;
       @include screen-md {
         flex-direction: row;
+        align-items: center;
+        justify-content: space-around;
       }
       h2 {
         margin: 0;
@@ -160,7 +162,10 @@
         }
       }
       .chat-input {
-        height: 10%;
+        height: 5%;
+        @include screen-md {
+          height: 65px;
+        }
         width: 100%;
         display: flex;
         align-items: flex-end;

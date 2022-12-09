@@ -28,7 +28,7 @@
   <div class="responsiveMenuBottomButtons">
     <button class="button" @click="showAllChannelsModal = true">All Channels</button>
     <button class="button" @click="showInvitationsModal = true">Invitations</button>
-    <button class="button" @click="showChannelModal = true">Create new channel</button>
+    <button class="button" @click="showChannelModal = true">New channel</button>
   </div>
   <AllChannelsModal v-if="showAllChannelsModal" @close-all-channels-modal="showAllChannelsModal = false" @join-channel="joiningNewChannel" />
   <InvitationsModal v-if="showInvitationsModal" @join-private-channel="joiningNewPrivateChannel" @close-invitations-modal="showInvitationsModal = false" />
