@@ -1,4 +1,5 @@
 import { Socket } from 'socket.io';
+import { UserEntity } from 'src/user/user.entity';
 import { MatchHistoryEntity } from './match_history.entity';
 
 export interface IPoint {
@@ -63,6 +64,7 @@ export class GameRoom {
   name: string;
   hostName: string;
   clientName: string;
+  opponent: any;
   status: string;
   kickOff: boolean;
   barCollide: boolean;

@@ -8,6 +8,8 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
+import { instanceToPlain } from 'class-transformer';
+import { hostname } from 'os';
 import { Server, Socket } from 'socket.io';
 import { FriendshipService } from 'src/friendship/friendship.service';
 import { UserEntity } from 'src/user/user.entity';
@@ -214,12 +216,18 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     const game = this.serverService.joinQueue(client, power);
     if (game) {
       this.server.to(game.room.name).emit('gameConfirmation', game.room);
-      setTimeout(() => {
+      setTimeout(async () => {
         if (game.host.gameData.status === 'ready' && game.client.gameData.status === 'ready') {
           game.room.status = 'playing';
           game.room.hostName = game.host.name;
           game.room.clientName = game.client.name;
-          this.server.to(game.room.name).emit('startGame', game.room);
+          const host = instanceToPlain(await this.userService.getUserByNickname(game.client.name));
+          game.room.opponent = host;
+          game.host.socket.emit('startGame', game.room);
+          const client = instanceToPlain(await this.userService.getUserByNickname(game.host.name));
+          game.room.opponent = client;
+          game.client.socket.emit('startGame', game.room);
+          // this.server.to(game.room.name).emit('startGame', game.room);
           this.serverService.startRound(game.room);
           this.serverService.updateStatus(game.host.id, 'inGame');
           this.serverService.updateStatus(game.client.id, 'inGame');

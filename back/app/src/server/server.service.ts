@@ -31,11 +31,11 @@ let debugPower = false;
 const chargeMax = 1;
 const ballSize = 16;
 const defaultGameOptions: GameOptions = {
-  scoreMax: 10,
+  scoreMax: 1,
   ballSpeed: 1,
   ballSize: 1,
   barSpeed: 1,
-  barSize: 3,
+  barSize: 2,
   smashStrength: 1,
   effects: true,
   powers: true,
@@ -181,12 +181,13 @@ export class ServerService {
   }
 
   newGame(client: User, host?: User) {
-    const newGame = {
+    const newGame: Game = {
       room: {
         name: '',
         hostName: '',
         clientName: '',
         status: 'launching',
+        opponent: null,
         kickOff: false,
         barCollide: false,
         sideCollide: false,
