@@ -228,7 +228,10 @@ async function studentLogin(code: string) {
   align-items: center;
 }
 .principalSection {
-  margin-top: 35px;
+  margin-top: 6rem;
+  @include screen-lg {
+    margin: 1rem 0;
+  }
 }
 .mainContainer {
   height: 100%;
