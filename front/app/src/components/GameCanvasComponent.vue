@@ -1,8 +1,8 @@
 <template>
   <div>
-    <div></div>
+    <div class="opponent"></div>
     <canvas></canvas>
-    <div></div>
+    <div class="us"></div>
   </div>
 </template>
 
@@ -11,6 +11,7 @@ import { socketLocal, useStore } from "@/store";
 import { GameOptions, GameRoom, GameState, IBar, IPoint, particleSet } from "@/types/Game";
 import { GameSummaryData } from "@/types/GameSummary";
 import { getUserByNickname, User } from "@/types/User";
+import { isFlowPredicate } from "@babel/types";
 import { onMounted, onUnmounted, reactive, ref, watch } from "vue";
 import ballUrl from "../assets/ball.png";
 import energyUrl from "../assets/energy.png";
@@ -24,9 +25,6 @@ import plateauUrl from "../assets/plateauV2.png";
 import powerChargeUrl from "../assets/powerCharge.png";
 import slotUrl from "../assets/slot.png";
 import fillRedUrl from "../assets/slot_fill_enemy.png";
-import Denial from "./InviteDenied/Modal.vue";
-import PowerSliderComponent from "./PowerSliderComponent.vue";
-import Modal from "./Summary/Modal.vue";
 
 const store = useStore();
 
@@ -55,9 +53,6 @@ fillImg.src = fillUrl;
 const fillRedImg = new Image();
 fillRedImg.src = fillRedUrl;
 
-const userImg = new Image();
-const opponentImg = new Image();
-
 const canvas = ref<HTMLCanvasElement | null>(null);
 let ctx: CanvasRenderingContext2D | null | undefined;
 let cHeight = 0;
@@ -65,25 +60,9 @@ let cWidth = 0;
 let scale = 0;
 let offset = 0;
 
-const startButton = ref(false);
-const lobbyStatus = ref("Find match");
 const hostScore = ref(0);
 const clientScore = ref(0);
-const hostName = ref("Host");
-const clientName = ref("Client");
-const color = ref("white");
-const sumTitle = ref("Placeholder");
 
-const noFriends = ref(false);
-const summary = ref(false);
-const toggleLadder = ref(true);
-const toggleInvited = ref(false);
-const gameBoard = ref(false);
-let displayLoading = ref(false);
-
-const friendName = ref("Placeholder");
-const customReady = ref("Ready ?");
-const readyButton = ref(false);
 const score = ref(5);
 const ballSpeed = ref(1);
 const ballSize = ref(1);
@@ -95,9 +74,9 @@ const effects = ref(true);
 const powers = ref(true);
 const smashes = ref(true);
 
-let gameOpts: GameOptions;
+const playing = false;
 
-const power = ref("");
+let gameOpts: GameOptions;
 
 let loadPercent = 120;
 let kickOff = false;
@@ -107,8 +86,7 @@ let ballBouncedSide = 0;
 let ballBouncedBar = 0;
 const particles: particleSet[] = [];
 
-let start: Date = new Date();
-let end: Date = new Date();
+let gState: GameState;
 
 let theRoom: GameRoom;
 const gameSummary = reactive<GameSummaryData>({
@@ -173,7 +151,6 @@ function drawSmashingEffect(bar: IBar, smashingPercent: number, ctx: CanvasRende
   );
 }
 function drawPlayground(ctx: CanvasRenderingContext2D) {
-  // Draw the border + backgroung
   ctx.drawImage(plateauImg, 0, 0, cWidth, cHeight);
 }
 function addParticle(ctx: CanvasRenderingContext2D, gameState: GameState) {
@@ -328,6 +305,15 @@ function drawBall(ctx: CanvasRenderingContext2D, gameState: GameState) {
   }
 }
 
+const kickOfff = () => {
+  kickOff = true;
+};
+
+const play = () => {
+  kickOff = false;
+  loadPercent = 120;
+};
+
 //SCALING FUNCTIONS
 
 function scaling(ctx?: CanvasRenderingContext2D | null) {
@@ -363,39 +349,21 @@ function scalePosition(gameState: GameState) {
 }
 function resizeCanvas() {
   scaling(ctx);
-  test(ctx, gState);
+  rerender(ctx, gState);
 }
 
 // SOCKET FUNCTIONS
 
 const registerSockets = (socket: any) => {
-  !socket?.value?.hasListeners("customInviter") && socket?.value?.on("customInviter", customInviter);
-  !socket?.value?.hasListeners("customInvitee") && socket?.value?.on("customInvitee", customInvitee);
-  !socket?.value?.hasListeners("foreverAlone") && socket?.value?.on("foreverAlone", foreverAlone);
-  !socket?.value?.hasListeners("spectating") && socket?.value?.on("spectating", spectating);
-  !socket?.value?.hasListeners("reconnect") && socket?.value?.on("reconnect", reconnect);
   !socket?.value?.hasListeners("kickOff") && socket?.value?.on("kickOff", kickOfff);
   !socket?.value?.hasListeners("play") && socket?.value?.on("play", play);
   !socket?.value?.hasListeners("ServerUpdate") && socket?.value?.on("ServerUpdate", ServerUpdate);
-  !socket?.value?.hasListeners("Win") && socket?.value?.on("Win", Win);
-  !socket?.value?.hasListeners("Lose") && socket?.value?.on("Lose", Lose);
-  !socket?.value?.hasListeners("startGame") && socket?.value?.on("startGame", startGame);
-  !socket?.value?.hasListeners("customInvitation") && socket?.value?.on("customInvitation", customInvitation);
 };
 
 const unregisterSockets = (socket: any) => {
-  socket?.value?.removeListener("customInviter");
-  socket?.value?.removeListener("customInvitee");
-  socket?.value?.removeListener("foreverAlone");
-  socket?.value?.removeListener("spectating");
-  socket?.value?.removeListener("reconnect");
   socket?.value?.removeListener("kickOff");
   socket?.value?.removeListener("play");
   socket?.value?.removeListener("ServerUpdate");
-  socket?.value?.removeListener("Win");
-  socket?.value?.removeListener("Lose");
-  socket?.value?.removeListener("startGame");
-  socket?.value?.removeListener("customInvitation");
 };
 
 onMounted(() => {
@@ -413,8 +381,11 @@ onMounted(() => {
   window.addEventListener("resize", resizeCanvas);
 });
 
-let gState: GameState;
-function test(ctx: CanvasRenderingContext2D | null | undefined, gameState: GameState) {
+onMounted(() => {
+  unregisterSockets(socketLocal);
+});
+
+function rerender(ctx: CanvasRenderingContext2D | null | undefined, gameState: GameState) {
   if (theRoom && ctx) {
     let ball = gameState.ball;
     clientScore.value = gameState.score.client;
@@ -438,33 +409,44 @@ function test(ctx: CanvasRenderingContext2D | null | undefined, gameState: GameS
 }
 
 const ServerUpdate = (gameState: GameState) => {
-  if (gameState.hit.hit) console.log(gameState);
-
   gState = gameState;
-  scalePosition(gameState);
-  if (theRoom) {
-    clientScore.value = gameState.score.client;
-    hostScore.value = gameState.score.host;
-    if (gameState.clientBar.smashing && cSmashingPercent < 100 && !kickOff) {
-      cSmashingPercent += 2;
-    } else if (!gameState.clientBar.smashing || kickOff) cSmashingPercent = 0;
-    if (gameState.hostBar.smashing && hSmashingPercent < 100 && !kickOff) {
-      hSmashingPercent += 2;
-    } else if (!gameState.hostBar.smashing || kickOff) hSmashingPercent = 0;
+};
+
+const predict = () => {
+  gState.frame++;
+}
+
+const gameLoop = () => {
+  let currentFrame = 0;
+  let previousFrame = 0;
+
+  while (playing) {
+    if (gState.frame != currentFrame) {
+      predict();
+    }
     if (ctx) {
-      if (gameState.hit.hit === true) addParticle(ctx, gameState);
+      scalePosition(gState);
+      clientScore.value = gState.score.client;
+      hostScore.value = gState.score.host;
+      if (gState.clientBar.smashing && cSmashingPercent < 100 && !kickOff) {
+        cSmashingPercent += 2;
+      } else if (!gState.clientBar.smashing || kickOff) cSmashingPercent = 0;
+      if (gState.hostBar.smashing && hSmashingPercent < 100 && !kickOff) {
+        hSmashingPercent += 2;
+      } else if (!gState.hostBar.smashing || kickOff) hSmashingPercent = 0;
       drawPlayground(ctx);
-      drawScore(ctx, gameState);
-      drawPowerCharge(ctx, gameState);
+      drawScore(ctx, gState);
+      drawPowerCharge(ctx, gState);
       kickoffLoading(ctx);
-      drawBall(ctx, gameState);
+      drawBall(ctx, gState);
       ctx.fillStyle = "black";
-      drawSmashingEffect(gameState.clientBar, cSmashingPercent, ctx);
-      drawSmashingEffect(gameState.hostBar, hSmashingPercent, ctx);
-      drawParticle(ctx, gameState);
-      drawPlayerInfo(ctx, gameState);
+      drawSmashingEffect(gState.clientBar, cSmashingPercent, ctx);
+      drawSmashingEffect(gState.hostBar, hSmashingPercent, ctx);
+      drawParticle(ctx, gState);
     }
   }
+  previousFrame = currentFrame;
+  currentFrame++;
 };
 </script>
 <style lang="scss" scoped></style>
