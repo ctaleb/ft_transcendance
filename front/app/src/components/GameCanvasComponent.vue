@@ -89,7 +89,7 @@ let gState: GameState = {
   ball: {
     size: 16,
     pos: { x: 250, y: 250 },
-    speed: { x: 5, y: 0 },
+    speed: { x: 2, y: 2 },
   },
   hostPower: { maxCharge: 8, currentCharge: 0, isActive: false },
   clientPower: { maxCharge: 8, currentCharge: 0, isActive: false },
@@ -121,7 +121,7 @@ const defaultGameOptions: GameOptions = {
   ballSpeed: 1,
   ballSize: 1,
   barSpeed: 1,
-  barSize: 2,
+  barSize: 1,
   smashStrength: 1,
   effects: true,
   powers: true,
@@ -426,6 +426,7 @@ function render(ctx: CanvasRenderingContext2D | null | undefined, gameState: Gam
 
 const ServerUpdate = (gameState: GameState) => {
   gState = gameState;
+  console.log(gState);
 };
 
 const wallBallCollision = (state: GameState) => {

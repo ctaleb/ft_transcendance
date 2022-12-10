@@ -31,11 +31,11 @@ let debugPower = false;
 const chargeMax = 1;
 const ballSize = 16;
 const defaultGameOptions: GameOptions = {
-  scoreMax: 1,
+  scoreMax: 5,
   ballSpeed: 1,
   ballSize: 1,
   barSpeed: 1,
-  barSize: 2,
+  barSize: 1,
   smashStrength: 1,
   effects: true,
   powers: true,

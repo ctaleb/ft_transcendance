@@ -77,14 +77,8 @@
         <img src="../assets/loadingGameIllustration.gif" alt="" class="loadingImage" />
       </div>
     </div>
-
-<<<<<<< HEAD
     <div v-if="lobbyStatus == 'playing'" class="ladder">
-      <GameCanvasComponent></GameCanvasComponent>
-=======
-    <div v-if="toggleLadder" class="ladder">
       <GameCanvasComponent :opponent="store.user!" :us="store.user!" :gameOptions="gameOpts"></GameCanvasComponent>
->>>>>>> 7554d2c7dfef4ee1af8525233b686bb4075b7c9a
       <div v-if="summary" class="overlay">
         <Modal :title="sumTitle" :data="gameSummary" :start="start" :end="end" @close="showSummary(false)"></Modal>
       </div>
