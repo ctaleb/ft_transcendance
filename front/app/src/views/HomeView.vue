@@ -227,9 +227,11 @@ async function studentLogin(code: string) {
   justify-content: center;
   align-items: center;
 }
-
+.principalSection {
+  margin-top: 35px;
+}
 .mainContainer {
-  height: 65vh;
+  height: 100%;
   .classicLogin {
     width: 100%;
   }

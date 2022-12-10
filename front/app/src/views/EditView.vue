@@ -24,6 +24,15 @@
         <input type="password" placeholder="please confirm new password" v-model="confirmPassword" />
         <button type="submit" class="button" @click.stop.prevent="updatePassword()">Update password</button>
       </div>
+      <div class="responsiveSvgSection">
+        <img :class="{ lessOpacity: twoFactorEnabled == false }" src="../assets/twoFaDisabled.svg" alt="" />
+        <div class="content">
+          <label class="switch">
+            <input type="checkbox" id="2faSwitch" @change="twoFactorSwitch($event)" />
+            <span class="slider round"></span>
+          </label>
+        </div>
+      </div>
     </div>
     <div class="svgSection">
       <img :class="{ lessOpacity: twoFactorEnabled == false }" src="../assets/twoFaDisabled.svg" alt="" />
@@ -302,16 +311,37 @@ export default defineComponent({
   display: flex;
   flex-direction: row;
   justify-content: space-around;
+  margin-top: 20px;
   align-items: center;
   width: 100vw;
   height: 75vh;
+  @include screen-lg {
+    justify-content: center;
+  }
 
   .mainContainer {
     justify-content: space-around;
-    padding: 20px;
-    height: 65vh;
+    height: 100%;
+    .responsiveSvgSection {
+      display: none;
+    }
     h3 {
       margin-bottom: 3px;
+    }
+    @include screen-lg {
+      width: 100%;
+      padding: 20px 0 0 0;
+      h3 {
+        display: none;
+      }
+      .svgSection {
+        display: none;
+      }
+      .responsiveSvgSection {
+        display: flex;
+        align-items: center;
+        margin-top: 9px;
+      }
     }
   }
   .svgSection {
@@ -321,7 +351,9 @@ export default defineComponent({
     width: 35%;
     color: white;
     position: relative;
-
+    @include screen-lg {
+      display: none;
+    }
     img {
       width: 100%;
       transition: opacity 0.4s ease;
