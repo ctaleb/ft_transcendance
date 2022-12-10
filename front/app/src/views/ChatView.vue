@@ -1,6 +1,6 @@
 <template>
   <div id="chat">
-    <ChatMenu :channels="myChannels" :convs="privateConvs" />
+    <ChatMenu :channels="myChannels" :convs="privateConvs!" />
     <ChatWindow @update-channels-list="updateChannelsList()" />
   </div>
 </template>
@@ -8,23 +8,24 @@
 <script setup lang="ts">
 import ChatMenu from "@/components/chat/ChatMenu.vue";
 import ChatWindow from "@/components/chat/ChatWindow.vue";
-import { fetchJSONDatas } from "@/functions/funcs";
-import { Channel } from "@/types/Channel";
+import FriendAlert from "@/components/FriendAlert.vue";
+import { addAlertMessage, fetchJSONDatas } from "@/functions/funcs";
+import { privateConvs, socketLocal, useStore } from "@/store";
+import { Channel, ChannelRole, ChannelType, ChannelUser, isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
-import { onMounted, ref, Ref } from "vue";
+import { onBeforeMount, onMounted, ref, Ref } from "vue";
 
 defineEmits(["updateChannelsList"]);
 
-const privateConvs: Ref<Array<Conversation>> = ref([]);
 const myChannels: Ref<Array<Channel>> = ref([]);
 
 const updateChannelsList = () => {
   getMyChannels();
 };
 
-onMounted(async () => {
-  await getMyChannels();
+onBeforeMount(async () => {
   await getAllConvs();
+  await getMyChannels();
 });
 
 const getMyChannels = async (): Promise<void> => {

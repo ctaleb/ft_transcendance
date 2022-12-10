@@ -1,21 +1,15 @@
 <template>
   <section>
-    <h2>{{ props.player.score }}</h2>
-    <h3>{{ props.player.name }}</h3>
+    <h2>{{ player.score }}</h2>
+    <h3>{{ player.name }}</h3>
     <div class="player">
-      <img
-        src="https://t3.ftcdn.net/jpg/03/47/77/38/360_F_347773818_LLKm2Y5S6mYlp26pkIYFbN1VMGW03PbF.jpg"
-        alt=""
-      />
+      <img v-if="store.user?.nickname === player.name" :src="User.getAvatar(store.user!)" alt="" />
+      <img v-else :src="opponent" alt="" />
       <div>
         <span
-          >{{ props.player.elo }}
-          <span v-if="props.player.eloChange >= 0" class="green">
-            + {{ props.player.eloChange }}
-          </span>
-          <span v-else class="red">
-            - {{ Math.abs(props.player.eloChange) }}
-          </span>
+          >{{ player.elo }}
+          <span v-if="result" class="green"> + {{ player.eloChange }} </span>
+          <span v-else class="red"> - {{ player.eloChange }} </span>
         </span>
       </div>
     </div>
@@ -26,10 +20,16 @@
 </template>
 
 <script setup lang="ts">
+import { useStore } from "@/store";
 import { PlayerInfoData } from "@/types/GameSummary";
+import { User } from "@/types/User";
+
+const store = useStore();
 
 const props = defineProps<{
   player: PlayerInfoData;
+  result: boolean;
+  opponent: string;
 }>();
 </script>
 

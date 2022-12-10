@@ -1,5 +1,5 @@
 import config from "@/config/config";
-import { currentUserProfile, menu, socketLocal, useStore } from "@/store";
+import { currentUserProfile, menu, privateConvs, socketLocal, useStore } from "@/store";
 import { Channel, ChannelUser, isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
 import { Alert } from "@/types/GameSummary";
@@ -122,18 +122,22 @@ export function addAlertMessage(message: string, type: number, second: number = 
 export function updateStatus(id: number, status: string) {
   const store = useStore();
 
-  if (currentUserProfile.value && currentUserProfile.value.id == id) {
+  if (currentUserProfile.value && currentUserProfile.value.id === id) {
     currentUserProfile.value.status = status;
   }
   let user = store.user?.friends?.find((element) => element.id === id);
   if (user) user.status = status;
   user = store.user?.invitations?.find((element) => element.id === id);
   if (user) user.status = status;
+  user = privateConvs.value.find((element) => element.other.id === id)?.other;
+  if (user) user.status = status;
   if (store.currentChat && isChannel(store.currentChat)) {
     user = (<Channel>store.currentChat)?.members?.find((element) => element.id === id);
     if (user) user.status = status;
-  } else if (store.currentChat) if ((<Conversation>store.currentChat)?.other?.id == id) (<Conversation>store.currentChat)!.other.status = status;
-  if (user?.id == id) user.status = status;
+  }
+  if (store.user) {
+    if (store.user.id == id) store.user.status = status;
+  }
 }
 
 export const showUserMenu = (event: any, user: User, requester?: ChannelUser) => {

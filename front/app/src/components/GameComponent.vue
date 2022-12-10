@@ -78,7 +78,7 @@
     <div v-if="toggleLadder" class="ladder">
       <canvas class="canvas hidden" ref="canvas"></canvas>
       <div v-if="summary" class="overlay">
-        <Modal :title="sumTitle" :data="gameSummary" :start="start" :end="end" @close="showSummary(false)"></Modal>
+        <Modal :title="sumTitle" :data="gameSummary" :opponent="opponentImg.src" :start="start" :end="end" @close="showSummary(false)"></Modal>
       </div>
       <div v-if="noFriends" class="overlay">
         <Denial :inviter="friendName" @sadStory="showDenial(false)"></Denial>
@@ -96,9 +96,11 @@
 </template>
 
 <script setup lang="ts">
+import { fetchJSONDatas } from "@/functions/funcs";
 import { socketLocal, useStore } from "@/store";
 import { GameOptions, GameRoom, GameState, IBar, IPoint, particleSet } from "@/types/Game";
 import { GameSummaryData } from "@/types/GameSummary";
+import { getUserByNickname, User } from "@/types/User";
 import { onMounted, onUnmounted, reactive, ref, watch } from "vue";
 import ballUrl from "../assets/ball.png";
 import energyUrl from "../assets/energy.png";
@@ -144,6 +146,9 @@ fillImg.src = fillUrl;
 const fillRedImg = new Image();
 fillRedImg.src = fillRedUrl;
 
+const userImg = new Image();
+const opponentImg = new Image();
+
 const canvas = ref<HTMLCanvasElement | null>(null);
 let ctx: CanvasRenderingContext2D | null | undefined;
 let cHeight = 0;
@@ -159,8 +164,6 @@ const hostName = ref("Host");
 const clientName = ref("Client");
 const color = ref("white");
 const sumTitle = ref("Placeholder");
-// const sumDate = ref("");
-// const sumTime = ref(0);
 
 const noFriends = ref(false);
 const summary = ref(false);
@@ -194,9 +197,8 @@ let hSmashingPercent = 0;
 let ballBouncedSide = 0;
 let ballBouncedBar = 0;
 const particles: particleSet[] = [];
-
-let start: Date = new Date();
-let end: Date = new Date();
+const start = ref(new Date());
+const end = ref(new Date());
 
 let theRoom: GameRoom;
 const gameSummary = reactive<GameSummaryData>({
@@ -216,10 +218,6 @@ const gameSummary = reactive<GameSummaryData>({
   },
   gameMode: "",
 });
-
-// function Confirmation(show: boolean) {
-//   confirmation.value = show;
-// }
 
 function showSummary(show: boolean) {
   summary.value = show;
@@ -430,6 +428,15 @@ function drawScore(ctx: CanvasRenderingContext2D, gameState: GameState) {
   }
 }
 
+function drawPlayerInfo(ctx: CanvasRenderingContext2D, gameState: GameState) {
+  ctx.drawImage(opponentImg, 100, 100, 70, 70);
+  ctx.drawImage(userImg, 100, 200, 70, 70);
+  // console.log(opponentImg);
+  // console.log(userImg);
+  // console.log(opponentImg.src);
+  // console.log(userImg.src);0
+}
+
 function drawPowerCharge(ctx: CanvasRenderingContext2D, gameState: GameState) {
   for (let i = 0; i < gameState.clientPower.currentCharge; i++) {
     ctx.drawImage(
@@ -479,24 +486,6 @@ function drawBall(ctx: CanvasRenderingContext2D, gameState: GameState) {
       gameState.ball.size * 2 * scale
     );
   }
-  // } else if (gameState.hit.hit == 2) {
-  //   ballBouncedBar = 3;
-  //   ctx.drawImage(
-  //     ballImg,
-  //     gameState.ball.pos.x - gameState.ball.size * scale,
-  //     gameState.ball.pos.y - gameState.ball.size * scale,
-  //     gameState.ball.size * 2 * scale * 0.7,
-  //     gameState.ball.size * 2 * scale
-  //   );
-  // } else if (ballBouncedBar > 0) {
-  //   ctx.drawImage(
-  //     ballImg,
-  //     gameState.ball.pos.x - gameState.ball.size * scale,
-  //     gameState.ball.pos.y - gameState.ball.size * scale,
-  //     gameState.ball.size * 2 * scale * 0.8 + 0.1 * (3 - ballBouncedBar),
-  //     gameState.ball.size * 2 * scale
-  //   );
-  //   ballBouncedBar--;}
 }
 
 function updateSummary(summary: GameSummaryData) {
@@ -579,8 +568,6 @@ onMounted(() => {
       registerSockets(socketLocal);
     }
   );
-  //needs to be moved
-  //window.removeEventListener("resize", resizeCanvas);
   window.addEventListener("resize", resizeCanvas);
 });
 
@@ -669,6 +656,8 @@ const play = () => {
 };
 
 const ServerUpdate = (gameState: GameState) => {
+  if (gameState.hit.hit) console.log(gameState);
+
   gState = gameState;
   scalePosition(gameState);
   if (theRoom) {
@@ -691,28 +680,12 @@ const ServerUpdate = (gameState: GameState) => {
       drawSmashingEffect(gameState.clientBar, cSmashingPercent, ctx);
       drawSmashingEffect(gameState.hostBar, hSmashingPercent, ctx);
       drawParticle(ctx, gameState);
+      drawPlayerInfo(ctx, gameState);
     }
   }
 };
 
 const Win = (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) => {
-  theRoom = gameRoom;
-  lobbyStatus.value = "Defeat... You lost -" + elo_diff + " elo ! Return to lobby ?";
-  startButton.value = false;
-  readyButton.value = false;
-  displayLoading.value = false;
-  customReady.value = "Ready ?";
-  powers.value = true;
-  end = new Date();
-  updateSummary(summary);
-  color.value = "red";
-  sumTitle.value = "Defeat";
-  showSummary(true);
-  //   gameBoard.value = false;
-  document.querySelector(".canvas")?.classList.add("hidden");
-};
-
-const Lose = (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) => {
   theRoom = gameRoom;
   lobbyStatus.value = "Victory ! You gained +" + elo_diff + " elo ! Return to lobby ?";
   startButton.value = false;
@@ -720,10 +693,27 @@ const Lose = (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) =>
   displayLoading.value = false;
   customReady.value = "Ready ?";
   powers.value = true;
-  end = new Date();
+  end.value = new Date();
   updateSummary(summary);
   color.value = "green";
   sumTitle.value = "Victory";
+  showSummary(true);
+  //   gameBoard.value = false;
+  document.querySelector(".canvas")?.classList.add("hidden");
+};
+
+const Lose = (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) => {
+  theRoom = gameRoom;
+  lobbyStatus.value = "Defeat... You lost -" + elo_diff + " elo ! Return to lobby ?";
+  startButton.value = false;
+  readyButton.value = false;
+  displayLoading.value = false;
+  customReady.value = "Ready ?";
+  powers.value = true;
+  end.value = new Date();
+  updateSummary(summary);
+  color.value = "red";
+  sumTitle.value = "Defeat";
   showSummary(true);
   //   gameBoard.value = false;
   document.querySelector(".canvas")?.classList.add("hidden");
@@ -737,10 +727,9 @@ const startGame = (gameRoom: GameRoom) => {
   theRoom = gameRoom;
   hostName.value = theRoom.hostName;
   clientName.value = theRoom.clientName;
-  start = new Date();
-  //   gameBoard.value = true;
-  console.log(gameBoard.value);
-  console.log(canvas.value);
+  userImg.src = User.getAvatar(store.user!);
+  opponentImg.src = User.getAvatar(gameRoom.opponent);
+  start.value = new Date();
   document.querySelector(".canvas")?.classList.remove("hidden");
 };
 
@@ -905,8 +894,8 @@ const customInvitation = () => {};
     box-shadow: 0 3rem 5rem rgba(0, 0, 0, 0.3);
     z-index: 10;
     @include screen-lg {
-    width: 100vw;
-  }
+      width: 100vw;
+    }
   }
   .overlay {
     position: absolute;

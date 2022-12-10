@@ -72,28 +72,8 @@ const decline = (invitation: User) => {
     .catch((err) => console.log(err));
 };
 
-const block = (invitation: User) => {
-  fetch("http://" + window.location.hostname + ":3000/api/friendship/block", {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + localStorage.getItem("token"),
-    },
-    body: JSON.stringify({
-      addressee: invitation.nickname,
-    }),
-  })
-    .then((res) => {
-      if (res.status !== 200) {
-        throw res.statusText;
-      }
-      return res.json();
-    })
-    .then((data) => {
-      store.user?.invitations?.splice(store.user?.invitations?.indexOf(invitation), 1);
-      // checkNotificationBadge();
-    })
-    .catch((err) => console.log(err));
+const block = async (invitation: User) => {
+  if ((await User.block(invitation)) === true) store.user?.invitations?.splice(store.user?.invitations?.indexOf(invitation), 1);
 };
 </script>
 

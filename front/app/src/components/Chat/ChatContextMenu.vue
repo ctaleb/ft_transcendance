@@ -86,45 +86,12 @@ const watchProfile = () => {
   router.push("/profile/" + menu.value.user?.nickname);
 };
 
-const spectateGame = () => {
-  socketLocal.value?.emit("spectate", { friend: menu.value.user?.nickname }, (response: string) => {
-    if (response == "ingame") {
-      router.push("game");
-      socketLocal.value?.emit("readySpectate", { friend: menu.value.user?.nickname });
-    }
-  });
-};
-
-const inviteCustom = () => {
-  let accepted = "yes";
-  socketLocal.value?.emit("customInvite", { friend: menu.value.user?.nickname }, (response: string) => {
-    if (response != "accepted") {
-      accepted = "no";
-    }
-  });
-  if (accepted === "no") return;
-  router.push("game");
-  socketLocal.value?.emit("settingsInviter", { friend: menu.value.user?.nickname });
-};
-
 const block = async () => {
-  if (menu.value.user)
-    await fetchJSONDatas("api/friendship/block", "PUT", { addressee: menu.value.user?.nickname })
-      .then(() => {
-        isBlocked.value = true;
-        addAlertMessage("The user has been blocked", 2);
-      })
-      .catch(() => {});
+  if ((await User.block(menu.value.user)) === true) isBlocked.value = true;
 };
 
 const unblock = async () => {
-  if (menu.value.user)
-    await fetchJSONDatas("api/friendship/unblock", "PUT", { addressee: menu.value.user?.nickname })
-      .then(() => {
-        isBlocked.value = false;
-        addAlertMessage("The user has been unblocked", 2);
-      })
-      .catch((err) => {});
+  if ((await User.unblock(menu.value.user)) === true) isBlocked.value = false;
 };
 
 const giveTakeAdmin = async () => {
