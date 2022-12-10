@@ -1,18 +1,21 @@
 <template>
   <section class="lobby container">
+    <div v-if="noFriends" class="overlay">
+      <Denial :inviter="friendName" @sadStory="showDenial(false)"></Denial>
+    </div>
     <div class="principalSection">
-      <div class="mainContainer" :class="store.user?.status != 'inQueue' ? '' : ' hidden'">
+      <div v-if="lobbyStatus == 'settingsInviter' || lobbyStatus == 'settingsInvitee' || lobbyStatus == 'lobby'" class="mainContainer">
         <div>
           <power-slider-component v-model="power" id="powerSlider" />
-          <div v-if="!toggleLadder">
+          <div v-if="lobbyStatus == 'settingsInviter' || lobbyStatus == 'settingsInvitee'">
             <div>
               <h1>Custom Game with {{ friendName }}</h1>
-              <div v-if="!toggleInvited" class="inviter">
+              <div v-if="lobbyStatus == 'settingsInviter'" class="inviter">
                 <div>
                   <div class="setting">
                     <label for="score">Max Score</label>
-                    <input v-model="score" type="range" id="score" name="score" min="1" max="100" :disabled="readyButton == true" />
-                    <h4>{{ score }}</h4>
+                    <input v-model="scoreMax" type="range" id="score" name="score" min="1" max="100" :disabled="readyButton == true" />
+                    <h4>{{ scoreMax }}</h4>
                   </div>
                   <div class="setting">
                     <label for="ballSpeed">Ball Speed</label>
@@ -67,21 +70,18 @@
           </div>
         </div>
       </div>
-      <div :class="store.user?.status == 'online' ? '' : ' hidden'" class="svgSection">
+      <div v-if="lobbyStatus == 'lobby'" class="svgSection">
         <img src="../assets/playGame.gif" alt="" class="playButton" @click="findMatch()" />
       </div>
-      <div :class="store.user?.status == 'inQueue' ? '' : ' hidden'" class="loadingDiv">
+      <div v-if="lobbyStatus == 'queuing'" class="loadingDiv">
         <img src="../assets/loadingGameIllustration.gif" alt="" class="loadingImage" />
       </div>
     </div>
 
-    <div v-if="toggleLadder" class="ladder">
+    <div v-if="lobbyStatus == 'playing'" class="ladder">
       <GameCanvasComponent></GameCanvasComponent>
       <div v-if="summary" class="overlay">
         <Modal :title="sumTitle" :data="gameSummary" :start="start" :end="end" @close="showSummary(false)"></Modal>
-      </div>
-      <div v-if="noFriends" class="overlay">
-        <Denial :inviter="friendName" @sadStory="showDenial(false)"></Denial>
       </div>
     </div>
     <div v-else class="custom"></div>
@@ -110,7 +110,20 @@ import Modal from "./Summary/Modal.vue";
 const store = useStore();
 
 const startButton = ref(false);
-const lobbyStatus = ref("Find match");
+// const lobbyStatus = ref("Find match");
+
+const scoreMax = ref(5);
+const ballSpeed = ref(1);
+const ballSize = ref(1);
+const barSpeed = ref(1);
+const barSize = ref(1);
+const smashStrength = ref(1);
+const effects = ref(true);
+const powers = ref(true);
+const smashes = ref(true);
+
+const lobbyStatus = ref("lobby");
+
 const hostScore = ref(0);
 const clientScore = ref(0);
 const hostName = ref("Host");
@@ -164,7 +177,7 @@ function showDenial(show: boolean) {
 function findMatch() {
   displayLoading.value = true;
   startButton.value = true;
-  lobbyStatus.value = "Looking for an opponent...";
+  lobbyStatus.value = "queuing";
   powers.value = false;
   socketLocal?.value?.emit("joinQueue", {
     power: power.value,
@@ -174,7 +187,7 @@ function readyUp() {
   displayLoading.value = true;
   readyButton.value = true;
   customReady.value = "Waiting for " + friendName.value;
-  if (toggleInvited.value) {
+  if (lobbyStatus.value === "settingsInvitee") {
     socketLocal?.value?.emit("readyInvitee", {
       power: power.value,
     });
@@ -188,7 +201,7 @@ function readyUp() {
 }
 function updateOpts() {
   gameOpts = {
-    scoreMax: score.value,
+    scoreMax: scoreMax.value,
     ballSpeed: ballSpeed.value,
     ballSize: ballSize.value,
     barSpeed: barSpeed.value,
@@ -212,10 +225,16 @@ function updateSummary(summary: GameSummaryData) {
   gameSummary.gameMode = summary.gameMode;
 }
 
+// store.$subscribe((mutation, state) => {
+//   if (store.user?.status != "inQueue") lobbyStatus.value = "lobby";
+//   else lobbyStatus.value = "queuing";
+// });
+
 onMounted(() => {
-  ctx = canvas.value?.getContext("2d");
-  ctx?.drawImage(plateauImg, 0, 0, cWidth, cHeight);
-  scaling(ctx);
+  if (store.user?.status == "inQueue") lobbyStatus.value = "queuing";
+  // ctx = canvas.value?.getContext("2d");
+  // ctx?.drawImage(plateauImg, 0, 0, cWidth, cHeight);
+  // scaling(ctx);
   registerSockets(socketLocal);
 
   watch(
@@ -224,7 +243,7 @@ onMounted(() => {
       registerSockets(socketLocal);
     }
   );
-  window.addEventListener("resize", resizeCanvas);
+  // window.addEventListener("resize", resizeCanvas);
 });
 
 onUnmounted(() => {
@@ -257,26 +276,28 @@ const unregisterSockets = (socket: any) => {
 
 const customInviter = (friend: string) => {
   friendName.value = friend;
-  toggleGameQueue();
+  lobbyStatus.value = "settingsInviter";
 };
 
 const customInvitee = (friend: string) => {
   friendName.value = friend;
-  toggleInvitedMode();
-  toggleGameQueue();
+  lobbyStatus.value = "settingsInvitee";
+  // toggleInvitedMode();
+  // toggleGameQueue();
 };
 
 const foreverAlone = () => {
-  toggleGameQueue();
+  // toggleGameQueue();
+  lobbyStatus.value = "lobby";
   noFriends.value = true;
 };
 
 const spectating = (gameRoom: GameRoom) => {
-  console.log("watching game");
+  // console.log("watching game");
   theRoom = gameRoom;
   hostName.value = theRoom.hostName;
   clientName.value = theRoom.clientName;
-  lobbyStatus.value = "Spectating";
+  lobbyStatus.value = "spectating";
   startButton.value = false;
   powers.value = false;
   //   gameBoard.value = true;
@@ -298,7 +319,7 @@ const reconnect = (gameRoom: GameRoom) => {
 
 const Win = (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) => {
   theRoom = gameRoom;
-  lobbyStatus.value = "Defeat... You lost -" + elo_diff + " elo ! Return to lobby ?";
+  lobbyStatus.value = "lobby";
   startButton.value = false;
   readyButton.value = false;
   displayLoading.value = false;
@@ -315,7 +336,7 @@ const Win = (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) => 
 
 const Lose = (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) => {
   theRoom = gameRoom;
-  lobbyStatus.value = "Victory ! You gained +" + elo_diff + " elo ! Return to lobby ?";
+  lobbyStatus.value = "lobby";
   startButton.value = false;
   readyButton.value = false;
   displayLoading.value = false;
@@ -331,10 +352,10 @@ const Lose = (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) =>
 };
 
 const startGame = (gameRoom: GameRoom) => {
-  lobbyStatus.value = "Play !";
-  if (!toggleLadder.value) toggleLadder.value = true;
-  if (toggleInvited.value) toggleInvited.value = false;
-  powers.value = false;
+  lobbyStatus.value = "playing";
+  // if (!toggleLadder.value) toggleLadder.value = true;
+  // if (toggleInvited.value) toggleInvited.value = false;
+  // powers.value = false;
   theRoom = gameRoom;
   hostName.value = theRoom.hostName;
   clientName.value = theRoom.clientName;
