@@ -213,9 +213,6 @@ function updateSummary(summary: GameSummaryData) {
 }
 
 onMounted(() => {
-  ctx = canvas.value?.getContext("2d");
-  ctx?.drawImage(plateauImg, 0, 0, cWidth, cHeight);
-  scaling(ctx);
   registerSockets(socketLocal);
 
   watch(
@@ -224,7 +221,6 @@ onMounted(() => {
       registerSockets(socketLocal);
     }
   );
-  window.addEventListener("resize", resizeCanvas);
 });
 
 onUnmounted(() => {
