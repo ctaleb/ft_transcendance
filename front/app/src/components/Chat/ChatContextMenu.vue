@@ -14,21 +14,31 @@
     <button class="button" v-if="!isBlocked" @click="block()">Block</button>
     <button class="button" v-else title="Unblock user" @click="unblock()">Unblock</button>
     <button
+      class="button"
       v-if="menu.requester && menu.requester!.role !== ChannelRole.MEMBER && (<ChannelUser>menu.user)!.role === ChannelRole.MEMBER"
       @click="showMuteModal = true"
     >
       Mute
     </button>
     <button
+      class="button"
       v-if="menu.requester && menu.requester!.role !== ChannelRole.MEMBER && (<ChannelUser>menu.user)!.role === ChannelRole.MEMBER"
       @click="showBanModal = true"
     >
       Ban
     </button>
-    <button v-if="menu.requester && menu.requester!.role === ChannelRole.OWNER && (<ChannelUser>menu.user)!.role === ChannelRole.MEMBER" @click="giveTakeAdmin">
+    <button
+      class="button"
+      v-if="menu.requester && menu.requester!.role === ChannelRole.OWNER && (<ChannelUser>menu.user)!.role === ChannelRole.MEMBER"
+      @click="giveTakeAdmin"
+    >
       Give admin
     </button>
-    <button v-if="menu.requester && menu.requester!.role === ChannelRole.OWNER && (<ChannelUser>menu.user)!.role === ChannelRole.ADMIN" @click="giveTakeAdmin">
+    <button
+      class="button"
+      v-if="menu.requester && menu.requester!.role === ChannelRole.OWNER && (<ChannelUser>menu.user)!.role === ChannelRole.ADMIN"
+      @click="giveTakeAdmin"
+    >
       Take admin
     </button>
   </div>

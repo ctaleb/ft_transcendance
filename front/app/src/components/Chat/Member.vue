@@ -9,7 +9,7 @@
       <h4 v-else>
         {{ member.nickname }}
       </h4>
-      <h4>{{ member.status }}</h4>
+      <h4 :class="statusClass">{{ member.status }}</h4>
     </div>
   </div>
 </template>
@@ -25,6 +25,7 @@ const props = defineProps<{
   member: ChannelUser;
   me: ChannelUser;
 }>();
+const statusClass = ref(props.member.status);
 
 const store = useStore();
 </script>

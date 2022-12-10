@@ -4,14 +4,18 @@
     <span @click="$emit('closeChannelModal')" class="close-modal"><i class="gg-close-o"></i></span>
     <h3>{{ channel.name }} - {{ picked }} channel</h3>
     <div class="radioBundle">
-      <input type="radio" id="one" name="public" value="public" v-model="picked" />
-      <label for="public">public</label>
-
-      <input type="radio" id="two" name="protected" value="protected" v-model="picked" />
-      <label for="protected">protected</label>
-
-      <input type="radio" id="three" name="private" value="private" v-model="picked" />
-      <label for="private">private</label>
+      <div>
+        <input type="radio" id="one" name="public" value="public" v-model="picked" />
+        <label for="public">public</label>
+      </div>
+      <div>
+        <input type="radio" id="two" name="protected" value="protected" v-model="picked" />
+        <label for="protected">protected</label>
+      </div>
+      <div>
+        <input type="radio" id="three" name="private" value="private" v-model="picked" />
+        <label for="private">private</label>
+      </div>
     </div>
     <div v-if="picked === 'protected'" class="searchBar">
       <input type="password" class="searchField" name="channelPassword" placeholder="Password" v-model="channelPassword" required />
@@ -62,6 +66,7 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 @import "../../../styles/variables";
+@import "../../../styles/mixins/sizes";
 .modal {
   z-index: 5;
   padding: 10px;
@@ -70,6 +75,16 @@ onMounted(() => {
   flex-direction: column;
   justify-content: space-around;
   align-items: center;
+  div {
+    display: flex;
+    align-items: center;
+    input {
+      margin-right: 11px;
+    }
+  }
+  @include screen-lg {
+    width: 100vw;
+  }
   h3 {
     margin: 0;
     color: $primary;
@@ -81,6 +96,13 @@ onMounted(() => {
     width: 50%;
     margin-top: 10px;
     margin-bottom: 10px;
+    @include screen-md {
+      flex-direction: column;
+      align-items: flex-start;
+      div {
+        margin-bottom: 10px;
+      }
+    }
   }
   .searchBar {
     display: flex;

@@ -751,6 +751,7 @@ const customInvitation = () => {};
 @import "../styles/containerStyle";
 @import "../styles/svgStyles";
 @import "../styles/variables";
+@import "../styles/mixins/sizes";
 //.eloBanner {
 //  height: 50%;
 //  width: 50%;
@@ -903,6 +904,9 @@ const customInvitation = () => {};
     border-radius: 5px;
     box-shadow: 0 3rem 5rem rgba(0, 0, 0, 0.3);
     z-index: 10;
+    @include screen-lg {
+    width: 100vw;
+  }
   }
   .overlay {
     position: absolute;

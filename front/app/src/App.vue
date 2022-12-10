@@ -358,4 +358,20 @@ body {
     box-shadow: 0 0 0 0px rgba(200, 150, 100, 1), 0 0 0 1px #e7d899;
   }
 }
+
+.inLobby {
+  color: yellow !important;
+}
+.inQueue {
+  color: blue !important;
+}
+.inGame {
+  color: orange !important;
+}
+.online {
+  color: green !important;
+}
+.offline {
+  color: red !important;
+}
 </style>

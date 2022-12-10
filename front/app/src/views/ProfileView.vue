@@ -16,7 +16,7 @@
       </div>
       <div class="sideInfo">
         <img class="sideIcons" src="../assets/profileStatusIcon.svg" alt="" />
-        <h3>{{ currentUserProfile.status }}</h3>
+        <h3 :class="statusClass">{{ currentUserProfile.status }}</h3>
       </div>
     </div>
     <div class="buttonProfile" v-if="currentUserProfile != store.user">
@@ -83,6 +83,7 @@ const toogleMenu = ref(false);
 const currentUserProfileIsBlocked = ref(false);
 const currentFriend = ref<User[]>();
 const currentSummary = ref<History[]>();
+const statusClass = ref(currentUserProfile.value?.status);
 
 onMounted(async () => {
   let nick = <string | undefined>route.params.nickname;
