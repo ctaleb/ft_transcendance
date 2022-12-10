@@ -1,4 +1,3 @@
-import config from "@/config/config";
 import { currentUserProfile, menu, privateConvs, socketLocal, useStore } from "@/store";
 import { Channel, ChannelUser, isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
@@ -72,7 +71,7 @@ export async function fetchBlobDatas(path: string, method: "GET" | "PUT" | "POST
 }
 
 export async function trySetupUser(): Promise<void> {
-  if (config.socket.id) {
+  if (socketLocal.value?.id) {
     return Promise.resolve();
   }
 

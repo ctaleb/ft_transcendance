@@ -138,7 +138,7 @@ const invFailure = () => {
 const logout = () => {
   localStorage.removeItem("token");
   localStorage.removeItem("user");
-  socketLocal.value?.emit("disco", {});
+  socketLocal.value?.emit("disco");
   socketLocal.value?.close();
 };
 
