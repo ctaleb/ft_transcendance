@@ -31,7 +31,7 @@ let debugPower = false;
 const chargeMax = 1;
 const ballSize = 16;
 const defaultGameOptions: GameOptions = {
-  scoreMax: 2,
+  scoreMax: 10,
   ballSpeed: 1,
   ballSize: 1,
   barSpeed: 1,
