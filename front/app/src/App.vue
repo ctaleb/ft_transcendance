@@ -21,6 +21,9 @@
       <div v-if="failedInvitation" class="overlay">
         <FailedInvitation @invFailure="invFailure()"></FailedInvitation>
       </div>
+      <div v-if="multiClientWarning" class="overlay">
+        <MultiClientWarning></MultiClientWarning>
+      </div>
       <div class="alertFlex">
         <AlertCard v-for="message of alertMessages" :message="message" />
       </div>
@@ -43,6 +46,7 @@ import AlertCard from "./components/AlertCard.vue";
 import CustomInvitation from "./components/CustomInvitation/Modal.vue";
 import FailedInvitation from "./components/FailedInvitation/Modal.vue";
 import GameConfirmation from "./components/GameConfirmation/Modal.vue";
+import MultiClientWarning from "./components/MultiClientWarning/Modal.vue";
 
 const store = useStore();
 const route = useRoute();
@@ -50,6 +54,7 @@ const router = useRouter();
 const gameConfirmation = ref(false);
 const customInvitation = ref(false);
 const failedInvitation = ref(false);
+const multiClientWarning = ref(false);
 const invSender = ref("Placeholder");
 
 trySetupUser().catch((err) => {
@@ -133,7 +138,7 @@ const invFailure = () => {
 const logout = () => {
   localStorage.removeItem("token");
   localStorage.removeItem("user");
-  socketLocal.value?.emit("disco", {});
+  socketLocal.value?.emit("disco");
   socketLocal.value?.close();
 };
 
@@ -147,6 +152,10 @@ function showInvite(show: boolean) {
 
 function showFailure(show: boolean) {
   failedInvitation.value = show;
+}
+
+function showMultiClientWarning(show: boolean) {
+  multiClientWarning.value = show;
 }
 
 onMounted(() => {
@@ -165,6 +174,11 @@ onMounted(() => {
   watch(
     () => socketLocal.value,
     () => {
+      if (!socket.value?.hasListeners("noMultiClient")) {
+        socket.value?.on("noMultiClient", () => {
+          showMultiClientWarning(true);
+        });
+      }
       if (!socket.value?.hasListeners("updateOneUserStatus")) {
         socket.value?.on("updateOneUserStatus", (obj: { id: number; status: string }) => {
           updateStatus(obj.id, obj.status);
