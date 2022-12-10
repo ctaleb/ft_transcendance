@@ -199,6 +199,7 @@ export class ServerService {
         viewers: [],
       },
       gameState: {
+        frame: 0,
         ball: {
           size: ballSize,
           pos: { x: 250, y: 250 },
@@ -554,6 +555,7 @@ export class ServerService {
 
   inverseState(gameState: GameState, game: Game) {
     const inverseState: GameState = {
+      frame: gameState.frame,
       ball: {
         size: gameState.ball.size,
         pos: {
@@ -604,6 +606,7 @@ export class ServerService {
 
   sendState(gameState: GameState, game: Game) {
     const State: GameState = {
+      frame: gameState.frame,
       ball: {
         size: gameState.ball.size,
         pos: {
@@ -757,6 +760,7 @@ export class ServerService {
   loop(game: Game) {
     if (!game.room.kickOff) {
       const gameState = game.gameState;
+      gameState.frame++;
       this.resetHit(gameState);
       this.updateMoveStatus(game.host, gameState.hostBar, 'host', game.room.options);
       this.updateMoveStatus(game.client, gameState.clientBar, 'client', game.room.options);

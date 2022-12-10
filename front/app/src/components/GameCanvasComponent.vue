@@ -1,18 +1,24 @@
 <template>
   <div>
-    <div class="opponent"></div>
-    <canvas></canvas>
-    <div class="us"></div>
+    <div class="opponent">
+      <img :src="User.getAvatar(opponent)" />
+      <h4>{{ opponent.nickname }}</h4>
+      <h4>{{ opponent.elo }}</h4>
+    </div>
+    <canvas ref="canvas"></canvas>
+    <div class="us">
+      <img :src="User.getAvatar(us)" />
+      <h4>{{ us.nickname }}</h4>
+      <h4>{{ us.elo }}</h4>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { socketLocal, useStore } from "@/store";
 import { GameOptions, GameRoom, GameState, IBar, IPoint, particleSet } from "@/types/Game";
-import { GameSummaryData } from "@/types/GameSummary";
-import { getUserByNickname, User } from "@/types/User";
-import { isFlowPredicate } from "@babel/types";
-import { onMounted, onUnmounted, reactive, ref, watch } from "vue";
+import { User } from "@/types/User";
+import { onMounted, onUnmounted, ref, watch } from "vue";
 import ballUrl from "../assets/ball.png";
 import energyUrl from "../assets/energy.png";
 import paddleEnergyUrl from "../assets/energy_paddle_grec.png";
@@ -27,6 +33,12 @@ import slotUrl from "../assets/slot.png";
 import fillRedUrl from "../assets/slot_fill_enemy.png";
 
 const store = useStore();
+
+const props = defineProps<{
+  opponent: User;
+  us: User;
+  gameOptions: GameOptions;
+}>();
 
 const ballImg = new Image();
 ballImg.src = ballUrl;
@@ -63,17 +75,6 @@ let offset = 0;
 const hostScore = ref(0);
 const clientScore = ref(0);
 
-const score = ref(5);
-const ballSpeed = ref(1);
-const ballSize = ref(1);
-const barSpeed = ref(1);
-const barSize = ref(1);
-const smashStrength = ref(1);
-const spinStrength = ref(1);
-const effects = ref(true);
-const powers = ref(true);
-const smashes = ref(true);
-
 const playing = false;
 
 let gameOpts: GameOptions;
@@ -83,29 +84,39 @@ let kickOff = false;
 let cSmashingPercent = 0;
 let hSmashingPercent = 0;
 let ballBouncedSide = 0;
-let ballBouncedBar = 0;
 const particles: particleSet[] = [];
 
-let gState: GameState;
+let gState: GameState = {
+  frame: 0,
+  ball: {
+    size: 16,
+    pos: { x: 250, y: 250 },
+    speed: { x: 2, y: 2 },
+  },
+  hostPower: { maxCharge: 8, currentCharge: 0, isActive: false },
+  clientPower: { maxCharge: 8, currentCharge: 0, isActive: false },
+  hostBar: {
+    size: { x: 50, y: 10 },
+    pos: { x: 250, y: 460 },
+    speed: 0,
+    smashing: false,
+    maxSpeed: 1,
+  },
+  clientBar: {
+    size: { x: 50, y: 10 },
+    pos: { x: 250, y: 40 },
+    speed: 0,
+    smashing: false,
+    maxSpeed: 1,
+  },
+  score: {
+    client: 0,
+    host: 0,
+  },
+  hit: { x: 0, y: 0, hit: false },
+};
 
 let theRoom: GameRoom;
-const gameSummary = reactive<GameSummaryData>({
-  host: {
-    elo: 1500,
-    name: "Host",
-    power: "",
-    score: 0,
-    eloChange: 0,
-  },
-  client: {
-    elo: 1000,
-    name: "Client",
-    power: "",
-    score: 0,
-    eloChange: 0,
-  },
-  gameMode: "",
-});
 
 //DRAW FUNCTIONS
 
@@ -381,7 +392,7 @@ onMounted(() => {
   window.addEventListener("resize", resizeCanvas);
 });
 
-onMounted(() => {
+onUnmounted(() => {
   unregisterSockets(socketLocal);
 });
 
@@ -413,14 +424,17 @@ const ServerUpdate = (gameState: GameState) => {
 };
 
 const predict = () => {
+  if (gState.hit.hit) gState.hit.hit = false;
+  gState.ball.pos.x += gState.ball.speed.x;
+  gState.ball.pos.y += gState.ball.speed.y;
   gState.frame++;
-}
+};
 
 const gameLoop = () => {
   let currentFrame = 0;
   let previousFrame = 0;
 
-  while (playing) {
+  setInterval(function () {
     if (gState.frame != currentFrame) {
       predict();
     }
@@ -443,10 +457,10 @@ const gameLoop = () => {
       drawSmashingEffect(gState.clientBar, cSmashingPercent, ctx);
       drawSmashingEffect(gState.hostBar, hSmashingPercent, ctx);
       drawParticle(ctx, gState);
+      previousFrame = currentFrame;
+      currentFrame++;
     }
-  }
-  previousFrame = currentFrame;
-  currentFrame++;
+  }, 1000 / 60);
 };
 </script>
 <style lang="scss" scoped></style>

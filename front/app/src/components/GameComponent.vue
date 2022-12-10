@@ -76,7 +76,7 @@
     </div>
 
     <div v-if="toggleLadder" class="ladder">
-      <GameCanvasComponent></GameCanvasComponent>
+      <GameCanvasComponent :opponent="store.user!" :us="store.user!" :gameOptions="gameOpts"></GameCanvasComponent>
       <div v-if="summary" class="overlay">
         <Modal :title="sumTitle" :data="gameSummary" :start="start" :end="end" @close="showSummary(false)"></Modal>
       </div>
