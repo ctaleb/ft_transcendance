@@ -42,7 +42,7 @@ import { defineComponent, ref, reactive, computed } from "vue";
 import { useRouter } from "vue-router";
 import useVuelidate from "@vuelidate/core";
 import { required, minLength, maxLength, sameAs, helpers } from "@vuelidate/validators";
-import { addAlertMessage } from "@/functions/funcs";
+import { addAlertMessage, fetchJSONDatas } from "@/functions/funcs";
 let funcs = require("../functions/funcs");
 
 export default defineComponent({
@@ -118,21 +118,11 @@ export default defineComponent({
       if (state.avatar != File.prototype) {
         formData.append("avatar", state.avatar, state.avatar.name);
       }
-      let data = await fetch("http://" + window.location.hostname + ":3000/api/authentication/registration", {
-        method: "POST",
-        body: formData,
-      })
-        .then((response) => {
-          if (!response.ok) return Promise.reject();
-          return response.json();
+      const data = await fetchJSONDatas(`api/authentication/registration`, "POST")
+        .then((data) => {
+          router.push("/");
         })
-        .catch(async () => {
-          addAlertMessage("Nickname already in use", 3);
-          return null;
-        });
-      if (data) {
-        router.push("/");
-      }
+        .catch(() => {});
     }
 
     const submitForm = async () => {

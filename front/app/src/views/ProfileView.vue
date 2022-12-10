@@ -137,16 +137,9 @@ onMounted(async () => {
     });
   }
 
-  await fetch("http://" + window.location.hostname + ":3000/api/profile/summary/" + currentUserProfile.value?.nickname, {
-    method: "GET",
-    headers: {
-      Authorization: "Bearer " + localStorage.getItem("token"),
-    },
-  })
-    .then((data) => data.json())
-    .then((data) => {
-      currentSummary.value = data;
-    });
+  await fetchJSONDatas(`api/profile/summary/${currentUserProfile.value?.nickname}`, "GET").then((data) => {
+    currentSummary.value = data;
+  }).catch(() => {});
   if (currentUserProfile.value && store.user && store.user!.id !== currentUserProfile.value!.id) {
     fetchJSONDatas(`api/friendship/isBlocked/${currentUserProfile.value?.id}`, "GET")
       .then((data) => {

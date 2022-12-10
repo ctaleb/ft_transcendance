@@ -7,7 +7,7 @@
   </div>
 </template>
 <script lang="ts">
-// import { any, number } from "@hapi/joi";
+import { fetchJSONDatas } from "@/functions/funcs";
 import { defineComponent } from "vue";
 
 export default defineComponent({
@@ -23,30 +23,18 @@ export default defineComponent({
     };
   },
   mounted() {
-    fetch("http://" + window.location.hostname + ":3000/api/user/bynickname/" + this.$props.nick, {
-      method: "GET",
-      headers: {
-        Authorization: "Bearer " + localStorage.getItem("token"),
-      },
-    })
-      .then((res) => res.json())
+    fetchJSONDatas(`api/user/bynickname/${this.$props.nick}`, "GET")
       .then((data) => {
         this.nickname = data.nickname;
         this.phone = data.phone;
         let avatar = data.avatar.path;
-        fetch("http://" + window.location.hostname + ":3000/api/user/profile-picture/" + avatar, {
-          method: "GET",
-          headers: {
-            Authorization: "Bearer " + localStorage.getItem("token"),
-          },
-        })
-          .then((res) => res.blob())
-          .then((data) => {
-            this.imageUrl = URL.createObjectURL(data);
+        fetchJSONDatas(`api/user/profile-picture/${avatar}`, "GET")
+          .then((res) => {
+            this.imageUrl = URL.createObjectURL(res);
           })
-          .catch((err) => console.log(err.message));
+          .catch(() => {});
       })
-      .catch((err) => console.log(err.message));
+      .catch(() => {});
   },
 });
 </script>

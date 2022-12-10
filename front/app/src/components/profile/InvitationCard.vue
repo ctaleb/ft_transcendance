@@ -49,27 +49,14 @@ const befriend = async (invitation: User) => {
     .catch(() => {});
 };
 
-const decline = (invitation: User) => {
-  fetch("http://" + window.location.hostname + ":3000/api/friendship/decline", {
-    method: "DELETE",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + localStorage.getItem("token"),
-    },
-    body: JSON.stringify({
-      addressee: invitation.nickname,
-    }),
+const decline = async (invitation: User) => {
+  await fetchJSONDatas("api/friendship/decline", "DELETE", {
+    addressee: invitation.nickname,
   })
-    .then((res) => {
-      if (res.status !== 200) {
-        throw res.statusText;
-      }
-      return res.json();
-    })
     .then((data) => {
       store.user?.invitations?.splice(store.user?.invitations?.indexOf(invitation), 1);
     })
-    .catch((err) => console.log(err));
+    .catch(() => {});
 };
 
 const block = async (invitation: User) => {
