@@ -78,7 +78,7 @@
     <div v-if="toggleLadder" class="ladder">
       <canvas class="canvas hidden" ref="canvas"></canvas>
       <div v-if="summary" class="overlay">
-        <Modal :title="sumTitle" :data="gameSummary" :start="start" :end="end" @close="showSummary(false)"></Modal>
+        <Modal :title="sumTitle" :data="gameSummary" :opponent="opponentImg.src" :start="start" :end="end" @close="showSummary(false)"></Modal>
       </div>
       <div v-if="noFriends" class="overlay">
         <Denial :inviter="friendName" @sadStory="showDenial(false)"></Denial>
@@ -197,9 +197,8 @@ let hSmashingPercent = 0;
 let ballBouncedSide = 0;
 let ballBouncedBar = 0;
 const particles: particleSet[] = [];
-
-let start: Date = new Date();
-let end: Date = new Date();
+const start = ref(new Date());
+const end = ref(new Date());
 
 let theRoom: GameRoom;
 const gameSummary = reactive<GameSummaryData>({
@@ -688,16 +687,16 @@ const ServerUpdate = (gameState: GameState) => {
 
 const Win = (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) => {
   theRoom = gameRoom;
-  lobbyStatus.value = "Defeat... You lost -" + elo_diff + " elo ! Return to lobby ?";
+  lobbyStatus.value = "Victory ! You gained +" + elo_diff + " elo ! Return to lobby ?";
   startButton.value = false;
   readyButton.value = false;
   displayLoading.value = false;
   customReady.value = "Ready ?";
   powers.value = true;
-  end = new Date();
+  end.value = new Date();
   updateSummary(summary);
-  color.value = "red";
-  sumTitle.value = "Defeat";
+  color.value = "green";
+  sumTitle.value = "Victory";
   showSummary(true);
   //   gameBoard.value = false;
   document.querySelector(".canvas")?.classList.add("hidden");
@@ -705,16 +704,16 @@ const Win = (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) => 
 
 const Lose = (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) => {
   theRoom = gameRoom;
-  lobbyStatus.value = "Victory ! You gained +" + elo_diff + " elo ! Return to lobby ?";
+  lobbyStatus.value = "Defeat... You lost -" + elo_diff + " elo ! Return to lobby ?";
   startButton.value = false;
   readyButton.value = false;
   displayLoading.value = false;
   customReady.value = "Ready ?";
   powers.value = true;
-  end = new Date();
+  end.value = new Date();
   updateSummary(summary);
-  color.value = "green";
-  sumTitle.value = "Victory";
+  color.value = "red";
+  sumTitle.value = "Defeat";
   showSummary(true);
   //   gameBoard.value = false;
   document.querySelector(".canvas")?.classList.add("hidden");
@@ -730,7 +729,7 @@ const startGame = (gameRoom: GameRoom) => {
   clientName.value = theRoom.clientName;
   userImg.src = User.getAvatar(store.user!);
   opponentImg.src = User.getAvatar(gameRoom.opponent);
-  start = new Date();
+  start.value = new Date();
   document.querySelector(".canvas")?.classList.remove("hidden");
 };
 

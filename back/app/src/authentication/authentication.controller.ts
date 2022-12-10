@@ -60,7 +60,7 @@ export class AuthenticationController {
   @Post('login')
   async login(@Request() req) {
     const token = this._authenticationService.login(req.user);
-    this.serverService.newUser((await token).access_token, req.user.nickname);
+    await this.serverService.newUser((await token).access_token, req.user.nickname);
     return { token: (await token).access_token, user: req.user };
   }
 }

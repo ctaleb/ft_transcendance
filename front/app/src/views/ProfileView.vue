@@ -74,12 +74,14 @@ import { addAlertMessage, fetchJSONDatas } from "@/functions/funcs";
 import { currentUserProfile, socketLocal, useStore } from "@/store";
 import { History } from "@/types/GameSummary";
 import { getUserByNickname, User } from "@/types/User";
-import { functionExpression } from "@babel/types";
+import { functionExpression, stringLiteral } from "@babel/types";
 import { onMounted, ref, watch } from "vue";
 import { RouterLink, useRoute } from "vue-router";
 import editUrl from "../assets/edit.png";
 import shutdownUrl from "../assets/shutdown.png";
 import { useRouter } from "vue-router";
+import { Conversation } from "@/types/Conversation";
+import { transformDate } from "@/types/Message";
 let funcs = require("../functions/funcs");
 
 const router = useRouter();
@@ -105,7 +107,7 @@ onMounted(async () => {
           currentSummary.value = data;
         })
         .catch(() => {});
-      if (currentUserProfile.value && store.user?.id != currentUserProfile.value!.id) {
+      if (currentUserProfile.value && store.user && store.user!.id !== currentUserProfile.value!.id) {
         fetchJSONDatas(`api/friendship/isBlocked/${currentUserProfile.value?.id}`, "GET")
           .then((data) => {
             currentUserProfileIsBlocked.value = data;
@@ -145,7 +147,7 @@ onMounted(async () => {
     .then((data) => {
       currentSummary.value = data;
     });
-  if (store.user?.id != currentUserProfile.value!.id) {
+  if (currentUserProfile.value && store.user && store.user!.id !== currentUserProfile.value!.id) {
     fetchJSONDatas(`api/friendship/isBlocked/${currentUserProfile.value?.id}`, "GET")
       .then((data) => {
         currentUserProfileIsBlocked.value = data;
@@ -189,7 +191,20 @@ const unblock = async (user?: User) => {
 
 const startConversation = (user?: User) => {
   if (user) {
-    User.createConversation(user).then(() => {
+    User.createConversation(user).then(async (conv) => {
+      await fetchJSONDatas(`api/privateConv/getMessages/${conv.conv.id}/0`, "GET")
+        .then((data) => {
+          if (data.length > 0) conv.conv.messages = data;
+          else conv.conv.messages = [];
+          for (let i = 0; i < conv.conv.messages.length; i++) conv.conv.messages[i] = transformDate(conv.conv.messages[i]);
+          conv.conv.other = user;
+          store.currentChat = conv.conv;
+        })
+        .catch(() => {
+          store.$patch({
+            currentChat: undefined,
+          });
+        });
       router.push("/chat");
     });
   }
