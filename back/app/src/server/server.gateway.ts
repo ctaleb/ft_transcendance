@@ -47,6 +47,11 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       hsNick = client.handshake.auth.user.nickname;
     }
     const user = this.serverService.userList.find((element) => element.name === hsNick);
+    if (user && user.socket?.connected) {
+      client.emit('noMultiClient');
+      client.disconnect();
+      return;
+    }
     if (user && user.token === hsToken) {
       user.socket = client;
       this.serverService.reconnect(user);
