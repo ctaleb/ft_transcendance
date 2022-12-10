@@ -2,7 +2,7 @@
   <div @click="hideUserMenu()" class="contextMenu" v-if="menu.view" v-bind:style="{ top: menu.top.toString() + 'px', left: menu.left.toString() + 'px' }">
     <div class="header">
       <div class="name">{{ menu.user!.nickname }}</div>
-      <div class="status">
+      <div class="status" :class="statusClass">
         <i class="gg-shape-rhombus"></i>
         {{ menu.user!.status }}
       </div>
@@ -55,12 +55,12 @@ import { addAlertMessage, fetchJSONDatas, hideUserMenu } from "@/functions/funcs
 import { currentUserProfile, menu, socketLocal, useStore } from "@/store";
 import { ChannelRole, ChannelUser } from "@/types/Channel";
 import { User } from "@/types/User";
-import { onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 
 const store = useStore();
 const router = useRouter();
-
+const statusClass = computed(() => menu.value.user?.status);
 const isBlocked = ref(false);
 const showMuteModal = ref(false);
 const showBanModal = ref(false);
@@ -157,7 +157,6 @@ const takeAdmin = async (member: ChannelUser): Promise<void> => {
     color: $primary;
   }
   .header {
-    color: $victory;
     display: flex;
     justify-content: space-around;
     align-items: center;
