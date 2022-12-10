@@ -1,18 +1,24 @@
 <template>
   <div>
-    <div class="opponent"></div>
-    <canvas></canvas>
-    <div class="us"></div>
+    <div class="opponent">
+      <!-- <img :src="User.getAvatar(opponent)" /> -->
+      <!-- <h4>{{ opponent.nickname }}</h4>
+      <h4>{{ opponent.elo }}</h4> -->
+    </div>
+    <canvas ref="canvas"></canvas>
+    <div class="us">
+      <!-- <img :src="User.getAvatar(us)" /> -->
+      <!-- <h4>{{ us.nickname }}</h4>
+      <h4>{{ us.elo }}</h4> -->
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { socketLocal, useStore } from "@/store";
 import { GameOptions, GameRoom, GameState, IBar, IPoint, particleSet } from "@/types/Game";
-import { GameSummaryData } from "@/types/GameSummary";
-import { getUserByNickname, User } from "@/types/User";
-import { isFlowPredicate } from "@babel/types";
-import { onMounted, onUnmounted, reactive, ref, watch } from "vue";
+import { User } from "@/types/User";
+import { onMounted, onUnmounted, ref, watch } from "vue";
 import ballUrl from "../assets/ball.png";
 import energyUrl from "../assets/energy.png";
 import paddleEnergyUrl from "../assets/energy_paddle_grec.png";
@@ -27,6 +33,12 @@ import slotUrl from "../assets/slot.png";
 import fillRedUrl from "../assets/slot_fill_enemy.png";
 
 const store = useStore();
+
+const props = defineProps<{
+  opponent: User;
+  us: User;
+  gameOptions: GameOptions;
+}>();
 
 const ballImg = new Image();
 ballImg.src = ballUrl;
@@ -53,7 +65,7 @@ fillImg.src = fillUrl;
 const fillRedImg = new Image();
 fillRedImg.src = fillRedUrl;
 
-const canvas = ref<HTMLCanvasElement | null>(null);
+const canvas = ref<HTMLCanvasElement>();
 let ctx: CanvasRenderingContext2D | null | undefined;
 let cHeight = 0;
 let cWidth = 0;
@@ -63,49 +75,60 @@ let offset = 0;
 const hostScore = ref(0);
 const clientScore = ref(0);
 
-const score = ref(5);
-const ballSpeed = ref(1);
-const ballSize = ref(1);
-const barSpeed = ref(1);
-const barSize = ref(1);
-const smashStrength = ref(1);
-const spinStrength = ref(1);
-const effects = ref(true);
-const powers = ref(true);
-const smashes = ref(true);
-
 const playing = false;
-
-let gameOpts: GameOptions;
 
 let loadPercent = 120;
 let kickOff = false;
 let cSmashingPercent = 0;
 let hSmashingPercent = 0;
 let ballBouncedSide = 0;
-let ballBouncedBar = 0;
 const particles: particleSet[] = [];
 
-let gState: GameState;
+let gState: GameState = {
+  frame: 0,
+  ball: {
+    size: 16,
+    pos: { x: 250, y: 250 },
+    speed: { x: 5, y: 0 },
+  },
+  hostPower: { maxCharge: 8, currentCharge: 0, isActive: false },
+  clientPower: { maxCharge: 8, currentCharge: 0, isActive: false },
+  hostBar: {
+    size: { x: 50, y: 10 },
+    pos: { x: 250, y: 460 },
+    speed: 0,
+    smashing: false,
+    maxSpeed: 1,
+  },
+  clientBar: {
+    size: { x: 50, y: 10 },
+    pos: { x: 250, y: 40 },
+    speed: 0,
+    smashing: false,
+    maxSpeed: 1,
+  },
+  score: {
+    client: 0,
+    host: 0,
+  },
+  hit: { x: 0, y: 0, hit: false },
+};
+
+let gStateRender: GameState;
+
+const defaultGameOptions: GameOptions = {
+  scoreMax: 5,
+  ballSpeed: 1,
+  ballSize: 1,
+  barSpeed: 1,
+  barSize: 2,
+  smashStrength: 1,
+  effects: true,
+  powers: true,
+  smashes: true,
+};
 
 let theRoom: GameRoom;
-const gameSummary = reactive<GameSummaryData>({
-  host: {
-    elo: 1500,
-    name: "Host",
-    power: "",
-    score: 0,
-    eloChange: 0,
-  },
-  client: {
-    elo: 1000,
-    name: "Client",
-    power: "",
-    score: 0,
-    eloChange: 0,
-  },
-  gameMode: "",
-});
 
 //DRAW FUNCTIONS
 
@@ -230,7 +253,7 @@ function drawParticle(ctx: CanvasRenderingContext2D, gameState: GameState) {
   });
 }
 function drawScore(ctx: CanvasRenderingContext2D, gameState: GameState) {
-  let slot = theRoom.options.scoreMax;
+  let slot = defaultGameOptions.scoreMax;
 
   for (let i = 0; i < slot; i++) {
     ctx.drawImage(slotImg, cWidth * 0.25 + ((cWidth * 0.5) / (slot + 1)) * (i + 1) - 10 * scale, cHeight * 0.148 - 25 * scale, 20 * scale, 20 * scale);
@@ -277,12 +300,12 @@ function drawPowerCharge(ctx: CanvasRenderingContext2D, gameState: GameState) {
 }
 function drawBall(ctx: CanvasRenderingContext2D, gameState: GameState) {
   if (gameState.hit.hit) {
-    ballBouncedSide = 3;
+    ballBouncedSide = 4;
     ctx.drawImage(
       ballImg,
       gameState.ball.pos.x - gameState.ball.size * scale,
       gameState.ball.pos.y - gameState.ball.size * scale,
-      gameState.ball.size * 2 * scale * 0.7,
+      gameState.ball.size * 2 * scale * 0.6,
       gameState.ball.size * 2 * scale
     );
   } else if (ballBouncedSide > 0) {
@@ -290,7 +313,7 @@ function drawBall(ctx: CanvasRenderingContext2D, gameState: GameState) {
       ballImg,
       gameState.ball.pos.x - gameState.ball.size * scale,
       gameState.ball.pos.y - gameState.ball.size * scale,
-      gameState.ball.size * 2 * scale * 0.8 + 0.1 * (3 - ballBouncedSide),
+      gameState.ball.size * 2 * scale * (0.7 + 0.1 * (4 - ballBouncedSide)),
       gameState.ball.size * 2 * scale
     );
     ballBouncedSide--;
@@ -332,24 +355,26 @@ function scaling(ctx?: CanvasRenderingContext2D | null) {
   }
 }
 function scalePosition(gameState: GameState) {
+  gStateRender = JSON.parse(JSON.stringify(gameState));
   let scale = cWidth / 500;
   let offset = (cHeight - cWidth) / 2;
-  gameState.ball.pos.x *= scale;
-  gameState.ball.pos.y *= scale;
-  gameState.ball.pos.y += offset;
-  gameState.hostBar.pos.x *= scale;
-  gameState.hostBar.pos.y *= scale;
-  gameState.hostBar.pos.y += offset;
-  gameState.clientBar.pos.x *= scale;
-  gameState.clientBar.pos.y *= scale;
-  gameState.clientBar.pos.y += offset;
-  gameState.hit.x *= scale;
-  gameState.hit.y *= scale;
-  gameState.hit.y += offset;
+  gStateRender.ball.pos.x *= scale;
+  gStateRender.ball.pos.y *= scale;
+  gStateRender.ball.pos.y += offset;
+  gStateRender.hostBar.pos.x *= scale;
+  gStateRender.hostBar.pos.y *= scale;
+  gStateRender.hostBar.pos.y += offset;
+  gStateRender.clientBar.pos.x *= scale;
+  gStateRender.clientBar.pos.y *= scale;
+  gStateRender.clientBar.pos.y += offset;
+  gStateRender.hit.x *= scale;
+  gStateRender.hit.y *= scale;
+  gStateRender.hit.y += offset;
 }
 function resizeCanvas() {
   scaling(ctx);
-  rerender(ctx, gState);
+  scalePosition(gState);
+  render(ctx, gStateRender);
 }
 
 // SOCKET FUNCTIONS
@@ -368,10 +393,8 @@ const unregisterSockets = (socket: any) => {
 
 onMounted(() => {
   ctx = canvas.value?.getContext("2d");
-  ctx?.drawImage(plateauImg, 0, 0, cWidth, cHeight);
   scaling(ctx);
   registerSockets(socketLocal);
-
   watch(
     () => socketLocal.value,
     () => {
@@ -379,32 +402,25 @@ onMounted(() => {
     }
   );
   window.addEventListener("resize", resizeCanvas);
+  gameLoop();
 });
 
-onMounted(() => {
+onUnmounted(() => {
   unregisterSockets(socketLocal);
 });
 
-function rerender(ctx: CanvasRenderingContext2D | null | undefined, gameState: GameState) {
-  if (theRoom && ctx) {
-    let ball = gameState.ball;
-    clientScore.value = gameState.score.client;
-    hostScore.value = gameState.score.host;
-    if (gameState.clientBar.smashing && cSmashingPercent < 100 && !kickOff) {
-      cSmashingPercent += 2;
-    } else if (!gameState.clientBar.smashing || kickOff) cSmashingPercent = 0;
-    if (gameState.hostBar.smashing && hSmashingPercent < 100 && !kickOff) {
-      hSmashingPercent += 2;
-    } else if (!gameState.hostBar.smashing || kickOff) hSmashingPercent = 0;
-    if (ctx) {
-      drawPlayground(ctx);
-      drawScore(ctx, gameState);
-      kickoffLoading(ctx);
-      drawBall(ctx, gameState);
-      ctx.fillStyle = "black";
-      drawSmashingEffect(gameState.clientBar, cSmashingPercent, ctx);
-      drawSmashingEffect(gameState.hostBar, hSmashingPercent, ctx);
-    }
+render;
+
+function render(ctx: CanvasRenderingContext2D | null | undefined, gameState: GameState) {
+  if (ctx) {
+    drawPlayground(ctx);
+    drawScore(ctx, gameState);
+    kickoffLoading(ctx);
+    drawBall(ctx, gameState);
+    ctx.fillStyle = "black";
+    drawSmashingEffect(gameState.clientBar, cSmashingPercent, ctx);
+    drawSmashingEffect(gameState.hostBar, hSmashingPercent, ctx);
+    drawParticle(ctx, gameState);
   }
 }
 
@@ -412,41 +428,56 @@ const ServerUpdate = (gameState: GameState) => {
   gState = gameState;
 };
 
+const wallBallCollision = (state: GameState) => {
+  if (state.ball.pos.x - 16 <= 0) {
+    state.ball.speed.x *= -1;
+    state.hit.x = 0;
+    state.hit.y = state.ball.pos.y;
+    state.hit.hit = true;
+    state.ball.pos.x = 0 + 16;
+  }
+  if (state.ball.pos.x + 16 > 500) {
+    state.ball.speed.x *= -1;
+    state.hit.x = 500;
+    state.hit.y = state.ball.pos.y;
+    state.hit.hit = true;
+    state.ball.pos.x = 500 - 16;
+  }
+};
+
 const predict = () => {
+  if (gState.hit.hit) gState.hit.hit = false;
+  gState.ball.pos.x += gState.ball.speed.x;
+  gState.ball.pos.y += gState.ball.speed.y;
+  wallBallCollision(gState);
   gState.frame++;
-}
+};
 
 const gameLoop = () => {
   let currentFrame = 0;
   let previousFrame = 0;
 
-  while (playing) {
+  setInterval(function () {
     if (gState.frame != currentFrame) {
       predict();
     }
     if (ctx) {
       scalePosition(gState);
-      clientScore.value = gState.score.client;
-      hostScore.value = gState.score.host;
-      if (gState.clientBar.smashing && cSmashingPercent < 100 && !kickOff) {
+      if (gStateRender.hit.hit) addParticle(ctx, gStateRender);
+      clientScore.value = gStateRender.score.client;
+      hostScore.value = gStateRender.score.host;
+      if (gStateRender.clientBar.smashing && cSmashingPercent < 100 && !kickOff) {
         cSmashingPercent += 2;
-      } else if (!gState.clientBar.smashing || kickOff) cSmashingPercent = 0;
-      if (gState.hostBar.smashing && hSmashingPercent < 100 && !kickOff) {
+      } else if (!gStateRender.clientBar.smashing || kickOff) cSmashingPercent = 0;
+      if (gStateRender.hostBar.smashing && hSmashingPercent < 100 && !kickOff) {
         hSmashingPercent += 2;
-      } else if (!gState.hostBar.smashing || kickOff) hSmashingPercent = 0;
-      drawPlayground(ctx);
-      drawScore(ctx, gState);
-      drawPowerCharge(ctx, gState);
-      kickoffLoading(ctx);
-      drawBall(ctx, gState);
-      ctx.fillStyle = "black";
-      drawSmashingEffect(gState.clientBar, cSmashingPercent, ctx);
-      drawSmashingEffect(gState.hostBar, hSmashingPercent, ctx);
-      drawParticle(ctx, gState);
+      } else if (!gStateRender.hostBar.smashing || kickOff) hSmashingPercent = 0;
+      render(ctx, gStateRender);
+      previousFrame = currentFrame;
+      gState.frame = currentFrame;
+      currentFrame++;
     }
-  }
-  previousFrame = currentFrame;
-  currentFrame++;
+  }, 1000 / 60);
 };
 </script>
 <style lang="scss" scoped></style>

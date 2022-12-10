@@ -33,6 +33,7 @@ export interface IHit {
 }
 
 export interface GameState {
+  frame: number;
   ball: IBall;
   hostPower: IPowerInfo;
   clientPower: IPowerInfo;
