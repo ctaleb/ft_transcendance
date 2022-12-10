@@ -50,7 +50,8 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     if (user && user.socket?.connected) {
       client.emit('noMultiClient');
       client.disconnect();
-      this.serverService.userList.splice(this.serverService.userList.indexOf(user), 1);
+      const toDel = this.serverService.userList.find((element) => element.name === hsNick && element.socket === undefined);
+      if (toDel) this.serverService.userList.splice(this.serverService.userList.indexOf(toDel), 1);
       return;
     }
     if (user && user.token === hsToken) {
@@ -61,6 +62,7 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     }
     // New stuff
     this.serverService.joinAllChannels(client, client.handshake.auth.user.id);
+    console.log('Socket ' + client.id + ' successfully connected');
   }
 
   @SubscribeMessage('debugging')
