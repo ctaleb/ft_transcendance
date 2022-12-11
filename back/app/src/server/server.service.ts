@@ -31,7 +31,7 @@ let debugPower = false;
 const chargeMax = 1;
 const ballSize = 16;
 const defaultGameOptions: GameOptions = {
-  scoreMax: 2,
+  scoreMax: 10,
   ballSpeed: 1,
   ballSize: 1,
   barSpeed: 1,
@@ -177,6 +177,7 @@ export class ServerService {
   }
 
   reconnect(player: User) {
+    this.updateStatus(player.id, 'online');
     let game = this.games.find((element) => element.host.name === player.name);
     if (!game) game = this.games.find((element) => element.client.name === player.name);
     if (game) {
@@ -833,35 +834,5 @@ export class ServerService {
     if (channel) {
       this.server.to(`${channel.id}`).emit('channelUpdatd', { id: channel.id, name: channel.name, type: channel.type });
     }
-  }
-  //chat stuff
-  identify(name: string, clientId: string, room: string) {
-    this.clientToUser[clientId] = name;
-    if (this.rooms.find((element) => element.name === room) === undefined) this.rooms.push({ name: room, messages: [], userList: [] });
-    this.rooms.find((element) => element.name === room).userList.push(name);
-    return Object.values(this.clientToUser);
-  }
-
-  getClientName(clientId: string, room: string) {
-    return this.clientToUser[clientId];
-  }
-
-  create(createMessageDto: CreateMessageDto, clientId: string, room: string) {
-    const message = {
-      name: this.clientToUser[clientId],
-      message: createMessageDto.message,
-    };
-    this.rooms.find((element) => element.name === room).messages.push(message);
-
-    return message;
-  }
-
-  findAll(room: string) {
-    return this.rooms.find((element) => element.name === room).messages;
-  }
-
-  findUsers(room: string) {
-    // console.log(this.rooms.find((element) => element.name === room).userList);
-    return this.rooms.find((element) => element.name === room).userList;
   }
 }

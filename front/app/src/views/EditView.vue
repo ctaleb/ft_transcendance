@@ -61,7 +61,7 @@
 </template>
 
 <script lang="ts">
-import { trySetupUser } from "@/functions/funcs";
+import { fetchJSONDatas, trySetupUser } from "@/functions/funcs";
 import { useStore } from "@/store";
 import { getUserById } from "@/types/User";
 import { defineComponent, ref } from "vue";
@@ -123,26 +123,14 @@ export default defineComponent({
     async updatePicture() {
       let formData = new FormData();
       formData.append("avatar", this.newAvatar);
-      let fetch_ret = await fetch("http://" + window.location.hostname + ":3000/api/user/avatarEdit", {
-        headers: {
-          Authorization: "Bearer " + localStorage.getItem("token"),
-        },
-        method: "PUT",
-        body: formData,
-      })
-        .then((res) => {
-          if (!res.ok) return Promise.reject();
-          return res.json();
+      await fetchJSONDatas("api/user/avatarEdit", "PUT", formData)
+        .then(async (data) => {
+          localStorage.setItem("user", JSON.stringify(data.user));
+          localStorage.setItem("token", data.token);
+          await trySetupUser();
+          this.avatarUrl = this.getUserAvatar();
         })
-        .catch((err) => {
-          funcs.addAlertMessage("Unauthorized", 3);
-          return null;
-        });
-      if (fetch_ret == null) return;
-      localStorage.setItem("user", JSON.stringify(fetch_ret.user));
-      localStorage.setItem("token", fetch_ret.token);
-      await trySetupUser();
-      this.avatarUrl = this.getUserAvatar();
+        .catch(() => {});
     },
 
     containsUppercase(value: string) {
@@ -186,37 +174,15 @@ export default defineComponent({
         funcs.addAlertMessage("Passwords don't match", 2);
         return;
       }
-      const updateResult = await fetch("http://" + window.location.hostname + ":3000/api/user/passwordEdit", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + localStorage.getItem("token"),
-        },
-        body: JSON.stringify({
-          newPassword: this.password,
-        }),
+      await fetchJSONDatas("api/user/passwordEdit", "PUT", {
+        newPassword: this.password,
       })
-        .then((res) => {
-          return res.json();
+        .then((data) => {
+          if (data.success) {
+            funcs.addAlertMessage("Password updated !", 1);
+          }
         })
-        .catch((err) => {
-          console.log(err);
-        });
-      if (updateResult.success) {
-        funcs.addAlertMessage("Password updated !", 1);
-      }
-    },
-
-    async deleteAccount() {
-      await fetch("http://" + window.location.hostname + ":3000/api/user/delete", {
-        headers: {
-          Authorization: "Bearer " + localStorage.getItem("token"),
-        },
-        method: "DELETE",
-      });
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      this.$router.push("/");
+        .catch(() => {});
     },
     getUserAvatar(): string {
       return `http://${window.location.hostname}:3000${this.store.user?.avatar}`;
@@ -243,54 +209,36 @@ export default defineComponent({
       }
     },
     async updatePhone() {
-      let fetch_ret = await fetch("http://" + window.location.hostname + ":3000/api/user/phoneEdit/" + this.phone, {
-        headers: {
-          Authorization: "Bearer " + localStorage.getItem("token"),
-        },
-        method: "PUT",
-      })
-        .then((res) => {
-          if (!res.ok) return Promise.reject();
-          return res.json();
+      await fetchJSONDatas(`api/user/phoneEdit/${this.phone}`, "PUT")
+        .then((data) => {
+          if (data && data.user) {
+            localStorage.setItem("user", JSON.stringify(data.user));
+            localStorage.setItem("token", data.token);
+            this.user = data.user;
+            funcs.addAlertMessage("Phone successfully updated", 2);
+            this.missingPhoneNumber = false;
+          } else funcs.addAlertMessage("Updated failed", 3);
         })
-        .catch((err) => {
-          funcs.addAlertMessage("Bad format. Need to be +336XXXXXXXX", 3);
-          return null;
-        });
-      if (fetch_ret && fetch_ret.user) {
-        localStorage.setItem("user", JSON.stringify(fetch_ret.user));
-        localStorage.setItem("token", fetch_ret.token);
-        this.user = fetch_ret.user;
-        funcs.addAlertMessage("Phone successfully updated", 2);
-        this.missingPhoneNumber = false;
-      } else funcs.addAlertMessage("Updated failed", 3);
+        .catch(() => {});
     },
 
     async updateTwoFactorAuth() {
-      let fetch_ret = await fetch("http://" + window.location.hostname + ":3000/api/user/twofactorAuthEdit/", {
-        headers: {
-          Authorization: "Bearer " + localStorage.getItem("token"),
-        },
-        method: "PUT",
-      })
-        .then((res) => {
-          return res.json();
+      await fetchJSONDatas("api/user/twofactorAuthEdit", "PUT")
+        .then((data) => {
+          if (data.user) {
+            localStorage.setItem("user", JSON.stringify(data.user));
+            localStorage.setItem("token", data.token);
+            this.user = data.user;
+            if (data.newValue == true) {
+              funcs.addAlertMessage("2fa enabled !", 2);
+              this.twoFactorEnabled = true;
+            } else {
+              this.twoFactorEnabled = false;
+              funcs.addAlertMessage("2fa Disabled", 2);
+            }
+          }
         })
-        .catch((err) => {
-          console.log(err);
-        });
-      if (fetch_ret.user) {
-        localStorage.setItem("user", JSON.stringify(fetch_ret.user));
-        localStorage.setItem("token", fetch_ret.token);
-        this.user = fetch_ret.user;
-        if (fetch_ret.newValue == true) {
-          funcs.addAlertMessage("2fa enabled !", 2);
-          this.twoFactorEnabled = true;
-        } else {
-          this.twoFactorEnabled = false;
-          funcs.addAlertMessage("2fa Disabled", 2);
-        }
-      }
+        .catch(() => {});
     },
     formatPhone() {
       console.log("formatPhone");

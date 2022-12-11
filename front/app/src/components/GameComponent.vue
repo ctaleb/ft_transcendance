@@ -728,6 +728,7 @@ const startGame = (gameRoom: GameRoom) => {
   hostName.value = theRoom.hostName;
   clientName.value = theRoom.clientName;
   userImg.src = User.getAvatar(store.user!);
+  console.log(gameRoom.opponent);
   opponentImg.src = User.getAvatar(gameRoom.opponent);
   start.value = new Date();
   document.querySelector(".canvas")?.classList.remove("hidden");
@@ -762,6 +763,10 @@ const customInvitation = () => {};
 //    height: 100%;
 //  }
 //}
+
+.canvas {
+  z-index: 10;
+}
 
 .principalSection {
   flex-wrap: wrap;

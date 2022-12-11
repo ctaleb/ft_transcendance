@@ -8,10 +8,8 @@
 </template>
 
 <script lang="ts" setup>
-import { computed } from "@vue/reactivity";
-import { watch } from "fs";
-import { onMounted, onUpdated, ref } from "vue";
-import * as funcs from "@/functions/funcs";
+import { fetchJSONDatas } from "@/functions/funcs";
+import { onMounted, ref } from "vue";
 let code = ref("");
 let error = ref(false);
 let phone = ref(hidePhone(localStorage.getItem("phoneTo2fa")));
@@ -34,10 +32,7 @@ function hidePhone(phone: string | null): string | null {
 
 async function validateCode() {
   if (code.value.length != 6) return;
-  await fetch("http://" + window.location.hostname + ":3000/api/twofactor/verifyCode/" + code.value + "/" + localStorage.getItem("phoneTo2fa"), {
-    method: "POST",
-  })
-    .then((data) => data.json())
+  await fetchJSONDatas(`api/twofactor/verifyCode/${code.value}/${localStorage.getItem("phoneTo2fa")}`, "POST")
     .then((data) => {
       if (data.status == "approved") {
         console.log("code validated");
@@ -51,22 +46,14 @@ async function validateCode() {
         error.value = true;
       }
     })
-    .catch((err) => {
-      console.log(err);
-    });
+    .catch(() => {});
 }
 async function sendCode() {
-  await fetch("http://" + window.location.hostname + ":3000/api/twofactor/sendCode/" + localStorage.getItem("phoneTo2fa"), {
-    method: "POST",
-  })
-    .then((data) => data.json())
+  await fetchJSONDatas(`api/twofactor/sendCode/${localStorage.getItem("phoneTo2fa")}`, "POST")
     .then((data) => {
       console.log(data.status);
-      //error in the console(unexpected json input) because i don't return jsons format in the service and the controller. Need to add return before the send function, and make a json return int eh last then
     })
-    .catch((err) => {
-      console.log(err);
-    });
+    .catch(() => {});
 }
 </script>
 <style lang="scss" scoped>

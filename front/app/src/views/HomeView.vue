@@ -63,6 +63,7 @@
 
 <script lang="ts" setup>
 import * as funcs from "@/functions/funcs";
+import { fetchJSONDatas } from "@/functions/funcs";
 import { useStore } from "@/store";
 import { User } from "@/types/User";
 import { onMounted, ref } from "vue";
@@ -115,17 +116,11 @@ function redirectTo(url: string) {
   location.href = url;
 }
 async function sendCode() {
-  await fetch("http://" + window.location.hostname + ":3000/api/twofactor/sendCode/" + localStorage.getItem("phoneTo2fa"), {
-    method: "POST",
-  })
-    .then((data) => data.json())
+  await fetchJSONDatas(`api/twofactor/sendCode/${localStorage.getItem("phoneTo2fa")}`, "POST")
     .then((data) => {
       console.log(data.status);
-      //error in the console(unexpected json input) because i don't return jsons format in the service and the controller. Need to add return before the send function, and make a json return int eh last then
     })
-    .catch((err) => {
-      console.log(err);
-    });
+    .catch(() => {});
 }
 async function login() {
   let data = await funcs
@@ -159,20 +154,13 @@ function extractIntraCode(): string | null {
 }
 
 async function getIntraToken(code: string) {
-  let getIntraToken = await fetch("http://" + window.location.hostname + ":3000/api/oauth/" + code, {
-    headers: {
-      "Content-Type": "application/json",
-    },
-    method: "POST",
-  });
-  return await getIntraToken.json();
+  const getIntraToken = await fetchJSONDatas(`api/oauth/${code}`, "POST").catch(() => {});
+  return getIntraToken;
 }
 
 async function getUserAndToken(intraToken: string) {
-  const userAndToken = await fetch("http://" + window.location.hostname + ":3000/api/oauth/login/" + intraToken, {
-    method: "POST",
-  });
-  return await userAndToken.json();
+  const userAndToken = await fetchJSONDatas(`api/oauth/login/${intraToken}`, "POST").catch(() => {});
+  return userAndToken;
 }
 
 async function studentLogin(code: string) {
