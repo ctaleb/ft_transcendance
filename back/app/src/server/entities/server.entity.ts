@@ -166,7 +166,7 @@ export class PowerElastico extends IPower {
 
   constructor(bar: IBar, name: string) {
     super(name);
-    this.maxCharge = 3;
+    this.maxCharge = 6;
     this.timeLeft = 0;
     this.initialBarSize = bar.size.x;
     this.bar = bar;
@@ -234,7 +234,7 @@ export class PowerExhaust extends IPower {
 
   constructor(bar: IBar, name: string) {
     super(name);
-    this.maxCharge = 4;
+    this.maxCharge = 7;
     this.timeLeft = 0;
     this.initialBarSpeed = JSON.parse(JSON.stringify(bar.maxSpeed));
     this.bar = bar;
@@ -288,7 +288,7 @@ export class PowerSmasher extends IPower {
 
   constructor(ball: IBall, name: string) {
     super(name);
-    this.maxCharge = 2;
+    this.maxCharge = 5;
     this.ball = ball;
   }
 

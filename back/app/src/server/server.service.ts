@@ -450,12 +450,8 @@ export class ServerService {
     if (!room.barCollide) {
       if (ball.pos.y - ball.size <= clientBar.pos.y + clientBar.size.y && ball.pos.y > clientBar.pos.y + clientBar.size.y) {
         if (ball.pos.x < clientBar.pos.x + clientBar.size.x + ball.size && ball.pos.x > clientBar.pos.x - clientBar.size.x - ball.size) {
-          if (client.gameData.power.isActive) {
-            client.gameData.power.handle();
-          } else if (room.options.powers) {
-            client.gameData.power.chargeUp();
-          }
-          const M = (Math.sqrt(Math.pow(ball.speed.x, 2) + Math.pow(ball.speed.y, 2)) / Math.sqrt(2)) * 1.1;
+          room.barCollide = true;
+          const M = (Math.sqrt(Math.pow(ball.speed.x, 2) + Math.pow(ball.speed.y, 2)) / Math.sqrt(2)) * 1.05;
           if (room.options.smashes) {
             if (client.gameData.smashLeft > 0) {
               ball.speed.x = 1 * M + client.gameData.smashLeft;
@@ -466,41 +462,52 @@ export class ServerService {
             } else {
               ball.speed.y *= -1;
             }
-            gameState.hit.x = gameState.ball.pos.x;
-            gameState.hit.y = gameState.ball.pos.y;
-            gameState.hit.hit = 2;
             clientBar.smashing = false;
             client.gameData.smashLeft = 0;
             client.gameData.smashRight = 0;
+            ball.pos.y += ball.speed.y;
+          } else {
+            ball.speed.y *= -1;
           }
-          room.barCollide = true;
+          if (room.options.powers && client.gameData.power.isActive) {
+            client.gameData.power.handle();
+          } else if (room.options.powers) {
+            client.gameData.power.chargeUp();
+          }
+          gameState.hit.x = gameState.ball.pos.x;
+          gameState.hit.y = gameState.ball.pos.y;
+          gameState.hit.hit = 2;
           this.storeEffect(clientBar, room);
         }
       }
       if (ball.pos.y + ball.size >= hostBar.pos.y - hostBar.size.y && ball.pos.y < hostBar.pos.y - hostBar.size.y) {
         if (ball.pos.x < hostBar.pos.x + hostBar.size.x + ball.size && ball.pos.x > hostBar.pos.x - hostBar.size.x - ball.size) {
-          if (host.gameData.power.isActive) {
-            host.gameData.power.handle();
-          } else if (room.options.powers) host.gameData.power.chargeUp();
-          const M = (Math.sqrt(Math.pow(ball.speed.x, 2) + Math.pow(ball.speed.y, 2)) / Math.sqrt(2)) * 1.1;
+          room.barCollide = true;
+          const M = (Math.sqrt(Math.pow(ball.speed.x, 2) + Math.pow(ball.speed.y, 2)) / Math.sqrt(2)) * 1.05;
           if (room.options.smashes) {
             if (host.gameData.smashLeft > 0) {
               ball.speed.x = -1 * M - host.gameData.smashLeft;
-              ball.speed.y = 1 * M + host.gameData.smashLeft;
+              ball.speed.y = -1 * M + host.gameData.smashLeft;
             } else if (host.gameData.smashRight > 0) {
               ball.speed.x = 1 * M + host.gameData.smashRight;
-              ball.speed.y = 1 * M + host.gameData.smashRight;
+              ball.speed.y = -1 * M + host.gameData.smashRight;
             } else {
               ball.speed.y *= -1;
             }
-            gameState.hit.x = gameState.ball.pos.x;
-            gameState.hit.y = gameState.ball.pos.y;
-            gameState.hit.hit = 2;
             hostBar.smashing = false;
             host.gameData.smashLeft = 0;
             host.gameData.smashRight = 0;
+            ball.pos.y += ball.speed.y;
+          } else {
+            ball.speed.y *= -1;
           }
-          room.barCollide = true;
+          if (room.options.powers && host.gameData.power.isActive) host.gameData.power.handle();
+          else if (room.options.powers) {
+            host.gameData.power.chargeUp();
+          }
+          gameState.hit.x = gameState.ball.pos.x;
+          gameState.hit.y = gameState.ball.pos.y;
+          gameState.hit.hit = 2;
           this.storeEffect(hostBar, room);
         }
       }
