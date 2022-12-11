@@ -85,7 +85,12 @@
       </div>
     </div>
     <div v-else class="custom"></div>
-    <svg preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" :class="!displayLoading ? 'bottomSvg' : ' hidden'">
+    <svg
+      preserveAspectRatio="none"
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 1440 320"
+      :class="store.user?.status == 'online' || store.user?.status == 'inLobby' ? 'bottomSvg' : ' hidden'"
+    >
       <path
         fill="#C1A36B"
         fill-opacity="1"
@@ -170,7 +175,6 @@ const summary = ref(false);
 const toggleLadder = ref(true);
 const toggleInvited = ref(false);
 const gameBoard = ref(false);
-let displayLoading = ref(false);
 
 const friendName = ref("Placeholder");
 const customReady = ref("Ready ?");
@@ -228,7 +232,6 @@ function showDenial(show: boolean) {
 }
 
 function findMatch() {
-  displayLoading.value = true;
   startButton.value = true;
   lobbyStatus.value = "Looking for an opponent...";
   powers.value = false;
@@ -237,7 +240,6 @@ function findMatch() {
   });
 }
 function readyUp() {
-  displayLoading.value = true;
   readyButton.value = true;
   customReady.value = "Waiting for " + friendName.value;
   if (toggleInvited.value) {
@@ -690,7 +692,6 @@ const Win = (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) => 
   lobbyStatus.value = "Victory ! You gained +" + elo_diff + " elo ! Return to lobby ?";
   startButton.value = false;
   readyButton.value = false;
-  displayLoading.value = false;
   customReady.value = "Ready ?";
   powers.value = true;
   end.value = new Date();
@@ -707,7 +708,6 @@ const Lose = (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) =>
   lobbyStatus.value = "Defeat... You lost -" + elo_diff + " elo ! Return to lobby ?";
   startButton.value = false;
   readyButton.value = false;
-  displayLoading.value = false;
   customReady.value = "Ready ?";
   powers.value = true;
   end.value = new Date();
