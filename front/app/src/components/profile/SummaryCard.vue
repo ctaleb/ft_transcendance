@@ -1,11 +1,7 @@
 <template>
   <li class="summary">
     <div :class="'border-gold insideSummary ' + getGameResultClass()">
-      <img
-        class="border-gold user-image left"
-        :src="User.getAvatar(summary.host)"
-        alt=""
-      />
+      <img class="border-gold user-image left" :src="User.getAvatar(summary.host)" alt="" />
       <div class="playerName">
         <h3>{{ summary.host.nickname }}</h3>
         <h4>{{ "ELO : " + summary.hostElo + " " + summary.eloChange }}</h4>
@@ -20,11 +16,7 @@
         <h3>{{ summary.client.nickname }}</h3>
         <h4>{{ "ELO : " + summary.clientElo + " " + summary.eloChange }}</h4>
       </div>
-      <img
-        class="border-gold user-image right"
-        :src="User.getAvatar(summary.client)"
-        alt=""
-      />
+      <img class="border-gold user-image right" :src="User.getAvatar(summary.client)" alt="" />
     </div>
   </li>
 </template>
@@ -43,17 +35,8 @@ const router = useRouter();
 const store = useStore();
 
 const isUserWinner = (): boolean => {
-  let userScore, opponentScore;
-
-  if (store.user?.nickname == props.summary.host.nickname) {
-    userScore = props.summary.hostScore;
-    opponentScore = props.summary.clientScore;
-  } else {
-    userScore = props.summary.clientScore;
-    opponentScore = props.summary.hostScore;
-  }
-
-  return userScore > opponentScore;
+  if (props.summary.winnerID == store.user?.id) return true;
+  return false;
 };
 
 const getGameResult = () => {

@@ -152,14 +152,14 @@ function showFailure(show: boolean) {
 onMounted(() => {
   watch(
     () => route.path,
-    () => {
+    (newValue, oldValue) => {
       if (route.path != "/chat") {
         privateConvs.value = [];
         store.$patch({
           currentChat: undefined,
         });
       }
-      socket.value?.emit("watchPath");
+      socket.value?.emit("watchPath", { oldValue });
     }
   );
 
