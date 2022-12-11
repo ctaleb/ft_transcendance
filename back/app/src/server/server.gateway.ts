@@ -121,7 +121,7 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   }
 
   @SubscribeMessage('watchPath')
-  switchPath(@ConnectedSocket() client: Socket) {
+  switchPath(@ConnectedSocket() client: Socket, @MessageBody('oldValue') oldValue: string) {
     let ingame = false;
     const player = this.serverService.userList.find((element) => element.socket === client);
     this.serverService.games.forEach((element) => {
@@ -132,6 +132,12 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       } else if (element.host === player) {
         element.room.status = 'hostForfeit';
         ingame = true;
+      }
+      if (oldValue != '/profile' && oldValue != '/chat') {
+        let theatre = element.theatre.name;
+        element.theatre.viewers.forEach((element) => {
+          if (element.id === client.id) element.leave(theatre);
+        });
       }
     });
   }
