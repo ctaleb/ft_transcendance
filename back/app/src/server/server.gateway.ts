@@ -125,11 +125,7 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     let ingame = false;
     const player = this.serverService.userList.find((element) => element.socket === client);
     this.serverService.games.forEach((element) => {
-      if (
-        element.room.status === 'launching' /*||
-		  element.room.status === 'gameOver'*/
-      )
-        return;
+      if (element.room.status === 'launching') return;
       if (element.client === player) {
         element.room.status = 'clientForfeit';
         ingame = true;
