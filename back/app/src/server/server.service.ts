@@ -96,12 +96,17 @@ export class ServerService {
 
   //game stuff
   async elo_calc(winner: User, loser: User) {
-    const elo = 20;
-    winner.gameData.elo += elo;
+    const oldElo = winner.gameData.elo;
+    const Kfactor = 20;
+    const R1 = Math.pow(10, winner.gameData.elo / 300);
+    const R2 = Math.pow(10, loser.gameData.elo / 300);
+    const E1 = R1 / (R1 + R2);
+    const E2 = R2 / (R1 + R2);
+    winner.gameData.elo = Math.floor(winner.gameData.elo + Kfactor * (1 - E1));
+    loser.gameData.elo = Math.floor(loser.gameData.elo + Kfactor * (0 - E1));
     this._userService.updateElo(winner.gameData.elo, winner.id);
-    loser.gameData.elo -= elo;
     this._userService.updateElo(loser.gameData.elo, loser.id);
-    return elo;
+    return winner.gameData.elo - oldElo;
   }
 
   inverseSummary(summary: GameSummaryData) {
@@ -176,6 +181,7 @@ export class ServerService {
   }
 
   reconnect(player: User) {
+    this.updateStatus(player.id, 'online');
     let game = this.games.find((element) => element.host.name === player.name);
     if (game) {
       game.room.status = 'hostForfeit';
@@ -851,35 +857,5 @@ export class ServerService {
     if (channel) {
       this.server.to(`${channel.id}`).emit('channelUpdatd', { id: channel.id, name: channel.name, type: channel.type });
     }
-  }
-  //chat stuff
-  identify(name: string, clientId: string, room: string) {
-    this.clientToUser[clientId] = name;
-    if (this.rooms.find((element) => element.name === room) === undefined) this.rooms.push({ name: room, messages: [], userList: [] });
-    this.rooms.find((element) => element.name === room).userList.push(name);
-    return Object.values(this.clientToUser);
-  }
-
-  getClientName(clientId: string, room: string) {
-    return this.clientToUser[clientId];
-  }
-
-  create(createMessageDto: CreateMessageDto, clientId: string, room: string) {
-    const message = {
-      name: this.clientToUser[clientId],
-      message: createMessageDto.message,
-    };
-    this.rooms.find((element) => element.name === room).messages.push(message);
-
-    return message;
-  }
-
-  findAll(room: string) {
-    return this.rooms.find((element) => element.name === room).messages;
-  }
-
-  findUsers(room: string) {
-    // console.log(this.rooms.find((element) => element.name === room).userList);
-    return this.rooms.find((element) => element.name === room).userList;
   }
 }

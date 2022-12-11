@@ -5,6 +5,7 @@
     </div>
     <div v-if="summary" class="overlay">
       <Modal :title="sumTitle" :data="gameSummary" :start="start" :end="end" @close="showSummary(false)"></Modal>
+      <!-- <Modal :title="sumTitle" :data="gameSummary" :opponent="opponentImg.src" :start="start" :end="end" @close="showSummary(false)"></Modal> -->
     </div>
     <div class="principalSection">
       <div v-if="lobbyStatus == 'settingsInviter' || lobbyStatus == 'settingsInvitee' || lobbyStatus == 'lobby'" class="mainContainer">
@@ -165,7 +166,7 @@ const gameSummary = reactive<GameSummaryData>({
     eloChange: 0,
   },
   gameMode: "",
-  winner: "",
+  winnerID: 0,
 });
 
 function showSummary(show: boolean) {
@@ -327,7 +328,7 @@ const Win = (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) => 
   displayLoading.value = false;
   customReady.value = "Ready ?";
   powers.value = true;
-  end = new Date();
+  end.value = new Date();
   updateSummary(summary);
   color.value = "red";
   sumTitle.value = "Victory";
@@ -344,7 +345,7 @@ const Lose = (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) =>
   displayLoading.value = false;
   customReady.value = "Ready ?";
   powers.value = true;
-  end = new Date();
+  end.value = new Date();
   updateSummary(summary);
   color.value = "green";
   sumTitle.value = "Defeat";
@@ -388,6 +389,10 @@ const customInvitation = () => {};
 @import "../styles/containerStyle";
 @import "../styles/svgStyles";
 @import "../styles/variables";
+
+.canvas {
+  z-index: 10;
+}
 
 .principalSection {
   flex-wrap: wrap;

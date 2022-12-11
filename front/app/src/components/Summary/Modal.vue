@@ -1,27 +1,36 @@
 <template>
   <div class="modal">
-    <PlayerInfo :player="props.data.host" />
+    <PlayerInfo :player="data.host" :opponent="opponent" :result="data.host.score > data.client.score" />
     <div class="midSection">
-      <h2>{{ props.title }}</h2>
-      <p>{{ dayjs(props.start).format("DD/MM/YY") }}</p>
+      <h2>{{ title }}</h2>
+      <p>{{ dayjs(start).format("DD/MM/YY") }}</p>
       <p>
-        {{ dayjs(dayjs(props.end).diff(props.start)).format("hh:mm:ss") }}
+        {{
+          dayjs(dayjs(end).diff(dayjs(start)))
+            .utc()
+            .format("HH:mm:ss")
+        }}
       </p>
       <h2>VS</h2>
       <button class="button" @click="$emit('close')">Close</button>
     </div>
-    <PlayerInfo :player="props.data.client" />
+    <PlayerInfo :player="data.client" :opponent="opponent" :result="data.host.score < data.client.score" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { GameSummaryData } from "@/types/GameSummary";
-import PlayerInfo from "./PlayerInfo.vue";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import { onMounted, ref } from "vue";
+import PlayerInfo from "./PlayerInfo.vue";
+
+dayjs.extend(utc);
 
 const props = defineProps<{
-  title: String;
+  title: string;
   data: GameSummaryData;
+  opponent: string;
   start: Date;
   end: Date;
 }>();
