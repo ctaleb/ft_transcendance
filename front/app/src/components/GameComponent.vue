@@ -3,6 +3,9 @@
     <div v-if="noFriends" class="overlay">
       <Denial :inviter="friendName" @sadStory="showDenial(false)"></Denial>
     </div>
+    <div v-if="summary" class="overlay">
+      <Modal :title="sumTitle" :data="gameSummary" :start="start" :end="end" @close="showSummary(false)"></Modal>
+    </div>
     <div class="principalSection">
       <div v-if="lobbyStatus == 'settingsInviter' || lobbyStatus == 'settingsInvitee' || lobbyStatus == 'lobby'" class="mainContainer">
         <div>
@@ -77,11 +80,8 @@
         <img src="../assets/loadingGameIllustration.gif" alt="" class="loadingImage" />
       </div>
     </div>
-    <div v-if="lobbyStatus == 'playing'" class="ladder">
+    <div v-if="lobbyStatus == 'playing' || lobbyStatus == 'spectating'" class="ladder">
       <GameCanvasComponent :opponent="store.user!" :us="store.user!" :gameOptions="gameOpts"></GameCanvasComponent>
-      <div v-if="summary" class="overlay">
-        <Modal :title="sumTitle" :data="gameSummary" :start="start" :end="end" @close="showSummary(false)"></Modal>
-      </div>
     </div>
     <div v-else class="custom"></div>
     <svg preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" :class="!displayLoading ? 'bottomSvg' : ' hidden'">

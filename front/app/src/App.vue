@@ -159,6 +159,7 @@ onMounted(() => {
           currentChat: undefined,
         });
       }
+      socket.value?.emit("watchPath");
     }
   );
 

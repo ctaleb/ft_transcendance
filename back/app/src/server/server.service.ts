@@ -173,10 +173,14 @@ export class ServerService {
 
   reconnect(player: User) {
     let game = this.games.find((element) => element.host.name === player.name);
-    if (!game) game = this.games.find((element) => element.client.name === player.name);
     if (game) {
-      player.socket.emit('reconnect', game.room);
-      player.socket.join(game.room.name);
+      game.room.status = 'hostForfeit';
+      return;
+    } else {
+      game = this.games.find((element) => element.client.name === player.name);
+    }
+    if (game) {
+      game.room.status = 'clientForfeit';
     }
   }
 
