@@ -224,7 +224,6 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
           game.room.opponent = client;
           game.client.socket.emit('startGame', game.room);
           // this.server.to(game.room.name).emit('startGame', game.room);
-          this.serverService.startRound(game.room);
           this.serverService.updateStatus(game.host.id, 'inGame');
           this.serverService.updateStatus(game.client.id, 'inGame');
           this.gameLoop(game);
@@ -384,7 +383,6 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     this.serverService.updateStatus(game.host.id, 'inGame');
     this.serverService.updateStatus(game.client.id, 'inGame');
     this.server.to(game.room.name).emit('startGame', game.room);
-    this.serverService.startRound(game.room);
     this.gameLoop(game);
   }
 

@@ -230,6 +230,7 @@ export class ServerService {
           host: 0,
         },
         hit: { x: 0, y: 0, hit: 0 },
+        state: 'start',
       },
       host: undefined,
       client: client,
@@ -433,7 +434,7 @@ export class ServerService {
     else room.effect = 'null';
   }
 
-  barBallCollision(hostBar: IBar, clientBar: IBar, ball: IBall, room: GameRoom, host: User, client: User) {
+  barBallCollision(hostBar: IBar, clientBar: IBar, ball: IBall, room: GameRoom, host: User, client: User, gameState: GameState) {
     if (!room.barCollide) {
       if (ball.pos.y - ball.size <= clientBar.pos.y + clientBar.size.y && ball.pos.y > clientBar.pos.y + clientBar.size.y) {
         if (ball.pos.x < clientBar.pos.x + clientBar.size.x + ball.size && ball.pos.x > clientBar.pos.x - clientBar.size.x - ball.size) {
@@ -453,6 +454,9 @@ export class ServerService {
             } else {
               ball.speed.y *= -1;
             }
+            gameState.hit.x = gameState.ball.pos.x;
+            gameState.hit.y = gameState.ball.pos.y;
+            gameState.hit.hit = 2;
             clientBar.smashing = false;
             client.gameData.smashLeft = 0;
             client.gameData.smashRight = 0;
@@ -477,6 +481,9 @@ export class ServerService {
             } else {
               ball.speed.y *= -1;
             }
+            gameState.hit.x = gameState.ball.pos.x;
+            gameState.hit.y = gameState.ball.pos.y;
+            gameState.hit.hit = 2;
             hostBar.smashing = false;
             host.gameData.smashLeft = 0;
             host.gameData.smashRight = 0;
@@ -551,13 +558,17 @@ export class ServerService {
       } else {
         game.gameState.score.client += 1;
       }
-      game.gameState.hit.hit == 3;
-      game.room.kickOff = true;
+      game.gameState.hit.x = game.gameState.ball.pos.x;
+      game.gameState.hit.y = game.gameState.ball.pos.y;
+      game.gameState.hit.hit = 3;
+      game.gameState.state = 'stop';
       setTimeout(() => {
-        game.room.kickOff = false;
         this.resetGameState(game);
-        this.startRound(game.room);
-      }, 3000);
+        game.gameState.state = 'kickoff';
+        setTimeout(() => {
+          game.gameState.state = 'play';
+        }, 3000);
+      }, 2000);
     }
   }
 
@@ -604,6 +615,7 @@ export class ServerService {
       },
       score: { host: gameState.score.client, client: gameState.score.host },
       hit: { x: 500 - gameState.hit.x, y: 500 - gameState.hit.y, hit: gameState.hit.hit },
+      state: gameState.state,
     };
     if (game.host.gameData.power.name == 'invisibility' && game.host.gameData.power.trigger == true) {
       inverseState.ball.pos.x = -50;
@@ -655,6 +667,7 @@ export class ServerService {
       },
       score: { host: gameState.score.host, client: gameState.score.client },
       hit: { x: gameState.hit.x, y: gameState.hit.y, hit: gameState.hit.hit },
+      state: gameState.state,
     };
     if (game.client.gameData.power.name == 'invisibility' && game.client.gameData.power.trigger == true) {
       State.ball.pos.x = -5000;
@@ -703,15 +716,6 @@ export class ServerService {
     game.client.gameData.power.reset();
     game.host.gameData.power.reset();
     game.gameState.hit.hit = 0;
-  }
-
-  startRound(room: GameRoom) {
-    room.kickOff = true;
-    this.server.to(room.name).emit('kickOff');
-    setTimeout(() => {
-      room.kickOff = false;
-      this.server.to(room.name).emit('play');
-    }, 3000);
   }
 
   setPowerInfo(game: Game) {
@@ -766,16 +770,16 @@ export class ServerService {
   }
 
   loop(game: Game) {
-    if (!game.room.kickOff) {
+    if (game.gameState.state == 'play') {
       const gameState = game.gameState;
       gameState.frame++;
-      this.resetHit(gameState);
+      this.resetHit(game.gameState);
       this.updateMoveStatus(game.host, gameState.hostBar, 'host', game.room.options);
       this.updateMoveStatus(game.client, gameState.clientBar, 'client', game.room.options);
       if (game.room.options.smashes) this.chargeUp(game);
       this.moveBar(gameState.hostBar, game.host, game.room.options.barSpeed);
       this.moveBar(gameState.clientBar, game.client, game.room.options.barSpeed);
-      this.barBallCollision(gameState.hostBar, gameState.clientBar, gameState.ball, game.room, game.host, game.client);
+      this.barBallCollision(gameState.hostBar, gameState.clientBar, gameState.ball, game.room, game.host, game.client, gameState);
       this.wallBallCollision(gameState, game.room);
       this.reset_collide(gameState.ball, game.room, game);
       this.nadal(gameState.ball, game.room.effect);
@@ -783,6 +787,12 @@ export class ServerService {
       gameState.ball.pos.y += gameState.ball.speed.y;
       this.goal(game);
       this.setPowerInfo(game);
+    } else if (game.gameState.state == 'start') {
+      game.gameState.state = 'kickoff';
+      this.resetGameState(game);
+      setTimeout(() => {
+        game.gameState.state = 'play';
+      }, 3000);
     }
   }
 

@@ -41,6 +41,7 @@ export interface GameState {
   clientBar: IBar;
   score: Score;
   hit: IHit;
+  state: string;
 }
 
 export class GameOptions {

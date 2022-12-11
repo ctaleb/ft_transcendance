@@ -358,8 +358,8 @@ const startGame = (gameRoom: GameRoom) => {
   theRoom = gameRoom;
   hostName.value = theRoom.hostName;
   clientName.value = theRoom.clientName;
-  userImg.src = User.getAvatar(store.user!);
-  opponentImg.src = User.getAvatar(gameRoom.opponent);
+  // userImg.src = User.getAvatar(store.user!);
+  // opponentImg.src = User.getAvatar(gameRoom.opponent);
   start = new Date();
   document.querySelector(".canvas")?.classList.remove("hidden");
 };

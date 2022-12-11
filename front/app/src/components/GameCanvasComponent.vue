@@ -75,8 +75,7 @@ let offset = 0;
 const hostScore = ref(0);
 const clientScore = ref(0);
 
-const playing = false;
-
+let goal = false;
 let loadPercent = 120;
 let kickOff = false;
 let cSmashingPercent = 0;
@@ -112,6 +111,7 @@ let gState: GameState = {
     host: 0,
   },
   hit: { x: 0, y: 0, hit: 0 },
+  state: "play",
 };
 
 let gStateRender: GameState;
@@ -132,11 +132,18 @@ let theRoom: GameRoom;
 
 //DRAW FUNCTIONS
 
-function kickoffLoading(ctx: any) {
-  if (kickOff) {
+function kickoffLoading(ctx: any, gameState: GameState) {
+  if (gState.state != "kickoff") {
+    kickOff = false;
+    loadPercent = 0;
+  } else if ((gameState.state = "kickoff")) {
+    if (!kickOff) {
+      loadPercent = 120;
+      kickOff = true;
+    }
     ctx.beginPath();
     let arcsize = (loadPercent / 100) * 2 * Math.PI;
-    loadPercent -= 0.4;
+    loadPercent -= 0.6;
     if (arcsize < 1) return;
     ctx.arc(cWidth / 2, cWidth / 2 + offset, 20 * scale, 1, arcsize);
     ctx.strokeStyle = "#5eadde";
@@ -176,56 +183,97 @@ function drawSmashingEffect(bar: IBar, smashingPercent: number, ctx: CanvasRende
 function drawPlayground(ctx: CanvasRenderingContext2D) {
   ctx.drawImage(plateauImg, 0, 0, cWidth, cHeight);
 }
-function addParticle(ctx: CanvasRenderingContext2D, gameState: GameState) {
+function addWallParticle(gameState: GameState) {
   const hit: particleSet = { particles: [], reach: false };
   let ab: IPoint = { x: gameState.ball.pos.x - gameState.hit.x, y: gameState.ball.pos.y - gameState.hit.y };
   let end1: IPoint = { x: gameState.hit.x < 250 ? 10 : 490, y: 1.3 * ab.x };
   let end2: IPoint = { x: gameState.hit.x < 250 ? 10 : 490, y: 1.3 * -ab.x };
 
   //left
-  hit.particles.push({
-    start: { x: gameState.hit.x < 250 ? 5 * scale : (500 - 7) * scale, y: gameState.hit.y },
-    end: { x: 0, y: end1.y },
-    trail: [],
-  });
-  hit.particles.push({
-    start: { x: gameState.hit.x < 250 ? 5 * scale : (500 - 7) * scale, y: gameState.hit.y },
-    end: { x: 0 + (gameState.hit.x < 250 ? Math.random() * 10 : -(Math.random() * 5)), y: end1.y + Math.random() * 10 },
-    trail: [],
-  });
-  hit.particles.push({
-    start: { x: gameState.hit.x < 250 ? 5 * scale : (500 - 7) * scale, y: gameState.hit.y },
-    end: { x: 0 + (gameState.hit.x < 250 ? Math.random() * 10 : -(Math.random() * 5)), y: end1.y + Math.random() * 10 },
-    trail: [],
-  });
-  hit.particles.push({
-    start: { x: gameState.hit.x < 250 ? 5 * scale : (500 - 7) * scale, y: gameState.hit.y },
-    end: { x: 0 + (gameState.hit.x < 250 ? Math.random() * 10 : -(Math.random() * 5)), y: end1.y + Math.random() * 10 },
-    trail: [],
-  });
-  //right
-  hit.particles.push({
-    start: { x: gameState.hit.x < 250 ? 5 * scale : (500 - 7) * scale, y: gameState.hit.y },
-    end: { x: 0 + (gameState.hit.x < 250 ? Math.random() * 10 : -(Math.random() * 5)), y: end2.y + Math.random() * 10 },
-    trail: [],
-  });
-  hit.particles.push({
-    start: { x: gameState.hit.x < 250 ? 5 * scale : (500 - 7) * scale, y: gameState.hit.y },
-    end: { x: 0 + (gameState.hit.x < 250 ? Math.random() * 10 : -(Math.random() * 5)), y: end2.y + Math.random() * 10 },
-    trail: [],
-  });
-  hit.particles.push({
-    start: { x: gameState.hit.x < 250 ? 5 * scale : (500 - 7) * scale, y: gameState.hit.y },
-    end: { x: 0 + (gameState.hit.x < 250 ? Math.random() * 10 : -(Math.random() * 5)), y: end2.y + Math.random() * 10 },
-    trail: [],
-  });
-  hit.particles.push({
-    start: { x: gameState.hit.x < 250 ? 5 * scale : (500 - 7) * scale, y: gameState.hit.y },
-    end: { x: 0 + (gameState.hit.x < 250 ? Math.random() * 10 : -(Math.random() * 5)), y: end2.y + Math.random() * 10 },
-    trail: [],
-  });
+  let rand;
+  let randhalf;
+  for (let i = 0; i < 10; i++) {
+    rand = Math.random() * 10;
+    randhalf = -Math.random() * 5;
+    hit.particles.push({
+      start: { x: gameState.hit.x < 250 ? 5 * scale : (500 - 7) * scale, y: gameState.hit.y },
+      end: { x: 0 + (gameState.hit.x < 250 ? rand : randhalf), y: end1.y + rand },
+      trail: [],
+      color: "#edd199",
+    });
+  }
+  for (let i = 0; i < 10; i++) {
+    rand = Math.random() * 10;
+    randhalf = -Math.random() * 5;
+    hit.particles.push({
+      start: { x: gameState.hit.x < 250 ? 5 * scale : (500 - 7) * scale, y: gameState.hit.y },
+      end: { x: 0 + (gameState.hit.x < 250 ? rand : randhalf), y: end2.y + rand },
+      trail: [],
+      color: "#edd199",
+    });
+  }
   particles.push(hit);
 }
+
+function addGoalParticle(gameState: GameState) {
+  if (!goal) {
+    goal = true;
+    const hit: particleSet = { particles: [], reach: false };
+    let offset = gameState.hit.y < 250 ? gameState.ball.size : -gameState.ball.size;
+    let end: IPoint = { x: gameState.hit.x, y: gameState.hit.y < 250 ? 90 * scale : -90 * scale };
+
+    let rand;
+
+    for (let i = 0; i < 10; i++) {
+      rand = Math.random() * 10;
+      hit.particles.push({
+        start: { x: gameState.hit.x + rand, y: gameState.hit.y + offset },
+        end: { x: rand, y: end.y },
+        trail: [],
+        color: gameState.hit.y < 250 ? "#1B90F0" : "#E01435",
+      });
+    }
+    for (let i = 0; i < 10; i++) {
+      rand = Math.random() * 10;
+      hit.particles.push({
+        start: { x: gameState.hit.x - rand, y: gameState.hit.y + offset },
+        end: { x: -rand, y: end.y },
+        trail: [],
+        color: gameState.hit.y < 250 ? "#1B90F0" : "#E01435",
+      });
+    }
+    particles.push(hit);
+  }
+}
+
+function addBarParticle(gameState: GameState) {
+  const hit: particleSet = { particles: [], reach: false };
+  let bar: IBar = gameState.hit.y < 250 ? gameState.clientBar : gameState.hostBar;
+  // let end: IPoint = { x: gameState.hit.y < 250 ? 90 * scale : -90 * scale, y: 0 };
+
+  let rand;
+
+  for (let i = 0; i < 3; i++) {
+    rand = Math.random() * 50;
+    hit.particles.push({
+      start: { x: bar.pos.x + bar.size.x, y: bar.pos.y },
+      end: { x: rand, y: 0 },
+      trail: [],
+      color: gameState.hit.y < 250 ? "#E01435" : "#1B90F0",
+    });
+  }
+  for (let i = 0; i < 3; i++) {
+    rand = Math.random() * 50;
+    hit.particles.push({
+      start: { x: bar.pos.x - bar.size.x, y: bar.pos.y },
+      end: { x: -rand, y: 0 },
+      trail: [],
+      color: gameState.hit.y < 250 ? "#E01435" : "#1B90F0",
+    });
+  }
+  particles.push(hit);
+}
+
 function drawParticle(ctx: CanvasRenderingContext2D, gameState: GameState) {
   particles.forEach((elemento) => {
     if (elemento.particles[0].trail.length == 10) elemento.reach = true;
@@ -241,11 +289,12 @@ function drawParticle(ctx: CanvasRenderingContext2D, gameState: GameState) {
         if (i > 0) element.trail.splice(0, 1);
         else tab.splice(1, 0);
       }
+      let color = element.color;
       element.trail.forEach((element, index) => {
         ctx.globalAlpha = 0.1 * index;
         ctx.beginPath();
-        ctx.fillStyle = "#edd199";
-        ctx.arc(element.x, element.y, 1, 0, 2 * Math.PI);
+        ctx.fillStyle = color;
+        ctx.arc(element.x, element.y, 2, 0, 2 * Math.PI);
         ctx.fill();
         ctx.globalAlpha = 1;
       });
@@ -328,17 +377,7 @@ function drawBall(ctx: CanvasRenderingContext2D, gameState: GameState) {
   }
 }
 
-const kickOfff = () => {
-  kickOff = true;
-};
-
-const play = () => {
-  kickOff = false;
-  loadPercent = 120;
-};
-
 //SCALING FUNCTIONS
-
 function scaling(ctx?: CanvasRenderingContext2D | null) {
   if (ctx) {
     ctx.canvas.height = window.innerHeight * 0.8;
@@ -380,14 +419,10 @@ function resizeCanvas() {
 // SOCKET FUNCTIONS
 
 const registerSockets = (socket: any) => {
-  !socket?.value?.hasListeners("kickOff") && socket?.value?.on("kickOff", kickOfff);
-  !socket?.value?.hasListeners("play") && socket?.value?.on("play", play);
   !socket?.value?.hasListeners("ServerUpdate") && socket?.value?.on("ServerUpdate", ServerUpdate);
 };
 
 const unregisterSockets = (socket: any) => {
-  socket?.value?.removeListener("kickOff");
-  socket?.value?.removeListener("play");
   socket?.value?.removeListener("ServerUpdate");
 };
 
@@ -413,11 +448,12 @@ function render(ctx: CanvasRenderingContext2D | null | undefined, gameState: Gam
   if (ctx) {
     drawPlayground(ctx);
     drawScore(ctx, gameState);
-    kickoffLoading(ctx);
+    kickoffLoading(ctx, gameState);
     drawBall(ctx, gameState);
     ctx.fillStyle = "black";
     drawSmashingEffect(gameState.clientBar, cSmashingPercent, ctx);
     drawSmashingEffect(gameState.hostBar, hSmashingPercent, ctx);
+    drawPowerCharge(ctx, gameState);
     drawParticle(ctx, gameState);
   }
 }
@@ -445,28 +481,33 @@ const wallBallCollision = (state: GameState) => {
 };
 
 const predict = () => {
-  if (gState.hit.hit) {
-    gState.hit.hit = 0;
-  }
+  // if (gState.hit.hit) {
+  //   gState.hit.hit = 0;
+  // }
   gState.ball.pos.x += gState.ball.speed.x;
   gState.ball.pos.y += gState.ball.speed.y;
   wallBallCollision(gState);
   gState.frame++;
 };
 
+const particleEvent = (gameState: GameState) => {
+  if (gameState.hit.hit == 1) addWallParticle(gameState);
+  // else if (gameState.hit.hit == 2) addBarParticle(gameState);
+  else if (gameState.hit.hit == 3) addGoalParticle(gameState);
+  else goal = false;
+};
+
 const gameLoop = () => {
   let currentFrame = 0;
-  let previousFrame = 0;
 
-  setInterval(function () {
-    if (gState.frame != currentFrame) {
+  let intervalId = setInterval(function () {
+    if (gState.state == "end") clearInterval(intervalId);
+    if (gState.frame < currentFrame && gState.state == "play") {
       predict();
-      console.log("Predict");
-      console.log(gStateRender);
     }
     if (ctx) {
       scalePosition(gState);
-      if (gStateRender.hit.hit) addParticle(ctx, gStateRender);
+      particleEvent(gStateRender);
       clientScore.value = gStateRender.score.client;
       hostScore.value = gStateRender.score.host;
       if (gStateRender.clientBar.smashing && cSmashingPercent < 100 && !kickOff) {
@@ -476,7 +517,6 @@ const gameLoop = () => {
         hSmashingPercent += 2;
       } else if (!gStateRender.hostBar.smashing || kickOff) hSmashingPercent = 0;
       render(ctx, gStateRender);
-      previousFrame = currentFrame;
       gState.frame = currentFrame;
       currentFrame++;
     }

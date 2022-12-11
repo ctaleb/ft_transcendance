@@ -8,6 +8,7 @@ export interface IPoint {
 export interface particle {
   start: IPoint;
   end: IPoint;
+  color: string;
   trail: IPoint[];
 }
 
@@ -50,6 +51,7 @@ export interface GameState {
   clientBar: IBar;
   score: Score;
   hit: IHit;
+  state: string;
 }
 
 export interface GameOptions {
