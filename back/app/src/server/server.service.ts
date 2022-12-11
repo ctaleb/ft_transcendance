@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { timeout } from 'rxjs';
 import { Server, Socket } from 'socket.io';
 import { ChatService } from 'src/chat/chat.service';
 import { UserEntity } from 'src/user/user.entity';
@@ -27,7 +28,6 @@ import {
   User,
 } from './entities/server.entity';
 
-let debugPower = false;
 const chargeMax = 1;
 const ballSize = 16;
 const defaultGameOptions: GameOptions = {
@@ -225,7 +225,7 @@ export class ServerService {
           client: 0,
           host: 0,
         },
-        hit: { x: 0, y: 0, hit: false },
+        hit: { x: 0, y: 0, hit: 0 },
       },
       host: undefined,
       client: client,
@@ -380,7 +380,6 @@ export class ServerService {
     player.gameData.input.forEach((input) => {
       if (input === 'downSpace') {
         player.gameData.power.active();
-        debugPower = true;
       } else if (input === 'downRight') playerType === 'host' ? (player.gameData.right = true) : (player.gameData.left = true);
       else if (input === 'downLeft') playerType === 'host' ? (player.gameData.left = true) : (player.gameData.right = true);
       else if (input === 'upRight') playerType === 'host' ? (player.gameData.right = false) : (player.gameData.left = false);
@@ -527,7 +526,7 @@ export class ServerService {
       state.ball.speed.x *= -1;
       state.hit.x = 0;
       state.hit.y = state.ball.pos.y;
-      state.hit.hit = true;
+      state.hit.hit = 1;
       state.ball.pos.x = 0 + 16;
       if (room.options.effects) this.applyEffect(room);
     }
@@ -535,21 +534,26 @@ export class ServerService {
       state.ball.speed.x *= -1;
       state.hit.x = 500;
       state.hit.y = state.ball.pos.y;
-      state.hit.hit = true;
+      state.hit.hit = 1;
       state.ball.pos.x = 500 - 16;
       if (room.options.effects) this.applyEffect(room);
     }
   }
 
   goal(game: Game) {
-    if (game.gameState.ball.pos.y < 0 || game.gameState.ball.pos.y > 500) {
+    if (game.gameState.ball.pos.y < 0 - game.gameState.ball.size || game.gameState.ball.pos.y > 500 + game.gameState.ball.size) {
       if (game.gameState.ball.pos.y < 0) {
         game.gameState.score.host += 1;
       } else {
         game.gameState.score.client += 1;
       }
-      this.resetGameState(game);
-      this.startRound(game.room);
+      game.gameState.hit.hit == 3;
+      game.room.kickOff = true;
+      setTimeout(() => {
+        game.room.kickOff = false;
+        this.resetGameState(game);
+        this.startRound(game.room);
+      }, 3000);
     }
   }
 
@@ -694,7 +698,7 @@ export class ServerService {
     game.client.gameData.right = false;
     game.client.gameData.power.reset();
     game.host.gameData.power.reset();
-    game.gameState.hit.hit = false;
+    game.gameState.hit.hit = 0;
   }
 
   startRound(room: GameRoom) {
@@ -741,7 +745,7 @@ export class ServerService {
   resetHit(state: GameState) {
     state.hit.x = 0;
     state.hit.y = 0;
-    state.hit.hit = false;
+    if (state.hit.hit != 3) state.hit.hit = 0;
   }
 
   chargeUp(game: Game) {
@@ -773,13 +777,8 @@ export class ServerService {
       this.nadal(gameState.ball, game.room.effect);
       gameState.ball.pos.x += gameState.ball.speed.x;
       gameState.ball.pos.y += gameState.ball.speed.y;
-
       this.goal(game);
       this.setPowerInfo(game);
-      if (debugPower) {
-        console.log(gameState);
-        debugPower = false;
-      }
     }
   }
 

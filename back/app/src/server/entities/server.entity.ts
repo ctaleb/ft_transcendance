@@ -29,7 +29,7 @@ export interface Score {
 export interface IHit {
   x: number;
   y: number;
-  hit: boolean;
+  hit: number;
 }
 
 export interface GameState {

@@ -111,7 +111,7 @@ let gState: GameState = {
     client: 0,
     host: 0,
   },
-  hit: { x: 0, y: 0, hit: false },
+  hit: { x: 0, y: 0, hit: 0 },
 };
 
 let gStateRender: GameState;
@@ -409,8 +409,6 @@ onUnmounted(() => {
   unregisterSockets(socketLocal);
 });
 
-render;
-
 function render(ctx: CanvasRenderingContext2D | null | undefined, gameState: GameState) {
   if (ctx) {
     drawPlayground(ctx);
@@ -425,8 +423,8 @@ function render(ctx: CanvasRenderingContext2D | null | undefined, gameState: Gam
 }
 
 const ServerUpdate = (gameState: GameState) => {
+  console.log(gameState);
   gState = gameState;
-  console.log(gState);
 };
 
 const wallBallCollision = (state: GameState) => {
@@ -434,20 +432,22 @@ const wallBallCollision = (state: GameState) => {
     state.ball.speed.x *= -1;
     state.hit.x = 0;
     state.hit.y = state.ball.pos.y;
-    state.hit.hit = true;
+    state.hit.hit = 1;
     state.ball.pos.x = 0 + 16;
   }
   if (state.ball.pos.x + 16 > 500) {
     state.ball.speed.x *= -1;
     state.hit.x = 500;
     state.hit.y = state.ball.pos.y;
-    state.hit.hit = true;
+    state.hit.hit = 1;
     state.ball.pos.x = 500 - 16;
   }
 };
 
 const predict = () => {
-  if (gState.hit.hit) gState.hit.hit = false;
+  if (gState.hit.hit) {
+    gState.hit.hit = 0;
+  }
   gState.ball.pos.x += gState.ball.speed.x;
   gState.ball.pos.y += gState.ball.speed.y;
   wallBallCollision(gState);
@@ -461,6 +461,8 @@ const gameLoop = () => {
   setInterval(function () {
     if (gState.frame != currentFrame) {
       predict();
+      console.log("Predict");
+      console.log(gStateRender);
     }
     if (ctx) {
       scalePosition(gState);
