@@ -121,6 +121,7 @@ export class ServerService {
         eloChange: summary.client.eloChange,
       },
       gameMode: summary.gameMode,
+      winnerID: summary.winnerID,
     };
     return inversedSummary;
   }
@@ -130,17 +131,19 @@ export class ServerService {
     let elo = 0;
     if (game.gameState.score.client >= game.room.options.scoreMax) {
       elo = await this.elo_calc(game.client, game.host);
-      await this.summarize(game, elo);
-      const data: GameSummaryData = this.summarizeEntityToData(game.gameSummary);
+      await this.summarize(game, elo, game.client.id);
+      const data: GameSummaryData = this.summarizeEntityToData(game.gameSummary, game.client.id);
       const revdata: GameSummaryData = this.inverseSummary(data);
       game.host.socket.emit('Lose', game.room, elo, data);
       game.client.socket.emit('Win', game.room, elo, revdata);
+      this.server.to(game.theatre.name).emit('endGame', game.room, elo, data, game.client.name);
     } else if (game.gameState.score.host >= game.room.options.scoreMax) {
       elo = await this.elo_calc(game.host, game.client);
-      await this.summarize(game, elo);
-      const data: GameSummaryData = this.summarizeEntityToData(game.gameSummary);
+      await this.summarize(game, elo, game.host.id);
+      const data: GameSummaryData = this.summarizeEntityToData(game.gameSummary, game.host.id);
       game.host.socket.emit('Win', game.room, elo, data);
       game.client.socket.emit('Lose', game.room, elo, this.inverseSummary(data));
+      this.server.to(game.theatre.name).emit('endGame', game.room, elo, data, game.host.name);
     }
     game.host.gameData.status = 'idle';
     this.updateStatus(game.host.id, 'online');
@@ -154,12 +157,13 @@ export class ServerService {
 
   async forfeit_game(winner: User, loser: User, game: Game) {
     const elo = await this.elo_calc(winner, loser);
-    await this.summarize(game, elo);
-    const data: GameSummaryData = this.summarizeEntityToData(game.gameSummary);
+    await this.summarize(game, elo, winner.id);
+    const data: GameSummaryData = this.summarizeEntityToData(game.gameSummary, winner.id);
     const revdata: GameSummaryData = this.inverseSummary(data);
     // this.summarize(game, elo);
     winner.socket.emit('Win', game.room, elo, data);
     loser.socket.emit('Lose', game.room, elo, revdata);
+    this.server.to(game.theatre.name).emit('endGame', game.room, elo, data, winner.name);
     game.host.gameData.status = 'idle';
     this.updateStatus(game.host.id, 'online');
     game.host.socket.leave(game.room.name);
@@ -291,7 +295,7 @@ export class ServerService {
     return undefined;
   }
 
-  async summarize(game: Game, elo: number) {
+  async summarize(game: Game, elo: number, victor: number) {
     try {
       const host: UserEntity = await this._userService.getUserByNickname(game.host.name);
       const client: UserEntity = await this._userService.getUserByNickname(game.client.name);
@@ -306,6 +310,7 @@ export class ServerService {
         clientElo: game.client.gameData.elo,
         eloChange: elo,
         gameMode: '',
+        winnerID: victor,
       });
       game.gameSummary = await this._matchHistoryRepository.save(match);
     } catch (error) {
@@ -313,7 +318,7 @@ export class ServerService {
     }
   }
 
-  summarizeEntityToData(sum: MatchHistoryEntity) {
+  summarizeEntityToData(sum: MatchHistoryEntity, victor: number) {
     const data: GameSummaryData = {
       host: {
         elo: sum.hostElo,
@@ -330,6 +335,7 @@ export class ServerService {
         eloChange: sum.eloChange,
       },
       gameMode: sum.gameMode,
+      winnerID: victor,
     };
     return data;
   }

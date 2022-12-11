@@ -165,6 +165,7 @@ const gameSummary = reactive<GameSummaryData>({
     eloChange: 0,
   },
   gameMode: "",
+  winner: "",
 });
 
 function showSummary(show: boolean) {
@@ -257,6 +258,7 @@ const registerSockets = (socket: any) => {
   !socket?.value?.hasListeners("reconnect") && socket?.value?.on("reconnect", reconnect);
   !socket?.value?.hasListeners("Win") && socket?.value?.on("Win", Win);
   !socket?.value?.hasListeners("Lose") && socket?.value?.on("Lose", Lose);
+  !socket?.value?.hasListeners("endGame") && socket?.value?.on("endGame", endGame);
   !socket?.value?.hasListeners("startGame") && socket?.value?.on("startGame", startGame);
   !socket?.value?.hasListeners("customInvitation") && socket?.value?.on("customInvitation", customInvitation);
 };
@@ -269,6 +271,7 @@ const unregisterSockets = (socket: any) => {
   socket?.value?.removeListener("reconnect");
   socket?.value?.removeListener("Win");
   socket?.value?.removeListener("Lose");
+  socket?.value?.removeListener("endGame");
   socket?.value?.removeListener("startGame");
   socket?.value?.removeListener("customInvitation");
 };
@@ -327,7 +330,7 @@ const Win = (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) => 
   end = new Date();
   updateSummary(summary);
   color.value = "red";
-  sumTitle.value = "Defeat";
+  sumTitle.value = "Victory";
   showSummary(true);
   //   gameBoard.value = false;
   document.querySelector(".canvas")?.classList.add("hidden");
@@ -344,10 +347,24 @@ const Lose = (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) =>
   end = new Date();
   updateSummary(summary);
   color.value = "green";
-  sumTitle.value = "Victory";
+  sumTitle.value = "Defeat";
   showSummary(true);
   //   gameBoard.value = false;
   document.querySelector(".canvas")?.classList.add("hidden");
+};
+
+const endGame = (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData, winner: string) => {
+  theRoom = gameRoom;
+  lobbyStatus.value = "lobby";
+  startButton.value = false;
+  readyButton.value = false;
+  displayLoading.value = false;
+  customReady.value = "Ready ?";
+  end = new Date();
+  updateSummary(summary);
+  color.value = "gold";
+  sumTitle.value = winner + " has won!";
+  showSummary(true);
 };
 
 const startGame = (gameRoom: GameRoom) => {
