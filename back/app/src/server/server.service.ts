@@ -97,9 +97,9 @@ export class ServerService {
   //game stuff
   async elo_calc(winner: User, loser: User) {
     const oldElo = winner.gameData.elo;
-    const Kfactor = 20;
-    const R1 = Math.pow(10, winner.gameData.elo / 300);
-    const R2 = Math.pow(10, loser.gameData.elo / 300);
+    const Kfactor = 25;
+    const R1 = Math.pow(10, winner.gameData.elo / 400);
+    const R2 = Math.pow(10, loser.gameData.elo / 400);
     const E1 = R1 / (R1 + R2);
     const E2 = R2 / (R1 + R2);
     winner.gameData.elo = Math.floor(winner.gameData.elo + Kfactor * (1 - E1));

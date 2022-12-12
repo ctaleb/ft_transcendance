@@ -4,7 +4,7 @@
       <Denial :inviter="friendName" @sadStory="showDenial(false)"></Denial>
     </div>
     <div v-if="summary" class="overlay">
-      <Modal :title="sumTitle" :data="gameSummary" :start="start" :end="end" @close="showSummary(false)"></Modal>
+      <Modal :title="sumTitle" :data="gameSummary" :opponent="opponentImg" :start="start" :end="end" @close="showSummary(false)"></Modal>
       <!-- <Modal :title="sumTitle" :data="gameSummary" :opponent="opponentImg.src" :start="start" :end="end" @close="showSummary(false)"></Modal> -->
     </div>
     <div class="principalSection">
@@ -145,8 +145,9 @@ let gameOpts: GameOptions;
 
 const power = ref("");
 
-let start: Date = new Date();
-let end: Date = new Date();
+const opponentImg = ref("");
+const start = ref(new Date());
+const end = ref(new Date());
 
 let theRoom: GameRoom;
 const gameSummary = reactive<GameSummaryData>({
@@ -329,7 +330,7 @@ const Win = (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) => 
   powers.value = true;
   end.value = new Date();
   updateSummary(summary);
-  color.value = "red";
+  color.value = "green";
   sumTitle.value = "Victory";
   showSummary(true);
   //   gameBoard.value = false;
@@ -346,7 +347,7 @@ const Lose = (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) =>
   powers.value = true;
   end.value = new Date();
   updateSummary(summary);
-  color.value = "green";
+  color.value = "red";
   sumTitle.value = "Defeat";
   showSummary(true);
   //   gameBoard.value = false;
@@ -360,7 +361,7 @@ const endGame = (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData,
   readyButton.value = false;
   displayLoading.value = false;
   customReady.value = "Ready ?";
-  end = new Date();
+  end.value = new Date();
   updateSummary(summary);
   color.value = "gold";
   sumTitle.value = winner + " has won!";
@@ -375,9 +376,8 @@ const startGame = (gameRoom: GameRoom) => {
   theRoom = gameRoom;
   hostName.value = theRoom.hostName;
   clientName.value = theRoom.clientName;
-  // userImg.src = User.getAvatar(store.user!);
-  // opponentImg.src = User.getAvatar(gameRoom.opponent);
-  start = new Date();
+  opponentImg.value = User.getAvatar(gameRoom.opponent);
+  start.value = new Date();
   document.querySelector(".canvas")?.classList.remove("hidden");
 };
 
@@ -388,6 +388,10 @@ const customInvitation = () => {};
 @import "../styles/containerStyle";
 @import "../styles/svgStyles";
 @import "../styles/variables";
+
+.canvas {
+  z-index: 10;
+}
 
 .canvas {
   z-index: 10;
