@@ -1,8 +1,11 @@
 <template>
   <section class="lobby container">
     <div class="principalSection">
-      <div class="mainContainer" :class="store.user?.status == 'online' || store.user?.status == 'inLobby' ? '' : ' hidden'">
-        <div>
+      <div
+        class="mainContainer"
+        :class="store.user?.status == 'online' || (store.user?.status == 'inLobby' && !toggleInvited && !toggleLadder) ? '' : ' hidden'"
+      >
+        <div class="powerSliderDiv">
           <power-slider-component v-model="power" id="powerSlider" v-if="store.user?.status == 'online'" />
           <div v-if="!toggleLadder">
             <div>
@@ -791,6 +794,10 @@ const customInvitation = () => {};
     @include screen-md {
       width: 100%;
       //  height: 40% !important;
+    }
+    .powerSliderDiv {
+      height: 100%;
+      width: 100%;
     }
     .inviter {
       display: flex;

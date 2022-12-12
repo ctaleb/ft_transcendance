@@ -12,13 +12,13 @@
         </div>
       </nav>
       <router-view :key="$route.fullPath" />
-      <div v-if="gameConfirmation" class="overlay">
+      <div v-if="gameConfirmation">
         <GameConfirmation @confirmGame="confirmGame()" @denyGame="denyGame()"></GameConfirmation>
       </div>
-      <div v-if="customInvitation" class="overlay">
+      <div v-if="customInvitation">
         <CustomInvitation :inviter="invSender" @acceptCustom="acceptCustom()" @denyCustom="denyCustom()"></CustomInvitation>
       </div>
-      <div v-if="failedInvitation" class="overlay">
+      <div v-if="failedInvitation">
         <FailedInvitation @invFailure="invFailure()"></FailedInvitation>
       </div>
       <div v-if="multiClientWarning" class="overlay">

@@ -19,13 +19,14 @@ import { showUserMenu } from "@/functions/funcs";
 import { useStore } from "@/store";
 import { ChannelRole, ChannelUser } from "@/types/Channel";
 import { User } from "@/types/User";
+import { computed } from "@vue/reactivity";
 import { ref } from "vue";
 
 const props = defineProps<{
   member: ChannelUser;
   me: ChannelUser;
 }>();
-const statusClass = ref(props.member.status);
+const statusClass = computed(() => props.member.status);
 
 const store = useStore();
 </script>
