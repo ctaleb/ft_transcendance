@@ -82,7 +82,7 @@
       </div>
     </div>
     <!-- BUTTON TO LEAVE QUEUE -->
-    <button v-if="lobbyStatus == 'queuing'" class="button">Leave queue</button>
+    <button v-if="lobbyStatus == 'queuing'" class="button" @click="leaveQueue()">Leave queue</button>
     <!-- BUTTON TO LEAVE QUEUE -->
     <div v-if="lobbyStatus == 'playing' || lobbyStatus == 'spectating'" class="ladder">
       <GameCanvasComponent :opponent="store.user!" :us="store.user!" :gameOptions="gameOpts"></GameCanvasComponent>
@@ -187,6 +187,13 @@ function findMatch() {
   socketLocal?.value?.emit("joinQueue", {
     power: power.value,
   });
+}
+function leaveQueue() {
+  startButton.value = false;
+  readyButton.value = false;
+  displayLoading.value = false;
+  socketLocal?.value?.emit("leaveQueue");
+  lobbyStatus.value = "lobby";
 }
 function readyUp() {
   readyButton.value = true;

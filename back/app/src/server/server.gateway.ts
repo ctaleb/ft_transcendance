@@ -267,6 +267,14 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       }, 5000);
     }
   }
+  @SubscribeMessage('leaveQueue')
+  leaveQueue(@ConnectedSocket() client: Socket) {
+    const player = this.serverService.SocketToPlayer(client);
+    if (!player) return;
+    player.status = 'online';
+    player.gameData.status = 'idle';
+    this.serverService.updateStatus(player.id, 'online');
+  }
 
   @SubscribeMessage('playerReady')
   playerReady(@ConnectedSocket() client: Socket) {
