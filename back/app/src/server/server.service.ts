@@ -202,6 +202,7 @@ export class ServerService {
         clientName: '',
         status: 'launching',
         opponent: null,
+        host: null,
         kickOff: false,
         barCollide: false,
         sideCollide: false,
