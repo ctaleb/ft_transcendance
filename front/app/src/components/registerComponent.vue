@@ -112,7 +112,7 @@ async function createPost() {
   if (state.avatar != File.prototype) {
     formData.append("avatar", state.avatar, state.avatar.name);
   }
-   let data = await fetch("http://" + window.location.hostname + ":3000/api/authentication/registration", {
+  let data = await fetch("http://" + window.location.hostname + ":3000/api/authentication/registration", {
     method: "POST",
     body: formData,
   })
