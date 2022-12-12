@@ -21,9 +21,10 @@ store.$subscribe((mutation, state) => {
 
 onMounted(() => {
   watch(
-    () => store.currentChat!.id,
+    () => store.currentChat,
     () => {
-      me.value = (<Channel>store.currentChat!).members!.find((member) => member.id === store.user!.id)!;
+      if (store.currentChat && (<Channel>store.currentChat).members)
+        me.value = (<Channel>store.currentChat!).members!.find((member) => member.id === store.user!.id)!;
     }
   );
 });

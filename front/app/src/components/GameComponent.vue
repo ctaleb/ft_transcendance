@@ -81,6 +81,9 @@
         <img src="../assets/loadingGameIllustration.gif" alt="" class="loadingImage" />
       </div>
     </div>
+    <!-- BUTTON TO LEAVE QUEUE -->
+    <button v-if="lobbyStatus == 'queuing'" class="button">Leave queue</button>
+    <!-- BUTTON TO LEAVE QUEUE -->
     <div v-if="lobbyStatus == 'playing' || lobbyStatus == 'spectating'" class="ladder">
       <GameCanvasComponent :opponent="store.user!" :us="store.user!" :gameOptions="gameOpts"></GameCanvasComponent>
     </div>
@@ -185,7 +188,6 @@ function findMatch() {
   });
 }
 function readyUp() {
-  displayLoading.value = true;
   readyButton.value = true;
   customReady.value = "Waiting for " + friendName.value;
   if (lobbyStatus.value === "settingsInvitee") {
@@ -386,6 +388,7 @@ const customInvitation = () => {};
 
 <style lang="scss" scoped>
 @import "../styles/containerStyle";
+@import "../styles/inputsAndButtons";
 @import "../styles/svgStyles";
 @import "../styles/variables";
 
@@ -396,7 +399,6 @@ const customInvitation = () => {};
 .canvas {
   z-index: 10;
 }
-
 .principalSection {
   flex-wrap: wrap;
   .mainContainer {
@@ -509,6 +511,7 @@ const customInvitation = () => {};
     width: 100vw;
     height: 90vh;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     z-index: -1;

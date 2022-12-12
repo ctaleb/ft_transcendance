@@ -389,4 +389,7 @@ body {
 .offline {
   color: red !important;
 }
+.spectating {
+  color: purple !important;
+}
 </style>
