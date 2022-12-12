@@ -231,7 +231,10 @@ function updateSummary(summary: GameSummaryData) {
 // });
 
 onMounted(() => {
-  if (store.user?.status == "inQueue") lobbyStatus.value = "queuing";
+  if (store.user?.status == "inQueue") {
+    lobbyStatus.value = "queuing";
+    displayLoading.value = true;
+  }
   // ctx = canvas.value?.getContext("2d");
   // ctx?.drawImage(plateauImg, 0, 0, cWidth, cHeight);
   // scaling(ctx);
@@ -288,8 +291,9 @@ const customInvitee = (friend: string) => {
   // toggleGameQueue();
 };
 
-const foreverAlone = () => {
+const foreverAlone = (friend: string) => {
   // toggleGameQueue();
+  friendName.value = friend;
   lobbyStatus.value = "lobby";
   noFriends.value = true;
 };

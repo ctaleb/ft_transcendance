@@ -28,12 +28,22 @@
       ></i>
       <template v-else>
         <i title="Delete friend" class="gg-close-o" @click="unfriend(currentUserProfile)"></i>
-        <i v-if="currentUserProfile.status === 'online'" title="Invite in game" class="gg-games" @click="User.inviteCustom(router, currentUserProfile)"></i>
+        <i
+          v-if="currentUserProfile.status === 'online' && store.user?.status === 'online'"
+          title="Invite in game"
+          class="gg-games"
+          @click="User.inviteCustom(router, currentUserProfile)"
+        ></i>
       </template>
       <i title="Chat" class="gg-comment" @click="startConversation(currentUserProfile)"></i>
       <i v-if="currentUserProfileIsBlocked === false" title="Block user" class="gg-block" @click="block(currentUserProfile)"></i>
       <i v-else title="Unblock user" class="gg-unblock" @click="unblock(currentUserProfile)"></i>
-      <i v-if="currentUserProfile.status === 'inGame'" title="Spectate your friend" class="gg-eye" @click="User.spectateGame(router, currentUserProfile)"></i>
+      <i
+        v-if="currentUserProfile.status === 'inGame' && store.user?.status === 'online'"
+        title="Spectate your friend"
+        class="gg-eye"
+        @click="User.spectateGame(router, currentUserProfile)"
+      ></i>
     </div>
     <div class="subMenu">
       <button class="darkButton pulse" :style="toogleMenu ? '' : 'border: 1px solid white'" @click="watchFriend()">Friend</button>
@@ -139,9 +149,11 @@ onMounted(async () => {
     });
   }
 
-  await fetchJSONDatas(`api/profile/summary/${currentUserProfile.value?.nickname}`, "GET").then((data) => {
-    currentSummary.value = data;
-  }).catch(() => {});
+  await fetchJSONDatas(`api/profile/summary/${currentUserProfile.value?.nickname}`, "GET")
+    .then((data) => {
+      currentSummary.value = data;
+    })
+    .catch(() => {});
   if (currentUserProfile.value && store.user && store.user!.id !== currentUserProfile.value!.id) {
     fetchJSONDatas(`api/friendship/isBlocked/${currentUserProfile.value?.id}`, "GET")
       .then((data) => {
