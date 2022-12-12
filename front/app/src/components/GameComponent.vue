@@ -4,7 +4,7 @@
       <Denial :inviter="friendName" @sadStory="showDenial(false)"></Denial>
     </div>
     <div v-if="summary" class="overlay">
-      <Modal :title="sumTitle" :data="gameSummary" :start="start" :end="end" @close="showSummary(false)"></Modal>
+      <Modal :title="sumTitle" :data="gameSummary" :opponent="opponentImg" :start="start" :end="end" @close="showSummary(false)"></Modal>
       <!-- <Modal :title="sumTitle" :data="gameSummary" :opponent="opponentImg.src" :start="start" :end="end" @close="showSummary(false)"></Modal> -->
     </div>
     <div class="principalSection">
@@ -145,6 +145,7 @@ let gameOpts: GameOptions;
 
 const power = ref("");
 
+const opponentImg = ref("");
 const start = ref(new Date());
 const end = ref(new Date());
 
@@ -375,8 +376,7 @@ const startGame = (gameRoom: GameRoom) => {
   theRoom = gameRoom;
   hostName.value = theRoom.hostName;
   clientName.value = theRoom.clientName;
-  // userImg.src = User.getAvatar(store.user!);
-  // opponentImg.src = User.getAvatar(gameRoom.opponent);
+  opponentImg.value = User.getAvatar(gameRoom.opponent);
   start.value = new Date();
   document.querySelector(".canvas")?.classList.remove("hidden");
 };
