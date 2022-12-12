@@ -3,8 +3,8 @@
     <h2>{{ player.score }}</h2>
     <h3>{{ player.name }}</h3>
     <div class="player">
-      <img v-if="store.user?.nickname === player.name" :src="User.getAvatar(store.user!)" alt="" />
-      <img v-else :src="opponent" alt="" />
+      <img v-if="player.name === opponent.nickname" :src="User.getAvatar(opponent)" alt="" />
+      <img v-else :src="User.getAvatar(host)" alt="" />
       <div>
         <span
           >{{ player.elo }}
@@ -29,7 +29,8 @@ const store = useStore();
 const props = defineProps<{
   player: PlayerInfoData;
   result: boolean;
-  opponent: string;
+  opponent: User;
+  host: User;
 }>();
 </script>
 

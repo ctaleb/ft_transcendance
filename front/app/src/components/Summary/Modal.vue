@@ -1,6 +1,6 @@
 <template>
   <div class="modal">
-    <PlayerInfo :player="data.host" :opponent="opponent" :result="data.host.score > data.client.score" />
+    <PlayerInfo :player="data.host" :opponent="opponent" :host="host" :result="data.host.score > data.client.score" />
     <div class="midSection">
       <h2>{{ title }}</h2>
       <p>{{ dayjs(start).format("DD/MM/YY") }}</p>
@@ -14,12 +14,13 @@
       <h2>VS</h2>
       <button class="button" @click="$emit('close')">Close</button>
     </div>
-    <PlayerInfo :player="data.client" :opponent="opponent" :result="data.host.score < data.client.score" />
+    <PlayerInfo :player="data.client" :opponent="opponent" :host="host" :result="data.host.score < data.client.score" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { GameSummaryData } from "@/types/GameSummary";
+import { User } from "@/types/User";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { onMounted, ref } from "vue";
@@ -30,7 +31,8 @@ dayjs.extend(utc);
 const props = defineProps<{
   title: string;
   data: GameSummaryData;
-  opponent: string;
+  opponent: User;
+  host: User;
   start: Date;
   end: Date;
 }>();

@@ -143,9 +143,12 @@ async function login() {
   }
   localStorage.setItem("token", data.token);
   localStorage.setItem("user", JSON.stringify(data.user));
-  funcs.trySetupUser().then(() => {
-    router.push("/game");
-  });
+  funcs
+    .trySetupUser()
+    .then(() => {
+      router.push("/game");
+    })
+    .catch(() => {});
 }
 
 function extractIntraCode(): string | null {
@@ -196,9 +199,12 @@ async function studentLogin(code: string) {
     console.log(error);
     console.log("Can't login the student");
   }
-  funcs.trySetupUser().then(() => {
-    router.push("/game");
-  });
+  funcs
+    .trySetupUser()
+    .then(() => {
+      router.push("/game");
+    })
+    .catch(() => {});
 }
 </script>
 

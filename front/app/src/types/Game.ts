@@ -77,6 +77,7 @@ export interface GameRoom {
   hostName: string;
   clientName: string;
   opponent: User;
+  host: User;
   status: string;
   kickOff: boolean;
   barCollide: boolean;

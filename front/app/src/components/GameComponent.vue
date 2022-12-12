@@ -4,7 +4,7 @@
       <Denial :inviter="friendName" @sadStory="showDenial(false)"></Denial>
     </div>
     <div v-if="summary" class="overlay">
-      <Modal :title="sumTitle" :data="gameSummary" :start="start" :end="end" @close="showSummary(false)"></Modal>
+      <Modal :title="sumTitle" :data="gameSummary" :opponent="opponent" :host="host" :start="start" :end="end" @close="showSummary(false)"></Modal>
       <!-- <Modal :title="sumTitle" :data="gameSummary" :opponent="opponentImg.src" :start="start" :end="end" @close="showSummary(false)"></Modal> -->
     </div>
     <div class="principalSection">
@@ -81,6 +81,9 @@
         <img src="../assets/loadingGameIllustration.gif" alt="" class="loadingImage" />
       </div>
     </div>
+    <!-- BUTTON TO LEAVE QUEUE -->
+    <button v-if="lobbyStatus == 'queuing'" class="button">Leave queue</button>
+    <!-- BUTTON TO LEAVE QUEUE -->
     <div v-if="lobbyStatus == 'playing' || lobbyStatus == 'spectating'" class="ladder">
       <GameCanvasComponent :opponent="store.user!" :us="store.user!" :gameOptions="gameOpts"></GameCanvasComponent>
     </div>
@@ -102,7 +105,7 @@ import { socketLocal, useStore } from "@/store";
 import { GameOptions, GameRoom } from "@/types/Game";
 import { GameSummaryData } from "@/types/GameSummary";
 import { getUserByNickname, User } from "@/types/User";
-import { onMounted, onUnmounted, reactive, ref, watch } from "vue";
+import { onMounted, onUnmounted, reactive, Ref, ref, watch } from "vue";
 import Denial from "./InviteDenied/Modal.vue";
 import PowerSliderComponent from "./PowerSliderComponent.vue";
 import Modal from "./Summary/Modal.vue";
@@ -145,8 +148,10 @@ let gameOpts: GameOptions;
 
 const power = ref("");
 
-let start: Date = new Date();
-let end: Date = new Date();
+const opponent = ref();
+const host = ref();
+const start = ref(new Date());
+const end = ref(new Date());
 
 let theRoom: GameRoom;
 const gameSummary = reactive<GameSummaryData>({
@@ -184,7 +189,6 @@ function findMatch() {
   });
 }
 function readyUp() {
-  displayLoading.value = true;
   readyButton.value = true;
   customReady.value = "Waiting for " + friendName.value;
   if (lobbyStatus.value === "settingsInvitee") {
@@ -333,7 +337,7 @@ const Win = (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) => 
   powers.value = true;
   end.value = new Date();
   updateSummary(summary);
-  color.value = "red";
+  color.value = "green";
   sumTitle.value = "Victory";
   showSummary(true);
   //   gameBoard.value = false;
@@ -350,7 +354,7 @@ const Lose = (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) =>
   powers.value = true;
   end.value = new Date();
   updateSummary(summary);
-  color.value = "green";
+  color.value = "red";
   sumTitle.value = "Defeat";
   showSummary(true);
   //   gameBoard.value = false;
@@ -364,7 +368,7 @@ const endGame = (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData,
   readyButton.value = false;
   displayLoading.value = false;
   customReady.value = "Ready ?";
-  end = new Date();
+  end.value = new Date();
   updateSummary(summary);
   color.value = "gold";
   sumTitle.value = winner + " has won!";
@@ -379,9 +383,9 @@ const startGame = (gameRoom: GameRoom) => {
   theRoom = gameRoom;
   hostName.value = theRoom.hostName;
   clientName.value = theRoom.clientName;
-  // userImg.src = User.getAvatar(store.user!);
-  // opponentImg.src = User.getAvatar(gameRoom.opponent);
-  start = new Date();
+  opponent.value = gameRoom.opponent;
+  host.value = gameRoom.host;
+  start.value = new Date();
   document.querySelector(".canvas")?.classList.remove("hidden");
 };
 
@@ -390,6 +394,7 @@ const customInvitation = () => {};
 
 <style lang="scss" scoped>
 @import "../styles/containerStyle";
+@import "../styles/inputsAndButtons";
 @import "../styles/svgStyles";
 @import "../styles/variables";
 
@@ -397,6 +402,9 @@ const customInvitation = () => {};
   z-index: 10;
 }
 
+.canvas {
+  z-index: 10;
+}
 .principalSection {
   flex-wrap: wrap;
   .mainContainer {
@@ -509,6 +517,7 @@ const customInvitation = () => {};
     width: 100vw;
     height: 90vh;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     z-index: -1;

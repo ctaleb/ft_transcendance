@@ -178,7 +178,9 @@ export class FriendshipService {
   }
 
   async getRelationsOf(username: string) {
-    const user: UserEntity = await this._userService.getUserByNickname(username);
+    const user: UserEntity = await this._userService.getUserByNickname(username).catch(() => {
+      return null;
+    });
     return {
       invitations: await this.findInvitationsOf(user),
       friends: await this.findFriendsOf(user),

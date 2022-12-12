@@ -63,29 +63,31 @@ export class ServerService {
 
   //generic stuff
   async newUser(token: string, user: string, sock?: Socket) {
-    const bdd_user: UserEntity = await this._userService.getUserByNickname(user);
-    const newUser: User = {
-      token: token,
-      socket: sock,
-      name: user,
-      id: bdd_user.id,
-      status: 'online',
-      gameData: {
-        input: [],
-        left: false,
-        right: false,
-        elo: bdd_user.elo,
-        smashLeft: 0,
-        smashRight: 0,
-        status: 'idle',
-        power: new IPower('init'),
-      },
-      chatData: {
-        RoomList: [],
-      },
-    };
-    this.updateStatus(newUser.id, 'online');
-    this.userList.push(newUser);
+    const bdd_user: UserEntity = await this._userService.getUserByNickname(user).catch();
+    if (bdd_user) {
+      const newUser: User = {
+        token: token,
+        socket: sock,
+        name: user,
+        id: bdd_user.id,
+        status: 'online',
+        gameData: {
+          input: [],
+          left: false,
+          right: false,
+          elo: bdd_user.elo,
+          smashLeft: 0,
+          smashRight: 0,
+          status: 'idle',
+          power: new IPower('init'),
+        },
+        chatData: {
+          RoomList: [],
+        },
+      };
+      this.updateStatus(newUser.id, 'online');
+      this.userList.push(newUser);
+    }
   }
 
   //status stuff
@@ -108,9 +110,9 @@ export class ServerService {
   //game stuff
   async elo_calc(winner: User, loser: User) {
     const oldElo = winner.gameData.elo;
-    const Kfactor = 20;
-    const R1 = Math.pow(10, winner.gameData.elo / 300);
-    const R2 = Math.pow(10, loser.gameData.elo / 300);
+    const Kfactor = 25;
+    const R1 = Math.pow(10, winner.gameData.elo / 400);
+    const R2 = Math.pow(10, loser.gameData.elo / 400);
     const E1 = R1 / (R1 + R2);
     const E2 = R2 / (R1 + R2);
     winner.gameData.elo = Math.floor(winner.gameData.elo + Kfactor * (1 - E1));
@@ -230,6 +232,7 @@ export class ServerService {
         clientName: '',
         status: 'launching',
         opponent: null,
+        host: null,
         kickOff: false,
         barCollide: false,
         sideCollide: false,

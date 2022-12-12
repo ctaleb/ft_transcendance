@@ -42,6 +42,8 @@ const showUpdateChannelModal = ref(false);
 const leaveChannel = async (): Promise<void> => {
   const data: Channel = await fetchJSONDatas("api/chat/leave-channel", "DELETE", {
     id: store.currentChat!.id,
+  }).catch((err) => {
+    console.log(err);
   });
   socketLocal.value?.emit("leaveChannelRoom", { id: data.id });
   emits("updateChannelsList");
@@ -59,7 +61,8 @@ onMounted(() => {
   watch(
     () => store.currentChat,
     () => {
-      user.value = (<Channel>store.currentChat!).members!.find((member) => member.id === store.user!.id)!;
+      if (store.currentChat && (<Channel>store.currentChat).members)
+        user.value = (<Channel>store.currentChat!).members!.find((member) => member.id === store.user!.id)!;
     }
   );
 });

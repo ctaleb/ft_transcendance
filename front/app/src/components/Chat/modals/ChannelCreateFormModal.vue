@@ -3,7 +3,7 @@
   <div class="modal">
     <span @click="$emit('closeChannelModal')" class="close-modal"><i class="gg-close-o"></i></span>
     <h1>Creating a new chat channel</h1>
-    <input v-model="channelName" type="text" id="username" placeholder="Channel name" />
+    <input v-model="channelName" type="text" id="username" placeholder="Channel name" maxlength="15" />
     <div class="radioBundle">
       <div>
         <input type="radio" id="one" name="public" value="public" v-model="picked" checked />

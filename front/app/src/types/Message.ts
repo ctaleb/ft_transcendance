@@ -8,7 +8,7 @@ export interface Message {
 
 export function transformDate(msg: Message): Message {
   const msgDate = dayjs(msg.date);
-  if (msgDate.diff(dayjs(), "hour") > 24) {
+  if (Math.abs(msgDate.diff(dayjs(), "hour")) > 24) {
     msg.date = msgDate.format("DD/MM/YYYY HH:mm");
   } else {
     if (msgDate.get("date") !== dayjs().get("date")) {
