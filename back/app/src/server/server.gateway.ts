@@ -199,11 +199,11 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
           game.room.status = 'playing';
           game.room.hostName = game.host.name;
           game.room.clientName = game.client.name;
-          const host = instanceToPlain(await this.userService.getUserByNickname(game.client.name));
-          game.room.opponent = host;
+          game.room.opponent = instanceToPlain(await this.userService.getUserByNickname(game.client.name));
+          game.room.host = instanceToPlain(await this.userService.getUserByNickname(game.host.name));
           game.host.socket.emit('startGame', game.room);
-          const client = instanceToPlain(await this.userService.getUserByNickname(game.host.name));
-          game.room.opponent = client;
+          game.room.opponent = instanceToPlain(await this.userService.getUserByNickname(game.host.name));
+          game.room.host = instanceToPlain(await this.userService.getUserByNickname(game.client.name));
           game.client.socket.emit('startGame', game.room);
           // this.server.to(game.room.name).emit('startGame', game.room);
           this.serverService.updateStatus(game.host.id, 'inGame');
@@ -364,11 +364,11 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     game.room.clientName = game.client.name;
     this.serverService.updateStatus(game.host.id, 'inGame');
     this.serverService.updateStatus(game.client.id, 'inGame');
-    const host = instanceToPlain(await this.userService.getUserByNickname(game.client.name));
-    game.room.opponent = host;
+    game.room.opponent = instanceToPlain(await this.userService.getUserByNickname(game.client.name));
+    game.room.host = instanceToPlain(await this.userService.getUserByNickname(game.host.name));
     game.host.socket.emit('startGame', game.room);
-    const client = instanceToPlain(await this.userService.getUserByNickname(game.host.name));
-    game.room.opponent = client;
+    game.room.opponent = instanceToPlain(await this.userService.getUserByNickname(game.host.name));
+    game.room.host = instanceToPlain(await this.userService.getUserByNickname(game.client.name));
     game.client.socket.emit('startGame', game.room);
     this.gameLoop(game);
   }
