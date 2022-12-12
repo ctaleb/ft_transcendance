@@ -127,21 +127,23 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   }
 
   @SubscribeMessage('watchPath')
-  switchPath(@ConnectedSocket() client: Socket) {
+  switchPath(@ConnectedSocket() client: Socket, @MessageBody('oldValue') oldValue: string) {
     let ingame = false;
     const player = this.serverService.userList.find((element) => element.socket === client);
     this.serverService.games.forEach((element) => {
-      if (
-        element.room.status === 'launching' /*||
-		  element.room.status === 'gameOver'*/
-      )
-        return;
+      if (element.room.status === 'launching') return;
       if (element.client === player) {
         element.room.status = 'clientForfeit';
         ingame = true;
       } else if (element.host === player) {
         element.room.status = 'hostForfeit';
         ingame = true;
+      }
+      if (oldValue != '/profile' && oldValue != '/chat') {
+        let theatre = element.theatre.name;
+        element.theatre.viewers.forEach((element) => {
+          if (element.id === client.id) element.leave(theatre);
+        });
       }
     });
   }
@@ -204,7 +206,6 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
           game.room.opponent = client;
           game.client.socket.emit('startGame', game.room);
           // this.server.to(game.room.name).emit('startGame', game.room);
-          this.serverService.startRound(game.room);
           this.serverService.updateStatus(game.host.id, 'inGame');
           this.serverService.updateStatus(game.client.id, 'inGame');
           this.gameLoop(game);
@@ -363,13 +364,7 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     game.room.clientName = game.client.name;
     this.serverService.updateStatus(game.host.id, 'inGame');
     this.serverService.updateStatus(game.client.id, 'inGame');
-    const host = instanceToPlain(await this.userService.getUserByNickname(game.client.name));
-    game.room.opponent = host;
-    game.host.socket.emit('startGame', game.room);
-    const client = instanceToPlain(await this.userService.getUserByNickname(game.host.name));
-    game.room.opponent = client;
-    game.client.socket.emit('startGame', game.room);
-    this.serverService.startRound(game.room);
+    this.server.to(game.room.name).emit('startGame', game.room);
     this.gameLoop(game);
   }
 

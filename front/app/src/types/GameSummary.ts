@@ -4,6 +4,7 @@ export interface GameSummaryData {
   host: PlayerInfoData;
   client: PlayerInfoData;
   gameMode: string;
+  winnerID: number;
 }
 
 export interface PlayerInfoData {
@@ -31,4 +32,5 @@ export interface History {
   clientElo: number;
   eloChange: number;
   gameMode: string;
+  winnerID: number;
 }

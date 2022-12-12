@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { timeout } from 'rxjs';
 import { Server, Socket } from 'socket.io';
 import { ChatService } from 'src/chat/chat.service';
 import { UserEntity } from 'src/user/user.entity';
@@ -27,11 +28,10 @@ import {
   User,
 } from './entities/server.entity';
 
-let debugPower = false;
 const chargeMax = 1;
 const ballSize = 16;
 const defaultGameOptions: GameOptions = {
-  scoreMax: 10,
+  scoreMax: 5,
   ballSpeed: 1,
   ballSize: 1,
   barSpeed: 1,
@@ -84,8 +84,8 @@ export class ServerService {
         RoomList: [],
       },
     };
-    this.userList.push(newUser);
     this.updateStatus(newUser.id, 'online');
+    this.userList.push(newUser);
   }
 
   //status stuff
@@ -126,6 +126,7 @@ export class ServerService {
         eloChange: summary.client.eloChange,
       },
       gameMode: summary.gameMode,
+      winnerID: summary.winnerID,
     };
     return inversedSummary;
   }
@@ -135,17 +136,19 @@ export class ServerService {
     let elo = 0;
     if (game.gameState.score.client >= game.room.options.scoreMax) {
       elo = await this.elo_calc(game.client, game.host);
-      await this.summarize(game, elo);
-      const data: GameSummaryData = this.summarizeEntityToData(game.gameSummary);
+      await this.summarize(game, elo, game.client.id);
+      const data: GameSummaryData = this.summarizeEntityToData(game.gameSummary, game.client.id);
       const revdata: GameSummaryData = this.inverseSummary(data);
       game.host.socket.emit('Lose', game.room, elo, data);
       game.client.socket.emit('Win', game.room, elo, revdata);
+      this.server.to(game.theatre.name).emit('endGame', game.room, elo, data, game.client.name);
     } else if (game.gameState.score.host >= game.room.options.scoreMax) {
       elo = await this.elo_calc(game.host, game.client);
-      await this.summarize(game, elo);
-      const data: GameSummaryData = this.summarizeEntityToData(game.gameSummary);
+      await this.summarize(game, elo, game.host.id);
+      const data: GameSummaryData = this.summarizeEntityToData(game.gameSummary, game.host.id);
       game.host.socket.emit('Win', game.room, elo, data);
       game.client.socket.emit('Lose', game.room, elo, this.inverseSummary(data));
+      this.server.to(game.theatre.name).emit('endGame', game.room, elo, data, game.host.name);
     }
     game.host.gameData.status = 'idle';
     this.updateStatus(game.host.id, 'online');
@@ -159,12 +162,13 @@ export class ServerService {
 
   async forfeit_game(winner: User, loser: User, game: Game) {
     const elo = await this.elo_calc(winner, loser);
-    await this.summarize(game, elo);
-    const data: GameSummaryData = this.summarizeEntityToData(game.gameSummary);
+    await this.summarize(game, elo, winner.id);
+    const data: GameSummaryData = this.summarizeEntityToData(game.gameSummary, winner.id);
     const revdata: GameSummaryData = this.inverseSummary(data);
     // this.summarize(game, elo);
     winner.socket.emit('Win', game.room, elo, data);
     loser.socket.emit('Lose', game.room, elo, revdata);
+    this.server.to(game.theatre.name).emit('endGame', game.room, elo, data, winner.name);
     game.host.gameData.status = 'idle';
     this.updateStatus(game.host.id, 'online');
     game.host.socket.leave(game.room.name);
@@ -179,10 +183,14 @@ export class ServerService {
   reconnect(player: User) {
     this.updateStatus(player.id, 'online');
     let game = this.games.find((element) => element.host.name === player.name);
-    if (!game) game = this.games.find((element) => element.client.name === player.name);
     if (game) {
-      player.socket.emit('reconnect', game.room);
-      player.socket.join(game.room.name);
+      game.room.status = 'hostForfeit';
+      return;
+    } else {
+      game = this.games.find((element) => element.client.name === player.name);
+    }
+    if (game) {
+      game.room.status = 'clientForfeit';
     }
   }
 
@@ -205,6 +213,7 @@ export class ServerService {
         viewers: [],
       },
       gameState: {
+        frame: 0,
         ball: {
           size: ballSize,
           pos: { x: 250, y: 250 },
@@ -230,7 +239,8 @@ export class ServerService {
           client: 0,
           host: 0,
         },
-        hit: { x: 0, y: 0, hit: false },
+        hit: { x: 0, y: 0, hit: 0 },
+        state: 'start',
       },
       host: undefined,
       client: client,
@@ -292,7 +302,7 @@ export class ServerService {
     return undefined;
   }
 
-  async summarize(game: Game, elo: number) {
+  async summarize(game: Game, elo: number, victor: number) {
     try {
       const host: UserEntity = await this._userService.getUserByNickname(game.host.name);
       const client: UserEntity = await this._userService.getUserByNickname(game.client.name);
@@ -307,6 +317,7 @@ export class ServerService {
         clientElo: game.client.gameData.elo,
         eloChange: elo,
         gameMode: '',
+        winnerID: victor,
       });
       game.gameSummary = await this._matchHistoryRepository.save(match);
     } catch (error) {
@@ -314,7 +325,7 @@ export class ServerService {
     }
   }
 
-  summarizeEntityToData(sum: MatchHistoryEntity) {
+  summarizeEntityToData(sum: MatchHistoryEntity, victor: number) {
     const data: GameSummaryData = {
       host: {
         elo: sum.hostElo,
@@ -331,6 +342,7 @@ export class ServerService {
         eloChange: sum.eloChange,
       },
       gameMode: sum.gameMode,
+      winnerID: victor,
     };
     return data;
   }
@@ -385,7 +397,6 @@ export class ServerService {
     player.gameData.input.forEach((input) => {
       if (input === 'downSpace') {
         player.gameData.power.active();
-        debugPower = true;
       } else if (input === 'downRight') playerType === 'host' ? (player.gameData.right = true) : (player.gameData.left = true);
       else if (input === 'downLeft') playerType === 'host' ? (player.gameData.left = true) : (player.gameData.right = true);
       else if (input === 'upRight') playerType === 'host' ? (player.gameData.right = false) : (player.gameData.left = false);
@@ -435,16 +446,12 @@ export class ServerService {
     else room.effect = 'null';
   }
 
-  barBallCollision(hostBar: IBar, clientBar: IBar, ball: IBall, room: GameRoom, host: User, client: User) {
+  barBallCollision(hostBar: IBar, clientBar: IBar, ball: IBall, room: GameRoom, host: User, client: User, gameState: GameState) {
     if (!room.barCollide) {
       if (ball.pos.y - ball.size <= clientBar.pos.y + clientBar.size.y && ball.pos.y > clientBar.pos.y + clientBar.size.y) {
         if (ball.pos.x < clientBar.pos.x + clientBar.size.x + ball.size && ball.pos.x > clientBar.pos.x - clientBar.size.x - ball.size) {
-          if (client.gameData.power.isActive) {
-            client.gameData.power.handle();
-          } else if (room.options.powers) {
-            client.gameData.power.chargeUp();
-          }
-          const M = (Math.sqrt(Math.pow(ball.speed.x, 2) + Math.pow(ball.speed.y, 2)) / Math.sqrt(2)) * 1.1;
+          room.barCollide = true;
+          const M = (Math.sqrt(Math.pow(ball.speed.x, 2) + Math.pow(ball.speed.y, 2)) / Math.sqrt(2)) * 1.05;
           if (room.options.smashes) {
             if (client.gameData.smashLeft > 0) {
               ball.speed.x = 1 * M + client.gameData.smashLeft;
@@ -458,32 +465,49 @@ export class ServerService {
             clientBar.smashing = false;
             client.gameData.smashLeft = 0;
             client.gameData.smashRight = 0;
+            ball.pos.y += ball.speed.y;
+          } else {
+            ball.speed.y *= -1;
           }
-          room.barCollide = true;
+          if (room.options.powers && client.gameData.power.isActive) {
+            client.gameData.power.handle();
+          } else if (room.options.powers) {
+            client.gameData.power.chargeUp();
+          }
+          gameState.hit.x = gameState.ball.pos.x;
+          gameState.hit.y = gameState.ball.pos.y;
+          gameState.hit.hit = 2;
           this.storeEffect(clientBar, room);
         }
       }
       if (ball.pos.y + ball.size >= hostBar.pos.y - hostBar.size.y && ball.pos.y < hostBar.pos.y - hostBar.size.y) {
         if (ball.pos.x < hostBar.pos.x + hostBar.size.x + ball.size && ball.pos.x > hostBar.pos.x - hostBar.size.x - ball.size) {
-          if (host.gameData.power.isActive) {
-            host.gameData.power.handle();
-          } else if (room.options.powers) host.gameData.power.chargeUp();
-          const M = (Math.sqrt(Math.pow(ball.speed.x, 2) + Math.pow(ball.speed.y, 2)) / Math.sqrt(2)) * 1.1;
+          room.barCollide = true;
+          const M = (Math.sqrt(Math.pow(ball.speed.x, 2) + Math.pow(ball.speed.y, 2)) / Math.sqrt(2)) * 1.05;
           if (room.options.smashes) {
             if (host.gameData.smashLeft > 0) {
               ball.speed.x = -1 * M - host.gameData.smashLeft;
-              ball.speed.y = 1 * M + host.gameData.smashLeft;
+              ball.speed.y = -1 * M + host.gameData.smashLeft;
             } else if (host.gameData.smashRight > 0) {
               ball.speed.x = 1 * M + host.gameData.smashRight;
-              ball.speed.y = 1 * M + host.gameData.smashRight;
+              ball.speed.y = -1 * M + host.gameData.smashRight;
             } else {
               ball.speed.y *= -1;
             }
             hostBar.smashing = false;
             host.gameData.smashLeft = 0;
             host.gameData.smashRight = 0;
+            ball.pos.y += ball.speed.y;
+          } else {
+            ball.speed.y *= -1;
           }
-          room.barCollide = true;
+          if (room.options.powers && host.gameData.power.isActive) host.gameData.power.handle();
+          else if (room.options.powers) {
+            host.gameData.power.chargeUp();
+          }
+          gameState.hit.x = gameState.ball.pos.x;
+          gameState.hit.y = gameState.ball.pos.y;
+          gameState.hit.hit = 2;
           this.storeEffect(hostBar, room);
         }
       }
@@ -532,7 +556,7 @@ export class ServerService {
       state.ball.speed.x *= -1;
       state.hit.x = 0;
       state.hit.y = state.ball.pos.y;
-      state.hit.hit = true;
+      state.hit.hit = 1;
       state.ball.pos.x = 0 + 16;
       if (room.options.effects) this.applyEffect(room);
     }
@@ -540,26 +564,36 @@ export class ServerService {
       state.ball.speed.x *= -1;
       state.hit.x = 500;
       state.hit.y = state.ball.pos.y;
-      state.hit.hit = true;
+      state.hit.hit = 1;
       state.ball.pos.x = 500 - 16;
       if (room.options.effects) this.applyEffect(room);
     }
   }
 
   goal(game: Game) {
-    if (game.gameState.ball.pos.y < 0 || game.gameState.ball.pos.y > 500) {
+    if (game.gameState.ball.pos.y < 0 - game.gameState.ball.size || game.gameState.ball.pos.y > 500 + game.gameState.ball.size) {
       if (game.gameState.ball.pos.y < 0) {
         game.gameState.score.host += 1;
       } else {
         game.gameState.score.client += 1;
       }
-      this.resetGameState(game);
-      this.startRound(game.room);
+      game.gameState.hit.x = game.gameState.ball.pos.x;
+      game.gameState.hit.y = game.gameState.ball.pos.y;
+      game.gameState.hit.hit = 3;
+      game.gameState.state = 'stop';
+      setTimeout(() => {
+        this.resetGameState(game);
+        game.gameState.state = 'kickoff';
+        setTimeout(() => {
+          game.gameState.state = 'play';
+        }, 3000);
+      }, 2000);
     }
   }
 
   inverseState(gameState: GameState, game: Game) {
     const inverseState: GameState = {
+      frame: gameState.frame,
       ball: {
         size: gameState.ball.size,
         pos: {
@@ -600,6 +634,7 @@ export class ServerService {
       },
       score: { host: gameState.score.client, client: gameState.score.host },
       hit: { x: 500 - gameState.hit.x, y: 500 - gameState.hit.y, hit: gameState.hit.hit },
+      state: gameState.state,
     };
     if (game.host.gameData.power.name == 'invisibility' && game.host.gameData.power.trigger == true) {
       inverseState.ball.pos.x = -50;
@@ -610,6 +645,7 @@ export class ServerService {
 
   sendState(gameState: GameState, game: Game) {
     const State: GameState = {
+      frame: gameState.frame,
       ball: {
         size: gameState.ball.size,
         pos: {
@@ -650,6 +686,7 @@ export class ServerService {
       },
       score: { host: gameState.score.host, client: gameState.score.client },
       hit: { x: gameState.hit.x, y: gameState.hit.y, hit: gameState.hit.hit },
+      state: gameState.state,
     };
     if (game.client.gameData.power.name == 'invisibility' && game.client.gameData.power.trigger == true) {
       State.ball.pos.x = -5000;
@@ -697,16 +734,7 @@ export class ServerService {
     game.client.gameData.right = false;
     game.client.gameData.power.reset();
     game.host.gameData.power.reset();
-    game.gameState.hit.hit = false;
-  }
-
-  startRound(room: GameRoom) {
-    room.kickOff = true;
-    this.server.to(room.name).emit('kickOff');
-    setTimeout(() => {
-      room.kickOff = false;
-      this.server.to(room.name).emit('play');
-    }, 3000);
+    game.gameState.hit.hit = 0;
   }
 
   setPowerInfo(game: Game) {
@@ -744,7 +772,7 @@ export class ServerService {
   resetHit(state: GameState) {
     state.hit.x = 0;
     state.hit.y = 0;
-    state.hit.hit = false;
+    if (state.hit.hit != 3) state.hit.hit = 0;
   }
 
   chargeUp(game: Game) {
@@ -761,27 +789,29 @@ export class ServerService {
   }
 
   loop(game: Game) {
-    if (!game.room.kickOff) {
+    if (game.gameState.state == 'play') {
       const gameState = game.gameState;
-      this.resetHit(gameState);
+      gameState.frame++;
+      this.resetHit(game.gameState);
       this.updateMoveStatus(game.host, gameState.hostBar, 'host', game.room.options);
       this.updateMoveStatus(game.client, gameState.clientBar, 'client', game.room.options);
       if (game.room.options.smashes) this.chargeUp(game);
       this.moveBar(gameState.hostBar, game.host, game.room.options.barSpeed);
       this.moveBar(gameState.clientBar, game.client, game.room.options.barSpeed);
-      this.barBallCollision(gameState.hostBar, gameState.clientBar, gameState.ball, game.room, game.host, game.client);
+      this.barBallCollision(gameState.hostBar, gameState.clientBar, gameState.ball, game.room, game.host, game.client, gameState);
       this.wallBallCollision(gameState, game.room);
       this.reset_collide(gameState.ball, game.room, game);
       this.nadal(gameState.ball, game.room.effect);
       gameState.ball.pos.x += gameState.ball.speed.x;
       gameState.ball.pos.y += gameState.ball.speed.y;
-
       this.goal(game);
       this.setPowerInfo(game);
-      if (debugPower) {
-        console.log(gameState);
-        debugPower = false;
-      }
+    } else if (game.gameState.state == 'start') {
+      game.gameState.state = 'kickoff';
+      this.resetGameState(game);
+      setTimeout(() => {
+        game.gameState.state = 'play';
+      }, 3000);
     }
   }
 
