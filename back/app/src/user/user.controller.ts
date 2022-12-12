@@ -46,19 +46,25 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @Get(':id')
   async getUserById(@Param('id', ParseIntPipe) id: number) {
-    return this._userService.getUserById(id);
+    return this._userService.getUserById(id).catch((err) => {
+      throw err;
+    });
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('bynickname/:nickname')
   async getUserByNickname(@Param('nickname') nickname: string): Promise<UserEntity> {
-    return await this._userService.getUserByNickname(nickname);
+    return await this._userService.getUserByNickname(nickname).catch((err) => {
+      throw err;
+    });
   }
 
   //@UseGuards(JwtAuthGuard)
   @Get('findIntraUser/:intraId')
   async getIntraUserById(@Param('intraId') intraId: string) {
-    const ret = await this._userService.getIntraUserById(intraId);
+    const ret = await this._userService.getIntraUserById(intraId).catch((err) => {
+      throw err;
+    });
     return ret;
   }
   @UseGuards(JwtAuthGuard)

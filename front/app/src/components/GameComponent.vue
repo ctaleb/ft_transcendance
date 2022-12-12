@@ -1,13 +1,16 @@
 <template>
   <section class="lobby container">
     <div class="principalSection">
-      <div class="mainContainer" :class="store.user?.status != 'inQueue' ? '' : ' hidden'">
-        <div>
-          <power-slider-component v-model="power" id="powerSlider" />
+      <div
+        class="mainContainer"
+        :class="store.user?.status == 'online' || (store.user?.status == 'inLobby' && !toggleInvited && !toggleLadder) ? '' : ' hidden'"
+      >
+        <div class="powerSliderDiv">
+          <power-slider-component v-model="power" id="powerSlider" v-if="store.user?.status == 'online'" />
           <div v-if="!toggleLadder">
             <div>
               <h1>Custom Game with {{ friendName }}</h1>
-              <div v-if="!toggleInvited" class="inviter">
+              <div v-if="!toggleInvited && store.user?.status == 'inLobby'" class="inviter">
                 <div>
                   <div class="setting">
                     <label for="score">Max Score</label>
@@ -85,7 +88,12 @@
       </div>
     </div>
     <div v-else class="custom"></div>
-    <svg preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" :class="!displayLoading ? 'bottomSvg' : ' hidden'">
+    <svg
+      preserveAspectRatio="none"
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 1440 320"
+      :class="store.user?.status == 'online' || store.user?.status == 'inLobby' ? 'bottomSvg' : ' hidden'"
+    >
       <path
         fill="#C1A36B"
         fill-opacity="1"
@@ -170,7 +178,6 @@ const summary = ref(false);
 const toggleLadder = ref(true);
 const toggleInvited = ref(false);
 const gameBoard = ref(false);
-let displayLoading = ref(false);
 
 const friendName = ref("Placeholder");
 const customReady = ref("Ready ?");
@@ -228,7 +235,6 @@ function showDenial(show: boolean) {
 }
 
 function findMatch() {
-  displayLoading.value = true;
   startButton.value = true;
   lobbyStatus.value = "Looking for an opponent...";
   powers.value = false;
@@ -237,7 +243,6 @@ function findMatch() {
   });
 }
 function readyUp() {
-  displayLoading.value = true;
   readyButton.value = true;
   customReady.value = "Waiting for " + friendName.value;
   if (toggleInvited.value) {
@@ -690,7 +695,6 @@ const Win = (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) => 
   lobbyStatus.value = "Victory ! You gained +" + elo_diff + " elo ! Return to lobby ?";
   startButton.value = false;
   readyButton.value = false;
-  displayLoading.value = false;
   customReady.value = "Ready ?";
   powers.value = true;
   end.value = new Date();
@@ -707,7 +711,6 @@ const Lose = (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) =>
   lobbyStatus.value = "Defeat... You lost -" + elo_diff + " elo ! Return to lobby ?";
   startButton.value = false;
   readyButton.value = false;
-  displayLoading.value = false;
   customReady.value = "Ready ?";
   powers.value = true;
   end.value = new Date();
@@ -741,6 +744,7 @@ const customInvitation = () => {};
 @import "../styles/containerStyle";
 @import "../styles/svgStyles";
 @import "../styles/variables";
+@import "../styles/mixins/sizes";
 //.eloBanner {
 //  height: 50%;
 //  width: 50%;
@@ -773,20 +777,27 @@ const customInvitation = () => {};
     justify-content: space-around;
     z-index: 1;
     width: 40%;
-    height: 50% !important;
+    overflow-y: hidden;
+    overflow-x: hidden;
+    padding: 25px;
+    //height: 50% !important;
     margin-top: 0;
     @include screen-xl {
       width: 50%;
-      height: 50% !important;
+      //  height: 50% !important;
       margin-top: 0;
     }
     @include screen-lg {
       width: 100%;
-      height: 30% !important;
+      //  height: 30% !important;
     }
     @include screen-md {
       width: 100%;
-      height: 40% !important;
+      //  height: 40% !important;
+    }
+    .powerSliderDiv {
+      height: 100%;
+      width: 100%;
     }
     .inviter {
       display: flex;
@@ -894,6 +905,9 @@ const customInvitation = () => {};
     border-radius: 5px;
     box-shadow: 0 3rem 5rem rgba(0, 0, 0, 0.3);
     z-index: 10;
+    @include screen-lg {
+      width: 100vw;
+    }
   }
   .overlay {
     position: absolute;

@@ -14,7 +14,6 @@
     color: $primary;
     user-select: none;
     // animation: ease-out 3s slide;
-
     @keyframes slide1 {
       0% {
         opacity: 1;
@@ -74,6 +73,16 @@
 
       & > * {
         height: 50%;
+      }
+    }
+    @include screen-md {
+      align-items: center;
+      h4 {
+        margin: 0;
+      }
+      .user-image {
+        width: 120px;
+        height: 120px;
       }
     }
   }

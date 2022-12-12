@@ -11,8 +11,19 @@
     border-right: 1px solid $primary;
     overflow-x: hidden;
     overflow-y: auto;
+    @include screen-md {
+      width: 100%;
+      flex-direction: row;
+      height: 7%;
+      overflow-x: scroll;
+      align-items: center;
+      border: none;
+    }
 
     ul {
+      @include screen-md {
+        flex-direction: row;
+      }
       list-style-type: none;
       padding: 0;
       margin: 0;

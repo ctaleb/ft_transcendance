@@ -39,6 +39,7 @@ const getAllConvs = async (): Promise<void> => {
 
 <style lang="scss" scoped>
 @import "../styles/svgStyles";
+@import "../styles/mixins/sizes";
 .overlay {
   position: fixed;
   height: 100vh;
@@ -60,6 +61,9 @@ const getAllConvs = async (): Promise<void> => {
   align-items: center;
   justify-content: space-around;
   gap: 1rem;
+  @include screen-lg {
+    width: 100vw;
+  }
   .close {
     position: absolute;
     top: 0;

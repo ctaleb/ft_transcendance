@@ -15,12 +15,14 @@
     border: solid 1px $primary;
     border-radius: 6px;
     height: $chat-menu-item-height;
+    overflow-x: auto;
     h4 {
       display: flex;
       justify-content: center;
       align-items: center;
+      margin-left: 6px;
       i {
-        margin-left: 15px;
+        margin-left: 5px;
         color: $primary;
       }
     }
@@ -34,7 +36,10 @@
       color: grey;
       img {
         height: 100%;
-        margin-right: 18px;
+        margin-right: 5px;
+        @include screen-lg {
+          display: none;
+        }
       }
     }
     .member-action {

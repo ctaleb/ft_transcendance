@@ -112,12 +112,22 @@ async function createPost() {
   if (state.avatar != File.prototype) {
     formData.append("avatar", state.avatar, state.avatar.name);
   }
-  await fetchJSONDatas("api/authentication/registration", "POST", formData)
-    .then((data) => {
-      emitCompleteRegister();
-      addAlertMessage("Account successfully created", 2);
+  let data = await fetch("http://" + window.location.hostname + ":3000/api/authentication/registration", {
+    method: "POST",
+    body: formData,
+  })
+    .then((response) => {
+      if (!response.ok) return Promise.reject();
+      return response.json();
     })
-    .catch(() => {});
+    .catch(async () => {
+      addAlertMessage("Nickname already in use", 3);
+      return null;
+    });
+  if (data) {
+    emitCompleteRegister();
+    addAlertMessage("Account successfully created", 2);
+  }
 }
 function emitCompleteRegister() {
   emit("update:modelValue", false);

@@ -43,11 +43,15 @@ const emit = defineEmits<{
 <style lang="scss" scoped>
 @import "../../styles/inputsAndButtons";
 @import "../../styles/variables";
+@import "../../styles/mixins/sizes";
 .modal {
   display: flex;
   justify-content: space-between;
   background-color: $secondary !important;
   color: $primary;
+  @include screen-lg {
+    width: 100vw;
+  }
   .midSection {
     display: flex;
     flex-direction: column;

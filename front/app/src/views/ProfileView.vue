@@ -16,7 +16,7 @@
       </div>
       <div class="sideInfo">
         <img class="sideIcons" src="../assets/profileStatusIcon.svg" alt="" />
-        <h3>{{ currentUserProfile.status }}</h3>
+        <h3 :class="statusClass">{{ currentUserProfile.status }}</h3>
       </div>
     </div>
     <div class="buttonProfile" v-if="currentUserProfile?.id !== store.user?.id">
@@ -75,7 +75,7 @@ import { currentUserProfile, socketLocal, useStore } from "@/store";
 import { History } from "@/types/GameSummary";
 import { getUserByNickname, User } from "@/types/User";
 import { functionExpression, stringLiteral } from "@babel/types";
-import { onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { RouterLink, useRoute } from "vue-router";
 import editUrl from "../assets/edit.png";
 import shutdownUrl from "../assets/shutdown.png";
@@ -95,6 +95,8 @@ const toogleMenu = ref(false);
 const currentUserProfileIsBlocked = ref(false);
 const currentFriend = ref<User[]>();
 const currentSummary = ref<History[]>();
+// const statusClass = ref(currentUserProfile.value?.status);
+const statusClass = computed(() => currentUserProfile.value?.status);
 
 onMounted(async () => {
   let nick = <string | undefined>route.params.nickname;

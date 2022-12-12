@@ -41,6 +41,9 @@ h3 {
   border: 0.3rem solid $primary;
   color: white;
   background: $secondary;
+  @include screen-lg {
+    width: 100vw;
+  }
 }
 
 .primary-btn {

@@ -12,13 +12,13 @@
         </div>
       </nav>
       <router-view :key="$route.fullPath" />
-      <div v-if="gameConfirmation" class="overlay">
+      <div v-if="gameConfirmation">
         <GameConfirmation @confirmGame="confirmGame()" @denyGame="denyGame()"></GameConfirmation>
       </div>
-      <div v-if="customInvitation" class="overlay">
+      <div v-if="customInvitation">
         <CustomInvitation :inviter="invSender" @acceptCustom="acceptCustom()" @denyCustom="denyCustom()"></CustomInvitation>
       </div>
-      <div v-if="failedInvitation" class="overlay">
+      <div v-if="failedInvitation">
         <FailedInvitation @invFailure="invFailure()"></FailedInvitation>
       </div>
       <div v-if="multiClientWarning" class="overlay">
@@ -371,5 +371,21 @@ body {
   100% {
     box-shadow: 0 0 0 0px rgba(200, 150, 100, 1), 0 0 0 1px #e7d899;
   }
+}
+
+.inLobby {
+  color: yellow !important;
+}
+.inQueue {
+  color: blue !important;
+}
+.inGame {
+  color: orange !important;
+}
+.online {
+  color: green !important;
+}
+.offline {
+  color: red !important;
 }
 </style>
