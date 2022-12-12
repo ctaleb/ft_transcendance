@@ -1,12 +1,12 @@
 <template>
   <div class="chat-window-header">
     <div class="chat-window-header-info">
-      <div>
-        <h2>{{ title }}</h2>
-        <p>{{ detail }}</p>
-        <p v-if="!isChannel(store.currentChat!)" style="color: green">{{(<Conversation>store.currentChat!).other.status}}</p>
+		<div>
+			<h2>{{ title }}</h2>
+			<h4>{{ detail }}</h4>
+			<p v-if="!isChannel(store.currentChat!)" :class="statusClass">{{(<Conversation>store.currentChat!).other.status}}</p>
       </div>
-      <i class="gg-more-o" v-if="isChannel(store.currentChat!)" @click="$emit('toggleChannelInfo')"></i>
+			<i class="gg-more-o" v-if="isChannel(store.currentChat!)" @click="$emit('toggleChannelInfo')"></i>
     </div>
   </div>
 </template>
@@ -15,9 +15,10 @@
 import { useStore } from "@/store";
 import { Channel, isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
-import { onMounted, Ref, ref } from "vue";
+import { computed, onMounted, Ref, ref } from "vue";
 
 const store = useStore();
+const statusClass = computed(() => (<Conversation>store.currentChat!).other.status);
 const title: Ref<string> = ref("");
 const detail: Ref<string> = ref("");
 
@@ -37,6 +38,6 @@ const reloadInfos = (state: any) => {
   title.value = isChannel(state.currentChat!) ? Channel.getName(<Channel>state.currentChat) : Conversation.getName(<Conversation>state.currentChat);
   detail.value = isChannel(state.currentChat!)
     ? `${(<Channel>state.currentChat).members!.length} members`
-    : `Rank ${(<Conversation>state.currentChat).other.elo}`;
+    : `ELO : ${(<Conversation>state.currentChat).other.elo}`;
 };
 </script>

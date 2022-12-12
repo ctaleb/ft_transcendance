@@ -12,11 +12,15 @@ const emit = defineEmits<{
 </script>
 
 <style lang="scss" scoped>
+@import "../../styles/mixins/sizes";
 .modal {
   display: flex;
   padding: 2rem;
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  @include screen-lg {
+    width: 100vw;
+  }
 }
 </style>

@@ -135,8 +135,7 @@ const noFriends = ref(false);
 const summary = ref(false);
 const toggleLadder = ref(true);
 const toggleInvited = ref(false);
-const gameBoard = ref(false);
-let displayLoading = ref(false);
+const displayLoading = ref(false);
 
 const friendName = ref("Placeholder");
 const customReady = ref("Ready ?");
@@ -400,20 +399,27 @@ const customInvitation = () => {};
     justify-content: space-around;
     z-index: 1;
     width: 40%;
-    height: 50% !important;
+    overflow-y: hidden;
+    overflow-x: hidden;
+    padding: 25px;
+    //height: 50% !important;
     margin-top: 0;
     @include screen-xl {
       width: 50%;
-      height: 50% !important;
+      //  height: 50% !important;
       margin-top: 0;
     }
     @include screen-lg {
       width: 100%;
-      height: 30% !important;
+      //  height: 30% !important;
     }
     @include screen-md {
       width: 100%;
-      height: 40% !important;
+      //  height: 40% !important;
+    }
+    .powerSliderDiv {
+      height: 100%;
+      width: 100%;
     }
     .inviter {
       display: flex;
@@ -521,6 +527,9 @@ const customInvitation = () => {};
     border-radius: 5px;
     box-shadow: 0 3rem 5rem rgba(0, 0, 0, 0.3);
     z-index: 10;
+    @include screen-lg {
+      width: 100vw;
+    }
   }
   .overlay {
     position: absolute;

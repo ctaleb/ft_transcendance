@@ -19,6 +19,7 @@ const props = defineProps<{
 </script>
 
 <style lang="scss" scoped>
+@import "../../styles/mixins/sizes";
 .modal {
   display: flex;
   flex-direction: column;
@@ -26,6 +27,9 @@ const props = defineProps<{
   align-items: center;
   padding: 2rem;
   z-index: 4;
+  @include screen-lg {
+    width: 100vw;
+  }
   h1 {
     color: white;
   }

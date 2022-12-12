@@ -2,7 +2,6 @@ import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 import HomeView from "../views/HomeView.vue";
 import GameView from "../views/GameView.vue";
 import ChatView from "../views/ChatView.vue";
-import RegisterView from "../views/RegisterView.vue";
 import ProfileView from "../views/ProfileView.vue";
 import EditView from "../views/EditView.vue";
 import twoFactorView from "../views/twoFactorView.vue";
@@ -25,11 +24,7 @@ const routes: Array<RouteRecordRaw> = [
     name: "chat",
     component: ChatView,
   },
-  {
-    path: "/signup",
-    name: "sign up",
-    component: RegisterView,
-  },
+
   {
     path: "/profile/:nickname?",
     name: "profile",

@@ -1,4 +1,5 @@
 @import "../variables";
+@import "../mixins/sizes";
 
 .all-chan-modal {
   display: flex;
@@ -11,6 +12,9 @@
   min-width: 60%;
   z-index: 9;
   padding: 20px;
+  @include screen-lg {
+    justify-content: center;
+  }
   h2 {
     text-align: center;
     width: 100%;
@@ -23,7 +27,7 @@
     align-items: center;
     border: 3px solid $primary;
     padding: 0.5rem;
-    width: 20%;
+    width: 200px;
     height: 20%;
     h3 {
       margin: 8px 0 8px 0;

@@ -16,12 +16,16 @@ const props = defineProps<{
 
 <style lang="scss" scoped>
 @import "../../styles/inputsAndButtons";
+@import "../../styles/mixins/sizes";
 
 .modal {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  @include screen-lg {
+    width: 100vw;
+  }
   .button {
     width: 30%;
   }

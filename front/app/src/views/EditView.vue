@@ -2,27 +2,38 @@
   <div class="principalSection">
     <div class="mainContainer">
       <h3>Personnal informations</h3>
-      <div class="section">
-        <img :src="avatarUrl" alt="" class="image" />
-        <label for="avatar" class="fileInput"
-          >Select picture <i class="gg-image"></i><input type="file" id="avatar" name="avatar" accept="image/*" @change="updateAvatar"
-        /></label>
-      </div>
-      <div class="section">
-        <input id="nick" type="text" v-model="nickname" maxlength="15" minlength="3" />
-        <button type="submit" class="button" @click.stop.prevent="updateNickname()">Update nickname</button>
-      </div>
-      <div class="section">
-        <input id="phone" type="text" placeholder="+33 6 11 22 33 44" v-model="phone" @input="formatPhone" />
-        <button type="submit" class="button" :disabled="phoneFormatError.length ? true : false" @click.stop.prevent="updatePhone()">Update phone</button>
-        <div v-if="phoneFormatError.length">
-          {{ phoneFormatError }}
+      <div class="containerSections">
+        <div class="section">
+          <img :src="avatarUrl" alt="" class="image" />
+          <label for="avatar" class="fileInput"
+            >Select picture <i class="gg-image"></i><input type="file" id="avatar" name="avatar" accept="image/*" @change="updateAvatar"
+          /></label>
         </div>
-      </div>
-      <div class="section">
-        <input id="password" type="password" placeholder="new password" v-model="password" />
-        <input type="password" placeholder="please confirm new password" v-model="confirmPassword" />
-        <button type="submit" class="button" @click.stop.prevent="updatePassword()">Update password</button>
+        <div class="section">
+          <input id="nick" type="text" v-model="nickname" maxlength="15" minlength="3" />
+          <button type="submit" class="button" @click.stop.prevent="updateNickname()">Update nickname</button>
+        </div>
+        <div class="section">
+          <input id="phone" type="text" placeholder="+33 6 11 22 33 44" v-model="phone" @input="formatPhone" />
+          <button type="submit" class="button" :disabled="phoneFormatError.length ? true : false" @click.stop.prevent="updatePhone()">Update phone</button>
+          <div v-if="phoneFormatError.length">
+            {{ phoneFormatError }}
+          </div>
+        </div>
+        <div class="section">
+          <input id="password" type="password" placeholder="new password" v-model="password" />
+          <input type="password" placeholder="please confirm new password" v-model="confirmPassword" />
+          <button type="submit" class="button" @click.stop.prevent="updatePassword()">Update password</button>
+        </div>
+        <div class="responsiveSvgSection">
+          <img :class="{ lessOpacity: twoFactorEnabled == false }" src="../assets/twoFaDisabled.svg" alt="" />
+          <div class="content">
+            <label class="switch">
+              <input type="checkbox" id="2faSwitch" @change="twoFactorSwitch($event)" />
+              <span class="slider round"></span>
+            </label>
+          </div>
+        </div>
       </div>
     </div>
     <div class="svgSection">
@@ -250,16 +261,48 @@ export default defineComponent({
   display: flex;
   flex-direction: row;
   justify-content: space-around;
+  margin-top: 20px;
   align-items: center;
   width: 100vw;
   height: 75vh;
+  @include screen-lg {
+    justify-content: center;
+  }
 
   .mainContainer {
-    justify-content: space-around;
-    padding: 20px;
-    height: 65vh;
+    height: 100%;
+    overflow-y: scroll;
+    .containerSections {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      width: 100%;
+      height: 100%;
+      @include screen-md {
+        justify-content: flex-start;
+      }
+    }
+    .responsiveSvgSection {
+      display: none;
+    }
     h3 {
       margin-bottom: 3px;
+    }
+    @include screen-lg {
+      width: 100%;
+      padding: 20px 0 0 0;
+      h3 {
+        display: none;
+      }
+      .svgSection {
+        display: none;
+      }
+      .responsiveSvgSection {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 9px;
+      }
     }
   }
   .svgSection {
@@ -269,7 +312,9 @@ export default defineComponent({
     width: 35%;
     color: white;
     position: relative;
-
+    @include screen-lg {
+      display: none;
+    }
     img {
       width: 100%;
       transition: opacity 0.4s ease;

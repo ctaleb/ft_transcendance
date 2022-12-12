@@ -9,7 +9,7 @@
     </svg>
     <img class="user-image" :src="User.getAvatar(friend)" alt="" />
     <h3>{{ friend.nickname }}</h3>
-    <h4 style="color: greenyellow; text-align: center">{{ friend.status }}</h4>
+    <h4 style="text-align: center" :class="statusClass">{{ friend.status }}</h4>
     <div class="socialIcons">
       <i v-if="friend.status === 'inGame'" title="Spectate your friend" class="gg-eye" @click="User.spectateGame(router, friend)"></i>
       <i title="Go to profile" class="gg-profile" @click="watchProfile()"></i>
@@ -22,8 +22,10 @@
 </template>
 
 <script lang="ts" setup>
+import FriendAlert from "@/components/FriendAlert.vue";
 import { currentUserProfile, socketLocal, useStore } from "@/store";
 import { User } from "@/types/User";
+import { computed } from "vue";
 import { useRouter } from "vue-router";
 
 const props = defineProps<{
@@ -32,6 +34,7 @@ const props = defineProps<{
 
 const router = useRouter();
 const store = useStore();
+const statusClass = computed(() => props.friend.status);
 
 const watchProfile = () => {
   router.push("/profile/" + props.friend.nickname);
