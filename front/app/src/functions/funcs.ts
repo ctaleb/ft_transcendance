@@ -1,11 +1,8 @@
 import { currentUserProfile, menu, privateConvs, socketLocal, useStore } from "@/store";
 import { Channel, ChannelUser, isChannel } from "@/types/Channel";
-import { Conversation } from "@/types/Conversation";
 import { Alert } from "@/types/GameSummary";
 import { User } from "@/types/User";
-import { storeToRefs } from "pinia";
-import { io, Socket } from "socket.io-client";
-import { markRaw, shallowReactive } from "vue";
+import { io } from "socket.io-client";
 
 export async function isConnected(token: string): Promise<boolean> {
   if (token == "" || token == null) return false;
@@ -92,7 +89,7 @@ async function fetchUser(token: string): Promise<void> {
 
   fetchJSONDatas("api/user/profile", "GET")
     .then((data) => (store.user = data))
-    .catch();
+    .catch(() => {});
 }
 
 function connectSocket(token: string, user: any) {

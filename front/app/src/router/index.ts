@@ -43,7 +43,7 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from) => {
-  let isConnected = funcs.isConnected(localStorage.getItem("token"));
+  let isConnected = funcs.isConnected(localStorage.getItem("token")).catch();
   if (to.fullPath != "/" && from.fullPath != "/") {
     if (isConnected) return true;
     else return { name: "home" };

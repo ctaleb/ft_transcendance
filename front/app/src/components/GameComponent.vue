@@ -185,7 +185,6 @@ function findMatch() {
   });
 }
 function readyUp() {
-  displayLoading.value = true;
   readyButton.value = true;
   customReady.value = "Waiting for " + friendName.value;
   if (lobbyStatus.value === "settingsInvitee") {
