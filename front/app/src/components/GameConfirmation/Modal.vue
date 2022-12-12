@@ -16,6 +16,7 @@ const emit = defineEmits<{
 </script>
 
 <style lang="scss" scoped>
+@import "../../styles/mixins/sizes";
 .modal {
   display: flex;
   flex-direction: column;
@@ -23,6 +24,9 @@ const emit = defineEmits<{
   align-items: center;
   padding: 2rem;
   width: 30%;
+  @include screen-lg {
+    width: 100vw;
+  }
   div {
     width: 100%;
     display: flex;

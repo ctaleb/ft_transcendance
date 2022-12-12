@@ -1,20 +1,44 @@
 <template>
   <div @click="hideUserMenu()" class="contextMenu" v-if="menu.view" v-bind:style="{ top: menu.top.toString() + 'px', left: menu.left.toString() + 'px' }">
-    <div class="name">{{ menu.user!.nickname }}</div>
-    <div class="status">{{ menu.user!.status }}</div>
-    <button @click="watchProfile()">Profile</button>
-    <button v-if="menu.user!.status == 'inGame'" @click="User.spectateGame(router, menu.user)">Spectate</button>
-    <button v-else-if="menu.user!.status == 'online'" @click="User.inviteCustom(router, menu.user)">Invite</button>
-    <button v-if="!isBlocked" @click="block()">Block</button>
-    <button v-else title="Unblock user" @click="unblock()">Unblock</button>
-    <template v-if="menu.requester && menu.requester!.role !== ChannelRole.MEMBER && (<ChannelUser>menu.user)!.role === ChannelRole.MEMBER">
-      <button @click="showMuteModal = true">Mute</button>
-      <button @click="showBanModal = true">Ban</button>
-    </template>
-    <button v-if="menu.requester && menu.requester!.role === ChannelRole.OWNER && (<ChannelUser>menu.user)!.role === ChannelRole.MEMBER" @click="giveTakeAdmin">
+    <div class="header">
+      <div class="name">{{ menu.user!.nickname }}</div>
+      <div class="status" :class="statusClass">
+        <i class="gg-shape-rhombus"></i>
+        {{ menu.user!.status }}
+      </div>
+    </div>
+    <hr />
+    <button class="button" @click="watchProfile()">Profile</button>
+    <button class="button" v-if="menu.user!.status == 'inGame'" @click="spectateGame()">Spectate</button>
+    <button class="button" v-else-if="menu.user!.status == 'online'" @click="inviteCustom()">Invite</button>
+    <button class="button" v-if="!isBlocked" @click="block()">Block</button>
+    <button class="button" v-else title="Unblock user" @click="unblock()">Unblock</button>
+    <button
+      class="button"
+      v-if="menu.requester && menu.requester!.role !== ChannelRole.MEMBER && (<ChannelUser>menu.user)!.role === ChannelRole.MEMBER"
+      @click="showMuteModal = true"
+    >
+      Mute
+    </button>
+    <button
+      class="button"
+      v-if="menu.requester && menu.requester!.role !== ChannelRole.MEMBER && (<ChannelUser>menu.user)!.role === ChannelRole.MEMBER"
+      @click="showBanModal = true"
+    >
+      Ban
+    </button>
+    <button
+      class="button"
+      v-if="menu.requester && menu.requester!.role === ChannelRole.OWNER && (<ChannelUser>menu.user)!.role === ChannelRole.MEMBER"
+      @click="giveTakeAdmin"
+    >
       Give admin
     </button>
-    <button v-if="menu.requester && menu.requester!.role === ChannelRole.OWNER && (<ChannelUser>menu.user)!.role === ChannelRole.ADMIN" @click="giveTakeAdmin">
+    <button
+      class="button"
+      v-if="menu.requester && menu.requester!.role === ChannelRole.OWNER && (<ChannelUser>menu.user)!.role === ChannelRole.ADMIN"
+      @click="giveTakeAdmin"
+    >
       Take admin
     </button>
   </div>
@@ -31,12 +55,12 @@ import { addAlertMessage, fetchJSONDatas, hideUserMenu } from "@/functions/funcs
 import { currentUserProfile, menu, socketLocal, useStore } from "@/store";
 import { ChannelRole, ChannelUser } from "@/types/Channel";
 import { User } from "@/types/User";
-import { onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 
 const store = useStore();
 const router = useRouter();
-
+const statusClass = computed(() => menu.value.user?.status);
 const isBlocked = ref(false);
 const showMuteModal = ref(false);
 const showBanModal = ref(false);
@@ -101,7 +125,8 @@ const takeAdmin = async (member: ChannelUser): Promise<void> => {
 <style lang="scss" scoped>
 @import "@/styles/variables";
 .contextMenu {
-  background-color: $background;
+  background-color: rgb(48, 48, 68);
+  border-radius: 10px;
   z-index: 50;
   position: absolute;
   display: flex;
@@ -109,25 +134,41 @@ const takeAdmin = async (member: ChannelUser): Promise<void> => {
   text-align: center;
   justify-content: center;
   flex-direction: column;
-  width: 60px;
+  padding: 10px;
 
+  hr {
+    margin: 0;
+    width: 95%;
+    border: 1px solid $primary;
+    margin-bottom: 2px;
+  }
+  .button {
+    width: 100%;
+    height: 2%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: none;
+    &:hover {
+      background: rgb(85, 85, 114);
+    }
+  }
   .name {
     color: $primary;
   }
-  .status {
-    color: $victory;
-  }
-  button {
-    background-color: $background;
-    color: $primary;
-    border: 1px solid lighten($background, 20%);
-    height: 20px;
-    width: 60px;
-    transition: all 0.5s ease;
-
-    &:hover {
-      background-color: lighten($background, 20%);
-      border: 1px solid $primary;
+  .header {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    width: 80%;
+    .status {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-left: 5px;
+      i {
+        --ggs: 0.6;
+      }
     }
   }
 }

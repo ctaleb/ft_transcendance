@@ -5,14 +5,18 @@
     <h1>Creating a new chat channel</h1>
     <input v-model="channelName" type="text" id="username" placeholder="Channel name" />
     <div class="radioBundle">
-      <input type="radio" id="one" name="public" value="public" v-model="picked" checked />
-      <label for="public">public</label>
-
-      <input type="radio" id="two" name="protected" value="protected" v-model="picked" />
-      <label for="protected">protected</label>
-
-      <input type="radio" id="three" name="private" value="private" v-model="picked" />
-      <label for="private">private</label>
+      <div>
+        <input type="radio" id="one" name="public" value="public" v-model="picked" checked />
+        <label for="public">public</label>
+      </div>
+      <div>
+        <input type="radio" id="two" name="protected" value="protected" v-model="picked" />
+        <label for="protected">protected</label>
+      </div>
+      <div>
+        <input type="radio" id="three" name="private" value="private" v-model="picked" />
+        <label for="private">private</label>
+      </div>
     </div>
     <div v-if="picked === 'protected'" class="protectedChan">
       <input type="password" class="channelPassword" name="channelPassword" placeholder="Password" v-model="channelPassword" required />
@@ -56,6 +60,7 @@ const createChannel = async (): Promise<void> => {
 </script>
 
 <style lang="scss" scoped>
+@import "../../../styles/mixins/sizes";
 .modal {
   display: flex;
   flex-direction: column;
@@ -63,6 +68,16 @@ const createChannel = async (): Promise<void> => {
   align-items: center;
   z-index: 5;
   padding: 2rem;
+  div {
+    display: flex;
+    align-items: center;
+    input {
+      margin-right: 11px;
+    }
+  }
+  @include screen-lg {
+    width: 100vw;
+  }
   .radioBundle {
     width: 70%;
     display: flex;
@@ -70,6 +85,13 @@ const createChannel = async (): Promise<void> => {
     align-items: center;
     margin-top: 25px;
     margin-bottom: 10px;
+    @include screen-md {
+      flex-direction: column;
+      align-items: flex-start;
+      div {
+        margin-bottom: 10px;
+      }
+    }
   }
 
   .button {

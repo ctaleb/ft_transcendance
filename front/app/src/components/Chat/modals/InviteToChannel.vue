@@ -40,6 +40,7 @@ const inviteToChannel = async (): Promise<void> => {
 };
 </script>
 <style lang="scss" scoped>
+@import "../../../styles/mixins/sizes";
 .modal {
   z-index: 5;
   padding: 12px;
@@ -48,6 +49,9 @@ const inviteToChannel = async (): Promise<void> => {
   justify-content: space-around;
   align-items: center;
   width: 30%;
+  @include screen-lg {
+    width: 100vw;
+  }
   div {
     width: 100%;
     display: flex;

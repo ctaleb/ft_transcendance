@@ -12,14 +12,17 @@
         </div>
       </nav>
       <router-view :key="$route.fullPath" />
-      <div v-if="gameConfirmation" class="overlay">
+      <div v-if="gameConfirmation">
         <GameConfirmation @confirmGame="confirmGame()" @denyGame="denyGame()"></GameConfirmation>
       </div>
-      <div v-if="customInvitation" class="overlay">
+      <div v-if="customInvitation">
         <CustomInvitation :inviter="invSender" @acceptCustom="acceptCustom()" @denyCustom="denyCustom()"></CustomInvitation>
       </div>
-      <div v-if="failedInvitation" class="overlay">
+      <div v-if="failedInvitation">
         <FailedInvitation @invFailure="invFailure()"></FailedInvitation>
+      </div>
+      <div v-if="multiClientWarning" class="overlay">
+        <MultiClientWarning></MultiClientWarning>
       </div>
       <div class="alertFlex">
         <AlertCard v-for="message of alertMessages" :message="message" />
@@ -43,6 +46,7 @@ import AlertCard from "./components/AlertCard.vue";
 import CustomInvitation from "./components/CustomInvitation/Modal.vue";
 import FailedInvitation from "./components/FailedInvitation/Modal.vue";
 import GameConfirmation from "./components/GameConfirmation/Modal.vue";
+import MultiClientWarning from "./components/MultiClientWarning/Modal.vue";
 
 const store = useStore();
 const route = useRoute();
@@ -50,6 +54,7 @@ const router = useRouter();
 const gameConfirmation = ref(false);
 const customInvitation = ref(false);
 const failedInvitation = ref(false);
+const multiClientWarning = ref(false);
 const invSender = ref("Placeholder");
 
 trySetupUser().catch((err) => {
@@ -133,7 +138,7 @@ const invFailure = () => {
 const logout = () => {
   localStorage.removeItem("token");
   localStorage.removeItem("user");
-  socketLocal.value?.emit("disco", {});
+  socketLocal.value?.emit("disco");
   socketLocal.value?.close();
 };
 
@@ -149,22 +154,32 @@ function showFailure(show: boolean) {
   failedInvitation.value = show;
 }
 
+function showMultiClientWarning(show: boolean) {
+  multiClientWarning.value = show;
+}
+
 onMounted(() => {
   watch(
     () => route.path,
-    () => {
+    (newValue, oldValue) => {
       if (route.path != "/chat") {
         privateConvs.value = [];
         store.$patch({
           currentChat: undefined,
         });
       }
+      socket.value?.emit("watchPath", { oldValue });
     }
   );
 
   watch(
     () => socketLocal.value,
     () => {
+      if (!socket.value?.hasListeners("noMultiClient")) {
+        socket.value?.on("noMultiClient", () => {
+          showMultiClientWarning(true);
+        });
+      }
       if (!socket.value?.hasListeners("updateOneUserStatus")) {
         socket.value?.on("updateOneUserStatus", (obj: { id: number; status: string }) => {
           updateStatus(obj.id, obj.status);
@@ -357,5 +372,21 @@ body {
   100% {
     box-shadow: 0 0 0 0px rgba(200, 150, 100, 1), 0 0 0 1px #e7d899;
   }
+}
+
+.inLobby {
+  color: yellow !important;
+}
+.inQueue {
+  color: blue !important;
+}
+.inGame {
+  color: orange !important;
+}
+.online {
+  color: green !important;
+}
+.offline {
+  color: red !important;
 }
 </style>

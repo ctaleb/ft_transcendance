@@ -85,6 +85,8 @@ const ban = async () => {
 </script>
 
 <style lang="scss" scoped>
+@import "../../../styles/mixins/sizes";
+@import "../../../styles/variables";
 .modal {
   display: flex;
   flex-direction: column;
@@ -92,6 +94,10 @@ const ban = async () => {
   align-items: center;
   padding: 12px;
   width: 20%;
+  z-index: 6;
+  @include screen-lg {
+    width: 100vw;
+  }
   .radioBundle {
     display: flex;
     flex-direction: column;
@@ -108,6 +114,19 @@ const ban = async () => {
   }
   .button {
     margin-top: 15px;
+  }
+  input[type="radio"] {
+    appearance: none;
+    background-color: $secondary;
+    font: inherit;
+    color: currentColor;
+    width: 1.15em;
+    height: 1.15em;
+    border: 0.09em solid currentColor;
+    border-radius: 50%;
+    &:checked {
+      background-color: $primary;
+    }
   }
 }
 </style>
