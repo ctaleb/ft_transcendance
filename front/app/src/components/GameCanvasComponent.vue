@@ -459,7 +459,6 @@ function render(ctx: CanvasRenderingContext2D | null | undefined, gameState: Gam
 }
 
 const ServerUpdate = (gameState: GameState) => {
-  console.log(gameState);
   gState = gameState;
 };
 

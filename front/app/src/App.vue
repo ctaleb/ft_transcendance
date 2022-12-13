@@ -168,7 +168,7 @@ onMounted(() => {
           currentChat: undefined,
         });
       }
-      socket.value?.emit("watchPath", { oldValue });
+      socket.value?.emit("watchPath", { oldValue, newValue });
     }
   );
 
@@ -388,5 +388,8 @@ body {
 }
 .offline {
   color: red !important;
+}
+.spectating {
+  color: purple !important;
 }
 </style>
