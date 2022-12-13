@@ -65,6 +65,7 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     console.log('Socket ' + client.id + ' successfully connected');
   }
 
+  //toRemove
   @SubscribeMessage('debugging')
   debug(@ConnectedSocket() client: Socket) {
     console.log('~~~~~~~~~~~ queue ~~~~~~~~~~');
@@ -80,7 +81,7 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     });
     console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
   }
-
+  //toRemove
   @SubscribeMessage('chatting')
   debugchat() {
     console.log('~~~~~~~~~~~ users + games ~~~~~~~~~~');
@@ -99,7 +100,6 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
 
   @SubscribeMessage('disco')
   disco(@ConnectedSocket() client: Socket) {
-    let ingame = false;
     if (client) {
       const player = this.serverService.userList.find((element) => element.socket && element.socket.id === client.id);
       if (player) {
@@ -112,10 +112,8 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
             if (element.room.status === 'launching') return;
             if (element.client.id === player.id) {
               element.room.status = 'clientForfeit';
-              ingame = true;
             } else if (element.host.id === player.id) {
               element.room.status = 'hostForfeit';
-              ingame = true;
             }
           });
           this.serverService.updateStatus(player.id, 'offline');
@@ -128,20 +126,21 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
 
   @SubscribeMessage('watchPath')
   switchPath(@ConnectedSocket() client: Socket, @MessageBody('oldValue') oldValue: string, @MessageBody('newValue') newValue: string) {
-    let ingame = false;
-    const player = this.serverService.userList.find((element) => element.socket === client);
+    if (!oldValue || !newValue) return;
+    const player = this.serverService.userList.find((element) => element.socket.id === client.id);
+    if (!player) return;
     this.serverService.games.forEach((element) => {
       if (element.room.status === 'launching') {
         if (oldValue == '/game') {
           if (element.client.id === player.id) {
-            if (player.gameData.status === 'inLobby' || player.gameData.status === 'ready') {
+            if (player.gameData.status === 'inCustomLobby' || player.gameData.status === 'ready') {
               this.serverService.stopCustom(element.host, element.client, element);
             } else if (player.gameData.status === 'readyQ') {
               player.gameData.status = 'idle';
               this.serverService.updateStatus(player.id, 'online');
             }
           } else if (element.host.id === player.id) {
-            if (player.gameData.status === 'inLobby' || player.gameData.status === 'ready') {
+            if (player.gameData.status === 'inCustomLobby' || player.gameData.status === 'ready') {
               this.serverService.stopCustom(element.client, element.host, element);
             } else if (player.gameData.status === 'readyQ') {
               player.gameData.status = 'idle';
@@ -153,10 +152,8 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       }
       if (element.client === player) {
         element.room.status = 'clientForfeit';
-        ingame = true;
       } else if (element.host === player) {
         element.room.status = 'hostForfeit';
-        ingame = true;
       }
       if (oldValue.indexOf('/profile') == -1 && oldValue != '/chat') {
         const theatre = element.theatre.name;
@@ -171,7 +168,6 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
           }
         });
       }
-      // if (player.status === 'inLobby')
     });
   }
 
@@ -209,13 +205,14 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     @ConnectedSocket()
     client: Socket,
   ) {
+    if (!key) return;
     this.serverService.storeInput(client, key);
   }
 
   // Game Core
-  //@body() powerString as additional arg
   @SubscribeMessage('joinQueue')
   joinQueue(@ConnectedSocket() client: Socket, @MessageBody('power') power: string) {
+    if (!power) return;
     const player = this.serverService.SocketToPlayer(client);
     if (!player || !(player.gameData.status === 'idle')) return;
     const game = this.serverService.joinQueue(client, power);
@@ -239,25 +236,31 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
         } else {
           if (game.host.gameData.status === 'readyQ') {
             game.host.gameData.status = 'inQueue';
+            game.host.status = 'inQueue';
             this.serverService.updateStatus(game.host.id, 'inQueue');
             game.client.gameData.status = 'idle';
+            game.client.status = 'inQueue';
             this.serverService.updateStatus(game.client.id, 'online');
             this.serverService.playerQueue.splice(this.serverService.playerQueue.indexOf(game.client), 1);
             game.client.socket.emit('gameConfirmationTimeout');
             this.serverService.playerQueue.push(game.host);
           } else if (game.client.gameData.status === 'readyQ') {
             game.client.gameData.status = 'inQueue';
+            game.client.status = 'inQueue';
             this.serverService.updateStatus(game.client.id, 'inQueue');
             game.host.gameData.status = 'idle';
+            game.host.status = 'online';
             this.serverService.updateStatus(game.host.id, 'online');
             this.serverService.playerQueue.splice(this.serverService.playerQueue.indexOf(game.host), 1);
             game.host.socket.emit('gameConfirmationTimeout');
             this.serverService.playerQueue.push(game.client);
           } else {
             game.host.gameData.status = 'idle';
+            game.host.status = 'online';
             this.serverService.updateStatus(game.host.id, 'online');
             this.serverService.playerQueue.splice(this.serverService.playerQueue.indexOf(game.host), 1);
             game.client.gameData.status = 'idle';
+            game.client.status = 'online';
             this.serverService.updateStatus(game.client.id, 'online');
             this.serverService.playerQueue.splice(this.serverService.playerQueue.indexOf(game.client), 1);
             this.server.to(game.room.name).emit('gameConfirmationTimeout');
@@ -294,6 +297,9 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   @SubscribeMessage('spectate')
   spectate(@MessageBody('friend') friend: string, @ConnectedSocket() client: Socket) {
     let response = 'na';
+    if (!friend) return response;
+    const player = this.serverService.userList.find((element) => element.socket.id === client.id);
+    if (!player) return response;
     this.serverService.games.forEach((element) => {
       if (element.client.name == friend || element.host.name == friend) response = 'inGame';
     });
@@ -329,10 +335,10 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       game = this.serverService.newGame(usr, inviter);
       game.room.name = 'game-' + game.host.name + '-' + game.client.name;
       game.theatre.name = 'spec-' + game.host.name + '-' + game.client.name;
-      usr.gameData.status = 'inLobby';
-      this.serverService.updateStatus(usr.id, 'inLobby');
-      inviter.gameData.status = 'inLobby';
-      this.serverService.updateStatus(inviter.id, 'inLobby');
+      usr.gameData.status = 'inCustomLobby';
+      this.serverService.updateStatus(usr.id, 'inCustomLobby');
+      inviter.gameData.status = 'inCustomLobby';
+      this.serverService.updateStatus(inviter.id, 'inCustomLobby');
       game.host.socket.join(game.room.name);
       usr.socket.emit('invitation', inviter.name);
       this.serverService.games.push(game);
