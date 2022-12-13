@@ -29,7 +29,7 @@
           <img :class="{ lessOpacity: twoFactorEnabled == false }" src="../assets/twoFaDisabled.svg" alt="" />
           <div class="content">
             <label class="switch">
-              <input type="checkbox" id="2faSwitch" @change="twoFactorSwitch($event)" />
+              <input type="checkbox" class="2faSwitch" @change="twoFactorSwitch($event)" />
               <span class="slider round"></span>
             </label>
           </div>
@@ -42,7 +42,7 @@
         <h2 v-if="twoFactorEnabled == false">2FA disabled</h2>
         <h2 v-else>2FA enabled</h2>
         <label class="switch">
-          <input type="checkbox" id="2faSwitch" @change="twoFactorSwitch($event)" />
+          <input type="checkbox" class="2faSwitch" @change="twoFactorSwitch($event)" />
           <span class="slider round"></span>
         </label>
       </div>
@@ -125,16 +125,29 @@ export default defineComponent({
     async updatePicture() {
       let formData = new FormData();
       formData.append("avatar", this.newAvatar);
-      await fetchJSONDatas("api/user/avatarEdit", "PUT", formData)
-        .then(async (data) => {
-          localStorage.setItem("user", JSON.stringify(data.user));
-          localStorage.setItem("token", data.token);
-          await trySetupUser();
-          this.avatarUrl = this.getUserAvatar();
+      let fetch_ret = await fetch("http://" + window.location.hostname + ":3000/api/user/avatarEdit", {
+        headers: {
+          Authorization: "Bearer " + localStorage.getItem("token"),
+        },
+        method: "PUT",
+        body: formData,
+      })
+        .then((res) => {
+          if (!res.ok) return Promise.reject();
+          return res.json();
         })
-        .catch(() => {});
-    },
+        .catch((err) => {
+          funcs.addAlertMessage("Unauthorized", 3);
+          return null;
+        });
+      if (fetch_ret == null) return;
+      localStorage.setItem("user", JSON.stringify(fetch_ret.user));
+      localStorage.setItem("token", fetch_ret.token);
+      await trySetupUser();
+      this.store.user!.avatar = "/api/user/profile-picture/" + fetch_ret.user.avatar.path;
 
+      this.avatarUrl = this.getUserAvatar();
+    },
     containsUppercase(value: string) {
       return /[A-Z]/.test(value);
     },
@@ -193,19 +206,22 @@ export default defineComponent({
     initTwoFactorToggle() {
       if (this.user.twoFactorAuth == true) {
         this.twoFactorEnabled = true;
-        document.getElementById("2faSwitch")?.setAttribute("checked", "true");
+        const switches = document.getElementsByClassName("2faSwitch");
+        Array.prototype.forEach.call(switches, function (el) {
+          el.checked = true;
+        });
       } else {
         console.log("2fa disabled");
       }
     },
     twoFactorSwitch(event: any) {
+      console.log(this.phone);
       if (this.phone == null) {
-        funcs.addAlertMessage("Missing phone number", 2);
-        const checkbox = document.getElementById("2faSwitch") as HTMLInputElement | null;
-
-        if (checkbox != null) {
-          checkbox.checked = false;
-        }
+        funcs.addAlertMessage("Missing phone number", 1);
+        const switches = document.getElementsByClassName("2faSwitch");
+        Array.prototype.forEach.call(switches, function (el) {
+          el.checked = false;
+        });
       } else {
         this.updateTwoFactorAuth();
       }

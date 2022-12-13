@@ -1,10 +1,11 @@
 FROM node:18-bullseye
-RUN apt-get update && apt-get upgrade
+RUN apt-get update -y && apt-get upgrade -y
 RUN npm install -g npm@9.1.3
 COPY app/ /back/app/
 WORKDIR /back/app/
 RUN npm i
 RUN npm install @nestjs/cli
+RUN npm install bcrypt
 EXPOSE 3000:3000
 # RUN npm run start:dev&
 # RUN npm install -g @nestjs/cli							\
@@ -16,4 +17,4 @@ EXPOSE 3000:3000
 # ENTRYPOINT ["node"]
 # CMD ["dist/main.js"]
 CMD ["npx", "nest", "start", "watch"]
-#  CMD ["sleep", "infinity"]
+#CMD ["sleep", "infinity"]

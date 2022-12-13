@@ -110,6 +110,7 @@ export class UserController {
     }),
   )
   async editAvatar(@UploadedFile() avatar: Express.Multer.File, @Request() req) {
+    console.log('photo:');
     console.log(avatar);
     return this._userService.updateAvatar(
       avatar
