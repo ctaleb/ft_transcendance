@@ -9,8 +9,12 @@
     </div>
     <hr />
     <button class="button" @click="watchProfile()">Profile</button>
-    <button class="button" v-if="menu.user!.status == 'inGame'" @click="spectateGame()">Spectate</button>
-    <button class="button" v-else-if="menu.user!.status == 'online'" @click="inviteCustom()">Invite</button>
+    <button class="button" v-if="menu.user!.status == 'inGame' && store.user?.status === 'online'" @click="User.spectateGame(router, menu.user)">
+      Spectate
+    </button>
+    <button class="button" v-else-if="menu.user!.status == 'online' && store.user?.status === 'online'" @click="User.inviteCustom(router, menu.user)">
+      Invite
+    </button>
     <button class="button" v-if="!isBlocked" @click="block()">Block</button>
     <button class="button" v-else title="Unblock user" @click="unblock()">Unblock</button>
     <button

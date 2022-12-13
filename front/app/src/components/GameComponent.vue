@@ -82,7 +82,7 @@
       </div>
     </div>
     <!-- BUTTON TO LEAVE QUEUE -->
-    <button v-if="lobbyStatus == 'queuing'" class="button">Leave queue</button>
+    <button v-if="lobbyStatus == 'queuing'" class="button" @click="leaveQueue()">Leave queue</button>
     <!-- BUTTON TO LEAVE QUEUE -->
     <div v-if="lobbyStatus == 'playing' || lobbyStatus == 'spectating'" class="ladder">
       <GameCanvasComponent :opponent="store.user!" :us="store.user!" :gameOptions="gameOpts"></GameCanvasComponent>
@@ -188,6 +188,13 @@ function findMatch() {
     power: power.value,
   });
 }
+function leaveQueue() {
+  startButton.value = false;
+  readyButton.value = false;
+  displayLoading.value = false;
+  socketLocal?.value?.emit("leaveQueue");
+  lobbyStatus.value = "lobby";
+}
 function readyUp() {
   readyButton.value = true;
   customReady.value = "Waiting for " + friendName.value;
@@ -235,7 +242,10 @@ function updateSummary(summary: GameSummaryData) {
 // });
 
 onMounted(() => {
-  if (store.user?.status == "inQueue") lobbyStatus.value = "queuing";
+  if (store.user?.status == "inQueue") {
+    lobbyStatus.value = "queuing";
+    displayLoading.value = true;
+  }
   // ctx = canvas.value?.getContext("2d");
   // ctx?.drawImage(plateauImg, 0, 0, cWidth, cHeight);
   // scaling(ctx);
@@ -292,8 +302,9 @@ const customInvitee = (friend: string) => {
   // toggleGameQueue();
 };
 
-const foreverAlone = () => {
+const foreverAlone = (friend: string) => {
   // toggleGameQueue();
+  friendName.value = friend;
   lobbyStatus.value = "lobby";
   noFriends.value = true;
 };

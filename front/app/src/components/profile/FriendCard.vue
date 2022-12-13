@@ -11,11 +11,21 @@
     <h3>{{ friend.nickname }}</h3>
     <h4 style="text-align: center" :class="statusClass">{{ friend.status }}</h4>
     <div class="socialIcons">
-      <i v-if="friend.status === 'inGame'" title="Spectate your friend" class="gg-eye" @click="User.spectateGame(router, friend)"></i>
+      <i
+        v-if="friend.status === 'inGame' && store.user?.status === 'online'"
+        title="Spectate your friend"
+        class="gg-eye"
+        @click="User.spectateGame(router, friend)"
+      ></i>
       <i title="Go to profile" class="gg-profile" @click="watchProfile()"></i>
       <template v-if="currentUserProfile?.id === store.user?.id">
         <i title="Delete friend" class="gg-close-o" @click="unfriend()"></i>
-        <i v-if="friend.status === 'online'" title="Invite in game" class="gg-games" @click="User.inviteCustom(router, friend)"></i>
+        <i
+          v-if="friend.status === 'online' && store.user?.status === 'online'"
+          title="Invite in game"
+          class="gg-games"
+          @click="User.inviteCustom(router, friend)"
+        ></i>
       </template>
     </div>
   </li>

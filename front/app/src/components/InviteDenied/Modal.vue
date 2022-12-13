@@ -1,6 +1,6 @@
 <template>
   <div class="modal">
-    <h1>{{ props.inviter }} declined your invitation</h1>
+    <h1>{{ props.inviter }} left the custom lobby.</h1>
     <button class="button" @click="$emit('sadStory')">Ok</button>
   </div>
 </template>
