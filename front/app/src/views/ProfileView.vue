@@ -73,7 +73,10 @@
     </div>
     <img src="../assets/profileConfettis.svg" class="leftBottomSvg" alt="" />
   </section>
-  <h4 v-else>User not found T_T</h4>
+  <div class="userNotFound" v-else>
+    <h4>This user does not exist</h4>
+    <button class="button" @click="router.push('/profile')">Back to profile</button>
+  </div>
 </template>
 
 <script lang="ts" setup>

@@ -392,4 +392,7 @@ body {
 .spectating {
   color: purple !important;
 }
+.inCustomLobby {
+  color: skyblue !important;
+}
 </style>
