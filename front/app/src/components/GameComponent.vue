@@ -4,7 +4,7 @@
       <Denial :inviter="friendName" @sadStory="showDenial(false)"></Denial>
     </div>
     <div v-if="summary" class="overlay">
-      <Modal :title="sumTitle" :data="gameSummary" :opponent="opponentImg" :start="start" :end="end" @close="showSummary(false)"></Modal>
+      <Modal :title="sumTitle" :data="gameSummary" :opponent="opponent" :host="host" :start="start" :end="end" @close="showSummary(false)"></Modal>
       <!-- <Modal :title="sumTitle" :data="gameSummary" :opponent="opponentImg.src" :start="start" :end="end" @close="showSummary(false)"></Modal> -->
     </div>
     <div class="principalSection">
@@ -81,6 +81,9 @@
         <img src="../assets/loadingGameIllustration.gif" alt="" class="loadingImage" />
       </div>
     </div>
+    <!-- BUTTON TO LEAVE QUEUE -->
+    <button v-if="lobbyStatus == 'queuing'" class="button" @click="leaveQueue()">Leave queue</button>
+    <!-- BUTTON TO LEAVE QUEUE -->
     <div v-if="lobbyStatus == 'playing' || lobbyStatus == 'spectating'" class="ladder">
       <GameCanvasComponent :opponent="store.user!" :us="store.user!" :gameOptions="gameOpts"></GameCanvasComponent>
     </div>
@@ -102,7 +105,7 @@ import { socketLocal, useStore } from "@/store";
 import { GameOptions, GameRoom } from "@/types/Game";
 import { GameSummaryData } from "@/types/GameSummary";
 import { getUserByNickname, User } from "@/types/User";
-import { onMounted, onUnmounted, reactive, ref, watch } from "vue";
+import { onMounted, onUnmounted, reactive, Ref, ref, watch } from "vue";
 import Denial from "./InviteDenied/Modal.vue";
 import PowerSliderComponent from "./PowerSliderComponent.vue";
 import Modal from "./Summary/Modal.vue";
@@ -145,7 +148,8 @@ let gameOpts: GameOptions;
 
 const power = ref("");
 
-const opponentImg = ref("");
+const opponent = ref();
+const host = ref();
 const start = ref(new Date());
 const end = ref(new Date());
 
@@ -183,6 +187,13 @@ function findMatch() {
   socketLocal?.value?.emit("joinQueue", {
     power: power.value,
   });
+}
+function leaveQueue() {
+  startButton.value = false;
+  readyButton.value = false;
+  displayLoading.value = false;
+  socketLocal?.value?.emit("leaveQueue");
+  lobbyStatus.value = "lobby";
 }
 function readyUp() {
   readyButton.value = true;
@@ -231,7 +242,25 @@ function updateSummary(summary: GameSummaryData) {
 // });
 
 onMounted(() => {
-  if (store.user?.status == "inQueue") lobbyStatus.value = "queuing";
+  if (store.user?.status == "inQueue" || store.user?.status == "inLobby") {
+    lobbyStatus.value = "queuing";
+    displayLoading.value = true;
+  }
+
+  store.$subscribe((mutation, state) => {
+    if (store.user?.status == "inQueue" || store.user?.status == "inLobby") {
+      lobbyStatus.value = "queuing";
+      displayLoading.value = true;
+    } else if (store.user?.status == "online") {
+      lobbyStatus.value = "lobby";
+      startButton.value = false;
+      readyButton.value = false;
+      displayLoading.value = false;
+      customReady.value = "Ready ?";
+      powers.value = true;
+    }
+  });
+
   // ctx = canvas.value?.getContext("2d");
   // ctx?.drawImage(plateauImg, 0, 0, cWidth, cHeight);
   // scaling(ctx);
@@ -288,8 +317,9 @@ const customInvitee = (friend: string) => {
   // toggleGameQueue();
 };
 
-const foreverAlone = () => {
+const foreverAlone = (friend: string) => {
   // toggleGameQueue();
+  friendName.value = friend;
   lobbyStatus.value = "lobby";
   noFriends.value = true;
 };
@@ -302,6 +332,8 @@ const spectating = (gameRoom: GameRoom) => {
   lobbyStatus.value = "spectating";
   startButton.value = false;
   powers.value = false;
+  opponent.value = gameRoom.opponent;
+  host.value = gameRoom.host;
   //   gameBoard.value = true;
   document.querySelector(".canvas")?.classList.remove("hidden");
 };
@@ -331,6 +363,7 @@ const Win = (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) => 
   updateSummary(summary);
   color.value = "green";
   sumTitle.value = "Victory";
+  store.user!.elo = summary.host.elo;
   showSummary(true);
   //   gameBoard.value = false;
   document.querySelector(".canvas")?.classList.add("hidden");
@@ -348,6 +381,7 @@ const Lose = (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) =>
   updateSummary(summary);
   color.value = "red";
   sumTitle.value = "Defeat";
+  store.user!.elo = summary.host.elo;
   showSummary(true);
   //   gameBoard.value = false;
   document.querySelector(".canvas")?.classList.add("hidden");
@@ -375,7 +409,8 @@ const startGame = (gameRoom: GameRoom) => {
   theRoom = gameRoom;
   hostName.value = theRoom.hostName;
   clientName.value = theRoom.clientName;
-  opponentImg.value = User.getAvatar(gameRoom.opponent);
+  opponent.value = gameRoom.opponent;
+  host.value = gameRoom.host;
   start.value = new Date();
   document.querySelector(".canvas")?.classList.remove("hidden");
 };
@@ -385,6 +420,7 @@ const customInvitation = () => {};
 
 <style lang="scss" scoped>
 @import "../styles/containerStyle";
+@import "../styles/inputsAndButtons";
 @import "../styles/svgStyles";
 @import "../styles/variables";
 
@@ -395,7 +431,6 @@ const customInvitation = () => {};
 .canvas {
   z-index: 10;
 }
-
 .principalSection {
   flex-wrap: wrap;
   .mainContainer {
@@ -508,6 +543,7 @@ const customInvitation = () => {};
     width: 100vw;
     height: 90vh;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     z-index: -1;

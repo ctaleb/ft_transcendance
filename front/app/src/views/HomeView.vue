@@ -148,7 +148,7 @@ async function login() {
     .then(() => {
       router.push("/game");
     })
-    .catch();
+    .catch(() => {});
 }
 
 function extractIntraCode(): string | null {

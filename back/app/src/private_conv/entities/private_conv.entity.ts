@@ -10,7 +10,7 @@ export class PrivateConvEntity extends AbstractEntity {
   @Expose({
     name: 'other',
   })
-  @ManyToOne(() => UserEntity, { eager: true })
+  @ManyToOne(() => UserEntity, { eager: true, onDelete: 'CASCADE' })
   @JoinColumn()
   user1: UserEntity;
 
@@ -18,13 +18,12 @@ export class PrivateConvEntity extends AbstractEntity {
     name: 'other',
     groups: ['user2'],
   })
-  @ManyToOne(() => UserEntity, { eager: true })
+  @ManyToOne(() => UserEntity, { eager: true, onDelete: 'CASCADE' })
   @JoinColumn()
   user2: UserEntity;
 
   @OneToMany(() => PrivateMessageEntity, (message) => message.conv, {
     lazy: true,
-    
   })
   @JoinColumn()
   messages: Promise<PrivateMessageEntity[]>;

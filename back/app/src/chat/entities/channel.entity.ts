@@ -1,5 +1,6 @@
 import { throws } from 'assert';
 import { Exclude, Expose } from 'class-transformer';
+import { MaxLength } from 'class-validator';
 import { AbstractEntity } from 'src/database/abstract.entity';
 import { UserEntity } from 'src/user/user.entity';
 import { Column, Entity, JoinColumn, JoinTable, ManyToMany, OneToMany, OneToOne } from 'typeorm';
@@ -25,6 +26,7 @@ export class ChannelEntity extends AbstractEntity {
   public type: ChannelType;
 
   @Column({ nullable: true })
+  @MaxLength(15)
   @Exclude()
   public password: string;
 

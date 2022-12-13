@@ -67,6 +67,7 @@ export class GameRoom {
   hostName: string;
   clientName: string;
   opponent: any;
+  host: any;
   status: string;
   kickOff: boolean;
   barCollide: boolean;
