@@ -125,9 +125,7 @@ const setCurrentChatWindow = async (target: Channel | Conversation) => {
         if (data.length > 0) conversation.messages = data;
         else conversation.messages = [];
         for (let i = 0; i < conversation.messages.length; i++) conversation.messages[i] = transformDate(conversation.messages[i]);
-        store.$patch({
-          currentChat: conversation,
-        });
+        store.currentChat = conversation;
       })
       .catch(() => {
         store.$patch({
@@ -160,7 +158,6 @@ onMounted(() => {
       const convIndex = props.convs.findIndex((conv) => conv.id === convData.conv.id);
       const convToTop = props.convs.splice(convIndex, 1)[0];
       props.convs.splice(0, 0, convToTop);
-      friends.value = store.user?.friends?.filter((user) => !props.convs.find((conv) => conv.other.id === user.id));
     });
   }
   if (!socketLocal.value?.hasListeners("channelUpdatd")) {
@@ -186,7 +183,6 @@ onMounted(() => {
           const convIndex = props.convs.findIndex((conv) => conv.id === convData.conv.id);
           const convToTop = props.convs.splice(convIndex, 1)[0];
           props.convs.splice(0, 0, convToTop);
-          friends.value = store.user?.friends?.filter((user) => !props.convs.find((conv) => conv.other.id === user.id));
         });
       }
       if (!socketLocal.value?.hasListeners("channelUpdatd")) {

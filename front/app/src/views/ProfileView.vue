@@ -188,7 +188,7 @@ const block = async (user?: User) => {
 const unfriend = async (user?: User) => {
   if ((await User.unfriend(user)) === true) {
     store.user?.friends!.splice(store.user?.friends!.indexOf(user!), 1);
-    socketLocal.value?.emit("unfriend", { id: store.user?.id, addresseeId: user!.id, target: user!.nickname, requester: store.user?.nickname });
+    socketLocal.value?.emit("unfriend", { id: store.user?.id, addresseeId: user!.id });
   }
 };
 

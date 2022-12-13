@@ -11,7 +11,10 @@ import {
 import { instanceToPlain } from 'class-transformer';
 import { hostname } from 'os';
 import { Server, Socket } from 'socket.io';
+import { ChatService } from 'src/chat/chat.service';
+import { ChannelMemberEntity } from 'src/chat/entities/channel_member.entity';
 import { FriendshipService } from 'src/friendship/friendship.service';
+import { ChannelMember } from 'src/server/entities/channel';
 import { UserEntity } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
 import { PrivateConvService } from '../private_conv/private_conv.service';
@@ -33,6 +36,7 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     private readonly privateMessageService: PrivateConvService,
     private readonly userService: UserService,
     private readonly friendshipService: FriendshipService,
+    private readonly chatService: ChatService,
   ) {}
 
   afterInit(server: Server) {
@@ -86,7 +90,7 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     console.log('~~~~~~~~~~~ users + games ~~~~~~~~~~');
     console.log(this.serverService.userList.length);
     this.serverService.userList.forEach((element) => {
-      console.log(element.name + ' - ' + element.socket?.id + ' - ' + element.status);
+      console.log(element.name + ' - ' + element.socket?.id + ' - ' + element.gameData.status);
     });
     console.log(this.serverService.games.length);
     this.serverService.games.forEach((element) => {
@@ -525,60 +529,86 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   }
 
   @SubscribeMessage('befriend')
-  async befriend(
-    @ConnectedSocket() client: Socket,
-    @MessageBody('id') id: number,
-    @MessageBody('addresseeId') addresseeId: number,
-    @MessageBody('target') target: string,
-    @MessageBody('requester') requester: string,
-  ) {
-    const friendship = await this.friendshipService.findFriendship(id, addresseeId);
-    const socket = this.serverService.PlayerToSocket(target);
-    if (socket && friendship && friendship.status === 'friend') {
-      this.server.to(socket.id).emit('acceptInvite', requester);
+  async befriend(@ConnectedSocket() client: Socket, @MessageBody('id') id: number, @MessageBody('addresseeId') addresseeId: number) {
+    if (id && addresseeId) {
+      const friendship = await this.friendshipService.findFriendship(id, addresseeId);
+      await this.userService
+        .getUserById(addresseeId)
+        .then(async (user) => {
+          if (user) {
+            const socket = this.serverService.PlayerToSocket(user.nickname);
+            await this.userService
+              .getUserById(id)
+              .then((requester) => {
+                if (socket && friendship && friendship.status === 'friend' && requester) {
+                  this.server.to(socket.id).emit('acceptInvite', requester.nickname);
+                }
+              })
+              .catch(() => {});
+          }
+        })
+        .catch(() => {});
     }
   }
 
   @SubscribeMessage('unfriend')
-  async unfriend(
-    @ConnectedSocket() client: Socket,
-    @MessageBody('id') id: number,
-    @MessageBody('addresseeId') addresseeId: number,
-    @MessageBody('target') target: string,
-    @MessageBody('requester') requester: string,
-  ) {
-    const friendship = await this.friendshipService.findFriendship(id, addresseeId);
-    const socket = this.serverService.PlayerToSocket(target);
-    if (socket && !friendship) {
-      this.server.to(socket.id).emit('removeFriend', requester);
+  async unfriend(@ConnectedSocket() client: Socket, @MessageBody('id') id: number, @MessageBody('addresseeId') addresseeId: number) {
+    if (id && addresseeId) {
+      const friendship = await this.friendshipService.findFriendship(id, addresseeId);
+      await this.userService
+        .getUserById(addresseeId)
+        .then(async (user) => {
+          if (user) {
+            const socket = this.serverService.PlayerToSocket(user.nickname);
+            await this.userService
+              .getUserById(id)
+              .then((requester) => {
+                if (socket && !friendship && requester) {
+                  this.server.to(socket.id).emit('removeFriend', requester.nickname);
+                }
+              })
+              .catch(() => {});
+          }
+        })
+        .catch(() => {});
     }
   }
 
   @SubscribeMessage('memberGotBanned')
-  async memberGotBanned(
-    @ConnectedSocket() client: Socket,
-    @MessageBody('id') id: number,
-    @MessageBody('channel') channel: string,
-    @MessageBody('nickname') nickname: string,
-  ) {
-    const targetSocket = this.serverService.PlayerToSocket(nickname);
-    if (targetSocket) {
-      targetSocket.leave(`${id}`);
-      this.server.to(targetSocket.id).emit('gotBannedFromChannel', channel);
+  async memberGotBanned(@ConnectedSocket() client: Socket, @MessageBody('id') id: number, @MessageBody('nickname') nickname: string) {
+    if (id && nickname) {
+      const targetSocket = this.serverService.PlayerToSocket(nickname);
+      if (targetSocket) {
+        await this.chatService
+          .getChannelById(id)
+          .then(async (chan) => {
+            const member = await ChannelMemberEntity.findOneBy({ channel: { id: chan.id }, user: { nickname: nickname } });
+            if (member) {
+              targetSocket.leave(`${id}`);
+              this.server.to(targetSocket.id).emit('gotBannedFromChannel', chan.name);
+            }
+          })
+          .catch(() => {});
+      }
     }
   }
 
   @SubscribeMessage('memberGotUnbanned')
-  async memberGotUnbanned(
-    @ConnectedSocket() client: Socket,
-    @MessageBody('id') id: number,
-    @MessageBody('channel') channel: string,
-    @MessageBody('nickname') nickname: string,
-  ) {
-    const targetSocket = this.serverService.PlayerToSocket(nickname);
-    if (targetSocket) {
-      targetSocket.join(`${id}`);
-      this.server.to(targetSocket.id).emit('gotUnbannedFromChannel', channel);
+  async memberGotUnbanned(@ConnectedSocket() client: Socket, @MessageBody('id') id: number, @MessageBody('nickname') nickname: string) {
+    if (id && nickname) {
+      const targetSocket = this.serverService.PlayerToSocket(nickname);
+      if (targetSocket) {
+        await this.chatService
+          .getChannelById(id)
+          .then(async (chan) => {
+            const member = await ChannelMemberEntity.findOneBy({ channel: { id: chan.id }, user: { nickname: nickname } });
+            if (member) {
+              targetSocket.join(`${id}`);
+              this.server.to(targetSocket.id).emit('gotUnbannedFromChannel', chan.name);
+            }
+          })
+          .catch(() => {});
+      }
     }
   }
 }
