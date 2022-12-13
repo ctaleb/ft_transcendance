@@ -180,7 +180,7 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   }
 
   gameLoop = (game: Game) => {
-    game.host.socket.emit('ServerUpdate', this.serverService.sendState(game.gameState, game));
+    if (game.gameState.frame % 1) game.host.socket.emit('ServerUpdate', this.serverService.sendState(game.gameState, game));
     game.client.socket.emit('ServerUpdate', this.serverService.inverseState(game.gameState, game));
     this.server.to(game.theatre.name).emit('ServerUpdate', this.serverService.sendState(game.gameState, game));
 
