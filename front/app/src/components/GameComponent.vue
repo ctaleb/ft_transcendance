@@ -7,7 +7,7 @@
       <Modal :title="sumTitle" :data="gameSummary" :opponent="opponent" :host="host" :start="start" :end="end" @close="showSummary(false)"></Modal>
       <!-- <Modal :title="sumTitle" :data="gameSummary" :opponent="opponentImg.src" :start="start" :end="end" @close="showSummary(false)"></Modal> -->
     </div>
-    <div class="principalSection">
+    <div v-if="lobbyStatus != 'playing'" class="principalSection">
       <div v-if="lobbyStatus == 'settingsInviter' || lobbyStatus == 'settingsInvitee' || lobbyStatus == 'lobby'" class="mainContainer">
         <div>
           <power-slider-component v-model="power" id="powerSlider" />
@@ -85,7 +85,7 @@
     <button v-if="lobbyStatus == 'queuing'" class="button" @click="leaveQueue()">Leave queue</button>
     <!-- BUTTON TO LEAVE QUEUE -->
     <div v-if="lobbyStatus == 'playing' || lobbyStatus == 'spectating'" class="ladder">
-      <GameCanvasComponent :opponent="store.user!" :us="store.user!" :gameOptions="gameOpts"></GameCanvasComponent>
+      <GameCanvasComponent :opponent="opponent" :us="host" :gameOptions="gameOpts"></GameCanvasComponent>
     </div>
     <div v-else class="custom"></div>
     <svg preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" :class="!displayLoading ? 'bottomSvg' : ' hidden'">

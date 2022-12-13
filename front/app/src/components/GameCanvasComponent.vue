@@ -1,15 +1,15 @@
 <template>
-  <div>
+  <div class="playZone">
     <div class="opponent">
-      <!-- <img :src="User.getAvatar(opponent)" /> -->
-      <!-- <h4>{{ opponent.nickname }}</h4>
-      <h4>{{ opponent.elo }}</h4> -->
+      <div :style="'font-size: ' + textSize + 'px;'" class="elo txt">{{ opponent.elo }}</div>
+      <div :style="'font-size: ' + textSize + 'px;'" class="name txt">{{ opponent.nickname }}</div>
+      <img :src="User.getAvatar(store.user!)" />
     </div>
-    <canvas ref="canvas"></canvas>
+    <canvas class="canvas" ref="canvas"> </canvas>
     <div class="us">
-      <!-- <img :src="User.getAvatar(us)" /> -->
-      <!-- <h4>{{ us.nickname }}</h4>
-      <h4>{{ us.elo }}</h4> -->
+      <img :src="User.getAvatar(store.user!)" />
+      <div :style="'font-size: ' + textSize + 'px;'" class="name txt">{{ us.nickname }}</div>
+      <div :style="'font-size: ' + textSize + 'px;'" class="elo txt">{{ us.elo }}</div>
     </div>
   </div>
 </template>
@@ -28,6 +28,8 @@ import fillUrl from "../assets/fill_slot.png";
 import paddleUrl from "../assets/paddle_grec.png";
 import paddleRedUrl from "../assets/paddle_grec_red.png";
 import plateauUrl from "../assets/plateauV2.png";
+import plateauHUrl from "../assets/plateauhaut.png";
+import plateauBUrl from "../assets/plateaubas.png";
 import powerChargeUrl from "../assets/powerCharge.png";
 import slotUrl from "../assets/slot.png";
 import fillRedUrl from "../assets/slot_fill_enemy.png";
@@ -50,6 +52,10 @@ const energyPaddleImg = new Image();
 energyPaddleImg.src = paddleEnergyUrl;
 const plateauImg = new Image();
 plateauImg.src = plateauUrl;
+const plateauHImg = new Image();
+plateauHImg.src = plateauHUrl;
+const plateauBImg = new Image();
+plateauBImg.src = plateauBUrl;
 const energyImg = new Image();
 energyImg.src = energyUrl;
 const energyPaddleRedImg = new Image();
@@ -74,6 +80,7 @@ let offset = 0;
 
 const hostScore = ref(0);
 const clientScore = ref(0);
+const textSize = ref(0);
 
 let goal = false;
 let loadPercent = 120;
@@ -81,6 +88,7 @@ let kickOff = false;
 let cSmashingPercent = 0;
 let hSmashingPercent = 0;
 let ballBouncedSide = 0;
+let ballBouncedPaddle = 0;
 const particles: particleSet[] = [];
 
 let gState: GameState = {
@@ -117,7 +125,7 @@ let gState: GameState = {
 let gStateRender: GameState;
 
 const defaultGameOptions: GameOptions = {
-  scoreMax: 5,
+  scoreMax: 20,
   ballSpeed: 1,
   ballSize: 1,
   barSpeed: 1,
@@ -183,6 +191,12 @@ function drawSmashingEffect(bar: IBar, smashingPercent: number, ctx: CanvasRende
 function drawPlayground(ctx: CanvasRenderingContext2D) {
   ctx.drawImage(plateauImg, 0, 0, cWidth, cHeight);
 }
+
+function drawinfoPlayground(ctx: CanvasRenderingContext2D) {
+  ctx.drawImage(plateauHImg, 0, 0, cWidth, cHeight / 6);
+  ctx.drawImage(plateauBImg, 0, cHeight - cHeight / 6, cWidth, cHeight / 6);
+}
+
 function addWallParticle(gameState: GameState) {
   const hit: particleSet = { particles: [], reach: false };
   let ab: IPoint = { x: gameState.ball.pos.x - gameState.hit.x, y: gameState.ball.pos.y - gameState.hit.y };
@@ -212,6 +226,7 @@ function addWallParticle(gameState: GameState) {
       color: "#edd199",
     });
   }
+  particles.length = 0;
   particles.push(hit);
 }
 
@@ -242,6 +257,7 @@ function addGoalParticle(gameState: GameState) {
         color: gameState.hit.y < 250 ? "#1B90F0" : "#E01435",
       });
     }
+    particles.length = 0;
     particles.push(hit);
   }
 }
@@ -328,27 +344,38 @@ function drawScore(ctx: CanvasRenderingContext2D, gameState: GameState) {
   }
 }
 function drawPowerCharge(ctx: CanvasRenderingContext2D, gameState: GameState) {
+  let roundRect = (ctx: CanvasRenderingContext2D, x0: number, y0: number, x1: number, y1: number, r: number, color: string) => {
+    var w = x1 - x0;
+    var h = y1 - y0;
+    if (r > w / 2) r = w / 2;
+    if (r > h / 2) r = h / 2;
+    ctx.beginPath();
+    ctx.moveTo(x1 - r, y0);
+    ctx.quadraticCurveTo(x1, y0, x1, y0 + r);
+    ctx.lineTo(x1, y1 - r);
+    ctx.quadraticCurveTo(x1, y1, x1 - r, y1);
+    ctx.lineTo(x0 + r, y1);
+    ctx.quadraticCurveTo(x0, y1, x0, y1 - r);
+    ctx.lineTo(x0, y0 + r);
+    ctx.quadraticCurveTo(x0, y0, x0 + r, y0);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+  };
   for (let i = 0; i < gameState.clientPower.currentCharge; i++) {
-    ctx.drawImage(
-      powerChargeImg,
-      cWidth * 0.265 + ((cWidth * 0.47) / gameState.clientPower.maxCharge) * i,
-      cHeight * 0.055,
-      (cWidth * 0.45) / gameState.clientPower.maxCharge,
-      9 * scale
-    );
+    let x: number = cWidth * 0.265 + ((cWidth * 0.47) / gameState.clientPower.maxCharge) * i;
+    let y: number = cHeight * 0.055;
+    roundRect(ctx, x, y, x + (cWidth * 0.45) / gameState.clientPower.maxCharge, y + 9 * scale, 5, "#E00");
   }
   for (let i = 0; i < gameState.hostPower.currentCharge; i++) {
-    ctx.drawImage(
-      powerChargeImg,
-      cWidth * 0.2656 + ((cWidth * 0.47) / gameState.hostPower.maxCharge) * i,
-      cHeight * 0.931,
-      (cWidth * 0.45) / gameState.hostPower.maxCharge,
-      9 * scale
-    );
+    let x: number = cWidth * 0.2656 + ((cWidth * 0.47) / gameState.hostPower.maxCharge) * i;
+    let y: number = cHeight * 0.932;
+    roundRect(ctx, x, y, x + (cWidth * 0.45) / gameState.hostPower.maxCharge, y + 9 * scale, 5, "#00E");
   }
 }
 function drawBall(ctx: CanvasRenderingContext2D, gameState: GameState) {
-  if (gameState.hit.hit) {
+  if (gameState.hit.hit == 1) {
+    ballBouncedPaddle = 0;
     ballBouncedSide = 4;
     ctx.drawImage(
       ballImg,
@@ -357,7 +384,7 @@ function drawBall(ctx: CanvasRenderingContext2D, gameState: GameState) {
       gameState.ball.size * 2 * scale * 0.6,
       gameState.ball.size * 2 * scale
     );
-  } else if (ballBouncedSide > 0) {
+  } else if (ballBouncedSide > 1) {
     ctx.drawImage(
       ballImg,
       gameState.ball.pos.x - gameState.ball.size * scale,
@@ -366,6 +393,25 @@ function drawBall(ctx: CanvasRenderingContext2D, gameState: GameState) {
       gameState.ball.size * 2 * scale
     );
     ballBouncedSide--;
+  } else if (gameState.hit.hit == 2) {
+    ballBouncedSide = 0;
+    ballBouncedPaddle = 3;
+    ctx.drawImage(
+      ballImg,
+      gameState.ball.pos.x - gameState.ball.size * scale,
+      gameState.ball.pos.y - gameState.ball.size * scale,
+      gameState.ball.size * 2 * scale,
+      gameState.ball.size * 2 * scale * 0.7
+    );
+  } else if (ballBouncedPaddle > 1) {
+    ctx.drawImage(
+      ballImg,
+      gameState.ball.pos.x - gameState.ball.size * scale,
+      gameState.ball.pos.y - gameState.ball.size * scale,
+      gameState.ball.size * 2 * scale,
+      gameState.ball.size * 2 * scale * (0.8 + 0.1 * (3 - ballBouncedPaddle))
+    );
+    ballBouncedPaddle--;
   } else {
     ctx.drawImage(
       ballImg,
@@ -380,7 +426,7 @@ function drawBall(ctx: CanvasRenderingContext2D, gameState: GameState) {
 //SCALING FUNCTIONS
 function scaling(ctx?: CanvasRenderingContext2D | null) {
   if (ctx) {
-    ctx.canvas.height = window.innerHeight * 0.8;
+    ctx.canvas.height = window.innerHeight - 140;
     if (ctx.canvas.height * 0.69 > window.innerWidth) {
       ctx.canvas.width = window.innerWidth;
       ctx.canvas.height = ctx.canvas.width * 1.449;
@@ -389,6 +435,7 @@ function scaling(ctx?: CanvasRenderingContext2D | null) {
     }
     cHeight = ctx.canvas.height;
     cWidth = ctx.canvas.width;
+    textSize.value = cHeight / 42;
     scale = cWidth / 500;
     offset = (cHeight - cWidth) / 2;
   }
@@ -447,14 +494,15 @@ onUnmounted(() => {
 function render(ctx: CanvasRenderingContext2D | null | undefined, gameState: GameState) {
   if (ctx) {
     drawPlayground(ctx);
-    drawScore(ctx, gameState);
     kickoffLoading(ctx, gameState);
     drawBall(ctx, gameState);
     ctx.fillStyle = "black";
     drawSmashingEffect(gameState.clientBar, cSmashingPercent, ctx);
     drawSmashingEffect(gameState.hostBar, hSmashingPercent, ctx);
-    drawPowerCharge(ctx, gameState);
     drawParticle(ctx, gameState);
+    drawinfoPlayground(ctx);
+    drawPowerCharge(ctx, gameState);
+    drawScore(ctx, gameState);
   }
 }
 
@@ -480,9 +528,6 @@ const wallBallCollision = (state: GameState) => {
 };
 
 const predict = () => {
-  // if (gState.hit.hit) {
-  //   gState.hit.hit = 0;
-  // }
   gState.ball.pos.x += gState.ball.speed.x;
   gState.ball.pos.y += gState.ball.speed.y;
   wallBallCollision(gState);
@@ -522,4 +567,49 @@ const gameLoop = () => {
   }, 1000 / 60);
 };
 </script>
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+@import "../styles/variables";
+.playZone {
+  position: relative;
+
+  .opponent {
+    position: absolute;
+    text-overflow: ellipsis;
+    width: 16%;
+    height: 15.5%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    img {
+      width: 81%;
+      aspect-ratio: 1 / 1;
+      border-radius: 10000px;
+    }
+  }
+
+  .elo {
+    color: $primary;
+  }
+  .name {
+    color: black;
+  }
+  .us {
+    position: absolute;
+    text-overflow: ellipsis;
+    width: 16%;
+    height: 15.5%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    bottom: 6px;
+    right: 0;
+    img {
+      width: 81%;
+      aspect-ratio: 1 / 1;
+      border-radius: 10000px;
+    }
+  }
+}
+</style>
