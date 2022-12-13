@@ -630,7 +630,8 @@ export class ServerService {
       game.gameState.hit.x = game.gameState.ball.pos.x;
       game.gameState.hit.y = game.gameState.ball.pos.y;
       game.gameState.hit.hit = 3;
-      game.gameState.state = 'stop';
+      if (game.gameState.score.client < game.room.options.scoreMax && game.gameState.score.host < game.room.options.scoreMax) game.gameState.state = 'stop';
+      else game.gameState.state = 'end';
       setTimeout(() => {
         this.resetGameState(game);
         game.gameState.state = 'kickoff';

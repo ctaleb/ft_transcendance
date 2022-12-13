@@ -552,6 +552,7 @@ const gameLoop = () => {
     } else {
       gStatePredicted = JSON.parse(JSON.stringify(gState));
       scalePosition(gState);
+      gStatePredicted.frame++;
     }
     if (ctx) {
       particleEvent(gStateRender);
