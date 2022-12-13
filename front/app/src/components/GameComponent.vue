@@ -81,6 +81,9 @@
         <img src="../assets/loadingGameIllustration.gif" alt="" class="loadingImage" />
       </div>
     </div>
+    <!-- BUTTON TO LEAVE QUEUE -->
+    <button v-if="lobbyStatus == 'queuing'" class="button" @click="leaveQueue()">Leave queue</button>
+    <!-- BUTTON TO LEAVE QUEUE -->
     <div v-if="lobbyStatus == 'playing' || lobbyStatus == 'spectating'" class="ladder">
       <GameCanvasComponent :opponent="store.user!" :us="store.user!" :gameOptions="gameOpts"></GameCanvasComponent>
     </div>
@@ -185,8 +188,14 @@ function findMatch() {
     power: power.value,
   });
 }
+function leaveQueue() {
+  startButton.value = false;
+  readyButton.value = false;
+  displayLoading.value = false;
+  socketLocal?.value?.emit("leaveQueue");
+  lobbyStatus.value = "lobby";
+}
 function readyUp() {
-  displayLoading.value = true;
   readyButton.value = true;
   customReady.value = "Waiting for " + friendName.value;
   if (lobbyStatus.value === "settingsInvitee") {
@@ -233,7 +242,10 @@ function updateSummary(summary: GameSummaryData) {
 // });
 
 onMounted(() => {
-  if (store.user?.status == "inQueue") lobbyStatus.value = "queuing";
+  if (store.user?.status == "inQueue") {
+    lobbyStatus.value = "queuing";
+    displayLoading.value = true;
+  }
   // ctx = canvas.value?.getContext("2d");
   // ctx?.drawImage(plateauImg, 0, 0, cWidth, cHeight);
   // scaling(ctx);
@@ -290,8 +302,9 @@ const customInvitee = (friend: string) => {
   // toggleGameQueue();
 };
 
-const foreverAlone = () => {
+const foreverAlone = (friend: string) => {
   // toggleGameQueue();
+  friendName.value = friend;
   lobbyStatus.value = "lobby";
   noFriends.value = true;
 };
@@ -388,6 +401,7 @@ const customInvitation = () => {};
 
 <style lang="scss" scoped>
 @import "../styles/containerStyle";
+@import "../styles/inputsAndButtons";
 @import "../styles/svgStyles";
 @import "../styles/variables";
 
@@ -511,6 +525,7 @@ const customInvitation = () => {};
     width: 100vw;
     height: 90vh;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     z-index: -1;

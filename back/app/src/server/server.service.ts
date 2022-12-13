@@ -63,35 +63,48 @@ export class ServerService {
 
   //generic stuff
   async newUser(token: string, user: string, sock?: Socket) {
-    const bdd_user: UserEntity = await this._userService.getUserByNickname(user);
-    const newUser: User = {
-      token: token,
-      socket: sock,
-      name: user,
-      id: bdd_user.id,
-      status: 'online',
-      gameData: {
-        input: [],
-        left: false,
-        right: false,
-        elo: bdd_user.elo,
-        smashLeft: 0,
-        smashRight: 0,
-        status: 'idle',
-        power: new IPower('init'),
-      },
-      chatData: {
-        RoomList: [],
-      },
-    };
-    this.updateStatus(newUser.id, 'online');
-    this.userList.push(newUser);
+    const bdd_user: UserEntity = await this._userService.getUserByNickname(user).catch();
+    if (bdd_user) {
+      const newUser: User = {
+        token: token,
+        socket: sock,
+        name: user,
+        id: bdd_user.id,
+        status: 'online',
+        gameData: {
+          input: [],
+          left: false,
+          right: false,
+          elo: bdd_user.elo,
+          smashLeft: 0,
+          smashRight: 0,
+          status: 'idle',
+          power: new IPower('init'),
+        },
+        chatData: {
+          RoomList: [],
+        },
+      };
+      this.updateStatus(newUser.id, 'online');
+      this.userList.push(newUser);
+    }
   }
 
   //status stuff
   async updateStatus(id: number, status: string) {
     await this._userService.updateStatus(id, status);
     this.server.emit('updateOneUserStatus', { id, status });
+  }
+
+  stopCustom(opponent: User, self: User, game: Game) {
+    self.gameData.status = 'idle';
+    this.updateStatus(self.id, 'online');
+    self.socket.leave(game.room.name);
+    opponent.gameData.status = 'idle';
+    this.updateStatus(opponent.id, 'online');
+    opponent.socket.leave(game.room.name);
+    opponent.socket.emit('foreverAlone', self.name);
+    this.games.splice(this.games.indexOf(game), 1);
   }
 
   //game stuff
@@ -134,6 +147,7 @@ export class ServerService {
   async end_game(game: Game) {
     game.room.status = 'gameOver';
     let elo = 0;
+    let spectator: User;
     if (game.gameState.score.client >= game.room.options.scoreMax) {
       elo = await this.elo_calc(game.client, game.host);
       await this.summarize(game, elo, game.client.id);
@@ -156,7 +170,14 @@ export class ServerService {
     game.client.gameData.status = 'idle';
     this.updateStatus(game.client.id, 'online');
     game.client.socket.leave(game.room.name);
-    game.theatre.viewers.forEach((element) => element.leave(game.theatre.name));
+    game.theatre.viewers.forEach((element) => {
+      spectator = this.userList.find((usr) => usr.socket.id === element.id);
+      if (spectator) {
+        spectator.status = 'online';
+        this.updateStatus(spectator.id, 'online');
+      }
+      element.leave(game.theatre.name);
+    });
     this.games.splice(this.games.indexOf(game), 1);
   }
 
@@ -184,13 +205,22 @@ export class ServerService {
     this.updateStatus(player.id, 'online');
     let game = this.games.find((element) => element.host.name === player.name);
     if (game) {
-      game.room.status = 'hostForfeit';
-      return;
+      if (game.room.status != 'launching') {
+        game.room.status = 'hostForfeit';
+        return;
+      } else {
+        this.stopCustom(game.client, game.host, game);
+        return;
+      }
     } else {
       game = this.games.find((element) => element.client.name === player.name);
     }
     if (game) {
-      game.room.status = 'clientForfeit';
+      if (game.room.status != 'launching') {
+        game.room.status = 'clientForfeit';
+      } else {
+        this.stopCustom(game.host, game.client, game);
+      }
     }
   }
 
@@ -383,7 +413,6 @@ export class ServerService {
       game.client.gameData.status = 'inLobby';
       this.updateStatus(game.client.id, 'inLobby');
       game.client.socket.join(game.room.name);
-      console.log(game.client.socket.id + ' ' + game.host.socket.id);
       return game;
     }
     return null;

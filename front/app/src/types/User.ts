@@ -107,9 +107,9 @@ export namespace User {
 }
 
 export async function getUserByNickname(nickname: string): Promise<User> {
-  return await fetchJSONDatas(`api/user/bynickname/${nickname}`, "GET");
+  return await fetchJSONDatas(`api/user/bynickname/${nickname}`, "GET").catch(() => {});
 }
 
 export async function getUserById(id: number): Promise<User> {
-  return await fetchJSONDatas(`api/user/${id}`, "GET");
+  return await fetchJSONDatas(`api/user/${id}`, "GET").catch(() => {});
 }
