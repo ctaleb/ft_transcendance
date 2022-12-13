@@ -261,6 +261,10 @@ onMounted(() => {
       displayLoading.value = false;
       customReady.value = "Ready ?";
       powers.value = true;
+    } else if (store.user?.status == "inGame") {
+      lobbyStatus.value = "playing";
+    } else if (store.user?.status == "inCustomLobby") {
+      //   lobbyStatus.value = "";
     }
   });
 
