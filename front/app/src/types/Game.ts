@@ -83,6 +83,8 @@ export interface GameRoom {
   barCollide: boolean;
   sideCollide: boolean;
   effect: string;
+  start: string;
+  end: string;
   options: GameOptions;
 }
 

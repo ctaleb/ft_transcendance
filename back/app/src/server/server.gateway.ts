@@ -150,9 +150,9 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
         }
         return;
       }
-      if (element.client === player) {
+      if (element.client.id === player.id) {
         element.room.status = 'clientForfeit';
-      } else if (element.host === player) {
+      } else if (element.host.id === player.id) {
         element.room.status = 'hostForfeit';
       }
       if (oldValue.indexOf('/profile') == -1 && oldValue != '/chat') {
@@ -225,9 +225,8 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
           game.room.clientName = game.client.name;
           game.room.opponent = instanceToPlain(await this.userService.getUserByNickname(game.client.name));
           game.room.host = instanceToPlain(await this.userService.getUserByNickname(game.host.name));
+          game.room.start = new Date();
           game.host.socket.emit('startGame', game.room);
-          game.room.opponent = instanceToPlain(await this.userService.getUserByNickname(game.host.name));
-          game.room.host = instanceToPlain(await this.userService.getUserByNickname(game.client.name));
           game.client.socket.emit('startGame', game.room);
           // this.server.to(game.room.name).emit('startGame', game.room);
           this.serverService.updateStatus(game.host.id, 'inGame');
@@ -420,9 +419,8 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     this.serverService.updateStatus(game.client.id, 'inGame');
     game.room.opponent = instanceToPlain(await this.userService.getUserByNickname(game.client.name));
     game.room.host = instanceToPlain(await this.userService.getUserByNickname(game.host.name));
+    game.room.start = new Date();
     game.host.socket.emit('startGame', game.room);
-    game.room.opponent = instanceToPlain(await this.userService.getUserByNickname(game.host.name));
-    game.room.host = instanceToPlain(await this.userService.getUserByNickname(game.client.name));
     game.client.socket.emit('startGame', game.room);
     this.gameLoop(game);
   }
