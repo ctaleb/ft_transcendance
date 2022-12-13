@@ -234,7 +234,7 @@ export default defineComponent({
             if (this.phone == "delete") {
               if (this.twoFactorEnabled == true) this.updateTwoFactorAuth();
               this.phone = null;
-              this.store.user!.phone = undefined;
+              this.store.user!.phone = this.phone;
               this.setSwitches(false);
             } else this.store.user!.phone = this.phone;
             funcs.addAlertMessage("Phone successfully updated", 2);
