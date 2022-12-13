@@ -209,10 +209,7 @@ export default defineComponent({
     initTwoFactorToggle() {
       if (this.user.twoFactorAuth == true) {
         this.twoFactorEnabled = true;
-        const switches = document.getElementsByClassName("2faSwitch");
-        Array.prototype.forEach.call(switches, function (el) {
-          el.checked = true;
-        });
+        this.setSwitches(true);
       } else {
         console.log("2fa disabled");
       }
@@ -221,24 +218,28 @@ export default defineComponent({
       console.log(this.phone);
       if (this.phone == null) {
         funcs.addAlertMessage("Missing phone number", 1);
-        const switches = document.getElementsByClassName("2faSwitch");
-        Array.prototype.forEach.call(switches, function (el) {
-          el.checked = false;
-        });
+        this.setSwitches(false);
       } else {
         this.updateTwoFactorAuth();
       }
     },
     async updatePhone() {
+      if (this.phone == "") this.phone = "delete";
       await fetchJSONDatas(`api/user/phoneEdit/${this.phone}`, "PUT")
         .then((data) => {
           if (data && data.user) {
             localStorage.setItem("user", JSON.stringify(data.user));
             localStorage.setItem("token", data.token);
             this.user = data.user;
-            this.store.user!.phone = this.phone;
+            if (this.phone == "delete") {
+              if (this.twoFactorEnabled == true) this.updateTwoFactorAuth();
+              this.phone = null;
+              this.store.user!.phone = undefined;
+              this.setSwitches(false);
+            } else this.store.user!.phone = this.phone;
             funcs.addAlertMessage("Phone successfully updated", 2);
             this.missingPhoneNumber = false;
+            trySetupUser();
           } else funcs.addAlertMessage("Updated failed", 3);
         })
         .catch(() => {});
@@ -264,8 +265,15 @@ export default defineComponent({
     },
     formatPhone() {
       console.log("formatPhone");
-      if (this.phone.match(/\+\d{2}[6,7]\d{8}/) && this.phone.length == 12) this.phoneFormatError = "";
+      if ((this.phone.match(/\+\d{2}[6,7]\d{8}/) && this.phone.length == 12) || this.phone == "") this.phoneFormatError = "";
       else this.phoneFormatError = "phone must be in format '+33611223344'";
+    },
+
+    setSwitches(val: boolean) {
+      const switches = document.getElementsByClassName("2faSwitch");
+      Array.prototype.forEach.call(switches, function (el) {
+        el.checked = val;
+      });
     },
   },
 });
