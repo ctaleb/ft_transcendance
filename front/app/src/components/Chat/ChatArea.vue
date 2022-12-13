@@ -78,6 +78,7 @@ const scrollDownMessages = (behavior: ScrollBehavior | undefined) => {
 };
 
 const sendMessage = () => {
+  messageField.value = messageField.value.trim();
   if (messageField.value.length > 0) {
     if (isChannel(store.currentChat!)) {
       socketLocal.value?.emit(
