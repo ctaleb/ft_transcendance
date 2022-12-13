@@ -5,7 +5,6 @@ COPY app/ /back/app/
 WORKDIR /back/app/
 RUN npm i
 RUN npm install @nestjs/cli
-RUN npm install bcrypt
 EXPOSE 3000:3000
 CMD ["npx", "nest", "start", "--watch"]
 #  CMD ["sleep", "infinity"]
