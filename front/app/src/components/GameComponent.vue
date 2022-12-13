@@ -310,11 +310,13 @@ const unregisterSockets = (socket: any) => {
   socket?.value?.removeListener("customInvitation");
 };
 
+//do away with this and try using status directly ?
 const customInviter = (friend: string) => {
   friendName.value = friend;
   lobbyStatus.value = "settingsInviter";
 };
 
+//do away with this and try using status directly ?
 const customInvitee = (friend: string) => {
   friendName.value = friend;
   lobbyStatus.value = "settingsInvitee";
