@@ -180,7 +180,7 @@ export class ServerService {
     game.theatre.viewers.forEach((element) => {
       spectator = this.userList.find((usr) => usr.socket.id === element.id);
       if (spectator) {
-        spectator.status = 'online';
+        spectator.gameData.status = 'idle';
         this.updateStatus(spectator.id, 'online');
       }
       element.leave(game.theatre.name);
@@ -209,7 +209,7 @@ export class ServerService {
     game.theatre.viewers.forEach((element) => {
       const spectator = this.userList.find((usr) => usr.socket.id === element.id);
       if (spectator) {
-        spectator.status = 'online';
+        spectator.gameData.status = 'idle';
         this.updateStatus(spectator.id, 'online');
       }
       element.leave(game.theatre.name);
@@ -416,12 +416,11 @@ export class ServerService {
   joinQueue(socket: Socket, powerName: string) {
     const player = this.userList.find((element) => element.socket === socket);
     if (!player) return;
-    console.log(powerName);
     player.gameData.power = new IPower(powerName);
     if (this.playerQueue.find((element) => element === player)) this.playerQueue.splice(this.playerQueue.indexOf(player), 1);
     if (this.playerQueue.length < 1) {
       this.playerQueue.push(player);
-      player.status = 'inQueue';
+      player.gameData.status = 'inQueue';
       this.updateStatus(player.id, 'inQueue');
     } else {
       const game = this.newGame(player);
