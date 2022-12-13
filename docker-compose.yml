@@ -26,7 +26,7 @@ services:
     # http://localhost:8080/ to access adminer page
     ports:
       - 8080:8080
-  # back:
+  #back:
   #  depends_on:
   #    - database
   #  image: back
@@ -39,7 +39,7 @@ services:
   #  ports:
   #    - 3000:3000
   #    - 3500:3500
-  # front:
+  #front:
   #  depends_on:
   #    - back
   #  image: front

@@ -53,6 +53,7 @@ export class UserService implements OnModuleInit {
   }
 
   async setAvatar(userId: number, fileData: ImageDto) {
+    console.log('BACK CHECKPOINT');
     let avatar;
     if (fileData) {
       avatar = await this._imageService.saveImage(fileData);

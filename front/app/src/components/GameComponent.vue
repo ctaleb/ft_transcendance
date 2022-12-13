@@ -431,7 +431,6 @@ const customInvitation = () => {};
 .canvas {
   z-index: 10;
 }
-
 .principalSection {
   flex-wrap: wrap;
   .mainContainer {
