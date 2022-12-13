@@ -226,6 +226,8 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
           game.room.opponent = instanceToPlain(await this.userService.getUserByNickname(game.client.name));
           game.room.host = instanceToPlain(await this.userService.getUserByNickname(game.host.name));
           game.room.start = new Date();
+          game.host.gameData.status = 'playing';
+          game.client.gameData.status = 'playing';
           game.host.socket.emit('startGame', game.room);
           game.client.socket.emit('startGame', game.room);
           // this.server.to(game.room.name).emit('startGame', game.room);
