@@ -94,7 +94,7 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @Put('phoneEdit/:phone')
   async editPhone(@Request() req, @Param('phone') newPhone: string) {
-    if (!newPhone.match(/\+\d{2}[1-9]\d{8}/) || newPhone.length != 12) throw new UnauthorizedException();
+    if ((!newPhone.match(/\+\d{2}[1-9]\d{8}/) || newPhone.length != 12) && newPhone != 'delete') throw new UnauthorizedException();
     return this._userService.updatePhone(req.user.payload.nickname, newPhone);
   }
 
@@ -110,6 +110,7 @@ export class UserController {
     }),
   )
   async editAvatar(@UploadedFile() avatar: Express.Multer.File, @Request() req) {
+    console.log('photo:');
     console.log(avatar);
     return this._userService.updateAvatar(
       avatar

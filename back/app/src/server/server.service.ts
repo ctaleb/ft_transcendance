@@ -116,14 +116,10 @@ export class ServerService {
     const R2 = Math.pow(10, loser.gameData.elo / 400);
     const E1 = R1 / (R1 + R2);
     const E2 = R2 / (R1 + R2);
-    console.log('elo calc:');
-    console.log(`   old elo winner: ${winner.gameData.elo}  looser: ${loser.gameData.elo}`);
     winner.gameData.elo = Math.floor(winner.gameData.elo + Kfactor * (1 - E1));
     loser.gameData.elo = Math.ceil(loser.gameData.elo + Kfactor * (0 - E2));
-    console.log(`   new elo winner: ${winner.gameData.elo}  looser: ${loser.gameData.elo}`);
     this._userService.updateElo(winner.gameData.elo, winner.id);
     this._userService.updateElo(loser.gameData.elo, loser.id);
-    console.log(`   elo diff: ${winner.gameData.elo - oldElo}`);
     return winner.gameData.elo - oldElo;
   }
 

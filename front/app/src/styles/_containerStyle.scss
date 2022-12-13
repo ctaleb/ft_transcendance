@@ -1,7 +1,7 @@
 @import "mixins/sizes";
 @import "mixins/border";
 .mainContainer {
-  overflow-y: scroll;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   align-items: center;

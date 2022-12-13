@@ -159,10 +159,10 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
         ingame = true;
       }
       if (oldValue.indexOf('/profile') == -1 && oldValue != '/chat') {
-        let theatre = element.theatre.name;
+        const theatre = element.theatre.name;
         element.theatre.viewers.forEach((element) => {
           if (element.id === client.id) {
-            let spectator = this.serverService.userList.find((usr) => usr.socket.id === element.id);
+            const spectator = this.serverService.userList.find((usr) => usr.socket.id === element.id);
             if (spectator) {
               spectator.status = 'online';
               this.serverService.updateStatus(spectator.id, 'online');
@@ -237,28 +237,28 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
           this.gameLoop(game);
         } else {
           if (game.host.gameData.status === 'readyQ') {
-            console.log('host ready');
             game.host.gameData.status = 'inQueue';
             this.serverService.updateStatus(game.host.id, 'inQueue');
             game.client.gameData.status = 'idle';
             this.serverService.updateStatus(game.client.id, 'online');
+            this.serverService.playerQueue.splice(this.serverService.playerQueue.indexOf(game.client), 1);
             game.client.socket.emit('gameConfirmationTimeout');
             this.serverService.playerQueue.push(game.host);
           } else if (game.client.gameData.status === 'readyQ') {
-            console.log('client ready');
             game.client.gameData.status = 'inQueue';
             this.serverService.updateStatus(game.client.id, 'inQueue');
             game.host.gameData.status = 'idle';
             this.serverService.updateStatus(game.host.id, 'online');
+            this.serverService.playerQueue.splice(this.serverService.playerQueue.indexOf(game.host), 1);
             game.host.socket.emit('gameConfirmationTimeout');
             this.serverService.playerQueue.push(game.client);
           } else {
-            console.log('else');
-
             game.host.gameData.status = 'idle';
             this.serverService.updateStatus(game.host.id, 'online');
+            this.serverService.playerQueue.splice(this.serverService.playerQueue.indexOf(game.host), 1);
             game.client.gameData.status = 'idle';
             this.serverService.updateStatus(game.client.id, 'online');
+            this.serverService.playerQueue.splice(this.serverService.playerQueue.indexOf(game.client), 1);
             this.server.to(game.room.name).emit('gameConfirmationTimeout');
           }
           this.serverService.games.splice(this.serverService.games.indexOf(game), 1);
@@ -272,6 +272,8 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     if (!player) return;
     player.status = 'online';
     player.gameData.status = 'idle';
+    if (this.serverService.playerQueue.find((element) => element === player))
+      this.serverService.playerQueue.splice(this.serverService.playerQueue.indexOf(player), 1);
     this.serverService.updateStatus(player.id, 'online');
   }
 

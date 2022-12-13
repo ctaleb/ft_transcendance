@@ -245,10 +245,25 @@ function updateSummary(summary: GameSummaryData) {
 // });
 
 onMounted(() => {
-  if (store.user?.status == "inQueue") {
+  if (store.user?.status == "inQueue" || store.user?.status == "inLobby") {
     lobbyStatus.value = "queuing";
     displayLoading.value = true;
   }
+
+  store.$subscribe((mutation, state) => {
+    if (store.user?.status == "inQueue" || store.user?.status == "inLobby") {
+      lobbyStatus.value = "queuing";
+      displayLoading.value = true;
+    } else if (store.user?.status == "online") {
+      lobbyStatus.value = "lobby";
+      startButton.value = false;
+      readyButton.value = false;
+      displayLoading.value = false;
+      customReady.value = "Ready ?";
+      powers.value = true;
+    }
+  });
+
   // ctx = canvas.value?.getContext("2d");
   // ctx?.drawImage(plateauImg, 0, 0, cWidth, cHeight);
   // scaling(ctx);
