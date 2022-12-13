@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { instanceToPlain } from 'class-transformer';
 import { timeout } from 'rxjs';
 import { Server, Socket } from 'socket.io';
 import { ChatService } from 'src/chat/chat.service';
@@ -125,6 +126,7 @@ export class ServerService {
   inverseSummary(summary: GameSummaryData) {
     const inversedSummary: GameSummaryData = {
       client: {
+        id: summary.host.id,
         name: summary.host.name,
         elo: summary.host.elo,
         power: summary.host.power,
@@ -132,6 +134,7 @@ export class ServerService {
         eloChange: summary.host.eloChange,
       },
       host: {
+        id: summary.client.id,
         name: summary.client.name,
         elo: summary.client.elo,
         power: summary.client.power,
@@ -148,11 +151,14 @@ export class ServerService {
     game.room.status = 'gameOver';
     let elo = 0;
     let spectator: User;
+    game.room.opponent = instanceToPlain(await this._userService.getUserByNickname(game.client.name));
+    game.room.host = instanceToPlain(await this._userService.getUserByNickname(game.host.name));
     if (game.gameState.score.client >= game.room.options.scoreMax) {
       elo = await this.elo_calc(game.client, game.host);
       await this.summarize(game, elo, game.client.id);
       const data: GameSummaryData = this.summarizeEntityToData(game.gameSummary, game.client.id);
       const revdata: GameSummaryData = this.inverseSummary(data);
+      game.room.end = new Date();
       game.host.socket.emit('Lose', game.room, elo, data);
       game.client.socket.emit('Win', game.room, elo, revdata);
       this.server.to(game.theatre.name).emit('endGame', game.room, elo, data, game.client.name);
@@ -160,6 +166,7 @@ export class ServerService {
       elo = await this.elo_calc(game.host, game.client);
       await this.summarize(game, elo, game.host.id);
       const data: GameSummaryData = this.summarizeEntityToData(game.gameSummary, game.host.id);
+      game.room.end = new Date();
       game.host.socket.emit('Win', game.room, elo, data);
       game.client.socket.emit('Lose', game.room, elo, this.inverseSummary(data));
       this.server.to(game.theatre.name).emit('endGame', game.room, elo, data, game.host.name);
@@ -187,6 +194,9 @@ export class ServerService {
     const data: GameSummaryData = this.summarizeEntityToData(game.gameSummary, winner.id);
     const revdata: GameSummaryData = this.inverseSummary(data);
     // this.summarize(game, elo);
+    game.room.opponent = instanceToPlain(await this._userService.getUserByNickname(game.client.name));
+    game.room.host = instanceToPlain(await this._userService.getUserByNickname(game.host.name));
+    game.room.end = new Date();
     winner.socket.emit('Win', game.room, elo, data);
     loser.socket.emit('Lose', game.room, elo, revdata);
     this.server.to(game.theatre.name).emit('endGame', game.room, elo, data, winner.name);
@@ -196,7 +206,14 @@ export class ServerService {
     game.client.gameData.status = 'idle';
     this.updateStatus(game.client.id, 'online');
     game.client.socket.leave(game.room.name);
-    game.theatre.viewers.forEach((element) => element.leave(game.theatre.name));
+    game.theatre.viewers.forEach((element) => {
+      const spectator = this.userList.find((usr) => usr.socket.id === element.id);
+      if (spectator) {
+        spectator.status = 'online';
+        this.updateStatus(spectator.id, 'online');
+      }
+      element.leave(game.theatre.name);
+    });
     this.games.splice(this.games.indexOf(game), 1);
     // this.userList.splice(this.userList.indexOf(loser), 1);
   }
@@ -237,6 +254,8 @@ export class ServerService {
         barCollide: false,
         sideCollide: false,
         effect: 'null',
+        start: new Date(),
+        end: new Date(),
         options: defaultGameOptions,
       },
       theatre: {
@@ -359,6 +378,7 @@ export class ServerService {
   summarizeEntityToData(sum: MatchHistoryEntity, victor: number) {
     const data: GameSummaryData = {
       host: {
+        id: sum.host.id,
         elo: sum.hostElo,
         name: sum.host.nickname,
         power: sum.hostPower,
@@ -366,6 +386,7 @@ export class ServerService {
         eloChange: sum.eloChange,
       },
       client: {
+        id: sum.client.id,
         elo: sum.clientElo,
         name: sum.client.nickname,
         power: sum.clientPower,

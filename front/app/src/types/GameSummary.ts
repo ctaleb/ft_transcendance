@@ -8,6 +8,7 @@ export interface GameSummaryData {
 }
 
 export interface PlayerInfoData {
+  id: number;
   elo: number;
   name: String;
   power: String;

@@ -72,6 +72,8 @@ export class GameRoom {
   kickOff: boolean;
   barCollide: boolean;
   sideCollide: boolean;
+  start: Date;
+  end: Date;
   effect: string;
   options: GameOptions;
 }
