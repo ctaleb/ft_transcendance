@@ -216,7 +216,7 @@ export default defineComponent({
     },
     twoFactorSwitch(event: any) {
       console.log(this.phone);
-      if (this.phone == null) {
+      if (this.phone == null || this.phoneFormatError != "") {
         funcs.addAlertMessage("Missing phone number", 1);
         this.setSwitches(false);
       } else {
