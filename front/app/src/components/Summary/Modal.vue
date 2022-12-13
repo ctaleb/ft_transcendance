@@ -1,6 +1,6 @@
 <template>
   <div class="modal">
-    <PlayerInfo :player="data.host" :opponent="opponent" :host="host" :result="data.host.score > data.client.score" />
+    <PlayerInfo :player="data.host" :opponent="opponent" :host="host" :result="data.host.id === data.winnerID" />
     <div class="midSection">
       <h2>{{ title }}</h2>
       <p>{{ dayjs(start).format("DD/MM/YY") }}</p>
@@ -14,7 +14,7 @@
       <h2>VS</h2>
       <button class="button" @click="$emit('close')">Close</button>
     </div>
-    <PlayerInfo :player="data.client" :opponent="opponent" :host="host" :result="data.host.score < data.client.score" />
+    <PlayerInfo :player="data.client" :opponent="opponent" :host="host" :result="data.client.id === data.winnerID" />
   </div>
 </template>
 
@@ -33,8 +33,8 @@ const props = defineProps<{
   data: GameSummaryData;
   opponent: User;
   host: User;
-  start: Date;
-  end: Date;
+  start: string;
+  end: string;
 }>();
 
 const emit = defineEmits<{

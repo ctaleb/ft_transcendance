@@ -48,6 +48,7 @@ export interface GameSummaryData {
 }
 
 export interface PlayerInfoData {
+  id: number;
   elo: number;
   eloChange: number;
   name: string;
