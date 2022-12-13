@@ -20,7 +20,7 @@
             {{ phoneFormatError }}
           </div>
         </div>
-        <div class="section">
+        <div class="section" v-if="!user.intraId">
           <input id="password" type="password" placeholder="new password" v-model="password" />
           <input type="password" placeholder="please confirm new password" v-model="confirmPassword" />
           <button type="submit" class="button" @click.stop.prevent="updatePassword()">Update password</button>
@@ -29,7 +29,7 @@
           <img :class="{ lessOpacity: twoFactorEnabled == false }" src="../assets/twoFaDisabled.svg" alt="" />
           <div class="content">
             <label class="switch">
-              <input type="checkbox" id="2faSwitch" @change="twoFactorSwitch($event)" />
+              <input type="checkbox" class="2faSwitch" @change="twoFactorSwitch($event)" />
               <span class="slider round"></span>
             </label>
           </div>
@@ -42,7 +42,7 @@
         <h2 v-if="twoFactorEnabled == false">2FA disabled</h2>
         <h2 v-else>2FA enabled</h2>
         <label class="switch">
-          <input type="checkbox" id="2faSwitch" @change="twoFactorSwitch($event)" />
+          <input type="checkbox" class="2faSwitch" @change="twoFactorSwitch($event)" />
           <span class="slider round"></span>
         </label>
       </div>
@@ -109,6 +109,7 @@ export default defineComponent({
         localStorage.setItem("user", JSON.stringify(fetch_ret.user));
         localStorage.setItem("token", fetch_ret.token);
         this.user = fetch_ret.user;
+        this.store.user!.nickname = this.nickname;
         funcs.addAlertMessage("Nickname successfully updated", 2);
       }
     },
@@ -125,16 +126,29 @@ export default defineComponent({
     async updatePicture() {
       let formData = new FormData();
       formData.append("avatar", this.newAvatar);
-      await fetchJSONDatas("api/user/avatarEdit", "PUT", formData)
-        .then(async (data) => {
-          localStorage.setItem("user", JSON.stringify(data.user));
-          localStorage.setItem("token", data.token);
-          await trySetupUser();
-          this.avatarUrl = this.getUserAvatar();
+      let fetch_ret = await fetch("http://" + window.location.hostname + ":3000/api/user/avatarEdit", {
+        headers: {
+          Authorization: "Bearer " + localStorage.getItem("token"),
+        },
+        method: "PUT",
+        body: formData,
+      })
+        .then((res) => {
+          if (!res.ok) return Promise.reject();
+          return res.json();
         })
-        .catch(() => {});
-    },
+        .catch((err) => {
+          funcs.addAlertMessage("Unauthorized", 3);
+          return null;
+        });
+      if (fetch_ret == null) return;
+      localStorage.setItem("user", JSON.stringify(fetch_ret.user));
+      localStorage.setItem("token", fetch_ret.token);
+      await trySetupUser();
+      this.store.user!.avatar = "/api/user/profile-picture/" + fetch_ret.user.avatar.path;
 
+      this.avatarUrl = this.getUserAvatar();
+    },
     containsUppercase(value: string) {
       return /[A-Z]/.test(value);
     },
@@ -181,6 +195,8 @@ export default defineComponent({
       })
         .then((data) => {
           if (data.success) {
+            this.password = "";
+            this.confirmPassword = "";
             funcs.addAlertMessage("Password updated !", 1);
           }
         })
@@ -193,32 +209,37 @@ export default defineComponent({
     initTwoFactorToggle() {
       if (this.user.twoFactorAuth == true) {
         this.twoFactorEnabled = true;
-        document.getElementById("2faSwitch")?.setAttribute("checked", "true");
+        this.setSwitches(true);
       } else {
         console.log("2fa disabled");
       }
     },
     twoFactorSwitch(event: any) {
+      console.log(this.phone);
       if (this.phone == null) {
-        funcs.addAlertMessage("Missing phone number", 2);
-        const checkbox = document.getElementById("2faSwitch") as HTMLInputElement | null;
-
-        if (checkbox != null) {
-          checkbox.checked = false;
-        }
+        funcs.addAlertMessage("Missing phone number", 1);
+        this.setSwitches(false);
       } else {
         this.updateTwoFactorAuth();
       }
     },
     async updatePhone() {
+      if (this.phone == "") this.phone = "delete";
       await fetchJSONDatas(`api/user/phoneEdit/${this.phone}`, "PUT")
         .then((data) => {
           if (data && data.user) {
             localStorage.setItem("user", JSON.stringify(data.user));
             localStorage.setItem("token", data.token);
             this.user = data.user;
+            if (this.phone == "delete") {
+              if (this.twoFactorEnabled == true) this.updateTwoFactorAuth();
+              this.phone = null;
+              this.store.user!.phone = this.phone;
+              this.setSwitches(false);
+            } else this.store.user!.phone = this.phone;
             funcs.addAlertMessage("Phone successfully updated", 2);
             this.missingPhoneNumber = false;
+            trySetupUser();
           } else funcs.addAlertMessage("Updated failed", 3);
         })
         .catch(() => {});
@@ -244,8 +265,15 @@ export default defineComponent({
     },
     formatPhone() {
       console.log("formatPhone");
-      if (this.phone.match(/\+\d{2}[6,7]\d{8}/) && this.phone.length == 12) this.phoneFormatError = "";
+      if ((this.phone.match(/\+\d{2}[6,7]\d{8}/) && this.phone.length == 12) || this.phone == "") this.phoneFormatError = "";
       else this.phoneFormatError = "phone must be in format '+33611223344'";
+    },
+
+    setSwitches(val: boolean) {
+      const switches = document.getElementsByClassName("2faSwitch");
+      Array.prototype.forEach.call(switches, function (el) {
+        el.checked = val;
+      });
     },
   },
 });
@@ -271,7 +299,6 @@ export default defineComponent({
 
   .mainContainer {
     height: 100%;
-    overflow-y: scroll;
     .containerSections {
       display: flex;
       flex-direction: column;

@@ -12,7 +12,7 @@ export class PrivateMessageEntity extends AbstractEntity {
 
   @Expose()
   @Transform((a) => a.value.nickname)
-  @ManyToOne(() => UserEntity, (user) => user.id, { eager: true })
+  @ManyToOne(() => UserEntity, (user) => user.id, { eager: true, onDelete: 'CASCADE' })
   author: UserEntity;
 
   @Expose()

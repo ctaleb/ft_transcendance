@@ -97,7 +97,7 @@ export class OauthService {
       intraId: user.id,
     };
     const filename: string = user.login + '.' + getUrlExtension(user.image.link);
-    const file_path: string = './assets/' + filename;
+    const file_path: string = 'assets/' + filename;
     download(user.image.link, file_path, function () {
       console.log('done');
     });

@@ -150,12 +150,13 @@ const power = ref("");
 
 const opponent = ref();
 const host = ref();
-const start = ref(new Date());
-const end = ref(new Date());
+const start = ref("");
+const end = ref("");
 
 let theRoom: GameRoom;
 const gameSummary = reactive<GameSummaryData>({
   host: {
+    id: 0,
     elo: 1500,
     name: "Host",
     power: "",
@@ -163,6 +164,7 @@ const gameSummary = reactive<GameSummaryData>({
     eloChange: 0,
   },
   client: {
+    id: 1,
     elo: 1000,
     name: "Client",
     power: "",
@@ -234,6 +236,7 @@ function updateSummary(summary: GameSummaryData) {
   gameSummary.host = summary.host;
   gameSummary.client = summary.client;
   gameSummary.gameMode = summary.gameMode;
+  gameSummary.winnerID = summary.winnerID;
 }
 
 // store.$subscribe((mutation, state) => {
@@ -242,10 +245,25 @@ function updateSummary(summary: GameSummaryData) {
 // });
 
 onMounted(() => {
-  if (store.user?.status == "inQueue") {
+  if (store.user?.status == "inQueue" || store.user?.status == "inLobby") {
     lobbyStatus.value = "queuing";
     displayLoading.value = true;
   }
+
+  store.$subscribe((mutation, state) => {
+    if (store.user?.status == "inQueue" || store.user?.status == "inLobby") {
+      lobbyStatus.value = "queuing";
+      displayLoading.value = true;
+    } else if (store.user?.status == "online") {
+      lobbyStatus.value = "lobby";
+      startButton.value = false;
+      readyButton.value = false;
+      displayLoading.value = false;
+      customReady.value = "Ready ?";
+      powers.value = true;
+    }
+  });
+
   // ctx = canvas.value?.getContext("2d");
   // ctx?.drawImage(plateauImg, 0, 0, cWidth, cHeight);
   // scaling(ctx);
@@ -317,6 +335,8 @@ const spectating = (gameRoom: GameRoom) => {
   lobbyStatus.value = "spectating";
   startButton.value = false;
   powers.value = false;
+  opponent.value = gameRoom.opponent;
+  host.value = gameRoom.host;
   //   gameBoard.value = true;
   document.querySelector(".canvas")?.classList.remove("hidden");
 };
@@ -342,10 +362,20 @@ const Win = (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) => 
   displayLoading.value = false;
   customReady.value = "Ready ?";
   powers.value = true;
-  end.value = new Date();
+  end.value = gameRoom.end;
+  start.value = gameRoom.start;
   updateSummary(summary);
   color.value = "green";
   sumTitle.value = "Victory";
+  if (store.user!.id === gameRoom.opponent.id) {
+    opponent.value = gameRoom.host;
+    host.value = gameRoom.opponent;
+    store.user!.elo = summary.client.elo;
+  } else {
+    opponent.value = gameRoom.opponent;
+    host.value = gameRoom.host;
+    store.user!.elo = summary.host.elo;
+  }
   showSummary(true);
   //   gameBoard.value = false;
   document.querySelector(".canvas")?.classList.add("hidden");
@@ -359,10 +389,20 @@ const Lose = (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) =>
   displayLoading.value = false;
   customReady.value = "Ready ?";
   powers.value = true;
-  end.value = new Date();
+  end.value = gameRoom.end;
+  start.value = gameRoom.start;
   updateSummary(summary);
   color.value = "red";
   sumTitle.value = "Defeat";
+  if (store.user!.id === gameRoom.opponent.id) {
+    opponent.value = gameRoom.host;
+    host.value = gameRoom.opponent;
+    store.user!.elo = summary.client.elo;
+  } else {
+    opponent.value = gameRoom.opponent;
+    host.value = gameRoom.host;
+    store.user!.elo = summary.host.elo;
+  }
   showSummary(true);
   //   gameBoard.value = false;
   document.querySelector(".canvas")?.classList.add("hidden");
@@ -375,10 +415,18 @@ const endGame = (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData,
   readyButton.value = false;
   displayLoading.value = false;
   customReady.value = "Ready ?";
-  end.value = new Date();
+  end.value = gameRoom.end;
+  start.value = gameRoom.start;
   updateSummary(summary);
   color.value = "gold";
   sumTitle.value = winner + " has won!";
+  if (store.user!.id === gameRoom.opponent.id) {
+    opponent.value = gameRoom.host;
+    host.value = gameRoom.opponent;
+  } else {
+    opponent.value = gameRoom.opponent;
+    host.value = gameRoom.host;
+  }
   showSummary(true);
 };
 
@@ -390,9 +438,13 @@ const startGame = (gameRoom: GameRoom) => {
   theRoom = gameRoom;
   hostName.value = theRoom.hostName;
   clientName.value = theRoom.clientName;
-  opponent.value = gameRoom.opponent;
-  host.value = gameRoom.host;
-  start.value = new Date();
+  if (store.user!.id === gameRoom.opponent.id) {
+    opponent.value = gameRoom.host;
+    host.value = gameRoom.opponent;
+  } else {
+    opponent.value = gameRoom.opponent;
+    host.value = gameRoom.host;
+  }
   document.querySelector(".canvas")?.classList.remove("hidden");
 };
 
@@ -412,6 +464,7 @@ const customInvitation = () => {};
 .canvas {
   z-index: 10;
 }
+
 .principalSection {
   flex-wrap: wrap;
   .mainContainer {

@@ -48,8 +48,9 @@ router.beforeEach((to, from) => {
     if (isConnected) return true;
     else return { name: "home" };
   } else if (to.query.code) return true;
-  else if (to.fullPath == "/" || to.fullPath == "/signup") return true;
-  else if (from.fullPath == "/" && localStorage.getItem("token")) return true;
+  else if (to.fullPath == "/" || to.fullPath == "/signup") {
+    return true;
+  } else if (from.fullPath == "/" && localStorage.getItem("token")) return true;
   return { name: "home" };
 });
 
