@@ -95,6 +95,7 @@ export class UserService implements OnModuleInit {
     throw new HttpException('User not Found', HttpStatus.NOT_FOUND);
   }
   async updatePhone(nickname: string, newPhone: string) {
+    if (newPhone == 'delete') newPhone = null;
     const user = await this._usersRepository.findOneBy({ nickname });
     if (user) {
       await this._usersRepository.update(user.id, { phone: newPhone });
