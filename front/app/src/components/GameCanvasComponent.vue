@@ -546,13 +546,12 @@ const gameLoop = () => {
   gStatePredicted = JSON.parse(JSON.stringify(gState));
   let intervalId = setInterval(function () {
     if (gState.state == "end") clearInterval(intervalId);
-    if (gState.frame < gStatePredicted.frame && gState.state == "play") {
+    if (gState.frame == gStatePredicted.frame && gState.state == "play") {
       predict();
       scalePosition(gStatePredicted);
     } else {
       gStatePredicted = JSON.parse(JSON.stringify(gState));
       scalePosition(gState);
-      gStatePredicted.frame++;
     }
     if (ctx) {
       particleEvent(gStateRender);
@@ -566,7 +565,7 @@ const gameLoop = () => {
       } else if (!gStateRender.hostBar.smashing || kickOff) hSmashingPercent = 0;
       render(ctx, gStateRender);
     }
-  }, 1000 / 60);
+  }, 1000 / 120);
 };
 </script>
 <style lang="scss" scoped>
