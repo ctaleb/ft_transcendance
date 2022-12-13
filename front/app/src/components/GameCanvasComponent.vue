@@ -1,15 +1,15 @@
 <template>
-  <div>
+  <div class="playZone">
     <div class="opponent">
-      <!-- <img :src="User.getAvatar(opponent)" /> -->
-      <!-- <h4>{{ opponent.nickname }}</h4>
-      <h4>{{ opponent.elo }}</h4> -->
+      <div :style="'font-size: ' + textSize + 'px;'" class="elo txt">{{ opponent.elo }}</div>
+      <div :style="'font-size: ' + textSize + 'px;'" class="name txt">{{ opponent.nickname }}</div>
+      <img :src="User.getAvatar(store.user!)" />
     </div>
-    <canvas ref="canvas"></canvas>
+    <canvas class="canvas" ref="canvas"> </canvas>
     <div class="us">
-      <!-- <img :src="User.getAvatar(us)" /> -->
-      <!-- <h4>{{ us.nickname }}</h4>
-      <h4>{{ us.elo }}</h4> -->
+      <img :src="User.getAvatar(store.user!)" />
+      <div :style="'font-size: ' + textSize + 'px;'" class="name txt">{{ us.nickname }}</div>
+      <div :style="'font-size: ' + textSize + 'px;'" class="elo txt">{{ us.elo }}</div>
     </div>
   </div>
 </template>
@@ -74,6 +74,7 @@ let offset = 0;
 
 const hostScore = ref(0);
 const clientScore = ref(0);
+const textSize = ref(0);
 
 let goal = false;
 let loadPercent = 120;
@@ -117,7 +118,7 @@ let gState: GameState = {
 let gStateRender: GameState;
 
 const defaultGameOptions: GameOptions = {
-  scoreMax: 5,
+  scoreMax: 20,
   ballSpeed: 1,
   ballSize: 1,
   barSpeed: 1,
@@ -183,6 +184,11 @@ function drawSmashingEffect(bar: IBar, smashingPercent: number, ctx: CanvasRende
 function drawPlayground(ctx: CanvasRenderingContext2D) {
   ctx.drawImage(plateauImg, 0, 0, cWidth, cHeight);
 }
+
+function drawinfoPlayground(ctx: CanvasRenderingContext2D) {
+  ctx.drawImage(plateauImg, 0, 0, cWidth, cHeight);
+}
+
 function addWallParticle(gameState: GameState) {
   const hit: particleSet = { particles: [], reach: false };
   let ab: IPoint = { x: gameState.ball.pos.x - gameState.hit.x, y: gameState.ball.pos.y - gameState.hit.y };
@@ -380,7 +386,7 @@ function drawBall(ctx: CanvasRenderingContext2D, gameState: GameState) {
 //SCALING FUNCTIONS
 function scaling(ctx?: CanvasRenderingContext2D | null) {
   if (ctx) {
-    ctx.canvas.height = window.innerHeight * 0.8;
+    ctx.canvas.height = window.innerHeight - 140;
     if (ctx.canvas.height * 0.69 > window.innerWidth) {
       ctx.canvas.width = window.innerWidth;
       ctx.canvas.height = ctx.canvas.width * 1.449;
@@ -389,6 +395,7 @@ function scaling(ctx?: CanvasRenderingContext2D | null) {
     }
     cHeight = ctx.canvas.height;
     cWidth = ctx.canvas.width;
+    textSize.value = cHeight / 42;
     scale = cWidth / 500;
     offset = (cHeight - cWidth) / 2;
   }
@@ -522,4 +529,49 @@ const gameLoop = () => {
   }, 1000 / 60);
 };
 </script>
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+@import "../styles/variables";
+.playZone {
+  position: relative;
+
+  .opponent {
+    position: absolute;
+    text-overflow: ellipsis;
+    width: 16%;
+    height: 15.5%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    img {
+      width: 81%;
+      aspect-ratio: 1 / 1;
+      border-radius: 10000px;
+    }
+  }
+
+  .elo {
+    color: $primary;
+  }
+  .name {
+    color: black;
+  }
+  .us {
+    position: absolute;
+    text-overflow: ellipsis;
+    width: 16%;
+    height: 15.5%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    bottom: 6px;
+    right: 0;
+    img {
+      width: 81%;
+      aspect-ratio: 1 / 1;
+      border-radius: 10000px;
+    }
+  }
+}
+</style>

@@ -7,7 +7,7 @@
       <Modal :title="sumTitle" :data="gameSummary" :opponent="opponent" :host="host" :start="start" :end="end" @close="showSummary(false)"></Modal>
       <!-- <Modal :title="sumTitle" :data="gameSummary" :opponent="opponentImg.src" :start="start" :end="end" @close="showSummary(false)"></Modal> -->
     </div>
-    <div class="principalSection">
+    <div v-if="lobbyStatus != 'playing'" class="principalSection">
       <div v-if="lobbyStatus == 'settingsInviter' || lobbyStatus == 'settingsInvitee' || lobbyStatus == 'lobby'" class="mainContainer">
         <div>
           <power-slider-component v-model="power" id="powerSlider" />
