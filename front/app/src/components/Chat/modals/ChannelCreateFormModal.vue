@@ -43,6 +43,7 @@ const createChannel = async (): Promise<void> => {
   if (channelName.value.length <= 0 || (picked.value === "protected" && channelPassword.value.length <= 0)) {
     return;
   }
+  channelName.value = channelName.value.trim();
   const channelType = <ChannelType>picked.value;
   await fetchJSONDatas("api/chat/create-channel", "POST", {
     name: channelName.value,
