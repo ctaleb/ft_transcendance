@@ -20,7 +20,7 @@
             {{ phoneFormatError }}
           </div>
         </div>
-        <div class="section">
+        <div class="section" v-if="!user.intraId">
           <input id="password" type="password" placeholder="new password" v-model="password" />
           <input type="password" placeholder="please confirm new password" v-model="confirmPassword" />
           <button type="submit" class="button" @click.stop.prevent="updatePassword()">Update password</button>
@@ -109,6 +109,7 @@ export default defineComponent({
         localStorage.setItem("user", JSON.stringify(fetch_ret.user));
         localStorage.setItem("token", fetch_ret.token);
         this.user = fetch_ret.user;
+        this.store.user!.nickname = this.nickname;
         funcs.addAlertMessage("Nickname successfully updated", 2);
       }
     },
@@ -194,6 +195,8 @@ export default defineComponent({
       })
         .then((data) => {
           if (data.success) {
+            this.password = "";
+            this.confirmPassword = "";
             funcs.addAlertMessage("Password updated !", 1);
           }
         })
@@ -233,6 +236,7 @@ export default defineComponent({
             localStorage.setItem("user", JSON.stringify(data.user));
             localStorage.setItem("token", data.token);
             this.user = data.user;
+            this.store.user!.phone = this.phone;
             funcs.addAlertMessage("Phone successfully updated", 2);
             this.missingPhoneNumber = false;
           } else funcs.addAlertMessage("Updated failed", 3);
@@ -287,7 +291,6 @@ export default defineComponent({
 
   .mainContainer {
     height: 100%;
-    overflow-y: scroll;
     .containerSections {
       display: flex;
       flex-direction: column;
