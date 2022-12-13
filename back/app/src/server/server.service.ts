@@ -116,7 +116,7 @@ export class ServerService {
     const E1 = R1 / (R1 + R2);
     const E2 = R2 / (R1 + R2);
     winner.gameData.elo = Math.floor(winner.gameData.elo + Kfactor * (1 - E1));
-    loser.gameData.elo = Math.floor(loser.gameData.elo + Kfactor * (0 - E1));
+    loser.gameData.elo = Math.ceil(loser.gameData.elo + Kfactor * (0 - E2));
     this._userService.updateElo(winner.gameData.elo, winner.id);
     this._userService.updateElo(loser.gameData.elo, loser.id);
     return winner.gameData.elo - oldElo;

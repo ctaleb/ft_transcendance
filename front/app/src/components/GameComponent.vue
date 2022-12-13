@@ -317,6 +317,8 @@ const spectating = (gameRoom: GameRoom) => {
   lobbyStatus.value = "spectating";
   startButton.value = false;
   powers.value = false;
+  opponent.value = gameRoom.opponent;
+  host.value = gameRoom.host;
   //   gameBoard.value = true;
   document.querySelector(".canvas")?.classList.remove("hidden");
 };
@@ -346,6 +348,7 @@ const Win = (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) => 
   updateSummary(summary);
   color.value = "green";
   sumTitle.value = "Victory";
+  store.user!.elo = summary.host.elo;
   showSummary(true);
   //   gameBoard.value = false;
   document.querySelector(".canvas")?.classList.add("hidden");
@@ -363,6 +366,7 @@ const Lose = (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) =>
   updateSummary(summary);
   color.value = "red";
   sumTitle.value = "Defeat";
+  store.user!.elo = summary.host.elo;
   showSummary(true);
   //   gameBoard.value = false;
   document.querySelector(".canvas")?.classList.add("hidden");
