@@ -317,6 +317,8 @@ const spectating = (gameRoom: GameRoom) => {
   lobbyStatus.value = "spectating";
   startButton.value = false;
   powers.value = false;
+  opponent.value = gameRoom.opponent;
+  host.value = gameRoom.host;
   //   gameBoard.value = true;
   document.querySelector(".canvas")?.classList.remove("hidden");
 };

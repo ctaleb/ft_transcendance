@@ -299,7 +299,7 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   }
 
   @SubscribeMessage('readySpectate')
-  readySpectate(@MessageBody('friend') friend: string, @ConnectedSocket() client: Socket) {
+  async readySpectate(@MessageBody('friend') friend: string, @ConnectedSocket() client: Socket) {
     const game = this.serverService.games.find((element) => element.client.name === friend || element.host.name === friend);
     if (game) {
       const player = this.serverService.userList.find((element) => element.socket.id === client.id);
@@ -307,6 +307,8 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
         player.status = 'spectating';
         this.serverService.updateStatus(player.id, 'spectating');
       }
+      game.room.opponent = instanceToPlain(await this.userService.getUserByNickname(game.client.name));
+      game.room.host = instanceToPlain(await this.userService.getUserByNickname(game.host.name));
       client.emit('spectating', game.room);
       client.join(game.theatre.name);
       game.theatre.viewers.push(client);
