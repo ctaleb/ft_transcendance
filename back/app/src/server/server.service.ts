@@ -171,18 +171,16 @@ export class ServerService {
       game.client.socket.emit('Lose', game.room, elo, this.inverseSummary(data));
       this.server.to(game.theatre.name).emit('endGame', game.room, elo, data, game.host.name);
     }
-    game.host.status = 'online';
     game.host.gameData.status = 'idle';
     this.updateStatus(game.host.id, 'online');
     game.host.socket.leave(game.room.name);
-    game.client.status = 'online';
     game.client.gameData.status = 'idle';
     this.updateStatus(game.client.id, 'online');
     game.client.socket.leave(game.room.name);
     game.theatre.viewers.forEach((element) => {
       spectator = this.userList.find((usr) => usr.socket.id === element.id);
       if (spectator) {
-        spectator.status = 'online';
+        spectator.gameData.status = 'idle';
         this.updateStatus(spectator.id, 'online');
       }
       element.leave(game.theatre.name);
@@ -203,17 +201,15 @@ export class ServerService {
     loser.socket.emit('Lose', game.room, elo, revdata);
     this.server.to(game.theatre.name).emit('endGame', game.room, elo, data, winner.name);
     game.host.gameData.status = 'idle';
-    game.host.status = 'online';
     this.updateStatus(game.host.id, 'online');
     game.host.socket.leave(game.room.name);
     game.client.gameData.status = 'idle';
-    game.client.status = 'online';
     this.updateStatus(game.client.id, 'online');
     game.client.socket.leave(game.room.name);
     game.theatre.viewers.forEach((element) => {
       const spectator = this.userList.find((usr) => usr.socket.id === element.id);
       if (spectator) {
-        spectator.status = 'online';
+        spectator.gameData.status = 'idle';
         this.updateStatus(spectator.id, 'online');
       }
       element.leave(game.theatre.name);
@@ -424,19 +420,17 @@ export class ServerService {
     if (this.playerQueue.find((element) => element === player)) this.playerQueue.splice(this.playerQueue.indexOf(player), 1);
     if (this.playerQueue.length < 1) {
       this.playerQueue.push(player);
-      player.status = 'inQueue';
+      player.gameData.status = 'inQueue';
       this.updateStatus(player.id, 'inQueue');
     } else {
       const game = this.newGame(player);
       this.games.push(game);
       game.room.name = 'game-' + game.host.name + '-' + game.client.name;
       game.theatre.name = 'spec-' + game.host.name + '-' + game.client.name;
-      game.host.status = 'ingame';
       game.host.gameData.status = 'inLobby';
       this.updateStatus(game.host.id, 'inLobby');
       game.host.socket.join(game.room.name);
       game.client.gameData.status = 'inLobby';
-      game.client.status = 'ingame';
       this.updateStatus(game.client.id, 'inLobby');
       game.client.socket.join(game.room.name);
       return game;
