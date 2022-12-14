@@ -515,6 +515,25 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     }
   }
 
+  @SubscribeMessage('convRandom')
+  async convRandom(@ConnectedSocket() client: Socket, @MessageBody('target') nickname: string, @MessageBody('created') created: boolean) {
+    if (nickname && created) {
+      await this.userService
+        .getUserByNickname(nickname)
+        .then(async (user) => {
+          if (user) {
+            const friendship = await this.friendshipService.findFriendship(client.handshake.auth.user.id, user.id);
+            const target = this.serverService.PlayerToSocket(user.nickname);
+            if (target)
+              if ((friendship && friendship.status === 'invitation') || !friendship) {
+                this.server.to(target.id).emit('newConv', client.handshake.auth.user.id);
+              }
+          }
+        })
+        .catch(() => {});
+    }
+  }
+
   @SubscribeMessage('updateChannelMembers')
   async updateChannelMembers(@ConnectedSocket() client: Socket, @MessageBody('id') channelId: number) {
     if (channelId) {

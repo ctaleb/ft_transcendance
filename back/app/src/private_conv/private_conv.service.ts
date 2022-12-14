@@ -42,6 +42,7 @@ export class PrivateConvService {
   async createConv(user1Id: number, user2Id: number): Promise<PrivateConvEntity> {
     if (user1Id === user2Id)
       throw new BadRequestException("Can't create conversation with yourself");
+    
     const ToSave = PrivateConvEntity.create({
       user1: { id: user1Id },
       user2: { id: user2Id },

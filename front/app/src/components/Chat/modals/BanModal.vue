@@ -72,10 +72,10 @@ const ban = async () => {
           id: store.currentChat?.id,
           nickname: props.member.nickname,
         });
-        addAlertMessage(`${props.member.nickname} has successfully been unbanned`, 1);
+        addAlertMessage(`${props.member.nickname} has successfully been unbanned`, 2);
       } else {
         socketLocal.value?.emit("memberGotBanned", { id: store.currentChat?.id, nickname: props.member.nickname });
-        addAlertMessage(`${props.member.nickname} has successfully been banned`, 1);
+        addAlertMessage(`${props.member.nickname} has successfully been banned`, 2);
       }
       emits("closeBanModal");
     })

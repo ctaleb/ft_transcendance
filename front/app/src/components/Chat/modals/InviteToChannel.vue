@@ -30,7 +30,7 @@ const inviteToChannel = async (): Promise<void> => {
       username: nickname.value,
     })
       .then((data) => {
-        addAlertMessage("Invitation successfully sent", 1);
+        addAlertMessage("Invitation successfully sent", 2);
         socketLocal.value?.emit("privateChannelInvite", { nickname: data.target, channel: data.channel });
         emits("closeInviteModal");
       })
