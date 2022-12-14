@@ -394,7 +394,7 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   @SubscribeMessage('settingsInvitee')
   settingsInvitee(@ConnectedSocket() client: Socket) {
     const usr = this.serverService.SocketToPlayer(client);
-    if (!usr && usr.gameData.status != 'invited') return;
+    if (!usr || usr.gameData.status != 'invited') return;
     usr.gameData.status = 'inCustomLobby';
     this.serverService.updateStatus(usr.id, 'inCustomLobby');
     const game = this.serverService.games.find((element) => element.client === usr);
