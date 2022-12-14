@@ -145,7 +145,7 @@ const customReady = ref("Ready ?");
 const readyButton = ref(false);
 
 const gameOpts = reactive<GameOptions>({
-  scoreMax: 100,
+  scoreMax: 10,
   ballSpeed: 1,
   ballSize: 1,
   barSpeed: 1,
