@@ -1,7 +1,9 @@
 import { UnauthorizedException } from '@nestjs/common';
 import { extname } from 'path';
+import { MessagingConfigurationContext } from 'twilio/lib/rest/verify/v2/service/messagingConfiguration';
 
 export const imageFileFilter = (req, file, callback) => {
+  console.log();
   if (!file.originalname.match(/\.(jpg|jpeg|png|gif|JPG|JPEG)$/)) {
     return callback(new UnauthorizedException('Only image files are allowed!'), false);
   }
