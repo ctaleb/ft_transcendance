@@ -44,7 +44,7 @@ export class UserService implements OnModuleInit {
     if (user) {
       return user;
     }
-    return null;
+    throw new HttpException('User not found', HttpStatus.NOT_FOUND);
   }
 
   async createUser(createUserDto: CreateUserDto): Promise<UserEntity> {

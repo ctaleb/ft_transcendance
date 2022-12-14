@@ -175,7 +175,7 @@ const invite = async (user?: User) => {
   if (user)
     await fetchJSONDatas("api/friendship/invite", "POST", { addressee: user?.nickname })
       .then((data) => {
-        socketLocal.value?.emit("friendship-invite", { id: store.user?.id, addresseeId: user?.id, target: user?.nickname, requester: store.user?.nickname });
+        socketLocal.value?.emit("friendship-invite", { id: store.user?.id, addresseeId: user?.id });
         addAlertMessage("The user has been invited", 2);
       })
       .catch((err) => {});
@@ -206,6 +206,7 @@ const startConversation = (user?: User) => {
           for (let i = 0; i < conv.conv.messages.length; i++) conv.conv.messages[i] = transformDate(conv.conv.messages[i]);
           conv.conv.other = user;
           store.currentChat = conv.conv;
+          socketLocal.value?.emit("friendToConv", { target: user.nickname });
         })
         .catch(() => {
           store.$patch({
