@@ -631,7 +631,8 @@ export class ServerService {
       game.gameState.hit.x = game.gameState.ball.pos.x;
       game.gameState.hit.y = game.gameState.ball.pos.y;
       game.gameState.hit.hit = 3;
-      game.gameState.state = 'stop';
+      if (game.gameState.score.client < game.room.options.scoreMax && game.gameState.score.host < game.room.options.scoreMax) game.gameState.state = 'stop';
+      else game.gameState.state = 'end';
       setTimeout(() => {
         this.resetGameState(game);
         game.gameState.state = 'kickoff';
@@ -816,8 +817,9 @@ export class ServerService {
   }
 
   nadal(ball: IBall, effect: string) {
-    if (effect === 'doLeft') this.rotateVector(ball.speed, 0.2);
-    else if (effect === 'doRight') this.rotateVector(ball.speed, -0.2);
+    const M = Math.sqrt(Math.pow(ball.speed.x, 2) + Math.pow(ball.speed.y, 2)) / Math.sqrt(2);
+    if (effect === 'doLeft') this.rotateVector(ball.speed, M / 20);
+    else if (effect === 'doRight') this.rotateVector(ball.speed, -M / 15);
   }
 
   resetHit(state: GameState) {
