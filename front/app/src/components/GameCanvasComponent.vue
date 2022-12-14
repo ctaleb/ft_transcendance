@@ -148,10 +148,10 @@ function kickoffLoading(ctx: any, gameState: GameState) {
     ctx.stroke();
   }
 }
-function drawSmashingEffect(bar: IBar, smashingPercent: number, ctx: CanvasRenderingContext2D) {
+function drawSmashingEffect(bar: IBar, oppobar: IBar, smashingPercent: number, ctx: CanvasRenderingContext2D) {
   if (bar.smashing) {
     ctx.drawImage(
-      bar.pos.y < 250 ? energyPaddleRedImg : energyPaddleImg,
+      bar.pos.y < oppobar.pos.y ? energyPaddleRedImg : energyPaddleImg,
       bar.pos.x - bar.size.x * scale,
       bar.pos.y - bar.size.y * scale * (1 + smashingPercent / 100 / 2),
       bar.size.x * 2 * scale,
@@ -161,7 +161,7 @@ function drawSmashingEffect(bar: IBar, smashingPercent: number, ctx: CanvasRende
   if (bar.smashing) {
     ctx.globalAlpha = (0.5 * smashingPercent) / 100;
     ctx.drawImage(
-      bar.pos.y < 250 ? energyRedImg : energyImg,
+      bar.pos.y < oppobar.pos.y ? energyRedImg : energyImg,
       bar.pos.x - bar.size.x * scale * 2.5,
       bar.pos.y - bar.size.y * scale * 4,
       bar.size.x * 5 * scale,
@@ -170,7 +170,7 @@ function drawSmashingEffect(bar: IBar, smashingPercent: number, ctx: CanvasRende
     ctx.globalAlpha = 1;
   }
   ctx.drawImage(
-    bar.pos.y < 250 ? paddleRedImg : paddleImg,
+    bar.pos.y < oppobar.pos.y ? paddleRedImg : paddleImg,
     bar.pos.x - bar.size.x * scale,
     bar.pos.y - bar.size.y * scale,
     bar.size.x * 2 * scale,
@@ -486,8 +486,8 @@ function render(ctx: CanvasRenderingContext2D | null | undefined, gameState: Gam
     kickoffLoading(ctx, gameState);
     drawBall(ctx, gameState);
     ctx.fillStyle = "black";
-    drawSmashingEffect(gameState.clientBar, cSmashingPercent, ctx);
-    drawSmashingEffect(gameState.hostBar, hSmashingPercent, ctx);
+    drawSmashingEffect(gameState.clientBar, gameState.hostBar, cSmashingPercent, ctx);
+    drawSmashingEffect(gameState.hostBar, gameState.clientBar, hSmashingPercent, ctx);
     drawParticle(ctx, gameState);
     drawinfoPlayground(ctx);
     drawPowerCharge(ctx, gameState);
@@ -534,13 +534,13 @@ const gameLoop = () => {
   gStatePredicted = JSON.parse(JSON.stringify(gState));
   let intervalId = setInterval(function () {
     if (gState.state == "end") clearInterval(intervalId);
-    // if (gState.frame >= gStatePredicted.frame && gState.state == "play") {
-    //   predict();
-    //   scalePosition(gStatePredicted);
-    // } else {
-    //   gStatePredicted = JSON.parse(JSON.stringify(gState));
-    scalePosition(gState);
-    // }
+    if (gStateRender.frame >= gStatePredicted.frame && gState.state == "play") {
+      predict();
+      scalePosition(gStatePredicted);
+    } else {
+      gStatePredicted = JSON.parse(JSON.stringify(gState));
+      scalePosition(gState);
+    }
     if (ctx) {
       particleEvent(gStateRender);
       clientScore.value = gStateRender.score.client;
