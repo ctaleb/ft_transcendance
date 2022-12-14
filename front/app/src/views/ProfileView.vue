@@ -210,6 +210,7 @@ const startConversation = (user?: User) => {
           conv.conv.other = user;
           store.currentChat = conv.conv;
           socketLocal.value?.emit("friendToConv", { target: user.nickname });
+          socketLocal.value?.emit("convRandom", { target: user.nickname, created: conv.created });
         })
         .catch(() => {
           store.$patch({
