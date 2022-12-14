@@ -1,25 +1,21 @@
 import { Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
+import { unlink } from 'fs';
+import { RegistrationDto } from 'src/authentication/registration.dto';
 import { PostgresErrorCode } from 'src/database/errors.constraint';
+import { ImageDto } from 'src/image/image.dto';
+import { UserEntity } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
 import { DataSource } from 'typeorm';
-import { RegistrationDto } from 'src/authentication/registration.dto';
-import { UserEntity } from 'src/user/user.entity';
-import { UserAlreadyExistException } from 'src/authentication/authentication.exception';
-import { InjectRepository } from '@nestjs/typeorm';
-import * as bcrypt from 'bcrypt';
-import { JwtService } from '@nestjs/jwt';
-import { ImageDto } from 'src/image/image.dto';
-import { unlink } from 'fs';
-import fileType from 'magic-bytes.js';
-import fs = require('fs');
-import { GuessedFile } from 'magic-bytes.js/dist/model/tree';
+import { check_magic_numbers } from '../utils/file-uploading.utils';
 
 @Injectable()
 export class AuthenticationService {
   constructor(private readonly _userService: UserService, private readonly _dataSource: DataSource, private jwtService: JwtService) {}
 
   async registration(registrationDto: RegistrationDto, imageDto: ImageDto): Promise<UserEntity> {
-    if (!(await this.check_magic_numbers(imageDto.path))) throw new UnauthorizedException('Mimetype');
+    if (!(await check_magic_numbers(imageDto.path))) throw new UnauthorizedException('Mimetype');
     let user: UserEntity;
     const queryRunner = this._dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -62,11 +58,5 @@ export class AuthenticationService {
     return {
       access_token: this.jwtService.sign(user),
     };
-  }
-
-  async check_magic_numbers(path: string) {
-    const mimetypes: GuessedFile[] = fileType(fs.readFileSync(path));
-    console.log(mimetypes);
-    return false;
   }
 }
