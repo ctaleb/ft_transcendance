@@ -106,7 +106,7 @@ function updateAvatar(event: Event) {
 
 async function createPost() {
   let formData = new FormData();
-
+  state.nickname = state.nickname.trim();
   formData.append("nickname", state.nickname);
   formData.append("password", state.password.firstTry);
   if (state.avatar != File.prototype) {
