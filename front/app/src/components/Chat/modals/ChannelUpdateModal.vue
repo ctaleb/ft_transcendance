@@ -53,7 +53,7 @@ const updateChannel = async (): Promise<void> => {
   })
     .then((data: Channel) => {
       emits("updateChannel");
-      addAlertMessage("Channel successfully updated", 1);
+      addAlertMessage("Channel successfully updated", 2);
       emits("closeChannelModal");
     })
     .catch(() => {});

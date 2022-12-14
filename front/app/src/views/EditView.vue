@@ -183,12 +183,12 @@ export default defineComponent({
         this.ValidPasswordFlag = false;
         funcs.addAlertMessage(
           "Password must contains at least one uppercase, one lowercase, one special character, and be between 9 and 13 characters long.",
-          2
+          1
         );
         return;
       }
       if (!this.passwordsMatch(this.password, this.confirmPassword)) {
-        funcs.addAlertMessage("Passwords don't match", 2);
+        funcs.addAlertMessage("Passwords don't match", 1);
         return;
       }
       await fetchJSONDatas("api/user/passwordEdit", "PUT", {
@@ -198,7 +198,7 @@ export default defineComponent({
           if (data.success) {
             this.password = "";
             this.confirmPassword = "";
-            funcs.addAlertMessage("Password updated !", 1);
+            funcs.addAlertMessage("Password updated !", 2);
           }
         })
         .catch(() => {});
@@ -258,7 +258,7 @@ export default defineComponent({
               this.twoFactorEnabled = true;
             } else {
               this.twoFactorEnabled = false;
-              funcs.addAlertMessage("2fa Disabled", 2);
+              funcs.addAlertMessage("2fa Disabled", 1);
             }
           }
         })
