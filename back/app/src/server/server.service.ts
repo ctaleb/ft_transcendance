@@ -935,7 +935,6 @@ export class ServerService {
   }
 
   async updateChannel(client: Socket, id: number, name: string, type: string) {
-    console.log();
     await this._chatService
       .getChannelById(id)
       .then(async (channel) => {
