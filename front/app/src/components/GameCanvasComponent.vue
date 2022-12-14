@@ -3,11 +3,11 @@
     <div class="opponent">
       <div :style="'font-size: ' + textSize + 'px;'" class="elo txt">{{ opponent.elo }}</div>
       <div :style="'font-size: ' + textSize + 'px;'" class="name txt">{{ opponent.nickname }}</div>
-      <img :src="User.getAvatar(opponent)" />
+      <img :src="User.getAvatar(store.user!)" />
     </div>
     <canvas class="canvas" ref="canvas"> </canvas>
     <div class="us">
-      <img :src="User.getAvatar(us)" />
+      <img :src="User.getAvatar(store.user!)" />
       <div :style="'font-size: ' + textSize + 'px;'" class="name txt">{{ us.nickname }}</div>
       <div :style="'font-size: ' + textSize + 'px;'" class="elo txt">{{ us.elo }}</div>
     </div>
@@ -33,6 +33,7 @@ import plateauBUrl from "../assets/plateaubas.png";
 import powerChargeUrl from "../assets/powerCharge.png";
 import slotUrl from "../assets/slot.png";
 import fillRedUrl from "../assets/slot_fill_enemy.png";
+import { toRef } from "vue";
 
 const store = useStore();
 
@@ -123,7 +124,18 @@ let gState: GameState = {
 };
 
 let gStateRender: GameState;
-let gStatePredicted: GameState;
+
+const defaultGameOptions: GameOptions = {
+  scoreMax: 20,
+  ballSpeed: 1,
+  ballSize: 1,
+  barSpeed: 1,
+  barSize: 1,
+  smashStrength: 1,
+  effects: true,
+  powers: true,
+  smashes: true,
+};
 
 let theRoom: GameRoom;
 
@@ -307,7 +319,7 @@ function drawParticle(ctx: CanvasRenderingContext2D, gameState: GameState) {
   });
 }
 function drawScore(ctx: CanvasRenderingContext2D, gameState: GameState) {
-  let slot = props.gameOptions.scoreMax;
+  let slot = toRef(props, "gameOptions").value.scoreMax;
 
   for (let i = 0; i < slot; i++) {
     ctx.drawImage(slotImg, cWidth * 0.25 + ((cWidth * 0.5) / (slot + 1)) * (i + 1) - 10 * scale, cHeight * 0.148 - 25 * scale, 20 * scale, 20 * scale);
@@ -517,10 +529,10 @@ const wallBallCollision = (state: GameState) => {
 };
 
 const predict = () => {
-  gStatePredicted.ball.pos.x += gStatePredicted.ball.speed.x;
-  gStatePredicted.ball.pos.y += gStatePredicted.ball.speed.y;
-  wallBallCollision(gStatePredicted);
-  gStatePredicted.frame++;
+  gState.ball.pos.x += gState.ball.speed.x;
+  gState.ball.pos.y += gState.ball.speed.y;
+  wallBallCollision(gState);
+  gState.frame++;
 };
 
 const particleEvent = (gameState: GameState) => {
@@ -531,17 +543,15 @@ const particleEvent = (gameState: GameState) => {
 };
 
 const gameLoop = () => {
-  gStatePredicted = JSON.parse(JSON.stringify(gState));
+  let currentFrame = 0;
+
   let intervalId = setInterval(function () {
     if (gState.state == "end") clearInterval(intervalId);
-    // if (gState.frame >= gStatePredicted.frame && gState.state == "play") {
-    //   predict();
-    //   scalePosition(gStatePredicted);
-    // } else {
-    //   gStatePredicted = JSON.parse(JSON.stringify(gState));
-    scalePosition(gState);
-    // }
+    if (gState.frame < currentFrame && gState.state == "play") {
+      predict();
+    }
     if (ctx) {
+      scalePosition(gState);
       particleEvent(gStateRender);
       clientScore.value = gStateRender.score.client;
       hostScore.value = gStateRender.score.host;
@@ -552,8 +562,10 @@ const gameLoop = () => {
         hSmashingPercent += 2;
       } else if (!gStateRender.hostBar.smashing || kickOff) hSmashingPercent = 0;
       render(ctx, gStateRender);
+      gState.frame = currentFrame;
+      currentFrame++;
     }
-  }, 1000 / 120);
+  }, 1000 / 60);
 };
 </script>
 <style lang="scss" scoped>

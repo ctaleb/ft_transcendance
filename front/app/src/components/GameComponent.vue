@@ -145,7 +145,7 @@ const customReady = ref("Ready ?");
 const readyButton = ref(false);
 
 const gameOpts = reactive<GameOptions>({
-  scoreMax: 5,
+  scoreMax: 100,
   ballSpeed: 1,
   ballSize: 1,
   barSpeed: 1,
@@ -195,7 +195,6 @@ function findMatch() {
   displayLoading.value = true;
   startButton.value = true;
   lobbyStatus.value = "queuing";
-  console.log("finding match queuing");
   powers.value = false;
   socketLocal?.value?.emit("joinQueue", {
     power: power.value,
@@ -466,6 +465,7 @@ const startGame = (gameRoom: GameRoom) => {
   // powers.value = false;
   theRoom = gameRoom;
   updateOpts(theRoom.options);
+
   hostName.value = theRoom.hostName;
   clientName.value = theRoom.clientName;
   if (store.user!.id === gameRoom.opponent.id) {
