@@ -33,7 +33,7 @@ import {
 const chargeMax = 1;
 const ballSize = 16;
 const defaultGameOptions: GameOptions = {
-  scoreMax: 5,
+  scoreMax: 3,
   ballSpeed: 1,
   ballSize: 1,
   barSpeed: 1,
