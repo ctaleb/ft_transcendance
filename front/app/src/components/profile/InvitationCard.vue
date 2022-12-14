@@ -44,7 +44,7 @@ const befriend = async (invitation: User) => {
     .then(() => {
       store.user?.invitations?.splice(store.user?.invitations?.indexOf(invitation), 1);
       store.user?.friends?.push(invitation);
-      socketLocal.value?.emit("befriend", { id: store.user?.id, addresseeId: invitation.id, target: invitation.nickname, requester: store.user?.nickname });
+      socketLocal.value?.emit("befriend", { id: store.user?.id, addresseeId: invitation.id });
     })
     .catch(() => {});
 };
