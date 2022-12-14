@@ -41,7 +41,7 @@ const joinChannel = async (channel: Channel): Promise<void> => {
 const declineInvitation = async (channel: Channel) => {
   await fetchJSONDatas("api/chat/decline-invitation", "DELETE", { id: channel.id })
     .then(() => {
-      addAlertMessage("Invitation delined", 1);
+      addAlertMessage("Invitation declined", 3);
       emits("declineInvitation", channel);
     })
     .catch(() => {});

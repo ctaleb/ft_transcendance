@@ -61,8 +61,8 @@ const mute = async () => {
     minutes: +picked.value,
   })
     .then(() => {
-      if (+picked.value == 0) addAlertMessage(`${props.member.nickname} has successfully been unmuted`, 1);
-      else addAlertMessage(`${props.member.nickname} has successfully been muted`, 1);
+      if (+picked.value == 0) addAlertMessage(`${props.member.nickname} has successfully been unmuted`, 2);
+      else addAlertMessage(`${props.member.nickname} has successfully been muted`, 2);
       emits("closeMuteModal");
     })
     .catch(() => {});
