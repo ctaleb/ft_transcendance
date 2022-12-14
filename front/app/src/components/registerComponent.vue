@@ -8,7 +8,7 @@
     <input :type="passwordFieldType" v-model="v$.password.firstTry.$model" id="password" name="password" placeholder="Password" />
     <!--<button class="right" type="button" @click.prevent="hidePassword = !hidePassword">show / hide</button>-->
     <span v-if="v$.password.firstTry.$errors.length > 0">
-      Password must contains at least one uppercase, one lowercase, one special character, and be between 9 and 13 characters long.
+      Password must contains at least one uppercase, one lowercase, one special character, one digit and be longer than 9 characters.
     </span>
     <input type="password" v-model="v$.password.confirmation.$model" autocomplete="off" placeholder="Confirm password" />
     <span v-for="error in v$.password.confirmation.$errors" :key="error.$uid">

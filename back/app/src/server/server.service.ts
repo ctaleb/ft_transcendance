@@ -4,11 +4,12 @@ import { instanceToPlain } from 'class-transformer';
 import { timeout } from 'rxjs';
 import { Server, Socket } from 'socket.io';
 import { ChatService } from 'src/chat/chat.service';
+import { ChannelMemberEntity, ChannelRole } from 'src/chat/entities/channel_member.entity';
 import { UserEntity } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
 import { Repository } from 'typeorm';
 import { CreateMessageDto } from './dto/create-message.dto';
-import { Channel } from './entities/channel';
+import { Channel, ChannelType } from './entities/channel';
 import { GameSummaryData, MatchHistoryEntity } from './entities/match_history.entity';
 import {
   ChatRoom,
@@ -64,31 +65,33 @@ export class ServerService {
 
   //generic stuff
   async newUser(token: string, user: string, sock?: Socket) {
-    const bdd_user: UserEntity = await this._userService.getUserByNickname(user).catch();
-    if (bdd_user) {
-      const newUser: User = {
-        token: token,
-        socket: sock,
-        name: user,
-        id: bdd_user.id,
-        status: 'online',
-        gameData: {
-          input: [],
-          left: false,
-          right: false,
-          elo: bdd_user.elo,
-          smashLeft: 0,
-          smashRight: 0,
-          status: 'idle',
-          power: new IPower('init'),
-        },
-        chatData: {
-          RoomList: [],
-        },
-      };
-      this.updateStatus(newUser.id, 'online');
-      this.userList.push(newUser);
-    }
+    await this._userService
+      .getUserByNickname(user)
+      .then((bdd_user) => {
+        const newUser: User = {
+          token: token,
+          socket: sock,
+          name: user,
+          id: bdd_user.id,
+          status: 'online',
+          gameData: {
+            input: [],
+            left: false,
+            right: false,
+            elo: bdd_user.elo,
+            smashLeft: 0,
+            smashRight: 0,
+            status: 'idle',
+            power: new IPower('init'),
+          },
+          chatData: {
+            RoomList: [],
+          },
+        };
+        this.updateStatus(newUser.id, 'online');
+        this.userList.push(newUser);
+      })
+      .catch(() => {});
   }
 
   //status stuff
@@ -892,30 +895,57 @@ export class ServerService {
   }
 
   async updateChannelMembers(channelId: number, client: Socket) {
-    const channels = await this._chatService.getUserChannels(client.handshake.auth.user.id);
-    if (channels.find((ell) => ell.id === channelId)) {
+    const member = await ChannelMemberEntity.findOneBy({ channel: { id: channelId }, user: { id: client.handshake.auth.user.id } });
+    if (member && member.role !== ChannelRole.MEMBER) {
+      console.log('updateChannelMembers');
       this.server.to(`${channelId}`).emit('updateChannelMembers', channelId);
     }
   }
 
   async joinChannelRoom(client: Socket, channelId: number) {
-    const channels = await this._chatService.getUserChannels(client.handshake.auth.user.id);
-    if (channels.find((ell) => ell.id === channelId)) {
-      this.server.to(`${channelId}`).emit('updateChannelMembers', channelId);
-      client.join(`${channelId}`);
-    }
+    await this._chatService
+      .getChannelById(channelId)
+      .then(async (channel) => {
+        if (channel) {
+          const member = await ChannelMemberEntity.findOneBy({ channel: { id: channelId }, user: { id: client.handshake.auth.user.id } });
+          if (member) {
+            console.log('joinChannelRoom');
+            this.server.to(`${channelId}`).emit('updateChannelMembers', channelId);
+            client.join(`${channelId}`);
+          }
+        }
+      })
+      .catch(() => {});
   }
 
   async leaveChannelRoom(client: Socket, channelId: number) {
-    this.server.to(`${channelId}`).emit('updateChannelMembers', channelId);
-    client.leave(`${channelId}`);
+    await this._chatService
+      .getChannelById(channelId)
+      .then(async (channel) => {
+        if (channel) {
+          const member = await ChannelMemberEntity.findOneBy({ channel: { id: channelId }, user: { id: client.handshake.auth.user.id } });
+          if (!member) {
+            console.log('leaveChannelRoom');
+            this.server.to(`${channelId}`).emit('updateChannelMembers', channelId);
+            client.leave(`${channelId}`);
+          }
+        }
+      })
+      .catch(() => {});
   }
 
   async updateChannel(client: Socket, id: number, name: string, type: string) {
-    const channels = await this._chatService.getUserChannels(client.handshake.auth.user.id);
-    const channel = channels.find((ell) => ell.id === id);
-    if (channel) {
-      this.server.to(`${channel.id}`).emit('channelUpdatd', { id: channel.id, name: channel.name, type: channel.type });
-    }
+    console.log();
+    await this._chatService
+      .getChannelById(id)
+      .then(async (channel) => {
+        if (channel && channel.name === name) {
+          const owner = await ChannelMemberEntity.findOneBy({ channel: { id: id }, user: { id: client.handshake.auth.user.id } });
+          if (owner && owner.role === ChannelRole.OWNER) {
+            this.server.to(`${channel.id}`).emit('channelUpdatd', { id: channel.id, name: channel.name, type: channel.type });
+          }
+        }
+      })
+      .catch(() => {});
   }
 }

@@ -1,6 +1,6 @@
 <template>
   <div id="chat">
-    <ChatMenu :channels="myChannels" :convs="privateConvs!" />
+    <ChatMenu :channels="myChannels" />
     <ChatWindow @update-channels-list="updateChannelsList()" />
   </div>
 </template>
