@@ -144,7 +144,17 @@ const friendName = ref("Placeholder");
 const customReady = ref("Ready ?");
 const readyButton = ref(false);
 
-let gameOpts: GameOptions;
+const gameOpts = reactive<GameOptions>({
+  scoreMax: 5,
+  ballSpeed: 1,
+  ballSize: 1,
+  barSpeed: 1,
+  barSize: 1,
+  smashStrength: 1,
+  effects: true,
+  powers: true,
+  smashes: true,
+});
 
 const power = ref("");
 
@@ -213,18 +223,28 @@ function readyUp() {
     });
   }
 }
-function updateOpts() {
-  gameOpts = {
-    scoreMax: scoreMax.value,
-    ballSpeed: ballSpeed.value,
-    ballSize: ballSize.value,
-    barSpeed: barSpeed.value,
-    barSize: barSize.value,
-    smashStrength: smashStrength.value,
-    effects: effects.value,
-    powers: powers.value,
-    smashes: smashes.value,
-  };
+function updateOpts(opts?: GameOptions) {
+  if (opts) {
+    gameOpts.scoreMax = opts.scoreMax;
+    gameOpts.ballSpeed = opts.ballSpeed;
+    gameOpts.ballSize = opts.ballSize;
+    gameOpts.barSpeed = opts.barSpeed;
+    gameOpts.barSize = opts.barSize;
+    gameOpts.smashStrength = opts.smashStrength;
+    gameOpts.effects = opts.effects;
+    gameOpts.powers = opts.powers;
+    gameOpts.smashes = opts.smashes;
+  } else {
+    gameOpts.scoreMax = scoreMax.value;
+    gameOpts.ballSpeed = ballSpeed.value;
+    gameOpts.ballSize = ballSize.value;
+    gameOpts.barSpeed = barSpeed.value;
+    gameOpts.barSize = barSize.value;
+    gameOpts.smashStrength = smashStrength.value;
+    gameOpts.effects = effects.value;
+    gameOpts.powers = powers.value;
+    gameOpts.smashes = smashes.value;
+  }
 }
 function toggleGameQueue() {
   toggleLadder.value = toggleLadder.value ? false : true;
@@ -445,6 +465,7 @@ const startGame = (gameRoom: GameRoom) => {
   // if (toggleInvited.value) toggleInvited.value = false;
   // powers.value = false;
   theRoom = gameRoom;
+  updateOpts(theRoom.options);
   hostName.value = theRoom.hostName;
   clientName.value = theRoom.clientName;
   if (store.user!.id === gameRoom.opponent.id) {
