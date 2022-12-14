@@ -54,7 +54,7 @@ import { Channel, isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
 import { Message, transformDate } from "@/types/Message";
 import { User } from "@/types/User";
-import { nextTick, onMounted, ref, watch } from "vue";
+import { nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import defaultAvatarUrl from "../../assets/defaultAvatar.png";
 
 const defaultAvatarImg = new Image();
@@ -181,7 +181,7 @@ onMounted(() => {
       if (store.currentChat && store.currentChat!.messages && store.currentChat!.messages!.length < 20) disableLoadMore.value = true;
     }
   );
-  if (!socketLocal.value?.hasListeners("updateChannelMembers")) {
+  if (socketLocal.value) {
     socketLocal.value?.on("updateChannelMembers", async (channelId: number) => {
       if (store.currentChat && isChannel(store.currentChat) && channelId === store.currentChat.id) {
         await fetchJSONDatas("api/chat/members", "POST", {
@@ -202,25 +202,28 @@ onMounted(() => {
   watch(
     () => socketLocal.value,
     () => {
-      if (!socketLocal.value?.hasListeners("updateChannelMembers")) {
-        socketLocal.value?.on("updateChannelMembers", async (channelId: number) => {
-          if (store.currentChat && isChannel(store.currentChat) && channelId === store.currentChat.id) {
-            await fetchJSONDatas("api/chat/members", "POST", {
-              id: store.currentChat!.id,
+      socketLocal.value?.removeListener("updateChannelMembers");
+      socketLocal.value?.on("updateChannelMembers", async (channelId: number) => {
+        if (store.currentChat && isChannel(store.currentChat) && channelId === store.currentChat.id) {
+          await fetchJSONDatas("api/chat/members", "POST", {
+            id: store.currentChat!.id,
+          })
+            .then((data) => {
+              store.currentChat?.messages?.forEach((msg) => {
+                if (!data.find((member: any) => member.nickname === msg.author)) msg.author = "UNKNOWN";
+              });
+              store.$patch({
+                currentChat: { members: data },
+              });
             })
-              .then((data) => {
-                store.currentChat?.messages?.forEach((msg) => {
-                  if (!data.find((member: any) => member.nickname === msg.author)) msg.author = "UNKNOWN";
-                });
-                store.$patch({
-                  currentChat: { members: data },
-                });
-              })
-              .catch(() => {});
-          }
-        });
-      }
+            .catch(() => {});
+        }
+      });
     }
   );
+});
+
+onUnmounted(() => {
+  socketLocal.value?.removeListener("updateChannelMembers");
 });
 </script>

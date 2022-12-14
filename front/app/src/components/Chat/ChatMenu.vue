@@ -46,7 +46,7 @@ import { privateConvs, socketLocal, useStore } from "@/store";
 import { Channel, ChannelType, isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
 import { User } from "@/types/User";
-import { onMounted, onUpdated, Ref, ref, watch } from "vue";
+import { onMounted, onUnmounted, onUpdated, Ref, ref, watch } from "vue";
 import { transformDate } from "@/types/Message";
 
 const props = defineProps<{
@@ -145,7 +145,7 @@ onMounted(() => {
       friends.value = store.user?.friends?.filter((user) => !privateConvs.value.find((conv) => conv.other.id === user.id));
     }
   );
-  if (!socketLocal.value?.hasListeners("friendTooConv")) {
+  if (socketLocal.value) {
     socketLocal.value?.on("friendTooConv", async (friendId: number) => {
       await fetchJSONDatas(`api/privateConv/create/${friendId}`, "GET")
         .then((data) => {
@@ -154,16 +154,12 @@ onMounted(() => {
         })
         .catch(() => {});
     });
-  }
-  if (!socketLocal.value?.hasListeners("channelUpdatd")) {
     socketLocal.value?.on("channelUpdatd", (data: { id: number; name: string; type: ChannelType }) => {
       const index = props.channels.findIndex((el) => el.id === data.id);
       if (index !== -1) {
         props.channels[index].type = data.type;
       }
     });
-  }
-  if (!socketLocal.value?.hasListeners("newConv")) {
     socketLocal.value?.on("newConv", async (userId: number) => {
       await fetchJSONDatas(`api/privateConv/create/${userId}`, "GET")
         .then((data) => {
@@ -175,26 +171,38 @@ onMounted(() => {
   watch(
     () => socketLocal.value,
     () => {
-      if (!socketLocal.value?.hasListeners("friendTooConv")) {
-        socketLocal.value?.on("friendTooConv", async (friendId: number) => {
-          await fetchJSONDatas(`api/privateConv/create/${friendId}`, "GET")
-            .then((data) => {
-              privateConvs.value.unshift(data.conv);
-              friends.value = store.user?.friends?.filter((user) => !privateConvs.value.find((conv) => conv.other.id === user.id));
-            })
-            .catch(() => {});
-        });
-      }
-      if (!socketLocal.value?.hasListeners("channelUpdatd")) {
-        socketLocal.value?.on("channelUpdatd", (data: { id: number; name: string; type: ChannelType }) => {
-          const index = props.channels.findIndex((el) => el.id === data.id);
-          if (index !== -1) {
-            props.channels[index].type = data.type;
-          }
-        });
-      }
+      socketLocal.value?.removeListener("friendTooConv");
+      socketLocal.value?.on("friendTooConv", async (friendId: number) => {
+        await fetchJSONDatas(`api/privateConv/create/${friendId}`, "GET")
+          .then((data) => {
+            privateConvs.value.unshift(data.conv);
+            friends.value = store.user?.friends?.filter((user) => !privateConvs.value.find((conv) => conv.other.id === user.id));
+          })
+          .catch(() => {});
+      });
+      socketLocal.value?.removeListener("channelUpdatd");
+      socketLocal.value?.on("channelUpdatd", (data: { id: number; name: string; type: ChannelType }) => {
+        const index = props.channels.findIndex((el) => el.id === data.id);
+        if (index !== -1) {
+          props.channels[index].type = data.type;
+        }
+      });
+      socketLocal.value?.removeListener("newConv");
+      socketLocal.value?.on("newConv", async (userId: number) => {
+        await fetchJSONDatas(`api/privateConv/create/${userId}`, "GET")
+          .then((data) => {
+            privateConvs.value.unshift(data.conv);
+          })
+          .catch(() => {});
+      });
     }
   );
+});
+
+onUnmounted(() => {
+  socketLocal.value?.removeListener("channelUpdatd");
+  socketLocal.value?.removeListener("newConv");
+  socketLocal.value?.removeListener("friendTooConv");
 });
 </script>
 

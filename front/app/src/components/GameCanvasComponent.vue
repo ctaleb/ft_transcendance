@@ -85,10 +85,10 @@ fillRedImg.src = fillRedUrl;
 
 const canvas = ref<HTMLCanvasElement>();
 let ctx: CanvasRenderingContext2D | null | undefined;
-let cHeight = 0;
-let cWidth = 0;
-let scale = 0;
-let offset = 0;
+let cHeight: number = 0;
+let cWidth: number = 0;
+let scale: number = 0;
+let offset: number = 0;
 
 const hostScore = ref(0);
 const clientScore = ref(0);
@@ -319,10 +319,9 @@ function drawParticle(ctx: CanvasRenderingContext2D, gameState: GameState) {
   });
 }
 function drawScore(ctx: CanvasRenderingContext2D, gameState: GameState) {
-  const slot = props.gameOptions.scoreMax;
-
-  for (let i = 0; i < slot; i++) {
-    ctx.drawImage(slotImg, cWidth * 0.25 + ((cWidth * 0.5) / (slot + 1)) * (i + 1) - 10 * scale, cHeight * 0.148 - 25 * scale, 20 * scale, 20 * scale);
+  const slot: number = props.gameOptions.scoreMax;
+  for (let i: number = 0; i < slot; i++) {
+    ctx.drawImage(slotImg, cWidth * 0.25 + ((cWidth * 0.5) / (+slot + 1)) * (i + 1) - 10 * scale, cHeight * 0.148 - 25 * scale, 20 * scale, 20 * scale);
     if (i < gameState.score.client)
       ctx.drawImage(
         fillRedImg,
@@ -332,8 +331,8 @@ function drawScore(ctx: CanvasRenderingContext2D, gameState: GameState) {
         12 * scale
       );
   }
-  for (let i = 0; i < slot; i++) {
-    ctx.drawImage(slotImg, cWidth * 0.25 + ((cWidth * 0.5) / (slot + 1)) * (i + 1) - 10 * scale, cHeight * 0.894 - 25 * scale, 20 * scale, 20 * scale);
+  for (let i: number = 0; i < slot; i++) {
+    ctx.drawImage(slotImg, cWidth * 0.25 + ((cWidth * 0.5) / (+slot + 1)) * (i + 1) - 10 * scale, cHeight * 0.894 - 25 * scale, 20 * scale, 20 * scale);
     if (i < gameState.score.host)
       ctx.drawImage(
         fillImg,
@@ -443,8 +442,6 @@ function scaling(ctx?: CanvasRenderingContext2D | null) {
 }
 function scalePosition(gameState: GameState) {
   gStateRender = JSON.parse(JSON.stringify(gameState));
-  let scale = cWidth / 500;
-  let offset = (cHeight - cWidth) / 2;
   gStateRender.ball.pos.x *= scale;
   gStateRender.ball.pos.y *= scale;
   gStateRender.ball.pos.y += offset;
