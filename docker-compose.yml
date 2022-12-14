@@ -26,31 +26,31 @@ services:
     # http://localhost:8080/ to access adminer page
     ports:
       - 8080:8080
-  #back:
-  #  depends_on:
-  #    - database
-  #  image: back
-  #  container_name: back
-  #  networks:
-  #    - 42network
-  #  init: true
-  #  build: back/.
-  #  restart: unless-stopped
-  #  ports:
-  #    - 3000:3000
-  #    - 3500:3500
-  #front:
-  #  depends_on:
-  #    - back
-  #  image: front
-  #  container_name: front
-  #  networks:
-  #    - 42network
-  #  init: true
-  #  build: front/.
-  #  restart: unless-stopped
-  #  ports:
-  #    - 4000:4000
+  back:
+    depends_on:
+      - database
+    image: back
+    container_name: back
+    networks:
+      - 42network
+    init: true
+    build: back/.
+    restart: unless-stopped
+    ports:
+      - 3000:3000
+      - 3500:3500
+  front:
+    depends_on:
+      - back
+    image: front
+    container_name: front
+    networks:
+      - 42network
+    init: true
+    build: front/.
+    restart: unless-stopped
+    ports:
+      - 4000:4000
 networks:
   42network:
     name: 42network

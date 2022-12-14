@@ -60,6 +60,9 @@ const configService = new ConfigService(process.env).ensureValues([
   'POSTGRES_PASSWORD',
   'POSTGRES_DB',
   'JWT_KEY',
+  'VUE_APP_42_ID',
+  'VUE_APP_42_SECRET',
+  'VUE_APP_42_URI',
 ]);
 
 export { configService };
