@@ -60,6 +60,7 @@ export class AuthenticationController {
             filename: 'pizz.jpeg',
             mimetype: 'image/jpeg',
           },
+		  false,
     );
   }
 
