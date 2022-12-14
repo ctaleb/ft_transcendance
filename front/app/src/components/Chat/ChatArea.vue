@@ -41,7 +41,7 @@
       <div ref="messagesBoxRef"></div>
     </div>
     <div class="chat-input">
-      <input type="text" class="input" name="messageField" v-model="messageField" placeholder="Write your message" />
+      <input type="text" class="input" name="messageField" v-model="messageField" placeholder="Write your message" maxlength="2000" />
       <button class="button pulse" @click="sendMessage()"><img src="../../assets/sendIcon.svg" alt="" /></button>
     </div>
   </div>
