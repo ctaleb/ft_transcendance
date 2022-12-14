@@ -219,6 +219,7 @@ export class ServerService {
   }
 
   reconnect(player: User) {
+    player.gameData.status = 'idle';
     this.updateStatus(player.id, 'online');
     let game = this.games.find((element) => element.host.name === player.name);
     if (game) {
