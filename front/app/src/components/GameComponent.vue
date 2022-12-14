@@ -185,6 +185,7 @@ function findMatch() {
   displayLoading.value = true;
   startButton.value = true;
   lobbyStatus.value = "queuing";
+  console.log("finding match queuing");
   powers.value = false;
   socketLocal?.value?.emit("joinQueue", {
     power: power.value,
@@ -252,8 +253,10 @@ onMounted(() => {
 
   store.$subscribe((mutation, state) => {
     if (store.user?.status == "inQueue" || store.user?.status == "inLobby") {
-      lobbyStatus.value = "queuing";
-      displayLoading.value = true;
+      if (lobbyStatus.value != "playing") {
+        lobbyStatus.value = "queuing";
+        displayLoading.value = true;
+      }
     } else if (store.user?.status == "online") {
       lobbyStatus.value = "lobby";
       startButton.value = false;
@@ -261,8 +264,12 @@ onMounted(() => {
       displayLoading.value = false;
       customReady.value = "Ready ?";
       powers.value = true;
-    } else if (store.user?.status == "inGame") {
-      lobbyStatus.value = "playing";
+      // } else if (store.user?.status == "inGame") {
+      //   lobbyStatus.value = "playing";
+    } else if (store.user?.status == "hostingCustomLobby") {
+      lobbyStatus.value = "settingsInviter";
+    } else if (store.user?.status == "inCustomLobby") {
+      lobbyStatus.value = "settingsInvitee";
     }
   });
 
@@ -332,7 +339,6 @@ const foreverAlone = (friend: string) => {
 };
 
 const spectating = (gameRoom: GameRoom) => {
-  // console.log("watching game");
   theRoom = gameRoom;
   hostName.value = theRoom.hostName;
   clientName.value = theRoom.clientName;
@@ -346,7 +352,6 @@ const spectating = (gameRoom: GameRoom) => {
 };
 
 const reconnect = (gameRoom: GameRoom) => {
-  console.log("reconnecting");
   theRoom = gameRoom;
   hostName.value = theRoom.hostName;
   clientName.value = theRoom.clientName;

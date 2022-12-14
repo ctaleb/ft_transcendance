@@ -395,4 +395,10 @@ body {
 .inCustomLobby {
   color: skyblue !important;
 }
+.hostingCustomLobby {
+  color: skyblue !important;
+}
+.invited {
+  color: darkblue !important;
+}
 </style>
