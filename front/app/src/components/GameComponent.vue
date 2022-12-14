@@ -7,7 +7,7 @@
       <Modal :title="sumTitle" :data="gameSummary" :opponent="opponent" :host="host" :start="start" :end="end" @close="showSummary(false)"></Modal>
       <!-- <Modal :title="sumTitle" :data="gameSummary" :opponent="opponentImg.src" :start="start" :end="end" @close="showSummary(false)"></Modal> -->
     </div>
-    <div class="principalSection">
+    <div v-if="lobbyStatus != 'playing'" class="principalSection">
       <div v-if="lobbyStatus == 'settingsInviter' || lobbyStatus == 'settingsInvitee' || lobbyStatus == 'lobby'" class="mainContainer">
         <div>
           <power-slider-component v-model="power" id="powerSlider" />
@@ -85,7 +85,7 @@
     <button v-if="lobbyStatus == 'queuing'" class="button" @click="leaveQueue()">Leave queue</button>
     <!-- BUTTON TO LEAVE QUEUE -->
     <div v-if="lobbyStatus == 'playing' || lobbyStatus == 'spectating'" class="ladder">
-      <GameCanvasComponent :opponent="store.user!" :us="store.user!" :gameOptions="gameOpts"></GameCanvasComponent>
+      <GameCanvasComponent :opponent="opponent" :us="host" :gameOptions="gameOpts"></GameCanvasComponent>
     </div>
     <div v-else class="custom"></div>
     <svg preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" :class="!displayLoading ? 'bottomSvg' : ' hidden'">
@@ -144,7 +144,17 @@ const friendName = ref("Placeholder");
 const customReady = ref("Ready ?");
 const readyButton = ref(false);
 
-let gameOpts: GameOptions;
+const gameOpts = reactive<GameOptions>({
+  scoreMax: 100,
+  ballSpeed: 1,
+  ballSize: 1,
+  barSpeed: 1,
+  barSize: 1,
+  smashStrength: 1,
+  effects: true,
+  powers: true,
+  smashes: true,
+});
 
 const power = ref("");
 
@@ -212,18 +222,28 @@ function readyUp() {
     });
   }
 }
-function updateOpts() {
-  gameOpts = {
-    scoreMax: scoreMax.value,
-    ballSpeed: ballSpeed.value,
-    ballSize: ballSize.value,
-    barSpeed: barSpeed.value,
-    barSize: barSize.value,
-    smashStrength: smashStrength.value,
-    effects: effects.value,
-    powers: powers.value,
-    smashes: smashes.value,
-  };
+function updateOpts(opts?: GameOptions) {
+  if (opts) {
+    gameOpts.scoreMax = opts.scoreMax;
+    gameOpts.ballSpeed = opts.ballSpeed;
+    gameOpts.ballSize = opts.ballSize;
+    gameOpts.barSpeed = opts.barSpeed;
+    gameOpts.barSize = opts.barSize;
+    gameOpts.smashStrength = opts.smashStrength;
+    gameOpts.effects = opts.effects;
+    gameOpts.powers = opts.powers;
+    gameOpts.smashes = opts.smashes;
+  } else {
+    gameOpts.scoreMax = scoreMax.value;
+    gameOpts.ballSpeed = ballSpeed.value;
+    gameOpts.ballSize = ballSize.value;
+    gameOpts.barSpeed = barSpeed.value;
+    gameOpts.barSize = barSize.value;
+    gameOpts.smashStrength = smashStrength.value;
+    gameOpts.effects = effects.value;
+    gameOpts.powers = powers.value;
+    gameOpts.smashes = smashes.value;
+  }
 }
 function toggleGameQueue() {
   toggleLadder.value = toggleLadder.value ? false : true;
@@ -252,8 +272,10 @@ onMounted(() => {
 
   store.$subscribe((mutation, state) => {
     if (store.user?.status == "inQueue" || store.user?.status == "inLobby") {
-      lobbyStatus.value = "queuing";
-      displayLoading.value = true;
+      if (lobbyStatus.value != "playing") {
+        lobbyStatus.value = "queuing";
+        displayLoading.value = true;
+      }
     } else if (store.user?.status == "online") {
       lobbyStatus.value = "lobby";
       startButton.value = false;
@@ -261,6 +283,12 @@ onMounted(() => {
       displayLoading.value = false;
       customReady.value = "Ready ?";
       powers.value = true;
+      // } else if (store.user?.status == "inGame") {
+      //   lobbyStatus.value = "playing";
+    } else if (store.user?.status == "hostingCustomLobby") {
+      lobbyStatus.value = "settingsInviter";
+    } else if (store.user?.status == "inCustomLobby") {
+      lobbyStatus.value = "settingsInvitee";
     }
   });
 
@@ -308,11 +336,13 @@ const unregisterSockets = (socket: any) => {
   socket?.value?.removeListener("customInvitation");
 };
 
+//do away with this and try using status directly ?
 const customInviter = (friend: string) => {
   friendName.value = friend;
   lobbyStatus.value = "settingsInviter";
 };
 
+//do away with this and try using status directly ?
 const customInvitee = (friend: string) => {
   friendName.value = friend;
   lobbyStatus.value = "settingsInvitee";
@@ -328,7 +358,6 @@ const foreverAlone = (friend: string) => {
 };
 
 const spectating = (gameRoom: GameRoom) => {
-  // console.log("watching game");
   theRoom = gameRoom;
   hostName.value = theRoom.hostName;
   clientName.value = theRoom.clientName;
@@ -342,7 +371,6 @@ const spectating = (gameRoom: GameRoom) => {
 };
 
 const reconnect = (gameRoom: GameRoom) => {
-  console.log("reconnecting");
   theRoom = gameRoom;
   hostName.value = theRoom.hostName;
   clientName.value = theRoom.clientName;
@@ -436,6 +464,8 @@ const startGame = (gameRoom: GameRoom) => {
   // if (toggleInvited.value) toggleInvited.value = false;
   // powers.value = false;
   theRoom = gameRoom;
+  updateOpts(theRoom.options);
+
   hostName.value = theRoom.hostName;
   clientName.value = theRoom.clientName;
   if (store.user!.id === gameRoom.opponent.id) {

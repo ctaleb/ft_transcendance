@@ -181,7 +181,7 @@ export class ServerService {
     game.theatre.viewers.forEach((element) => {
       spectator = this.userList.find((usr) => usr.socket.id === element.id);
       if (spectator) {
-        spectator.status = 'online';
+        spectator.gameData.status = 'idle';
         this.updateStatus(spectator.id, 'online');
       }
       element.leave(game.theatre.name);
@@ -210,7 +210,7 @@ export class ServerService {
     game.theatre.viewers.forEach((element) => {
       const spectator = this.userList.find((usr) => usr.socket.id === element.id);
       if (spectator) {
-        spectator.status = 'online';
+        spectator.gameData.status = 'idle';
         this.updateStatus(spectator.id, 'online');
       }
       element.leave(game.theatre.name);
@@ -220,6 +220,7 @@ export class ServerService {
   }
 
   reconnect(player: User) {
+    player.gameData.status = 'idle';
     this.updateStatus(player.id, 'online');
     let game = this.games.find((element) => element.host.name === player.name);
     if (game) {
@@ -417,12 +418,11 @@ export class ServerService {
   joinQueue(socket: Socket, powerName: string) {
     const player = this.userList.find((element) => element.socket === socket);
     if (!player) return;
-    console.log(powerName);
     player.gameData.power = new IPower(powerName);
     if (this.playerQueue.find((element) => element === player)) this.playerQueue.splice(this.playerQueue.indexOf(player), 1);
     if (this.playerQueue.length < 1) {
       this.playerQueue.push(player);
-      player.status = 'inQueue';
+      player.gameData.status = 'inQueue';
       this.updateStatus(player.id, 'inQueue');
     } else {
       const game = this.newGame(player);
@@ -632,7 +632,8 @@ export class ServerService {
       game.gameState.hit.x = game.gameState.ball.pos.x;
       game.gameState.hit.y = game.gameState.ball.pos.y;
       game.gameState.hit.hit = 3;
-      game.gameState.state = 'stop';
+      if (game.gameState.score.client < game.room.options.scoreMax && game.gameState.score.host < game.room.options.scoreMax) game.gameState.state = 'stop';
+      else game.gameState.state = 'end';
       setTimeout(() => {
         this.resetGameState(game);
         game.gameState.state = 'kickoff';
@@ -817,8 +818,9 @@ export class ServerService {
   }
 
   nadal(ball: IBall, effect: string) {
-    if (effect === 'doLeft') this.rotateVector(ball.speed, 0.2);
-    else if (effect === 'doRight') this.rotateVector(ball.speed, -0.2);
+    const M = Math.sqrt(Math.pow(ball.speed.x, 2) + Math.pow(ball.speed.y, 2)) / Math.sqrt(2);
+    if (effect === 'doLeft') this.rotateVector(ball.speed, M / 20);
+    else if (effect === 'doRight') this.rotateVector(ball.speed, -M / 15);
   }
 
   resetHit(state: GameState) {

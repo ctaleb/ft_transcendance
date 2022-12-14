@@ -97,6 +97,7 @@ export default defineComponent({
   },
   methods: {
     async updateNickname() {
+      this.nickname = this.nickname.trim();
       if (this.nickname.length < 1) return;
       let fetch_ret = await funcs.fetchJSONDatas("api/user/nicknameEdit/" + this.nickname, "PUT").catch(() => {
         return null;
@@ -216,7 +217,7 @@ export default defineComponent({
     },
     twoFactorSwitch(event: any) {
       console.log(this.phone);
-      if (this.phone == null) {
+      if (this.phone == null || this.phoneFormatError != "") {
         funcs.addAlertMessage("Missing phone number", 1);
         this.setSwitches(false);
       } else {
