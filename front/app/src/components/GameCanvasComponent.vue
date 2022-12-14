@@ -42,6 +42,18 @@ const props = defineProps<{
   gameOptions: GameOptions;
 }>();
 
+const defaultGameOptions: GameOptions = {
+  scoreMax: 13,
+  ballSpeed: 1,
+  ballSize: 1,
+  barSpeed: 1,
+  barSize: 1,
+  smashStrength: 1,
+  effects: true,
+  powers: true,
+  smashes: true,
+};
+
 const ballImg = new Image();
 ballImg.src = ballUrl;
 const powerChargeImg = new Image();
@@ -307,7 +319,7 @@ function drawParticle(ctx: CanvasRenderingContext2D, gameState: GameState) {
   });
 }
 function drawScore(ctx: CanvasRenderingContext2D, gameState: GameState) {
-  let slot = props.gameOptions.scoreMax;
+  const slot = props.gameOptions.scoreMax;
 
   for (let i = 0; i < slot; i++) {
     ctx.drawImage(slotImg, cWidth * 0.25 + ((cWidth * 0.5) / (slot + 1)) * (i + 1) - 10 * scale, cHeight * 0.148 - 25 * scale, 20 * scale, 20 * scale);
@@ -534,7 +546,6 @@ const particleEvent = (gameState: GameState) => {
 const gameLoop = () => {
   gStatePredicted = JSON.parse(JSON.stringify(gState));
   intervalId = setInterval(function () {
-    console.log("LOLOLOLOL");
     // if (gStateRender.frame >= gStatePredicted.frame && gState.state == "play") {
     //   predict();
     //   scalePosition(gStatePredicted);
