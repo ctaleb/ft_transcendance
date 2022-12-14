@@ -44,6 +44,7 @@
     "cookie-parser": "^1.4.6",
     "dotenv": "^16.0.3",
     "http": "^0.0.1-security",
+    "magic-bytes.js": "^1.0.13",
     "matter-js": "^0.18.0",
     "nest": "^0.1.6",
     "passport": "^0.6.0",

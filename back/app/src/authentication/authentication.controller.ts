@@ -12,6 +12,9 @@ import {
   UseInterceptors,
   Inject,
   UnauthorizedException,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  FileTypeValidator,
 } from '@nestjs/common';
 import { UserEntity } from 'src/user/user.entity';
 import { RegistrationDto } from 'src/authentication/registration.dto';
@@ -38,7 +41,11 @@ export class AuthenticationController {
       fileFilter: imageFileFilter,
     }),
   )
-  async registration(@UploadedFile() avatar: Express.Multer.File, @Body() registrationDto: RegistrationDto): Promise<UserEntity> {
+  async registration(
+    @UploadedFile()
+    avatar: Express.Multer.File,
+    @Body() registrationDto: RegistrationDto,
+  ): Promise<UserEntity> {
     if (registrationDto.nickname.length > 15) throw new UnauthorizedException();
     return this._authenticationService.registration(
       registrationDto,
