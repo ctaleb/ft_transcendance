@@ -438,7 +438,7 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     @MessageBody('message') messageToDeliver: string,
     @MessageBody('friendNickname') friendNickname: string,
   ) {
-    if (!messageToDeliver || !friendNickname) return;
+    if (!messageToDeliver || !friendNickname || messageToDeliver.length > 2000) return;
     let requester: UserEntity;
     const getAuthor = this.serverService.SocketToPlayer(client);
     if (!getAuthor) return;
@@ -487,6 +487,7 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     @MessageBody('channelName') channelName: string,
     @MessageBody('content') content: string,
   ) {
+    if (content.length > 2000) return;
     return await this.serverService.sendChannelMessage(channelId, channelName, content, client.handshake.auth.user.id);
   }
 
