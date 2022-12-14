@@ -125,18 +125,6 @@ let gState: GameState = {
 let gStateRender: GameState;
 let gStatePredicted: GameState;
 
-const defaultGameOptions: GameOptions = {
-  scoreMax: 20,
-  ballSpeed: 1,
-  ballSize: 1,
-  barSpeed: 1,
-  barSize: 1,
-  smashStrength: 1,
-  effects: true,
-  powers: true,
-  smashes: true,
-};
-
 let theRoom: GameRoom;
 
 //DRAW FUNCTIONS
@@ -319,7 +307,7 @@ function drawParticle(ctx: CanvasRenderingContext2D, gameState: GameState) {
   });
 }
 function drawScore(ctx: CanvasRenderingContext2D, gameState: GameState) {
-  let slot = defaultGameOptions.scoreMax;
+  let slot = props.gameOptions.scoreMax;
 
   for (let i = 0; i < slot; i++) {
     ctx.drawImage(slotImg, cWidth * 0.25 + ((cWidth * 0.5) / (slot + 1)) * (i + 1) - 10 * scale, cHeight * 0.148 - 25 * scale, 20 * scale, 20 * scale);
