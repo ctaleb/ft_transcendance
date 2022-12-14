@@ -163,6 +163,15 @@ onMounted(() => {
       }
     });
   }
+  if (!socketLocal.value?.hasListeners("newConv")) {
+    socketLocal.value?.on("newConv", async (userId: number) => {
+      await fetchJSONDatas(`api/privateConv/create/${userId}`, "GET")
+        .then((data) => {
+          privateConvs.value.unshift(data.conv);
+        })
+        .catch(() => {});
+    });
+  }
   watch(
     () => socketLocal.value,
     () => {
