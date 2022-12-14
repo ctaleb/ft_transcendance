@@ -53,7 +53,7 @@ const createChannel = async (): Promise<void> => {
     .then((data: Channel) => {
       emits("createNewChannel", data);
       socketLocal.value?.emit("joinChannelRoom", { id: data.id });
-      addAlertMessage("Channel successfully created", 1);
+      addAlertMessage("Channel successfully created", 2);
       emits("closeChannelModal");
     })
     .catch(() => {});
