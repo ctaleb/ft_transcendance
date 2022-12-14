@@ -1,21 +1,21 @@
 import { Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
+import { unlink } from 'fs';
+import { RegistrationDto } from 'src/authentication/registration.dto';
 import { PostgresErrorCode } from 'src/database/errors.constraint';
+import { ImageDto } from 'src/image/image.dto';
+import { UserEntity } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
 import { DataSource } from 'typeorm';
-import { RegistrationDto } from 'src/authentication/registration.dto';
-import { UserEntity } from 'src/user/user.entity';
-import { UserAlreadyExistException } from 'src/authentication/authentication.exception';
-import { InjectRepository } from '@nestjs/typeorm';
-import * as bcrypt from 'bcrypt';
-import { JwtService } from '@nestjs/jwt';
-import { ImageDto } from 'src/image/image.dto';
-import { unlink } from 'fs';
+import { check_magic_numbers } from '../utils/file-uploading.utils';
 
 @Injectable()
 export class AuthenticationService {
   constructor(private readonly _userService: UserService, private readonly _dataSource: DataSource, private jwtService: JwtService) {}
 
   async registration(registrationDto: RegistrationDto, imageDto: ImageDto): Promise<UserEntity> {
+    if (!(await check_magic_numbers(imageDto.path))) throw new UnauthorizedException('Mimetype');
     let user: UserEntity;
     const queryRunner = this._dataSource.createQueryRunner();
     await queryRunner.connect();

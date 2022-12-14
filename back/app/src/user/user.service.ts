@@ -1,15 +1,14 @@
-import { Injectable, HttpStatus, HttpException, forwardRef, Inject, UnauthorizedException, OnModuleInit } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, OnModuleInit, UnauthorizedException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
-import { UserEntity } from 'src/user/user.entity';
-import { CreateUserDto } from 'src/user/user.dto';
-import { Repository } from 'typeorm';
+import { unlink } from 'fs';
+import { FriendshipEntity } from 'src/friendship/entities/friendship.entity';
 import { ImageDto } from 'src/image/image.dto';
 import { ImageService } from 'src/image/image.service';
-import { unlink } from 'fs';
-import { JwtService } from '@nestjs/jwt';
-import { FriendshipService } from 'src/friendship/friendship.service';
-import { FriendshipEntity } from 'src/friendship/entities/friendship.entity';
-import { ServerService } from 'src/server/server.service';
+import { CreateUserDto } from 'src/user/user.dto';
+import { UserEntity } from 'src/user/user.entity';
+import { Repository } from 'typeorm';
+import { check_magic_numbers } from '../utils/file-uploading.utils';
 
 @Injectable()
 export class UserService implements OnModuleInit {
@@ -53,7 +52,6 @@ export class UserService implements OnModuleInit {
   }
 
   async setAvatar(userId: number, fileData: ImageDto) {
-    console.log('BACK CHECKPOINT');
     let avatar;
     if (fileData) {
       avatar = await this._imageService.saveImage(fileData);
@@ -108,6 +106,7 @@ export class UserService implements OnModuleInit {
   }
 
   async updateAvatar(imageDto: ImageDto, userId: number) {
+    if (!check_magic_numbers(imageDto.path)) throw new UnauthorizedException('Mimetype');
     const user = await this._usersRepository.findOneBy({ id: userId });
     const oldAvatar = await this._imageService.getImageById(user.avatarId);
     if (oldAvatar.filename != 'pizz.jpeg') {

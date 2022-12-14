@@ -133,14 +133,19 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       if (element.room.status === 'launching') {
         if (oldValue == '/game') {
           if (element.client.id === player.id) {
-            if (player.gameData.status === 'inCustomLobby' || player.gameData.status === 'ready') {
+            if (
+              player.gameData.status === 'inCustomLobby' ||
+              player.gameData.status === 'hostingCustomLobby' ||
+              player.gameData.status === 'ready' ||
+              player.gameData.status === 'invited'
+            ) {
               this.serverService.stopCustom(element.host, element.client, element);
             } else if (player.gameData.status === 'readyQ') {
               player.gameData.status = 'idle';
               this.serverService.updateStatus(player.id, 'online');
             }
           } else if (element.host.id === player.id) {
-            if (player.gameData.status === 'inCustomLobby' || player.gameData.status === 'ready') {
+            if (player.gameData.status === 'inCustomLobby' || player.gameData.status === 'hostingCustomLobby' || player.gameData.status === 'ready') {
               this.serverService.stopCustom(element.client, element.host, element);
             } else if (player.gameData.status === 'readyQ') {
               player.gameData.status = 'idle';
@@ -333,10 +338,10 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       game = this.serverService.newGame(usr, inviter);
       game.room.name = 'game-' + game.host.name + '-' + game.client.name;
       game.theatre.name = 'spec-' + game.host.name + '-' + game.client.name;
-      usr.gameData.status = 'inCustomLobby';
-      this.serverService.updateStatus(usr.id, 'inCustomLobby');
-      inviter.gameData.status = 'inCustomLobby';
-      this.serverService.updateStatus(inviter.id, 'inCustomLobby');
+      usr.gameData.status = 'invited';
+      this.serverService.updateStatus(usr.id, 'invited');
+      inviter.gameData.status = 'hostingCustomLobby';
+      this.serverService.updateStatus(inviter.id, 'hostingCustomLobby');
       game.host.socket.join(game.room.name);
       usr.socket.emit('invitation', inviter.name);
       this.serverService.games.push(game);
@@ -351,14 +356,14 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   settingsInviter(@MessageBody('friend') friend: string, @ConnectedSocket() client: Socket) {
     if (!friend) return;
     const player = this.serverService.SocketToPlayer(client);
-    if (!player || player.gameData.status != 'inCustomLobby') return;
+    if (!player || player.gameData.status != 'hostingCustomLobby') return;
     client.emit('customInviter', friend);
   }
   @SubscribeMessage('readyInviter')
   readyInviter(@MessageBody('gameOpts') gameOpts: GameOptions, @MessageBody('power') power: string, @ConnectedSocket() client: Socket) {
     if (!gameOpts || !power) return;
     const usr = this.serverService.SocketToPlayer(client);
-    if (!usr || usr.gameData.status != 'inCustomLobby') return;
+    if (!usr || usr.gameData.status != 'hostingCustomLobby') return;
     const game = this.serverService.games.find((element) => element.host === usr);
     if (!game) return;
     if (game.room.options.powers) usr.gameData.power = new IPower(power);
@@ -389,7 +394,9 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   @SubscribeMessage('settingsInvitee')
   settingsInvitee(@ConnectedSocket() client: Socket) {
     const usr = this.serverService.SocketToPlayer(client);
-    if (!usr && usr.gameData.status != 'inCustomLobby') return;
+    if (!usr || usr.gameData.status != 'invited') return;
+    usr.gameData.status = 'inCustomLobby';
+    this.serverService.updateStatus(usr.id, 'inCustomLobby');
     const game = this.serverService.games.find((element) => element.client === usr);
     if (game) {
       game.client.socket.join(game.room.name);
@@ -421,6 +428,8 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     game.room.status = 'playing';
     game.room.hostName = game.host.name;
     game.room.clientName = game.client.name;
+    game.host.gameData.status = 'playing';
+    game.client.gameData.status = 'playing';
     this.serverService.updateStatus(game.host.id, 'inGame');
     this.serverService.updateStatus(game.client.id, 'inGame');
     game.room.opponent = instanceToPlain(await this.userService.getUserByNickname(game.client.name));

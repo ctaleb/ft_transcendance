@@ -3,8 +3,11 @@ import {
   ClassSerializerInterceptor,
   Controller,
   Delete,
+  FileTypeValidator,
   Get,
+  MaxFileSizeValidator,
   Param,
+  ParseFilePipe,
   ParseIntPipe,
   Put,
   Request,
@@ -14,6 +17,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { join } from 'path';
@@ -109,7 +113,11 @@ export class UserController {
       fileFilter: imageFileFilter,
     }),
   )
-  async editAvatar(@UploadedFile() avatar: Express.Multer.File, @Request() req) {
+  async editAvatar(
+    @UploadedFile()
+    avatar: Express.Multer.File,
+    @Request() req,
+  ) {
     console.log('photo:');
     console.log(avatar);
     return this._userService.updateAvatar(
