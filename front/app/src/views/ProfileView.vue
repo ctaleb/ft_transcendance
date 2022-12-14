@@ -221,6 +221,7 @@ const startConversation = (user?: User) => {
 };
 
 const searchProfile = async () => {
+  searchFriend.value = searchFriend.value.trim();
   if (searchFriend.value.length > 0)
     await getUserByNickname(searchFriend.value)
       .then(() => {
