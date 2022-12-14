@@ -33,8 +33,8 @@ import plateauBUrl from "../assets/plateaubas.png";
 import powerChargeUrl from "../assets/powerCharge.png";
 import slotUrl from "../assets/slot.png";
 import fillRedUrl from "../assets/slot_fill_enemy.png";
-
-const store = useStore();
+import { toRef } from "vue";
+import { useRoute, useRouter } from "vue-router";
 
 const props = defineProps<{
   opponent: User;
@@ -125,7 +125,7 @@ let gState: GameState = {
 let gStateRender: GameState;
 let gStatePredicted: GameState;
 
-let theRoom: GameRoom;
+let intervalId: number | undefined;
 
 //DRAW FUNCTIONS
 
@@ -478,6 +478,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   unregisterSockets(socketLocal);
+  clearInterval(intervalId);
 });
 
 function render(ctx: CanvasRenderingContext2D | null | undefined, gameState: GameState) {
@@ -532,15 +533,15 @@ const particleEvent = (gameState: GameState) => {
 
 const gameLoop = () => {
   gStatePredicted = JSON.parse(JSON.stringify(gState));
-  let intervalId = setInterval(function () {
-    if (gState.state == "end") clearInterval(intervalId);
-    if (gStateRender.frame >= gStatePredicted.frame && gState.state == "play") {
-      predict();
-      scalePosition(gStatePredicted);
-    } else {
-      gStatePredicted = JSON.parse(JSON.stringify(gState));
-      scalePosition(gState);
-    }
+  intervalId = setInterval(function () {
+    console.log("LOLOLOLOL");
+    // if (gStateRender.frame >= gStatePredicted.frame && gState.state == "play") {
+    //   predict();
+    //   scalePosition(gStatePredicted);
+    // } else {
+    // gStatePredicted = JSON.parse(JSON.stringify(gState));
+    scalePosition(gState);
+    // }
     if (ctx) {
       particleEvent(gStateRender);
       clientScore.value = gStateRender.score.client;
