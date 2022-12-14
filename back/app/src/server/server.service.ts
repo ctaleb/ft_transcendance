@@ -816,8 +816,9 @@ export class ServerService {
   }
 
   nadal(ball: IBall, effect: string) {
-    if (effect === 'doLeft') this.rotateVector(ball.speed, 0.2);
-    else if (effect === 'doRight') this.rotateVector(ball.speed, -0.2);
+    const M = Math.sqrt(Math.pow(ball.speed.x, 2) + Math.pow(ball.speed.y, 2)) / Math.sqrt(2);
+    if (effect === 'doLeft') this.rotateVector(ball.speed, M / 20);
+    else if (effect === 'doRight') this.rotateVector(ball.speed, -M / 15);
   }
 
   resetHit(state: GameState) {

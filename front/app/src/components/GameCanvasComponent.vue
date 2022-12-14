@@ -546,13 +546,13 @@ const gameLoop = () => {
   gStatePredicted = JSON.parse(JSON.stringify(gState));
   let intervalId = setInterval(function () {
     if (gState.state == "end") clearInterval(intervalId);
-    if (gState.frame == gStatePredicted.frame && gState.state == "play") {
-      predict();
-      scalePosition(gStatePredicted);
-    } else {
-      gStatePredicted = JSON.parse(JSON.stringify(gState));
-      scalePosition(gState);
-    }
+    // if (gState.frame >= gStatePredicted.frame && gState.state == "play") {
+    //   predict();
+    //   scalePosition(gStatePredicted);
+    // } else {
+    //   gStatePredicted = JSON.parse(JSON.stringify(gState));
+    scalePosition(gState);
+    // }
     if (ctx) {
       particleEvent(gStateRender);
       clientScore.value = gStateRender.score.client;
