@@ -1,12 +1,12 @@
 <template>
   <div class="playZone">
-    <div class="opponent">
+    <div v-if="opponent" class="opponent">
       <div :style="'font-size: ' + textSize + 'px;'" class="elo txt">{{ opponent.elo }}</div>
       <div :style="'font-size: ' + textSize + 'px;'" class="name txt">{{ opponent.nickname }}</div>
       <img :src="User.getAvatar(opponent)" />
     </div>
     <canvas class="canvas" ref="canvas"> </canvas>
-    <div class="us">
+    <div v-if="us" class="us">
       <img :src="User.getAvatar(us)" />
       <div :style="'font-size: ' + textSize + 'px;'" class="name txt">{{ us.nickname }}</div>
       <div :style="'font-size: ' + textSize + 'px;'" class="elo txt">{{ us.elo }}</div>
@@ -37,9 +37,9 @@ import { toRef } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 const props = defineProps<{
-  opponent: User;
-  us: User;
-  gameOptions: GameOptions;
+  opponent?: User;
+  us?: User;
+  gameOptions?: GameOptions;
 }>();
 
 const defaultGameOptions: GameOptions = {
@@ -291,7 +291,7 @@ function drawParticle(ctx: CanvasRenderingContext2D, gameState: GameState) {
   });
 }
 function drawScore(ctx: CanvasRenderingContext2D, gameState: GameState) {
-  const slot: number = props.gameOptions.scoreMax;
+  const slot: number = props.gameOptions!.scoreMax;
   for (let i: number = 0; i < slot; i++) {
     ctx.drawImage(slotImg, cWidth * 0.25 + ((cWidth * 0.5) / (+slot + 1)) * (i + 1) - 10 * scale, cHeight * 0.148 - 25 * scale, 20 * scale, 20 * scale);
     if (i < gameState.score.client)

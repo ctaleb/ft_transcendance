@@ -541,10 +541,10 @@ export class ServerService {
           if (room.options.smashes) {
             if (host.gameData.smashLeft > 0) {
               ball.speed.x = -1 * M - host.gameData.smashLeft;
-              ball.speed.y = -1 * M + host.gameData.smashLeft;
+              ball.speed.y = -1 * M - host.gameData.smashLeft;
             } else if (host.gameData.smashRight > 0) {
               ball.speed.x = 1 * M + host.gameData.smashRight;
-              ball.speed.y = -1 * M + host.gameData.smashRight;
+              ball.speed.y = -1 * M - host.gameData.smashRight;
             } else {
               ball.speed.y *= -1;
             }
