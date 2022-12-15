@@ -109,8 +109,8 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       if (player) {
         if (this.serverService.playerQueue.find((element) => element.id === player.id)) {
           this.serverService.playerQueue.splice(this.serverService.playerQueue.indexOf(player), 1);
-          this.serverService.userList.splice(this.serverService.userList.indexOf(player), 1);
-          this.serverService.updateStatus(player.id, 'offline');
+          //   this.serverService.userList.splice(this.serverService.userList.indexOf(player), 1);
+          //   this.serverService.updateStatus(player.id, 'offline');
         } else {
           this.serverService.games.forEach((element) => {
             if (element.room.status === 'launching') return;
@@ -120,11 +120,13 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
               element.room.status = 'hostForfeit';
             }
           });
-          this.serverService.updateStatus(player.id, 'offline');
-          this.serverService.userList.splice(this.serverService.userList.indexOf(player), 1);
         }
+        // this.serverService.updateStatus(player.id, 'offline');
+        // this.serverService.userList.splice(this.serverService.userList.indexOf(player), 1);
       }
       client.disconnect();
+      const toDel = this.serverService.userList.find((element) => element.name === player.name && element.socket === undefined);
+      if (toDel) this.serverService.userList.splice(this.serverService.userList.indexOf(toDel), 1);
     }
   }
 
