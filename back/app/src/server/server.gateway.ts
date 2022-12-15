@@ -6,7 +6,7 @@ import {
   OnGatewayInit,
   SubscribeMessage,
   WebSocketGateway,
-  WebSocketServer
+  WebSocketServer,
 } from '@nestjs/websockets';
 import { instanceToPlain } from 'class-transformer';
 import { Server, Socket } from 'socket.io';
@@ -320,7 +320,7 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   spectate(@MessageBody('friend') friend: string, @ConnectedSocket() client: Socket) {
     let response = 'na';
     if (!friend) return response;
-    const player = this.serverService.userList.find((element) => element.socket.id === client.id);
+    const player = this.serverService.userList.find((element) => element.socket && element.socket.id === client.id);
     if (!player || player.gameData.status != 'idle') return response;
     this.serverService.games.forEach((element) => {
       if (element.client.name == friend || element.host.name == friend) response = 'inGame';
