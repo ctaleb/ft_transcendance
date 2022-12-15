@@ -6,7 +6,7 @@ import {
   OnGatewayInit,
   SubscribeMessage,
   WebSocketGateway,
-  WebSocketServer
+  WebSocketServer,
 } from '@nestjs/websockets';
 import { instanceToPlain } from 'class-transformer';
 import { Server, Socket } from 'socket.io';
@@ -166,6 +166,9 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
               this.serverService.updateStatus(player.id, 'online');
             }
           }
+        } else if (element.client.gameData.status === 'invited') {
+          if (player === element.client) this.serverService.stopCustom(element.host, element.client, element);
+          else if (player === element.host) this.serverService.stopCustom(element.client, element.host, element);
         }
         return;
       }
@@ -191,9 +194,7 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   }
 
   handleDisconnect(@ConnectedSocket() client: Socket) {
-    this.serverService.userList.forEach((element) => {
-      if (element.socket && element.socket.id === client.id) this.serverService.userList.splice(this.serverService.userList.indexOf(element), 1);
-    });
+    this.serverService.userList = this.serverService.userList.filter((element) => element.socket.id != client.id);
   }
 
   gameLoop = (game: Game) => {
