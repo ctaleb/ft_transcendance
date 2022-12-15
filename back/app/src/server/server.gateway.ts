@@ -194,7 +194,7 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   }
 
   handleDisconnect(@ConnectedSocket() client: Socket) {
-    this.serverService.userList = this.serverService.userList.filter((element) => element.socket.id != client.id);
+    this.serverService.userList = this.serverService.userList.filter((element) => (element.socket && element.socket.id != client.id) || !element.socket);
   }
 
   gameLoop = (game: Game) => {
@@ -306,13 +306,13 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
 
   @SubscribeMessage('playerReady')
   playerReady(@ConnectedSocket() client: Socket) {
-    const player = this.serverService.userList.find((element) => element.socket === client);
+    const player = this.serverService.userList.find((element) => element.socket && element.socket.id === client.id);
     if (player && player.gameData.status === 'inLobby') player.gameData.status = 'readyQ';
   }
 
   @SubscribeMessage('playerNotReady')
   playerNotReady(@ConnectedSocket() client: Socket) {
-    const player = this.serverService.userList.find((element) => element.socket === client);
+    const player = this.serverService.userList.find((element) => element.socket && element.socket.id === client.id);
     if (player && player.gameData.status === 'inLobby') player.gameData.status = 'idle';
   }
 
@@ -332,7 +332,7 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   @SubscribeMessage('readySpectate')
   async readySpectate(@MessageBody('friend') friend: string, @ConnectedSocket() client: Socket) {
     if (!friend) return;
-    const player = this.serverService.userList.find((element) => element.socket.id === client.id);
+    const player = this.serverService.userList.find((element) => element.socket && element.socket.id === client.id);
     const game = this.serverService.games.find((element) => element.client.name === friend || element.host.name === friend);
     if (game) {
       if (player && player.gameData.status === 'idle') {
@@ -353,7 +353,7 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     if (!friend) return;
     let response = 'failure';
     let game: Game;
-    const inviter = this.serverService.userList.find((element) => element.socket === client);
+    const inviter = this.serverService.userList.find((element) => element.socket && element.socket.id === client.id);
     if (!inviter || inviter.gameData.status != 'idle') return response;
     const usr = this.serverService.userList.find((element) => element.name === friend);
     if (!usr) return response;
