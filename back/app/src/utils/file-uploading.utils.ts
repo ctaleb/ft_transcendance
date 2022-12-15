@@ -25,6 +25,11 @@ export const editFileName = (req, file, callback) => {
 
 export const check_magic_numbers = (path: string) => {
   const mimetypes: GuessedFile[] = fileType(fs.readFileSync(path));
-  if (mimetypes.length < 1) return false;
+  if (mimetypes.length < 1) {
+    fs.unlink(path, () => {
+      console.log('Unapropriate file deleted');
+    });
+    return false;
+  }
   return true;
 };
