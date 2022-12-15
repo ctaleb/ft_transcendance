@@ -317,23 +317,6 @@ export class ServerService {
     game.gameState.hostBar.size.y = game.gameState.clientBar.size.y;
   }
 
-  printList() {
-    console.log('~~ player list ~~');
-    this.userList.forEach((element) => {
-      console.log(element.name);
-    });
-    console.log('~~ player queue ~~');
-    this.playerQueue.forEach((element) => {
-      console.log(element.name);
-    });
-    console.log('~~ game list ~~');
-    this.games.forEach((element) => {
-      console.log(element.room.name);
-      console.log(element.host.name);
-      console.log(element.client.name);
-    });
-  }
-
   initPower(user: User, gameState: GameState, myBar: IBar, opponentBar: IBar) {
     if (user.gameData.power.name == 'Elastico') user.gameData.power = new PowerElastico(myBar, user.gameData.power.name);
     else if (user.gameData.power.name == 'Exhaust') user.gameData.power = new PowerExhaust(opponentBar, user.gameData.power.name);
@@ -373,7 +356,6 @@ export class ServerService {
       });
       game.gameSummary = await this._matchHistoryRepository.save(match);
     } catch (error) {
-      console.log(error);
     }
   }
 
@@ -895,7 +877,6 @@ export class ServerService {
   async updateChannelMembers(channelId: number, client: Socket) {
     const member = await ChannelMemberEntity.findOneBy({ channel: { id: channelId }, user: { id: client.handshake.auth.user.id } });
     if (member && member.role !== ChannelRole.MEMBER) {
-      console.log('updateChannelMembers');
       this.server.to(`${channelId}`).emit('updateChannelMembers', channelId);
     }
   }
@@ -907,7 +888,6 @@ export class ServerService {
         if (channel) {
           const member = await ChannelMemberEntity.findOneBy({ channel: { id: channelId }, user: { id: client.handshake.auth.user.id } });
           if (member) {
-            console.log('joinChannelRoom');
             this.server.to(`${channelId}`).emit('updateChannelMembers', channelId);
             client.join(`${channelId}`);
           }
@@ -923,7 +903,6 @@ export class ServerService {
         if (channel) {
           const member = await ChannelMemberEntity.findOneBy({ channel: { id: channelId }, user: { id: client.handshake.auth.user.id } });
           if (!member) {
-            console.log('leaveChannelRoom');
             this.server.to(`${channelId}`).emit('updateChannelMembers', channelId);
             client.leave(`${channelId}`);
           }

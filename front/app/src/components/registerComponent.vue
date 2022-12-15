@@ -116,12 +116,12 @@ async function createPost() {
     method: "POST",
     body: formData,
   })
-    .then((response) => {
-      if (!response.ok) return Promise.reject(response.statusText);
+    .then(async (response) => {
+      if (!response.ok) return Promise.reject(await response.json());
       return response.json();
     })
     .catch(async (err) => {
-      addAlertMessage(err, 3);
+      addAlertMessage(err.message, 3);
       return null;
     });
   if (data) {

@@ -46,7 +46,7 @@ export class AuthenticationController {
     avatar: Express.Multer.File,
     @Body() registrationDto: RegistrationDto,
   ): Promise<UserEntity> {
-    if (registrationDto.nickname.length > 15) throw new UnauthorizedException();
+    if (registrationDto.nickname.length > 15) throw new UnauthorizedException('Nickname too long');
     return this._authenticationService.registration(
       registrationDto,
       avatar
@@ -60,7 +60,7 @@ export class AuthenticationController {
             filename: 'pizz.jpeg',
             mimetype: 'image/jpeg',
           },
-		  false,
+      false,
     );
   }
 

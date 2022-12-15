@@ -35,7 +35,6 @@ async function validateCode() {
   await fetchJSONDatas(`api/twofactor/verifyCode/${code.value}/${localStorage.getItem("phoneTo2fa")}`, "POST")
     .then((data) => {
       if (data.status == "approved") {
-        console.log("code validated");
         emit("update:modelValue", true);
         if (localStorage.getItem("userType") == "classic") emit("twofaSuccessClassicUser");
         else emit("twofaSuccessIntraUser");
@@ -50,9 +49,7 @@ async function validateCode() {
 }
 async function sendCode() {
   await fetchJSONDatas(`api/twofactor/sendCode/${localStorage.getItem("phoneTo2fa")}`, "POST")
-    .then((data) => {
-      console.log(data.status);
-    })
+    .then((data) => {})
     .catch(() => {});
 }
 </script>

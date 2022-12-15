@@ -58,7 +58,7 @@ const multiClientWarning = ref(false);
 const invSender = ref("Placeholder");
 
 trySetupUser().catch((err) => {
-  console.log("Cant't set up user for now");
+  
 });
 
 let alertMessages: Alert[] = store.message;
