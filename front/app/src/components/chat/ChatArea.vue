@@ -225,5 +225,6 @@ onMounted(() => {
 
 onUnmounted(() => {
   socketLocal.value?.removeListener("updateChannelMembers");
+  messageField.value = "";
 });
 </script>

@@ -61,73 +61,72 @@ trySetupUser().catch((err) => {
   console.log("Cant't set up user for now");
 });
 
-let socket = socketLocal;
 let alertMessages: Alert[] = store.message;
 
 window.addEventListener("keydown", (e) => {
   if (e.key === "ArrowLeft")
-    socket?.value?.emit("key", {
+    socketLocal?.value?.emit("key", {
       key: "downLeft",
     });
   else if (e.key === "ArrowRight")
-    socket?.value?.emit("key", {
+    socketLocal?.value?.emit("key", {
       key: "downRight",
     });
   if (e.key === "a" || e.key === "A")
-    socket?.value?.emit("key", {
+    socketLocal?.value?.emit("key", {
       key: "downA",
     });
   else if (e.key === "d" || e.key === "D")
-    socket?.value?.emit("key", {
+    socketLocal?.value?.emit("key", {
       key: "downD",
     });
   else if (e.key === " ") {
-    socket?.value?.emit("key", {
+    socketLocal?.value?.emit("key", {
       key: "downSpace",
     });
   }
-  if (e.key === "o") socket?.value?.emit("debugging");
-  if (e.key === "i") socket?.value?.emit("chatting");
+  if (e.key === "o") socketLocal?.value?.emit("debugging");
+  if (e.key === "i") socketLocal?.value?.emit("chatting");
 });
 
 window.addEventListener("keyup", (e) => {
   if (e.key === "ArrowLeft")
-    socket?.value?.emit("key", {
+    socketLocal?.value?.emit("key", {
       key: "upLeft",
     });
   else if (e.key === "ArrowRight")
-    socket?.value?.emit("key", {
+    socketLocal?.value?.emit("key", {
       key: "upRight",
     });
   if (e.key === "a")
-    socket?.value?.emit("key", {
+    socketLocal?.value?.emit("key", {
       key: "upA",
     });
   else if (e.key === "d")
-    socket?.value?.emit("key", {
+    socketLocal?.value?.emit("key", {
       key: "upD",
     });
 });
 
 const confirmGame = () => {
-  socket?.value?.emit("playerReady", {}, () => {});
+  socketLocal?.value?.emit("playerReady", {}, () => {});
   showConfirmation(false);
   router.push("/game");
 };
 
 const denyGame = () => {
-  socket?.value?.emit("playerNotReady");
+  socketLocal?.value?.emit("playerNotReady");
   showConfirmation(false);
 };
 
 const acceptCustom = () => {
   showInvite(false);
   router.push("/game");
-  socket?.value?.emit("settingsInvitee");
+  socketLocal?.value?.emit("settingsInvitee");
 };
 
 const denyCustom = () => {
-  socket?.value?.emit("declineCustom");
+  socketLocal?.value?.emit("declineCustom");
   showInvite(false);
 };
 
@@ -168,72 +167,72 @@ onMounted(() => {
           currentChat: undefined,
         });
       }
-      socket.value?.emit("watchPath", { oldValue, newValue });
+      socketLocal?.value?.emit("watchPath", { oldValue, newValue });
     }
   );
 
   watch(
     () => socketLocal.value,
     () => {
-      if (!socket.value?.hasListeners("noMultiClient")) {
-        socket.value?.on("noMultiClient", () => {
+      if (!socketLocal.value?.hasListeners("noMultiClient")) {
+        socketLocal.value?.on("noMultiClient", () => {
           showMultiClientWarning(true);
         });
       }
-      if (!socket.value?.hasListeners("updateOneUserStatus")) {
-        socket.value?.on("updateOneUserStatus", (obj: { id: number; status: string }) => {
+      if (!socketLocal.value?.hasListeners("updateOneUserStatus")) {
+        socketLocal.value?.on("updateOneUserStatus", (obj: { id: number; status: string }) => {
           updateStatus(obj.id, obj.status);
         });
       }
-      if (!socket.value?.hasListeners("customInvite")) {
-        socket.value?.on("customInvite", (inviter: string) => {
+      if (!socketLocal.value?.hasListeners("customInvite")) {
+        socketLocal.value?.on("customInvite", (inviter: string) => {
           // theRoom = gameRoom;
           showInvite(true);
         });
       }
-      if (!socket.value?.hasListeners("gameConfirmation")) {
-        socket.value?.on("gameConfirmation", (gameRoom: any) => {
+      if (!socketLocal.value?.hasListeners("gameConfirmation")) {
+        socketLocal.value?.on("gameConfirmation", (gameRoom: any) => {
           // theRoom = gameRoom;
           showConfirmation(true);
         });
       }
-      if (!socket.value?.hasListeners("invitation")) {
-        socket.value?.on("invitation", (requester: string) => {
+      if (!socketLocal.value?.hasListeners("invitation")) {
+        socketLocal.value?.on("invitation", (requester: string) => {
           invSender.value = requester;
           showInvite(true);
         });
       }
-      if (!socket.value?.hasListeners("gameConfirmationTimeout")) {
-        socket.value?.on("gameConfirmationTimeout", () => {
+      if (!socketLocal.value?.hasListeners("gameConfirmationTimeout")) {
+        socketLocal.value?.on("gameConfirmationTimeout", () => {
           showConfirmation(false);
           // startButton.value = true;
           // lobbyStatus.value = "Find Match";
         });
       }
-      if (!socket.value?.hasListeners("friendshipInvite")) {
-        socket.value?.on("friendshipInvite", (requester: string) => {
+      if (!socketLocal.value?.hasListeners("friendshipInvite")) {
+        socketLocal.value?.on("friendshipInvite", (requester: string) => {
           getUserByNickname(requester).then((data) => {
             store.user?.invitations?.push(data!);
             addAlertMessage(`Incoming friendship request from ${requester}`, 1);
           });
         });
       }
-      if (!socket.value?.hasListeners("acceptInvite")) {
-        socket.value?.on("acceptInvite", (requester: string) => {
+      if (!socketLocal.value?.hasListeners("acceptInvite")) {
+        socketLocal.value?.on("acceptInvite", (requester: string) => {
           getUserByNickname(requester).then((data) => {
             store.user?.friends?.push(data!);
           });
         });
       }
-      if (!socket.value?.hasListeners("removeFriend")) {
-        socket.value?.on("removeFriend", (requester: string) => {
+      if (!socketLocal.value?.hasListeners("removeFriend")) {
+        socketLocal.value?.on("removeFriend", (requester: string) => {
           getUserByNickname(requester).then((data) => {
             store.user?.friends?.splice(store.user?.friends?.indexOf(data!), 1);
           });
         });
       }
-      if (!socket.value?.hasListeners("inviteFailure")) {
-        socket.value?.on("inviteFailure", () => {
+      if (!socketLocal.value?.hasListeners("inviteFailure")) {
+        socketLocal.value?.on("inviteFailure", () => {
           showFailure(true);
         });
       }
