@@ -63,7 +63,6 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     }
     // New stuff
     this.serverService.joinAllChannels(client, client.handshake.auth.user.id);
-    console.log('Socket ' + client.id + ' successfully connected');
   }
 
   //toRemove
@@ -167,6 +166,9 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
               this.serverService.updateStatus(player.id, 'online');
             }
           }
+        } else if (element.client.gameData.status === 'invited') {
+          if (player === element.client) this.serverService.stopCustom(element.host, element.client, element);
+          else if (player === element.host) this.serverService.stopCustom(element.client, element.host, element);
         }
         return;
       }
@@ -192,10 +194,7 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   }
 
   handleDisconnect(@ConnectedSocket() client: Socket) {
-    console.log('Socket ' + client.id + ' successfully disconnected');
-    this.serverService.userList.forEach((element) => {
-      if (element.socket && element.socket.id === client.id) this.serverService.userList.splice(this.serverService.userList.indexOf(element), 1);
-    });
+    this.serverService.userList = this.serverService.userList.filter((element) => element.socket.id != client.id);
   }
 
   gameLoop = (game: Game) => {
@@ -221,6 +220,13 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       this.gameLoop(game);
     }, 10);
   };
+
+  @SubscribeMessage('newNick')
+  changeNick(@MessageBody('oldNick') oldNick: string, @MessageBody('newNick') newNick: string, @ConnectedSocket() client: Socket) {
+    const player = this.serverService.SocketToPlayer(client);
+    if (!player || player.name != oldNick) return;
+    player.name = newNick;
+  }
 
   @SubscribeMessage('key')
   recieveKey(
@@ -315,7 +321,7 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   spectate(@MessageBody('friend') friend: string, @ConnectedSocket() client: Socket) {
     let response = 'na';
     if (!friend) return response;
-    const player = this.serverService.userList.find((element) => element.socket.id === client.id);
+    const player = this.serverService.userList.find((element) => element.socket && element.socket.id === client.id);
     if (!player || player.gameData.status != 'idle') return response;
     this.serverService.games.forEach((element) => {
       if (element.client.name == friend || element.host.name == friend) response = 'inGame';
