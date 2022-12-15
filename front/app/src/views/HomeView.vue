@@ -138,7 +138,7 @@ async function login() {
     localStorage.setItem("phoneTo2fa", data.user.phone);
     localStorage.setItem("userType", "classic");
 
-    //sendCode();
+    sendCode();
     return;
   }
   localStorage.setItem("token", data.token);
@@ -189,7 +189,7 @@ async function studentLogin(code: string) {
       localStorage.setItem("userType", "intra");
       localStorage.setItem("phoneTo2fa", userAndToken.user.phone!);
 
-      //  sendCode();
+      sendCode();
       return;
     }
     login_failed_msg.value = false;
