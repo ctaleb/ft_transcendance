@@ -474,12 +474,19 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     if (!getAuthor) return;
     const receiver = this.serverService.userList.find((element) => element.name === friendNickname);
     if (receiver) {
-      requester = await this.userService.getUserByNickname(receiver.name);
+      requester = await this.userService.getUserByNickname(receiver.name).catch(() => {
+        return null;
+      });
     } else {
-      requester = await this.userService.getUserByNickname(friendNickname);
+      requester = await this.userService.getUserByNickname(friendNickname).catch(() => {
+        return null;
+      });
     }
 
-    const author: UserEntity = await this.userService.getUserByNickname(getAuthor.name);
+    const author: UserEntity = await this.userService.getUserByNickname(getAuthor.name).catch(() => {
+      return null;
+    });
+    if (!author || !requester) return;
 
     const conv = await this.privateMessageService.getConv(author.id, requester.id).catch(async () => {
       return await this.privateMessageService.createConv(author.id, requester.id);
