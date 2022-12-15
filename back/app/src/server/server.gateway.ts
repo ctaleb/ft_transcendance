@@ -111,6 +111,17 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
           this.serverService.playerQueue.splice(this.serverService.playerQueue.indexOf(player), 1);
           //   this.serverService.userList.splice(this.serverService.userList.indexOf(player), 1);
           //   this.serverService.updateStatus(player.id, 'offline');
+        } else if (
+          player.gameData.status === 'inCustomLobby' ||
+          player.gameData.status === 'hostingCustomLobby' ||
+          player.gameData.status === 'ready' ||
+          player.gameData.status === 'invited'
+        ) {
+          const game = this.serverService.games.find((gme) => gme.host.socket.id === client.id || gme.client.socket.id === client.id);
+          if (game) {
+            if (game.client.socket.id === client.id) this.serverService.stopCustom(game.host, game.client, game);
+            else this.serverService.stopCustom(game.client, game.host, game);
+          }
         } else {
           this.serverService.games.forEach((element) => {
             if (element.room.status === 'launching') return;
@@ -125,8 +136,9 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
         // this.serverService.userList.splice(this.serverService.userList.indexOf(player), 1);
       }
       client.disconnect();
-      const toDel = this.serverService.userList.find((element) => element.name === player.name && element.socket === undefined);
-      if (toDel) this.serverService.userList.splice(this.serverService.userList.indexOf(toDel), 1);
+      //   this.serverService.userList.forEach((element) => {
+      //     if (element.socket && element.socket.id === client.id) this.serverService.userList.splice(this.serverService.userList.indexOf(element), 1);
+      //   });
     }
   }
 
@@ -184,6 +196,9 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
 
   handleDisconnect(@ConnectedSocket() client: Socket) {
     console.log('Socket ' + client.id + ' successfully disconnected');
+    this.serverService.userList.forEach((element) => {
+      if (element.socket && element.socket.id === client.id) this.serverService.userList.splice(this.serverService.userList.indexOf(element), 1);
+    });
   }
 
   gameLoop = (game: Game) => {

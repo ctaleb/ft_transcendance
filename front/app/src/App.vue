@@ -168,6 +168,8 @@ onMounted(() => {
         });
       }
       socketLocal?.value?.emit("watchPath", { oldValue, newValue });
+      showInvite(false);
+      showConfirmation(false);
     }
   );
   if (socketLocal.value) {
