@@ -102,11 +102,8 @@ export default defineComponent({
       let fetch_ret = await funcs.fetchJSONDatas("api/user/nicknameEdit/" + this.nickname, "PUT").catch(() => {
         return null;
       });
-      if (fetch_ret == null) {
-        funcs.addAlertMessage("Nickname must stay between 3 and 15 chars.", 1);
-        return;
-      }
-      if (fetch_ret.user) {
+
+      if (fetch_ret) {
         localStorage.setItem("user", JSON.stringify(fetch_ret.user));
         localStorage.setItem("token", fetch_ret.token);
         this.user = fetch_ret.user;
@@ -182,7 +179,7 @@ export default defineComponent({
       if (!this.isValidPassword(this.password)) {
         this.ValidPasswordFlag = false;
         funcs.addAlertMessage(
-          "Password must contains at least one uppercase, one lowercase, one special character, and be between 9 and 13 characters long.",
+          "Password must contains at least one uppercase, one lowercase, one special character, one digit and be longer than 9 characters.",
           1
         );
         return;

@@ -15,7 +15,7 @@ export class AuthenticationService {
   constructor(private readonly _userService: UserService, private readonly _dataSource: DataSource, private jwtService: JwtService) {}
 
   async registration(registrationDto: RegistrationDto, imageDto: ImageDto, reg42: boolean): Promise<UserEntity> {
-    if (!reg42 && !(await check_magic_numbers(imageDto.path))) throw new UnauthorizedException('Mimetype');
+    if (!reg42 && !check_magic_numbers(imageDto.path)) throw new UnauthorizedException("Extension don't match with file content");
     let user: UserEntity;
     const queryRunner = this._dataSource.createQueryRunner();
     await queryRunner.connect();

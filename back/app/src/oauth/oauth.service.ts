@@ -27,7 +27,7 @@ export class OauthService {
   async connect(code: string): Promise<any> {
     const token = await this.getIntraToken(code);
     if (token.access_token == null) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('No access token');
     }
     const user: intraUser = await this.fetchUserFromIntra(token.access_token);
     await this.userService.getIntraUserById(user.id).catch(async () => {
@@ -101,11 +101,15 @@ export class OauthService {
     download(user.image.link, file_path, function () {
       console.log('done');
     });
-    await this.authenticationService.registration(registrationDto, {
-      filename: filename,
-      path: './assets/' + filename,
-      mimetype: 'image/jpeg',
-    }, true);
+    await this.authenticationService.registration(
+      registrationDto,
+      {
+        filename: filename,
+        path: './assets/' + filename,
+        mimetype: 'image/jpeg',
+      },
+      true,
+    );
   }
 
   async check42NicknameUsed(originalLogin: string) {

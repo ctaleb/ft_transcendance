@@ -8,7 +8,7 @@ import { GuessedFile } from 'magic-bytes.js/dist/model/tree';
 export const imageFileFilter = (req, file, callback) => {
   console.log();
   if (!file.originalname.match(/\.(jpg|jpeg|png|gif|JPG|JPEG)$/)) {
-    return callback(new UnauthorizedException('Only image files are allowed!'), false);
+    return callback(new UnauthorizedException('jpg, png, jpeg and gif are allowed'), false);
   }
   callback(null, true);
 };
