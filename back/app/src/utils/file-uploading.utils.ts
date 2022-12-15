@@ -1,9 +1,8 @@
 import { UnauthorizedException } from '@nestjs/common';
-import { extname } from 'path';
-import { MessagingConfigurationContext } from 'twilio/lib/rest/verify/v2/service/messagingConfiguration';
 import fileType from 'magic-bytes.js';
-import fs = require('fs');
 import { GuessedFile } from 'magic-bytes.js/dist/model/tree';
+import { extname } from 'path';
+import fs = require('fs');
 
 export const imageFileFilter = (req, file, callback) => {
   console.log();

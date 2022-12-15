@@ -15,8 +15,8 @@
 </template>
 
 <script setup lang="ts">
-import { socketLocal, useStore } from "@/store";
-import { GameOptions, GameRoom, GameState, IBar, IPoint, particleSet } from "@/types/Game";
+import { socketLocal } from "@/store";
+import { GameOptions, GameState, IBar, IPoint, particleSet } from "@/types/Game";
 import { User } from "@/types/User";
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import ballUrl from "../assets/ball.png";
@@ -27,14 +27,12 @@ import energyRedUrl from "../assets/energy_red.png";
 import fillUrl from "../assets/fill_slot.png";
 import paddleUrl from "../assets/paddle_grec.png";
 import paddleRedUrl from "../assets/paddle_grec_red.png";
-import plateauUrl from "../assets/plateauV2.png";
-import plateauHUrl from "../assets/plateauhaut.png";
 import plateauBUrl from "../assets/plateaubas.png";
+import plateauHUrl from "../assets/plateauhaut.png";
+import plateauUrl from "../assets/plateauV2.png";
 import powerChargeUrl from "../assets/powerCharge.png";
 import slotUrl from "../assets/slot.png";
 import fillRedUrl from "../assets/slot_fill_enemy.png";
-import { toRef } from "vue";
-import { useRoute, useRouter } from "vue-router";
 
 const props = defineProps<{
   opponent?: User;

@@ -1,6 +1,6 @@
 import { AbstractEntity } from 'src/database/abstract.entity';
 import { UserEntity } from 'src/user/user.entity';
-import { Column, Entity, JoinColumn, ManyToOne, RelationId } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 
 @Entity({ name: 'friendship' })
 export class FriendshipEntity extends AbstractEntity {

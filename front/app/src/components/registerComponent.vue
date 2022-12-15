@@ -29,11 +29,11 @@
 </template>
 
 <script lang="ts" setup>
-import { defineComponent, ref, reactive, computed } from "vue";
-import { useRouter } from "vue-router";
+import { addAlertMessage } from "@/functions/funcs";
 import useVuelidate from "@vuelidate/core";
-import { required, minLength, maxLength, sameAs, helpers } from "@vuelidate/validators";
-import { addAlertMessage, fetchJSONDatas } from "@/functions/funcs";
+import { helpers, maxLength, minLength, required, sameAs } from "@vuelidate/validators";
+import { computed, reactive, ref } from "vue";
+import { useRouter } from "vue-router";
 let funcs = require("../functions/funcs");
 
 const emit = defineEmits(["update:modelValue"]);

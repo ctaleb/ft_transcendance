@@ -27,8 +27,8 @@
 <script setup lang="ts">
 import { addAlertMessage, fetchJSONDatas } from "@/functions/funcs";
 import { useStore } from "@/store";
-import { Channel, ChannelType, ChannelUser } from "@/types/Channel";
-import { onMounted, Ref, ref } from "vue";
+import { Channel, ChannelType } from "@/types/Channel";
+import { onMounted, ref } from "vue";
 
 const props = defineProps<{
   channel: Channel;

@@ -37,17 +37,17 @@
 
 <script setup lang="ts">
 import ChatMenuItem from "@/components/chat/ChatMenuItem.vue";
-import CollapseList from "@/components/common/CollapseList.vue";
-import InvitationsModal from "@/components/chat/modals/InvitationsModal.vue";
 import AllChannelsModal from "@/components/chat/modals/AllChannelsModal.vue";
 import ChannelCreateFormModal from "@/components/chat/modals/ChannelCreateFormModal.vue";
+import InvitationsModal from "@/components/chat/modals/InvitationsModal.vue";
+import CollapseList from "@/components/common/CollapseList.vue";
 import { fetchJSONDatas, showUserMenu } from "@/functions/funcs";
 import { privateConvs, socketLocal, useStore } from "@/store";
 import { Channel, ChannelType, isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
-import { User } from "@/types/User";
-import { onMounted, onUnmounted, onUpdated, Ref, ref, watch } from "vue";
 import { transformDate } from "@/types/Message";
+import { User } from "@/types/User";
+import { onMounted, onUnmounted, Ref, ref, watch } from "vue";
 
 const props = defineProps<{
   channels: Channel[];

@@ -1,15 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { instanceToPlain } from 'class-transformer';
-import { timeout } from 'rxjs';
 import { Server, Socket } from 'socket.io';
 import { ChatService } from 'src/chat/chat.service';
 import { ChannelMemberEntity, ChannelRole } from 'src/chat/entities/channel_member.entity';
 import { UserEntity } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
 import { Repository } from 'typeorm';
-import { CreateMessageDto } from './dto/create-message.dto';
-import { Channel, ChannelType } from './entities/channel';
+import { Channel } from './entities/channel';
 import { GameSummaryData, MatchHistoryEntity } from './entities/match_history.entity';
 import {
   ChatRoom,

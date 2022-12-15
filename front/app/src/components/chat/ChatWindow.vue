@@ -12,9 +12,9 @@
 </template>
 
 <script setup lang="ts">
-import ChatWindowHeader from "@/components/chat/ChatWindowHeader.vue";
 import ChannelInfo from "@/components/chat/ChannelInfo.vue";
 import ChatArea from "@/components/chat/ChatArea.vue";
+import ChatWindowHeader from "@/components/chat/ChatWindowHeader.vue";
 import { useStore } from "@/store";
 import { isChannel } from "@/types/Channel";
 import { ref } from "vue";

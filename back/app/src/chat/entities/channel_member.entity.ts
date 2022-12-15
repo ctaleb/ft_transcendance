@@ -1,15 +1,10 @@
-import { AbstractEntity } from 'src/database/abstract.entity';
 import { ChannelEntity } from 'src/chat/entities/channel.entity';
+import { AbstractEntity } from 'src/database/abstract.entity';
 import { UserEntity } from 'src/user/user.entity';
 import {
   Column,
   Entity,
-  JoinColumn,
-  JoinTable,
-  ManyToMany,
-  ManyToOne,
-  OneToMany,
-  OneToOne,
+  JoinColumn, ManyToOne
 } from 'typeorm';
 
 export enum ChannelRole {
