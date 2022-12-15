@@ -46,6 +46,7 @@ export namespace User {
       return await fetchJSONDatas("api/friendship/block", "PUT", { addressee: user.nickname })
         .then(() => {
           addAlertMessage("The user has been blocked", 2);
+          socketLocal.value?.emit("block", { blocked: user.nickname });
           return true;
         })
         .catch(() => {

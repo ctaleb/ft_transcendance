@@ -605,6 +605,25 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     }
   }
 
+  @SubscribeMessage('block')
+  async block(@ConnectedSocket() client: Socket, @MessageBody('blocked') blocked: string) {
+    if (blocked) {
+      await this.userService
+        .getUserByNickname(blocked)
+        .then(async (user) => {
+          if (user) {
+            if (await this.friendshipService.getBlockedStatus(client.handshake.auth.user.id, user.id)) {
+              const socket = this.serverService.PlayerToSocket(user.nickname);
+              if (socket) {
+                this.server.to(socket.id).emit('blocked', client.handshake.auth.user.id);
+              }
+            }
+          }
+        })
+        .catch(() => {});
+    }
+  }
+
   @SubscribeMessage('befriend')
   async befriend(@ConnectedSocket() client: Socket, @MessageBody('id') id: number, @MessageBody('addresseeId') addresseeId: number) {
     if (id && addresseeId && id === client.handshake.auth.user.id && id !== addresseeId) {
