@@ -364,7 +364,7 @@ const spectating = (gameRoom: GameRoom) => {
   powers.value = false;
   opponent.value = gameRoom.opponent;
   host.value = gameRoom.host;
-  //   gameBoard.value = true;
+  gameOpts.scoreMax = gameRoom.options.scoreMax;
   document.querySelector(".canvas")?.classList.remove("hidden");
 };
 

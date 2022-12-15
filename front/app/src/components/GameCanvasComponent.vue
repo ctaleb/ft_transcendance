@@ -535,7 +535,7 @@ const gameLoop = () => {
   let currentFrame: number = 0;
   intervalId = setInterval(function () {
     if (gState) {
-      if (gState.frame > 5 && gState.state != "play") {
+      if (gStatePredicted && gState.frame > 5 && gState.state != "play") {
         predict(currentFrame);
         scalePosition(gStatePredicted);
       } else {
