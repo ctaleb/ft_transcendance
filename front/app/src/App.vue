@@ -189,6 +189,11 @@ onMounted(() => {
       invSender.value = requester;
       showInvite(true);
     });
+    socketLocal.value?.on("blocked", (userId: number, nickname: string) => {
+      if (store.user && store.user.invitations) {
+        store.user.invitations = store.user.invitations.filter((invit) => invit.id !== userId);
+      }
+    });
     socketLocal.value?.on("gameConfirmationTimeout", () => {
       showConfirmation(false);
       // startButton.value = true;
@@ -267,6 +272,12 @@ onMounted(() => {
         socketLocal.value?.on("invitation", (requester: string) => {
           invSender.value = requester;
           showInvite(true);
+        });
+        socketLocal.value?.removeListener("blocked");
+        socketLocal.value?.on("blocked", (userId: number, nickname: string) => {
+          if (store.user && store.user.invitations) {
+            store.user.invitations = store.user.invitations.filter((invit) => invit.id !== userId);
+          }
         });
         socketLocal.value?.removeListener("gameConfirmationTimeout");
         socketLocal.value?.on("gameConfirmationTimeout", () => {
