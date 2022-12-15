@@ -66,7 +66,6 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     }
     // New stuff
     this.serverService.joinAllChannels(client, client.handshake.auth.user.id);
-    console.log('Socket ' + client.id + ' successfully connected');
   }
 
   //toRemove
@@ -195,7 +194,6 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   }
 
   handleDisconnect(@ConnectedSocket() client: Socket) {
-    console.log('Socket ' + client.id + ' successfully disconnected');
     this.serverService.userList.forEach((element) => {
       if (element.socket && element.socket.id === client.id) this.serverService.userList.splice(this.serverService.userList.indexOf(element), 1);
     });

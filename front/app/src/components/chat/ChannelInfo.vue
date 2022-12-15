@@ -43,7 +43,6 @@ const leaveChannel = async (): Promise<void> => {
   const data: Channel = await fetchJSONDatas("api/chat/leave-channel", "DELETE", {
     id: store.currentChat!.id,
   }).catch((err) => {
-    console.log(err);
   });
   socketLocal.value?.emit("leaveChannelRoom", { id: data.id });
   emits("updateChannelsList");

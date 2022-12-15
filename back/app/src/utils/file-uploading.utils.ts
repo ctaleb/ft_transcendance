@@ -6,7 +6,6 @@ import fs = require('fs');
 import { GuessedFile } from 'magic-bytes.js/dist/model/tree';
 
 export const imageFileFilter = (req, file, callback) => {
-  console.log();
   if (!file.originalname.match(/\.(jpg|jpeg|png|gif|JPG|JPEG)$/)) {
     return callback(new UnauthorizedException('jpg, png, jpeg and gif are allowed'), false);
   }
@@ -26,9 +25,7 @@ export const editFileName = (req, file, callback) => {
 export const check_magic_numbers = (path: string) => {
   const mimetypes: GuessedFile[] = fileType(fs.readFileSync(path));
   if (mimetypes.length < 1) {
-    fs.unlink(path, () => {
-      console.log('Unapropriate file deleted');
-    });
+    fs.unlink(path, () => {});
     return false;
   }
   return true;

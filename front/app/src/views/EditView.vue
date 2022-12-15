@@ -131,12 +131,12 @@ export default defineComponent({
         method: "PUT",
         body: formData,
       })
-        .then((res) => {
-          if (!res.ok) return Promise.reject();
+        .then(async (res) => {
+          if (!res.ok) return Promise.reject(await res.json());
           return res.json();
         })
         .catch((err) => {
-          funcs.addAlertMessage("Unauthorized", 3);
+          funcs.addAlertMessage(err.message, 3);
           return null;
         });
       if (fetch_ret == null) return;
@@ -209,11 +209,9 @@ export default defineComponent({
         this.twoFactorEnabled = true;
         this.setSwitches(true);
       } else {
-        console.log("2fa disabled");
       }
     },
     twoFactorSwitch(event: any) {
-      console.log(this.phone);
       if (this.phone == null || this.phoneFormatError != "") {
         funcs.addAlertMessage("Missing phone number", 1);
         this.setSwitches(false);
@@ -262,7 +260,6 @@ export default defineComponent({
         .catch(() => {});
     },
     formatPhone() {
-      console.log("formatPhone");
       if ((this.phone.match(/\+\d{2}[6,7]\d{8}/) && this.phone.length == 12) || this.phone == "") this.phoneFormatError = "";
       else this.phoneFormatError = "phone must be in format '+33611223344'";
     },
