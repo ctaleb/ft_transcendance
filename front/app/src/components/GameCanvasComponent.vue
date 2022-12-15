@@ -519,7 +519,6 @@ const predict = (currentFrame: number) => {
   if (gStatePredicted.state == "play") {
     gStatePredicted.ball.pos.x += gStatePredicted.ball.speed.x;
     gStatePredicted.ball.pos.y += gStatePredicted.ball.speed.y;
-    if (gStatePredicted.hit.hit) gStatePredicted.hit.hit = 0;
     wallBallCollision(gStatePredicted);
     gStatePredicted.clientBar.pos.x += gStatePredicted.clientBar.speed;
     gStatePredicted.hostBar.pos.x += gStatePredicted.hostBar.speed;
