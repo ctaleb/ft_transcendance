@@ -253,16 +253,22 @@
         z-index: 1;
         width: 100%;
         left: 0;
+
+        position: absolute;
+        overflow-y: auto;
+      }
+      .channel-options {
         -webkit-backdrop-filter: blur(15px); /* assure la compatibilité avec safari */
         backdrop-filter: blur(25px);
         background-color: rgba(24, 26, 28, 0.482);
-        position: absolute;
-        overflow-y: scroll;
-      }
-      .channel-options {
         .button {
           width: 100%;
         }
+      }
+      .channel-members {
+        -webkit-backdrop-filter: blur(15px); /* assure la compatibilité avec safari */
+        backdrop-filter: blur(25px);
+        background-color: rgba(24, 26, 28, 0.482);
       }
     }
   }
