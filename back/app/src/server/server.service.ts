@@ -33,7 +33,7 @@ import {
 const chargeMax = 1;
 const ballSize = 16;
 const defaultGameOptions: GameOptions = {
-  scoreMax: 5,
+  scoreMax: 3,
   ballSpeed: 1,
   ballSize: 1,
   barSpeed: 1,
@@ -65,31 +65,33 @@ export class ServerService {
 
   //generic stuff
   async newUser(token: string, user: string, sock?: Socket) {
-    const bdd_user: UserEntity = await this._userService.getUserByNickname(user).catch();
-    if (bdd_user) {
-      const newUser: User = {
-        token: token,
-        socket: sock,
-        name: user,
-        id: bdd_user.id,
-        status: 'online',
-        gameData: {
-          input: [],
-          left: false,
-          right: false,
-          elo: bdd_user.elo,
-          smashLeft: 0,
-          smashRight: 0,
-          status: 'idle',
-          power: new IPower('init'),
-        },
-        chatData: {
-          RoomList: [],
-        },
-      };
-      this.updateStatus(newUser.id, 'online');
-      this.userList.push(newUser);
-    }
+    await this._userService
+      .getUserByNickname(user)
+      .then((bdd_user) => {
+        const newUser: User = {
+          token: token,
+          socket: sock,
+          name: user,
+          id: bdd_user.id,
+          status: 'online',
+          gameData: {
+            input: [],
+            left: false,
+            right: false,
+            elo: bdd_user.elo,
+            smashLeft: 0,
+            smashRight: 0,
+            status: 'idle',
+            power: new IPower('init'),
+          },
+          chatData: {
+            RoomList: [],
+          },
+        };
+        this.updateStatus(newUser.id, 'online');
+        this.userList.push(newUser);
+      })
+      .catch(() => {});
   }
 
   //status stuff

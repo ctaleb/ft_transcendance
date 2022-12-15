@@ -3,11 +3,11 @@
     <div class="opponent">
       <div :style="'font-size: ' + textSize + 'px;'" class="elo txt">{{ opponent.elo }}</div>
       <div :style="'font-size: ' + textSize + 'px;'" class="name txt">{{ opponent.nickname }}</div>
-      <img :src="User.getAvatar(store.user!)" />
+      <img :src="User.getAvatar(opponent)" />
     </div>
     <canvas class="canvas" ref="canvas"> </canvas>
     <div class="us">
-      <img :src="User.getAvatar(store.user!)" />
+      <img :src="User.getAvatar(us)" />
       <div :style="'font-size: ' + textSize + 'px;'" class="name txt">{{ us.nickname }}</div>
       <div :style="'font-size: ' + textSize + 'px;'" class="elo txt">{{ us.elo }}</div>
     </div>
@@ -34,14 +34,25 @@ import powerChargeUrl from "../assets/powerCharge.png";
 import slotUrl from "../assets/slot.png";
 import fillRedUrl from "../assets/slot_fill_enemy.png";
 import { toRef } from "vue";
-
-const store = useStore();
+import { useRoute, useRouter } from "vue-router";
 
 const props = defineProps<{
   opponent: User;
   us: User;
   gameOptions: GameOptions;
 }>();
+
+const defaultGameOptions: GameOptions = {
+  scoreMax: 13,
+  ballSpeed: 1,
+  ballSize: 1,
+  barSpeed: 1,
+  barSize: 1,
+  smashStrength: 1,
+  effects: true,
+  powers: true,
+  smashes: true,
+};
 
 const ballImg = new Image();
 ballImg.src = ballUrl;
@@ -74,10 +85,10 @@ fillRedImg.src = fillRedUrl;
 
 const canvas = ref<HTMLCanvasElement>();
 let ctx: CanvasRenderingContext2D | null | undefined;
-let cHeight = 0;
-let cWidth = 0;
-let scale = 0;
-let offset = 0;
+let cHeight: number = 0;
+let cWidth: number = 0;
+let scale: number = 0;
+let offset: number = 0;
 
 const hostScore = ref(0);
 const clientScore = ref(0);
@@ -124,20 +135,9 @@ let gState: GameState = {
 };
 
 let gStateRender: GameState;
+let gStatePredicted: GameState;
 
-const defaultGameOptions: GameOptions = {
-  scoreMax: 20,
-  ballSpeed: 1,
-  ballSize: 1,
-  barSpeed: 1,
-  barSize: 1,
-  smashStrength: 1,
-  effects: true,
-  powers: true,
-  smashes: true,
-};
-
-let theRoom: GameRoom;
+let intervalId: number | undefined;
 
 //DRAW FUNCTIONS
 
@@ -160,10 +160,10 @@ function kickoffLoading(ctx: any, gameState: GameState) {
     ctx.stroke();
   }
 }
-function drawSmashingEffect(bar: IBar, smashingPercent: number, ctx: CanvasRenderingContext2D) {
+function drawSmashingEffect(bar: IBar, oppobar: IBar, smashingPercent: number, ctx: CanvasRenderingContext2D) {
   if (bar.smashing) {
     ctx.drawImage(
-      bar.pos.y < 250 ? energyPaddleRedImg : energyPaddleImg,
+      bar.pos.y < oppobar.pos.y ? energyPaddleRedImg : energyPaddleImg,
       bar.pos.x - bar.size.x * scale,
       bar.pos.y - bar.size.y * scale * (1 + smashingPercent / 100 / 2),
       bar.size.x * 2 * scale,
@@ -173,7 +173,7 @@ function drawSmashingEffect(bar: IBar, smashingPercent: number, ctx: CanvasRende
   if (bar.smashing) {
     ctx.globalAlpha = (0.5 * smashingPercent) / 100;
     ctx.drawImage(
-      bar.pos.y < 250 ? energyRedImg : energyImg,
+      bar.pos.y < oppobar.pos.y ? energyRedImg : energyImg,
       bar.pos.x - bar.size.x * scale * 2.5,
       bar.pos.y - bar.size.y * scale * 4,
       bar.size.x * 5 * scale,
@@ -182,7 +182,7 @@ function drawSmashingEffect(bar: IBar, smashingPercent: number, ctx: CanvasRende
     ctx.globalAlpha = 1;
   }
   ctx.drawImage(
-    bar.pos.y < 250 ? paddleRedImg : paddleImg,
+    bar.pos.y < oppobar.pos.y ? paddleRedImg : paddleImg,
     bar.pos.x - bar.size.x * scale,
     bar.pos.y - bar.size.y * scale,
     bar.size.x * 2 * scale,
@@ -319,10 +319,9 @@ function drawParticle(ctx: CanvasRenderingContext2D, gameState: GameState) {
   });
 }
 function drawScore(ctx: CanvasRenderingContext2D, gameState: GameState) {
-  let slot = toRef(props, "gameOptions").value.scoreMax;
-
-  for (let i = 0; i < slot; i++) {
-    ctx.drawImage(slotImg, cWidth * 0.25 + ((cWidth * 0.5) / (slot + 1)) * (i + 1) - 10 * scale, cHeight * 0.148 - 25 * scale, 20 * scale, 20 * scale);
+  const slot: number = props.gameOptions.scoreMax;
+  for (let i: number = 0; i < slot; i++) {
+    ctx.drawImage(slotImg, cWidth * 0.25 + ((cWidth * 0.5) / (+slot + 1)) * (i + 1) - 10 * scale, cHeight * 0.148 - 25 * scale, 20 * scale, 20 * scale);
     if (i < gameState.score.client)
       ctx.drawImage(
         fillRedImg,
@@ -332,8 +331,8 @@ function drawScore(ctx: CanvasRenderingContext2D, gameState: GameState) {
         12 * scale
       );
   }
-  for (let i = 0; i < slot; i++) {
-    ctx.drawImage(slotImg, cWidth * 0.25 + ((cWidth * 0.5) / (slot + 1)) * (i + 1) - 10 * scale, cHeight * 0.894 - 25 * scale, 20 * scale, 20 * scale);
+  for (let i: number = 0; i < slot; i++) {
+    ctx.drawImage(slotImg, cWidth * 0.25 + ((cWidth * 0.5) / (+slot + 1)) * (i + 1) - 10 * scale, cHeight * 0.894 - 25 * scale, 20 * scale, 20 * scale);
     if (i < gameState.score.host)
       ctx.drawImage(
         fillImg,
@@ -443,8 +442,6 @@ function scaling(ctx?: CanvasRenderingContext2D | null) {
 }
 function scalePosition(gameState: GameState) {
   gStateRender = JSON.parse(JSON.stringify(gameState));
-  let scale = cWidth / 500;
-  let offset = (cHeight - cWidth) / 2;
   gStateRender.ball.pos.x *= scale;
   gStateRender.ball.pos.y *= scale;
   gStateRender.ball.pos.y += offset;
@@ -490,6 +487,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   unregisterSockets(socketLocal);
+  clearInterval(intervalId);
 });
 
 function render(ctx: CanvasRenderingContext2D | null | undefined, gameState: GameState) {
@@ -498,8 +496,8 @@ function render(ctx: CanvasRenderingContext2D | null | undefined, gameState: Gam
     kickoffLoading(ctx, gameState);
     drawBall(ctx, gameState);
     ctx.fillStyle = "black";
-    drawSmashingEffect(gameState.clientBar, cSmashingPercent, ctx);
-    drawSmashingEffect(gameState.hostBar, hSmashingPercent, ctx);
+    drawSmashingEffect(gameState.clientBar, gameState.hostBar, cSmashingPercent, ctx);
+    drawSmashingEffect(gameState.hostBar, gameState.clientBar, hSmashingPercent, ctx);
     drawParticle(ctx, gameState);
     drawinfoPlayground(ctx);
     drawPowerCharge(ctx, gameState);
@@ -529,10 +527,10 @@ const wallBallCollision = (state: GameState) => {
 };
 
 const predict = () => {
-  gState.ball.pos.x += gState.ball.speed.x;
-  gState.ball.pos.y += gState.ball.speed.y;
-  wallBallCollision(gState);
-  gState.frame++;
+  gStatePredicted.ball.pos.x += gStatePredicted.ball.speed.x;
+  gStatePredicted.ball.pos.y += gStatePredicted.ball.speed.y;
+  wallBallCollision(gStatePredicted);
+  gStatePredicted.frame++;
 };
 
 const particleEvent = (gameState: GameState) => {
@@ -543,15 +541,16 @@ const particleEvent = (gameState: GameState) => {
 };
 
 const gameLoop = () => {
-  let currentFrame = 0;
-
-  let intervalId = setInterval(function () {
-    if (gState.state == "end") clearInterval(intervalId);
-    if (gState.frame < currentFrame && gState.state == "play") {
-      predict();
-    }
+  gStatePredicted = JSON.parse(JSON.stringify(gState));
+  intervalId = setInterval(function () {
+    // if (gStateRender.frame >= gStatePredicted.frame && gState.state == "play") {
+    //   predict();
+    //   scalePosition(gStatePredicted);
+    // } else {
+    // gStatePredicted = JSON.parse(JSON.stringify(gState));
+    scalePosition(gState);
+    // }
     if (ctx) {
-      scalePosition(gState);
       particleEvent(gStateRender);
       clientScore.value = gStateRender.score.client;
       hostScore.value = gStateRender.score.host;
@@ -562,10 +561,8 @@ const gameLoop = () => {
         hSmashingPercent += 2;
       } else if (!gStateRender.hostBar.smashing || kickOff) hSmashingPercent = 0;
       render(ctx, gStateRender);
-      gState.frame = currentFrame;
-      currentFrame++;
     }
-  }, 1000 / 60);
+  }, 1000 / 120);
 };
 </script>
 <style lang="scss" scoped>

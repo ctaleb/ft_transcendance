@@ -145,7 +145,7 @@ const customReady = ref("Ready ?");
 const readyButton = ref(false);
 
 const gameOpts = reactive<GameOptions>({
-  scoreMax: 100,
+  scoreMax: 10,
   ballSpeed: 1,
   ballSize: 1,
   barSpeed: 1,
@@ -277,14 +277,14 @@ onMounted(() => {
         displayLoading.value = true;
       }
     } else if (store.user?.status == "online") {
-      lobbyStatus.value = "lobby";
-      startButton.value = false;
-      readyButton.value = false;
-      displayLoading.value = false;
-      customReady.value = "Ready ?";
-      powers.value = true;
-      // } else if (store.user?.status == "inGame") {
-      //   lobbyStatus.value = "playing";
+      if (lobbyStatus.value != "playing") {
+        lobbyStatus.value = "lobby";
+        startButton.value = false;
+        readyButton.value = false;
+        displayLoading.value = false;
+        customReady.value = "Ready ?";
+        powers.value = true;
+      }
     } else if (store.user?.status == "hostingCustomLobby") {
       lobbyStatus.value = "settingsInviter";
     } else if (store.user?.status == "inCustomLobby") {
