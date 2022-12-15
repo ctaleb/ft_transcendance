@@ -16,12 +16,12 @@
   </div>
 </template>
 <script setup lang="ts">
+import { onMounted, ref } from "vue";
 import exhaustUrl from "../assets/powers/exhaust.jpeg";
-import shieldUrl from "../assets/powers/shield.png";
-import teleportUrl from "../assets/powers/teleport.png";
 import flashUrl from "../assets/powers/flash.jpeg";
 import ghostUrl from "../assets/powers/ghost.png";
-import { onMounted, ref } from "vue";
+import shieldUrl from "../assets/powers/shield.png";
+import teleportUrl from "../assets/powers/teleport.png";
 
 const emit = defineEmits(["update:modelValue"]);
 const current = ref(0);

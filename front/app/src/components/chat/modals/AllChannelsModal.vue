@@ -12,7 +12,6 @@
 <script setup lang="ts">
 import ChannelInModal from "@/components/chat/modals/ChannelInModal.vue";
 import { fetchJSONDatas } from "@/functions/funcs";
-import { useStore } from "@/store";
 import { Channel } from "@/types/Channel";
 import { onMounted, ref, Ref } from "vue";
 

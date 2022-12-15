@@ -53,10 +53,10 @@
 <!-- Need to add isBlocked() to show/ornot blockbutton -->
 
 <script setup lang="ts">
-import MuteModal from "@/components/chat/modals/MuteModal.vue";
 import BanModal from "@/components/chat/modals/BanModal.vue";
+import MuteModal from "@/components/chat/modals/MuteModal.vue";
 import { addAlertMessage, fetchJSONDatas, hideUserMenu } from "@/functions/funcs";
-import { currentUserProfile, menu, socketLocal, useStore } from "@/store";
+import { menu, socketLocal, useStore } from "@/store";
 import { ChannelRole, ChannelUser } from "@/types/Channel";
 import { User } from "@/types/User";
 import { computed, onMounted, ref, watch } from "vue";

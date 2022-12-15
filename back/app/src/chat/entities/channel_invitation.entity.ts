@@ -1,15 +1,6 @@
 import { AbstractEntity } from 'src/database/abstract.entity';
 import { UserEntity } from 'src/user/user.entity';
-import {
-  Column,
-  Entity,
-  JoinColumn,
-  JoinTable,
-  ManyToMany,
-  ManyToOne,
-  OneToMany,
-  OneToOne,
-} from 'typeorm';
+import { Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { ChannelEntity } from './channel.entity';
 
 @Entity({ name: 'channel_invitation' })

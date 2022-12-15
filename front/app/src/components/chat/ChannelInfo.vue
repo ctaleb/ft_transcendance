@@ -20,11 +20,11 @@
 
 <script setup lang="ts">
 import ChannelMembers from "@/components/chat/ChannelMembers.vue";
-import InviteToChannel from "@/components/chat/modals/InviteToChannel.vue";
 import ChannelUpdateModal from "@/components/chat/modals/ChannelUpdateModal.vue";
+import InviteToChannel from "@/components/chat/modals/InviteToChannel.vue";
 import { fetchJSONDatas } from "@/functions/funcs";
 import { socketLocal, useStore } from "@/store";
-import { Channel, ChannelType, ChannelUser, ChannelRole } from "@/types/Channel";
+import { Channel, ChannelRole, ChannelType, ChannelUser } from "@/types/Channel";
 import { onMounted, Ref, ref, watch } from "vue";
 
 const store = useStore();

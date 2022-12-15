@@ -1,18 +1,17 @@
 import { Module } from '@nestjs/common';
-import { OauthService } from './oauth.service';
-import { OauthController } from './oauth.controller';
 import { JwtModule } from '@nestjs/jwt';
-import { jwtConstants } from 'src/authentication/constants';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthenticationService } from 'src/authentication/authentication.service';
+import { jwtConstants } from 'src/authentication/constants';
+import { FriendshipEntity } from 'src/friendship/entities/friendship.entity';
+import { ImageEntity } from 'src/image/image.entity';
+import { ImageModule } from 'src/image/image.module';
+import { ImageService } from 'src/image/image.service';
 import { UserEntity } from 'src/user/user.entity';
 import { UserModule } from 'src/user/user.module';
 import { UserService } from 'src/user/user.service';
-import { ImageModule } from 'src/image/image.module';
-import { ImageService } from 'src/image/image.service';
-import { ImageEntity } from 'src/image/image.entity';
-import { AuthenticationService } from 'src/authentication/authentication.service';
-import { FriendshipModule } from 'src/friendship/friendship.module';
-import { FriendshipEntity } from 'src/friendship/entities/friendship.entity';
+import { OauthController } from './oauth.controller';
+import { OauthService } from './oauth.service';
 
 @Module({
   imports: [

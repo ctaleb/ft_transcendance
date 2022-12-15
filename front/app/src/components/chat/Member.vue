@@ -20,7 +20,6 @@ import { useStore } from "@/store";
 import { ChannelRole, ChannelUser } from "@/types/Channel";
 import { User } from "@/types/User";
 import { computed } from "@vue/reactivity";
-import { ref } from "vue";
 
 const props = defineProps<{
   member: ChannelUser;

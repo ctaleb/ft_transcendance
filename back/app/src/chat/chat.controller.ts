@@ -1,12 +1,10 @@
 import { Body, Controller, Delete, Get, Post, Put, Request, UseGuards } from '@nestjs/common';
-import { request } from 'http';
 import { JwtAuthGuard } from 'src/authentication/jwt-auth.guard';
 import { ChatService } from './chat.service';
 import { ChangeRoleDto } from './dtos/change-role.dto';
 import { CreateChannelDto } from './dtos/create-channel.dto';
 import { DeclineInvitationDto } from './dtos/decline-invitation.dto';
 import { GetChannelMessagesDto } from './dtos/get-channel-messages.dto';
-import { GetChannelsListDto } from './dtos/get-channels-list.dto';
 import { InviteToChannelDto } from './dtos/invite-to-channel.dto';
 import { JoinChannelDto } from './dtos/join-channel.dto';
 import { LeaveChannelDto } from './dtos/leave-channel.dto';

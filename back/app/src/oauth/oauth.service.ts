@@ -1,19 +1,12 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { AuthenticationService } from 'src/authentication/authentication.service';
+import { UserEntity } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
+import { intraUser } from './entities/oauth.entity';
 var fs = require('fs');
 var request = require('request');
-import { authorize } from 'passport';
-import { json } from 'stream/consumers';
-import { CreateOauthDto } from './dto/create-oauth.dto';
-import { UpdateOauthDto } from './dto/update-oauth.dto';
-import { imageFileFilter } from 'src/utils/file-uploading.utils';
-import { ConfigService } from '@nestjs/config';
-import { AuthenticationService } from 'src/authentication/authentication.service';
-import { getFileInfo } from 'prettier';
-import { User } from 'src/server/entities/server.entity';
-import { UserEntity } from 'src/user/user.entity';
-import { intraUser } from './entities/oauth.entity';
 
 @Injectable()
 export class OauthService {
@@ -101,11 +94,15 @@ export class OauthService {
     download(user.image.link, file_path, function () {
       console.log('done');
     });
-    await this.authenticationService.registration(registrationDto, {
-      filename: filename,
-      path: './assets/' + filename,
-      mimetype: 'image/jpeg',
-    }, true);
+    await this.authenticationService.registration(
+      registrationDto,
+      {
+        filename: filename,
+        path: './assets/' + filename,
+        mimetype: 'image/jpeg',
+      },
+      true,
+    );
   }
 
   async check42NicknameUsed(originalLogin: string) {

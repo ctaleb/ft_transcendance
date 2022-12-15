@@ -8,12 +8,10 @@
 <script setup lang="ts">
 import ChatMenu from "@/components/chat/ChatMenu.vue";
 import ChatWindow from "@/components/chat/ChatWindow.vue";
-import FriendAlert from "@/components/FriendAlert.vue";
-import { addAlertMessage, fetchJSONDatas } from "@/functions/funcs";
-import { privateConvs, socketLocal, useStore } from "@/store";
-import { Channel, ChannelRole, ChannelType, ChannelUser, isChannel } from "@/types/Channel";
-import { Conversation } from "@/types/Conversation";
-import { onBeforeMount, onMounted, ref, Ref } from "vue";
+import { fetchJSONDatas } from "@/functions/funcs";
+import { privateConvs } from "@/store";
+import { Channel } from "@/types/Channel";
+import { onBeforeMount, ref, Ref } from "vue";
 
 defineEmits(["updateChannelsList"]);
 

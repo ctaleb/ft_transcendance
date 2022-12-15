@@ -32,9 +32,9 @@
 </template>
 
 <script setup lang="ts">
-import { addAlertMessage, trySetupUser, updateStatus, hideUserMenu } from "@/functions/funcs";
 import ChatContextMenu from "@/components/chat/ChatContextMenu.vue";
-import { currentUserProfile, privateConvs, socketLocal, useStore } from "@/store";
+import { addAlertMessage, hideUserMenu, trySetupUser, updateStatus } from "@/functions/funcs";
+import { privateConvs, socketLocal, useStore } from "@/store";
 import { Channel, isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
 import { Alert } from "@/types/GameSummary";
