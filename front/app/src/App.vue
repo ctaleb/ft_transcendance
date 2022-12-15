@@ -12,7 +12,7 @@
         </div>
       </nav>
       <router-view :key="$route.fullPath" />
-      <div v-if="gameConfirmation" class="overlay">
+      <div v-if="gameConfirmation">
         <GameConfirmation @confirmGame="confirmGame()" @denyGame="denyGame()"></GameConfirmation>
       </div>
       <div v-if="customInvitation">
@@ -428,14 +428,6 @@ body {
 
 .hidden {
   display: none !important;
-}
-
-.overlay {
-  position: absolute;
-  z-index: 1000;
-  width: 100vw;
-  height: 100vh;
-  background: red;
 }
 
 .dot {
