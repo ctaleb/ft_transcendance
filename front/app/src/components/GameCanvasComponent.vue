@@ -201,8 +201,8 @@ function drawinfoPlayground(ctx: CanvasRenderingContext2D) {
 function addWallParticle(gameState: GameState) {
   const hit: particleSet = { particles: [], reach: false };
   let ab: IPoint = { x: gameState.ball.pos.x - gameState.hit.x, y: gameState.ball.pos.y - gameState.hit.y };
-  let end1: IPoint = { x: gameState.hit.x < 250 ? 10 : 490, y: 1.3 * ab.x };
-  let end2: IPoint = { x: gameState.hit.x < 250 ? 10 : 490, y: 1.3 * -ab.x };
+  let end1: IPoint = { x: gameState.hit.x < 250 / scale ? 10 : 490, y: 1.3 * ab.x };
+  let end2: IPoint = { x: gameState.hit.x < 250 / scale ? 10 : 490, y: 1.3 * -ab.x };
 
   //left
   let rand;
@@ -211,8 +211,8 @@ function addWallParticle(gameState: GameState) {
     rand = Math.random() * 10;
     randhalf = -Math.random() * 5;
     hit.particles.push({
-      start: { x: gameState.hit.x < 250 ? 5 * scale : (500 - 7) * scale, y: gameState.hit.y },
-      end: { x: 0 + (gameState.hit.x < 250 ? rand : randhalf), y: end1.y + rand },
+      start: { x: gameState.hit.x < 250 / scale ? 5 * scale : (500 - 7) * scale, y: gameState.hit.y },
+      end: { x: 0 + (gameState.hit.x < 250 / scale ? rand : randhalf), y: end1.y + rand },
       trail: [],
       color: "#edd199",
     });
@@ -221,8 +221,8 @@ function addWallParticle(gameState: GameState) {
     rand = Math.random() * 10;
     randhalf = -Math.random() * 5;
     hit.particles.push({
-      start: { x: gameState.hit.x < 250 ? 5 * scale : (500 - 7) * scale, y: gameState.hit.y },
-      end: { x: 0 + (gameState.hit.x < 250 ? rand : randhalf), y: end2.y + rand },
+      start: { x: gameState.hit.x < 250 / scale ? 5 * scale : (500 - 7) * scale, y: gameState.hit.y },
+      end: { x: 0 + (gameState.hit.x < 250 / scale ? rand : randhalf), y: end2.y + rand },
       trail: [],
       color: "#edd199",
     });
@@ -263,34 +263,6 @@ function addGoalParticle(gameState: GameState) {
   }
 }
 
-function addBarParticle(gameState: GameState) {
-  const hit: particleSet = { particles: [], reach: false };
-  let bar: IBar = gameState.hit.y < 250 ? gameState.clientBar : gameState.hostBar;
-  // let end: IPoint = { x: gameState.hit.y < 250 ? 90 * scale : -90 * scale, y: 0 };
-
-  let rand;
-
-  for (let i = 0; i < 3; i++) {
-    rand = Math.random() * 50;
-    hit.particles.push({
-      start: { x: bar.pos.x + bar.size.x, y: bar.pos.y },
-      end: { x: rand, y: 0 },
-      trail: [],
-      color: gameState.hit.y < 250 ? "#E01435" : "#1B90F0",
-    });
-  }
-  for (let i = 0; i < 3; i++) {
-    rand = Math.random() * 50;
-    hit.particles.push({
-      start: { x: bar.pos.x - bar.size.x, y: bar.pos.y },
-      end: { x: -rand, y: 0 },
-      trail: [],
-      color: gameState.hit.y < 250 ? "#E01435" : "#1B90F0",
-    });
-  }
-  particles.push(hit);
-}
-
 function drawParticle(ctx: CanvasRenderingContext2D, gameState: GameState) {
   particles.forEach((elemento) => {
     if (elemento.particles[0].trail.length == 10) elemento.reach = true;
@@ -325,7 +297,7 @@ function drawScore(ctx: CanvasRenderingContext2D, gameState: GameState) {
     if (i < gameState.score.client)
       ctx.drawImage(
         fillRedImg,
-        cWidth * 0.25 + ((cWidth * 0.5) / (slot + 1)) * (i + 1) - 6 * scale,
+        cWidth * 0.25 + ((cWidth * 0.5) / (+slot + 1)) * (i + 1) - 6 * scale,
         cHeight * 0.148 - 25 * scale + (8 * scale) / 2,
         12 * scale,
         12 * scale
@@ -336,7 +308,7 @@ function drawScore(ctx: CanvasRenderingContext2D, gameState: GameState) {
     if (i < gameState.score.host)
       ctx.drawImage(
         fillImg,
-        cWidth * 0.25 + ((cWidth * 0.5) / (slot + 1)) * (i + 1) - 6 * scale,
+        cWidth * 0.25 + ((cWidth * 0.5) / (+slot + 1)) * (i + 1) - 6 * scale,
         cHeight * 0.894 - 25 * scale + (8 * scale) / 2,
         12 * scale,
         12 * scale
@@ -526,30 +498,52 @@ const wallBallCollision = (state: GameState) => {
   }
 };
 
-const predict = () => {
-  gStatePredicted.ball.pos.x += gStatePredicted.ball.speed.x;
-  gStatePredicted.ball.pos.y += gStatePredicted.ball.speed.y;
-  wallBallCollision(gStatePredicted);
-  gStatePredicted.frame++;
+const interpolate = () => {
+  gStatePredicted.ball.pos.x = (gStatePredicted.ball.pos.x + gState.ball.pos.x) / 2;
+  gStatePredicted.ball.pos.y = (gStatePredicted.ball.pos.y + gState.ball.pos.y) / 2;
+  gStatePredicted.ball.speed.x = (gStatePredicted.ball.speed.x + gState.ball.speed.x) / 2;
+  gStatePredicted.ball.speed.y = (gStatePredicted.ball.speed.y + gState.ball.speed.y) / 2;
+  gStatePredicted.hostBar.pos.x = (gStatePredicted.hostBar.pos.x + gState.hostBar.pos.x) / 2;
+  gStatePredicted.clientBar.pos.x = (gStatePredicted.clientBar.pos.x + gState.clientBar.pos.x) / 2;
+  gStatePredicted.hostBar.speed = (gStatePredicted.hostBar.speed + gState.hostBar.speed) / 2;
+  gStatePredicted.clientBar.speed = (gStatePredicted.clientBar.speed + gState.clientBar.speed) / 2;
+  gStatePredicted.hostBar.smashing = gState.hostBar.smashing;
+  gStatePredicted.clientBar.smashing = gState.clientBar.smashing;
+  gStatePredicted.hit = gState.hit;
+  gStatePredicted.state = gState.state;
+  gStatePredicted.score = gState.score;
+};
+
+const predict = (currentFrame: number) => {
+  gStatePredicted.state = gState.state;
+  if (gStatePredicted.state == "play") {
+    gStatePredicted.ball.pos.x += gStatePredicted.ball.speed.x;
+    gStatePredicted.ball.pos.y += gStatePredicted.ball.speed.y;
+    wallBallCollision(gStatePredicted);
+    gStatePredicted.clientBar.pos.x += gStatePredicted.clientBar.speed;
+    gStatePredicted.hostBar.pos.x += gStatePredicted.hostBar.speed;
+  }
+  interpolate();
+  gStatePredicted.frame = currentFrame + 2;
 };
 
 const particleEvent = (gameState: GameState) => {
   if (gameState.hit.hit == 1) addWallParticle(gameState);
-  // else if (gameState.hit.hit == 2) addBarParticle(gameState);
   else if (gameState.hit.hit == 3) addGoalParticle(gameState);
   else goal = false;
 };
 
 const gameLoop = () => {
-  gStatePredicted = JSON.parse(JSON.stringify(gState));
+  let currentFrame: number = 0;
   intervalId = setInterval(function () {
-    // if (gStateRender.frame >= gStatePredicted.frame && gState.state == "play") {
-    //   predict();
-    //   scalePosition(gStatePredicted);
-    // } else {
-    // gStatePredicted = JSON.parse(JSON.stringify(gState));
-    scalePosition(gState);
-    // }
+    if (gState.frame > 5 && gState.state != "play") {
+      predict(currentFrame);
+      scalePosition(gStatePredicted);
+    } else {
+      gStatePredicted = JSON.parse(JSON.stringify(gState));
+      currentFrame = gState.frame + 2;
+      scalePosition(gState);
+    }
     if (ctx) {
       particleEvent(gStateRender);
       clientScore.value = gStateRender.score.client;
@@ -562,7 +556,8 @@ const gameLoop = () => {
       } else if (!gStateRender.hostBar.smashing || kickOff) hSmashingPercent = 0;
       render(ctx, gStateRender);
     }
-  }, 1000 / 120);
+    currentFrame++;
+  }, 1000 / 60);
 };
 </script>
 <style lang="scss" scoped>
