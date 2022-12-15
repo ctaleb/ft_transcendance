@@ -22,7 +22,7 @@
 </template>
 
 <script lang="ts" setup>
-import { useStore } from "@/store";
+import { currentUserProfile, useStore } from "@/store";
 import { History } from "@/types/GameSummary";
 import { User } from "@/types/User";
 import { useRouter } from "vue-router";
@@ -35,7 +35,7 @@ const router = useRouter();
 const store = useStore();
 
 const isUserWinner = (): boolean => {
-  if (props.summary.winnerID == store.user?.id) return true;
+  if (props.summary.winnerID == currentUserProfile.value?.id) return true;
   return false;
 };
 
