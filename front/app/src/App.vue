@@ -12,7 +12,7 @@
         </div>
       </nav>
       <router-view :key="$route.fullPath" />
-      <div v-if="gameConfirmation">
+      <div v-if="gameConfirmation" class="overlay">
         <GameConfirmation @confirmGame="confirmGame()" @denyGame="denyGame()"></GameConfirmation>
       </div>
       <div v-if="customInvitation">
@@ -57,9 +57,7 @@ const failedInvitation = ref(false);
 const multiClientWarning = ref(false);
 const invSender = ref("Placeholder");
 
-trySetupUser().catch((err) => {
-  
-});
+trySetupUser().catch((err) => {});
 
 let alertMessages: Alert[] = store.message;
 
@@ -430,6 +428,14 @@ body {
 
 .hidden {
   display: none !important;
+}
+
+.overlay {
+  position: absolute;
+  z-index: 1000;
+  width: 100vw;
+  height: 100vh;
+  background: red;
 }
 
 .dot {
