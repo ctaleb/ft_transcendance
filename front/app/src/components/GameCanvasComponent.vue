@@ -534,27 +534,29 @@ const particleEvent = (gameState: GameState) => {
 const gameLoop = () => {
   let currentFrame: number = 0;
   intervalId = setInterval(function () {
-    if (gState.frame > 5 && gState.state != "play") {
-      predict(currentFrame);
-      scalePosition(gStatePredicted);
-    } else {
-      gStatePredicted = JSON.parse(JSON.stringify(gState));
-      currentFrame = gState.frame + 2;
-      scalePosition(gState);
+    if (gState) {
+      if (gState.frame > 5 && gState.state != "play") {
+        predict(currentFrame);
+        scalePosition(gStatePredicted);
+      } else {
+        gStatePredicted = JSON.parse(JSON.stringify(gState));
+        currentFrame = gState.frame + 2;
+        scalePosition(gState);
+      }
+      if (ctx) {
+        particleEvent(gStateRender);
+        clientScore.value = gStateRender.score.client;
+        hostScore.value = gStateRender.score.host;
+        if (gStateRender.clientBar.smashing && cSmashingPercent < 100 && !kickOff) {
+          cSmashingPercent += 2;
+        } else if (!gStateRender.clientBar.smashing || kickOff) cSmashingPercent = 0;
+        if (gStateRender.hostBar.smashing && hSmashingPercent < 100 && !kickOff) {
+          hSmashingPercent += 2;
+        } else if (!gStateRender.hostBar.smashing || kickOff) hSmashingPercent = 0;
+        render(ctx, gStateRender);
+      }
+      currentFrame++;
     }
-    if (ctx) {
-      particleEvent(gStateRender);
-      clientScore.value = gStateRender.score.client;
-      hostScore.value = gStateRender.score.host;
-      if (gStateRender.clientBar.smashing && cSmashingPercent < 100 && !kickOff) {
-        cSmashingPercent += 2;
-      } else if (!gStateRender.clientBar.smashing || kickOff) cSmashingPercent = 0;
-      if (gStateRender.hostBar.smashing && hSmashingPercent < 100 && !kickOff) {
-        hSmashingPercent += 2;
-      } else if (!gStateRender.hostBar.smashing || kickOff) hSmashingPercent = 0;
-      render(ctx, gStateRender);
-    }
-    currentFrame++;
   }, 1000 / 60);
 };
 </script>
