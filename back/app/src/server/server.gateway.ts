@@ -6,19 +6,16 @@ import {
   OnGatewayInit,
   SubscribeMessage,
   WebSocketGateway,
-  WebSocketServer,
+  WebSocketServer
 } from '@nestjs/websockets';
 import { instanceToPlain } from 'class-transformer';
-import { hostname } from 'os';
 import { Server, Socket } from 'socket.io';
 import { ChatService } from 'src/chat/chat.service';
 import { ChannelMemberEntity, ChannelRole } from 'src/chat/entities/channel_member.entity';
 import { FriendshipService } from 'src/friendship/friendship.service';
-import { ChannelMember } from 'src/server/entities/channel';
 import { UserEntity } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
 import { PrivateConvService } from '../private_conv/private_conv.service';
-import { CreateMessageDto } from './dto/create-message.dto';
 import { Game, GameOptions, IPower } from './entities/server.entity';
 import { ServerService } from './server.service';
 
@@ -222,6 +219,13 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       this.gameLoop(game);
     }, 10);
   };
+
+  @SubscribeMessage('newNick')
+  changeNick(@MessageBody('oldNick') oldNick: string, @MessageBody('newNick') newNick: string, @ConnectedSocket() client: Socket) {
+    const player = this.serverService.SocketToPlayer(client);
+    if (!player || player.name != oldNick) return;
+    player.name = newNick;
+  }
 
   @SubscribeMessage('key')
   recieveKey(

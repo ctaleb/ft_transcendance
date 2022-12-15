@@ -23,7 +23,6 @@ import { GameSummaryData } from "@/types/GameSummary";
 import { User } from "@/types/User";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
-import { onMounted, ref } from "vue";
 import PlayerInfo from "./PlayerInfo.vue";
 
 dayjs.extend(utc);

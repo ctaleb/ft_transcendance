@@ -41,12 +41,10 @@
 </template>
 
 <script setup lang="ts">
-import ChannelInModal from "@/components/chat/modals/ChannelInModal.vue";
 import { addAlertMessage, fetchJSONDatas } from "@/functions/funcs";
 import { socketLocal, useStore } from "@/store";
-import { Channel, ChannelUser } from "@/types/Channel";
-import { memberExpression, numberLiteralTypeAnnotation } from "@babel/types";
-import { onMounted, ref, Ref } from "vue";
+import { ChannelUser } from "@/types/Channel";
+import { ref } from "vue";
 
 const props = defineProps<{
   member: ChannelUser;

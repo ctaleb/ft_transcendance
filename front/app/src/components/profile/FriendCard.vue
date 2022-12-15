@@ -32,7 +32,6 @@
 </template>
 
 <script lang="ts" setup>
-import FriendAlert from "@/components/FriendAlert.vue";
 import { currentUserProfile, socketLocal, useStore } from "@/store";
 import { User } from "@/types/User";
 import { computed } from "vue";

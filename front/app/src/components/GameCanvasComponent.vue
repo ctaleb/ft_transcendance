@@ -1,12 +1,12 @@
 <template>
   <div class="playZone">
-    <div class="opponent">
+    <div v-if="opponent" class="opponent">
       <div :style="'font-size: ' + textSize + 'px;'" class="elo txt">{{ opponent.elo }}</div>
       <div :style="'font-size: ' + textSize + 'px;'" class="name txt">{{ opponent.nickname }}</div>
       <img :src="User.getAvatar(opponent)" />
     </div>
     <canvas class="canvas" ref="canvas"> </canvas>
-    <div class="us">
+    <div v-if="us" class="us">
       <img :src="User.getAvatar(us)" />
       <div :style="'font-size: ' + textSize + 'px;'" class="name txt">{{ us.nickname }}</div>
       <div :style="'font-size: ' + textSize + 'px;'" class="elo txt">{{ us.elo }}</div>
@@ -15,8 +15,8 @@
 </template>
 
 <script setup lang="ts">
-import { socketLocal, useStore } from "@/store";
-import { GameOptions, GameRoom, GameState, IBar, IPoint, particleSet } from "@/types/Game";
+import { socketLocal } from "@/store";
+import { GameOptions, GameState, IBar, IPoint, particleSet } from "@/types/Game";
 import { User } from "@/types/User";
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import ballUrl from "../assets/ball.png";
@@ -27,19 +27,17 @@ import energyRedUrl from "../assets/energy_red.png";
 import fillUrl from "../assets/fill_slot.png";
 import paddleUrl from "../assets/paddle_grec.png";
 import paddleRedUrl from "../assets/paddle_grec_red.png";
-import plateauUrl from "../assets/plateauV2.png";
-import plateauHUrl from "../assets/plateauhaut.png";
 import plateauBUrl from "../assets/plateaubas.png";
+import plateauHUrl from "../assets/plateauhaut.png";
+import plateauUrl from "../assets/plateauV2.png";
 import powerChargeUrl from "../assets/powerCharge.png";
 import slotUrl from "../assets/slot.png";
 import fillRedUrl from "../assets/slot_fill_enemy.png";
-import { toRef } from "vue";
-import { useRoute, useRouter } from "vue-router";
 
 const props = defineProps<{
-  opponent: User;
-  us: User;
-  gameOptions: GameOptions;
+  opponent?: User;
+  us?: User;
+  gameOptions?: GameOptions;
 }>();
 
 const defaultGameOptions: GameOptions = {
@@ -291,7 +289,7 @@ function drawParticle(ctx: CanvasRenderingContext2D, gameState: GameState) {
   });
 }
 function drawScore(ctx: CanvasRenderingContext2D, gameState: GameState) {
-  const slot: number = props.gameOptions.scoreMax;
+  const slot: number = props.gameOptions!.scoreMax;
   for (let i: number = 0; i < slot; i++) {
     ctx.drawImage(slotImg, cWidth * 0.25 + ((cWidth * 0.5) / (+slot + 1)) * (i + 1) - 10 * scale, cHeight * 0.148 - 25 * scale, 20 * scale, 20 * scale);
     if (i < gameState.score.client)

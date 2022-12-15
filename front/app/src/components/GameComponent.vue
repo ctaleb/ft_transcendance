@@ -100,12 +100,10 @@
 
 <script setup lang="ts">
 import GameCanvasComponent from "@/components/GameCanvasComponent.vue";
-import { fetchJSONDatas } from "@/functions/funcs";
 import { socketLocal, useStore } from "@/store";
 import { GameOptions, GameRoom } from "@/types/Game";
 import { GameSummaryData } from "@/types/GameSummary";
-import { getUserByNickname, User } from "@/types/User";
-import { onMounted, onUnmounted, reactive, Ref, ref, watch } from "vue";
+import { onMounted, onUnmounted, reactive, ref, watch } from "vue";
 import Denial from "./InviteDenied/Modal.vue";
 import PowerSliderComponent from "./PowerSliderComponent.vue";
 import Modal from "./Summary/Modal.vue";
