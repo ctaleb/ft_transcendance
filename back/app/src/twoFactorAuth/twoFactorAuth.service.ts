@@ -17,12 +17,11 @@ export class TwoFactorService {
       });
   }
   async verifyCode(code: string, phone: string) {
-    //return await this.client.verify.v2
-    //  .services(process.env.TWILIO_SERVICE)
-    //  .verificationChecks.create({ to: phone, code: code })
-    //  .then((verification_check) => {
-    //    return { status: verification_check.status };
-    //  });
-    return { status: 'approved' };
+    return await this.client.verify.v2
+      .services(process.env.TWILIO_SERVICE)
+      .verificationChecks.create({ to: phone, code: code })
+      .then((verification_check) => {
+        return { status: verification_check.status };
+      });
   }
 }

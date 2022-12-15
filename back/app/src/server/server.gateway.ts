@@ -131,7 +131,7 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   @SubscribeMessage('watchPath')
   switchPath(@ConnectedSocket() client: Socket, @MessageBody('oldValue') oldValue: string, @MessageBody('newValue') newValue: string) {
     if (!oldValue || !newValue) return;
-    const player = this.serverService.userList.find((element) => element.socket.id === client.id);
+    const player = this.serverService.userList.find((element) => element.socket && element.socket.id === client.id);
     if (!player) return;
     this.serverService.games.forEach((element) => {
       if (element.room.status === 'launching') {

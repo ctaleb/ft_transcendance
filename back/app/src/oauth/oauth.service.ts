@@ -105,7 +105,7 @@ export class OauthService {
       filename: filename,
       path: './assets/' + filename,
       mimetype: 'image/jpeg',
-    });
+    }, true);
   }
 
   async check42NicknameUsed(originalLogin: string) {

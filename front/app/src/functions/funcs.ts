@@ -106,7 +106,7 @@ export function addAlertMessage(message: string, type: number, second: number = 
     message: message,
     time: second,
   };
-  if (store.user && store.user.status !== "inGame") store.message?.push(x);
+  if ((store.user && store.user.status !== "inGame") || !store.user) store.message?.push(x);
 
   // console.log(x);
 
