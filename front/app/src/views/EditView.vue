@@ -64,7 +64,7 @@
 
 <script lang="ts">
 import { fetchJSONDatas, trySetupUser } from "@/functions/funcs";
-import { useStore } from "@/store";
+import { socketLocal, useStore } from "@/store";
 import { getUserById } from "@/types/User";
 import { defineComponent, ref } from "vue";
 let funcs = require("../functions/funcs");
@@ -110,6 +110,10 @@ export default defineComponent({
         localStorage.setItem("user", JSON.stringify(fetch_ret.user));
         localStorage.setItem("token", fetch_ret.token);
         this.user = fetch_ret.user;
+        socketLocal?.value?.emit("newNick", {
+          oldNick: this.store.user!.nickname,
+          newNick: this.nickname,
+        });
         this.store.user!.nickname = this.nickname;
         funcs.addAlertMessage("Nickname successfully updated", 2);
       }

@@ -225,6 +225,13 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     }, 10);
   };
 
+  @SubscribeMessage('newNick')
+  changeNick(@MessageBody('oldNick') oldNick: string, @MessageBody('newNick') newNick: string, @ConnectedSocket() client: Socket) {
+    const player = this.serverService.SocketToPlayer(client);
+    if (!player || player.name != oldNick) return;
+    player.name = newNick;
+  }
+
   @SubscribeMessage('key')
   recieveKey(
     @MessageBody('key') key: string,
