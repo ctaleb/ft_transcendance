@@ -52,7 +52,7 @@ const emit = defineEmits<{
   background-color: $secondary !important;
   color: $primary;
   @include screen-lg {
-    width: 100vw;
+    width: 90vw;
   }
   .midSection {
     display: flex;

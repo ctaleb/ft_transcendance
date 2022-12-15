@@ -86,15 +86,10 @@ import SummaryCard from "@/components/profile/SummaryCard.vue";
 import { addAlertMessage, fetchJSONDatas } from "@/functions/funcs";
 import { currentUserProfile, socketLocal, useStore } from "@/store";
 import { History } from "@/types/GameSummary";
-import { getUserByNickname, User } from "@/types/User";
-import { functionExpression, stringLiteral } from "@babel/types";
-import { computed, onMounted, ref, watch } from "vue";
-import { RouterLink, useRoute } from "vue-router";
-import editUrl from "../assets/edit.png";
-import shutdownUrl from "../assets/shutdown.png";
-import { useRouter } from "vue-router";
-import { Conversation } from "@/types/Conversation";
 import { transformDate } from "@/types/Message";
+import { getUserByNickname, User } from "@/types/User";
+import { computed, onMounted, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 let funcs = require("../functions/funcs");
 
 const router = useRouter();

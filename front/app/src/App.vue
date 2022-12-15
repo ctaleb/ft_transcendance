@@ -40,7 +40,7 @@ import { Conversation } from "@/types/Conversation";
 import { Alert } from "@/types/GameSummary";
 import { Message, transformDate } from "@/types/Message";
 import { getUserByNickname } from "@/types/User";
-import { onMounted, ref, watch } from "vue";
+import { onMounted, onUnmounted, ref, watch } from "vue";
 import { RouterLink, RouterView, useRoute, useRouter } from "vue-router";
 import AlertCard from "./components/AlertCard.vue";
 import CustomInvitation from "./components/CustomInvitation/Modal.vue";
@@ -168,114 +168,202 @@ onMounted(() => {
         });
       }
       socketLocal?.value?.emit("watchPath", { oldValue, newValue });
+      showInvite(false);
+      showConfirmation(false);
     }
   );
-
+  if (socketLocal.value) {
+    socketLocal.value?.on("noMultiClient", () => {
+      showMultiClientWarning(true);
+    });
+    socketLocal.value?.on("updateOneUserStatus", (obj: { id: number; status: string }) => {
+      updateStatus(obj.id, obj.status);
+    });
+    socketLocal.value?.on("customInvite", (inviter: string) => {
+      // theRoom = gameRoom;
+      showInvite(true);
+    });
+    socketLocal.value?.on("gameConfirmation", (gameRoom: any) => {
+      // theRoom = gameRoom;
+      showConfirmation(true);
+    });
+    socketLocal.value?.on("invitation", (requester: string) => {
+      invSender.value = requester;
+      showInvite(true);
+    });
+    socketLocal.value?.on("blocked", (userId: number, nickname: string) => {
+      if (store.user && store.user.invitations) {
+        store.user.invitations = store.user.invitations.filter((invit) => invit.id !== userId);
+      }
+    });
+    socketLocal.value?.on("gameConfirmationTimeout", () => {
+      showConfirmation(false);
+      // startButton.value = true;
+      // lobbyStatus.value = "Find Match";
+    });
+    socketLocal.value?.on("friendshipInvite", (requester: string) => {
+      getUserByNickname(requester).then((data) => {
+        store.user?.invitations?.push(data!);
+        addAlertMessage(`Incoming friendship request from ${requester}`, 1);
+      });
+    });
+    socketLocal.value?.on("acceptInvite", (requester: string) => {
+      getUserByNickname(requester).then((data) => {
+        store.user?.friends?.push(data!);
+      });
+    });
+    socketLocal.value?.on("removeFriend", (requester: string) => {
+      getUserByNickname(requester).then((data) => {
+        store.user?.friends?.splice(store.user?.friends?.indexOf(data!), 1);
+      });
+    });
+    socketLocal.value?.on("inviteFailure", () => {
+      showFailure(true);
+    });
+    socketLocal?.value?.on("Message to the client", async (privateMessage: Message) => {
+      if (!isChannel(store.currentChat!) && privateMessage.author === (<Conversation>store.currentChat)?.other.nickname) {
+        store.currentChat?.messages?.push(transformDate(privateMessage));
+      } else {
+        addAlertMessage(`New message from ${privateMessage.author}`, 1);
+      }
+    });
+    socketLocal.value?.on("messageReceived", (channelId: number, channelName: string, msg: Message) => {
+      if (isChannel(store.currentChat!) && channelId === store.currentChat!.id) {
+        store.currentChat?.messages?.push(transformDate(msg));
+      } else {
+        addAlertMessage(`New message from ${msg.author} in "${channelName}"`, 1);
+      }
+    });
+    socketLocal.value?.on("incomingChannelInvitation", (channel: string) => {
+      addAlertMessage(`You've been invited to join "${channel}" channel`, 1);
+    });
+    socketLocal.value?.on("gotBannedFromChannel", (channel: string) => {
+      if (store.currentChat && isChannel(store.currentChat!) && (<Channel>store.currentChat)?.name === channel) {
+        store.$patch({
+          currentChat: undefined,
+        });
+      }
+      addAlertMessage(`You've been banned from "${channel}" channel`, 3);
+    });
+    socketLocal.value?.on("gotUnbannedFromChannel", (channel: string) => {
+      addAlertMessage(`You've been unbanned from "${channel}" channel`, 1);
+    });
+  }
   watch(
     () => socketLocal.value,
     () => {
-      if (!socketLocal.value?.hasListeners("noMultiClient")) {
-        socketLocal.value?.on("noMultiClient", () => {
-          showMultiClientWarning(true);
+      socketLocal.value?.removeListener("noMultiClient");
+      socketLocal.value?.on("noMultiClient", () => {
+        showMultiClientWarning(true);
+      });
+      socketLocal.value?.removeListener("updateOneUserStatus");
+      socketLocal.value?.on("updateOneUserStatus", (obj: { id: number; status: string }) => {
+        updateStatus(obj.id, obj.status);
+      });
+      socketLocal.value?.removeListener("customInvite");
+      socketLocal.value?.on("customInvite", (inviter: string) => {
+        // theRoom = gameRoom;
+        showInvite(true);
+      });
+      socketLocal.value?.removeListener("gameConfirmation");
+      socketLocal.value?.on("gameConfirmation", (gameRoom: any) => {
+        // theRoom = gameRoom;
+        showConfirmation(true);
+      });
+      socketLocal.value?.removeListener("invitation");
+      socketLocal.value?.on("invitation", (requester: string) => {
+        invSender.value = requester;
+        showInvite(true);
+      });
+      socketLocal.value?.removeListener("blocked");
+      socketLocal.value?.on("blocked", (userId: number, nickname: string) => {
+        if (store.user && store.user.invitations) {
+          store.user.invitations = store.user.invitations.filter((invit) => invit.id !== userId);
+        }
+      });
+      socketLocal.value?.removeListener("gameConfirmationTimeout");
+      socketLocal.value?.on("gameConfirmationTimeout", () => {
+        showConfirmation(false);
+        // startButton.value = true;
+        // lobbyStatus.value = "Find Match";
+      });
+      socketLocal.value?.removeListener("friendshipInvite");
+      socketLocal.value?.on("friendshipInvite", (requester: string) => {
+        getUserByNickname(requester).then((data) => {
+          store.user?.invitations?.push(data!);
+          addAlertMessage(`Incoming friendship request from ${requester}`, 1);
         });
-      }
-      if (!socketLocal.value?.hasListeners("updateOneUserStatus")) {
-        socketLocal.value?.on("updateOneUserStatus", (obj: { id: number; status: string }) => {
-          updateStatus(obj.id, obj.status);
+      });
+      socketLocal.value?.removeListener("acceptInvite");
+      socketLocal.value?.on("acceptInvite", (requester: string) => {
+        getUserByNickname(requester).then((data) => {
+          store.user?.friends?.push(data!);
         });
-      }
-      if (!socketLocal.value?.hasListeners("customInvite")) {
-        socketLocal.value?.on("customInvite", (inviter: string) => {
-          // theRoom = gameRoom;
-          showInvite(true);
+      });
+      socketLocal.value?.removeListener("removeFriend");
+      socketLocal.value?.on("removeFriend", (requester: string) => {
+        getUserByNickname(requester).then((data) => {
+          store.user?.friends?.splice(store.user?.friends?.indexOf(data!), 1);
         });
-      }
-      if (!socketLocal.value?.hasListeners("gameConfirmation")) {
-        socketLocal.value?.on("gameConfirmation", (gameRoom: any) => {
-          // theRoom = gameRoom;
-          showConfirmation(true);
-        });
-      }
-      if (!socketLocal.value?.hasListeners("invitation")) {
-        socketLocal.value?.on("invitation", (requester: string) => {
-          invSender.value = requester;
-          showInvite(true);
-        });
-      }
-      if (!socketLocal.value?.hasListeners("gameConfirmationTimeout")) {
-        socketLocal.value?.on("gameConfirmationTimeout", () => {
-          showConfirmation(false);
-          // startButton.value = true;
-          // lobbyStatus.value = "Find Match";
-        });
-      }
-      if (!socketLocal.value?.hasListeners("friendshipInvite")) {
-        socketLocal.value?.on("friendshipInvite", (requester: string) => {
-          getUserByNickname(requester).then((data) => {
-            store.user?.invitations?.push(data!);
-            addAlertMessage(`Incoming friendship request from ${requester}`, 1);
+      });
+      socketLocal.value?.removeListener("inviteFailure");
+      socketLocal.value?.on("inviteFailure", () => {
+        showFailure(true);
+      });
+      socketLocal.value?.removeListener("Message to the client");
+      socketLocal?.value?.on("Message to the client", async (privateMessage: Message) => {
+        if (!isChannel(store.currentChat!) && privateMessage.author === (<Conversation>store.currentChat)?.other.nickname) {
+          store.currentChat?.messages?.push(transformDate(privateMessage));
+        } else {
+          addAlertMessage(`New message from ${privateMessage.author}`, 1);
+        }
+      });
+      socketLocal.value?.removeListener("messageReceived");
+      socketLocal.value?.on("messageReceived", (channelId: number, channelName: string, msg: Message) => {
+        if (isChannel(store.currentChat!) && channelId === store.currentChat!.id) {
+          store.currentChat?.messages?.push(transformDate(msg));
+        } else {
+          addAlertMessage(`New message from ${msg.author} in "${channelName}"`, 1);
+        }
+      });
+      socketLocal.value?.removeListener("incomingChannelInvitation");
+      socketLocal.value?.on("incomingChannelInvitation", (channel: string) => {
+        addAlertMessage(`You've been invited to join "${channel}" channel`, 1);
+      });
+      socketLocal.value?.removeListener("gotBannedFromChannel");
+      socketLocal.value?.on("gotBannedFromChannel", (channel: string) => {
+        if (store.currentChat && isChannel(store.currentChat!) && (<Channel>store.currentChat)?.name === channel) {
+          store.$patch({
+            currentChat: undefined,
           });
-        });
-      }
-      if (!socketLocal.value?.hasListeners("acceptInvite")) {
-        socketLocal.value?.on("acceptInvite", (requester: string) => {
-          getUserByNickname(requester).then((data) => {
-            store.user?.friends?.push(data!);
-          });
-        });
-      }
-      if (!socketLocal.value?.hasListeners("removeFriend")) {
-        socketLocal.value?.on("removeFriend", (requester: string) => {
-          getUserByNickname(requester).then((data) => {
-            store.user?.friends?.splice(store.user?.friends?.indexOf(data!), 1);
-          });
-        });
-      }
-      if (!socketLocal.value?.hasListeners("inviteFailure")) {
-        socketLocal.value?.on("inviteFailure", () => {
-          showFailure(true);
-        });
-      }
-      if (!socketLocal?.value?.hasListeners("Message to the client")) {
-        socketLocal?.value?.on("Message to the client", async (privateMessage: Message) => {
-          if (!isChannel(store.currentChat!) && privateMessage.author === (<Conversation>store.currentChat)?.other.nickname) {
-            store.currentChat?.messages?.push(transformDate(privateMessage));
-          } else {
-            addAlertMessage(`New message from ${privateMessage.author}`, 1);
-          }
-        });
-      }
-      if (!socketLocal.value?.hasListeners("messageRecieved")) {
-        socketLocal.value?.on("messageReceived", (channelId: number, channelName: string, msg: Message) => {
-          if (isChannel(store.currentChat!) && channelId === store.currentChat!.id) {
-            store.currentChat?.messages?.push(transformDate(msg));
-          } else {
-            addAlertMessage(`New message from ${msg.author} in "${channelName}"`, 1);
-          }
-        });
-      }
-      if (!socketLocal.value?.hasListeners("incomingChannelInvitation")) {
-        socketLocal.value?.on("incomingChannelInvitation", (channel: string) => {
-          addAlertMessage(`You've been invited to join "${channel}" channel`, 1);
-        });
-      }
-      if (!socketLocal.value?.hasListeners("gotBannedFromChannel")) {
-        socketLocal.value?.on("gotBannedFromChannel", (channel: string) => {
-          if (store.currentChat && isChannel(store.currentChat!) && (<Channel>store.currentChat)?.name === channel) {
-            store.$patch({
-              currentChat: undefined,
-            });
-          }
-          addAlertMessage(`You've been banned from "${channel}" channel`, 3);
-        });
-      }
-      if (!socketLocal.value?.hasListeners("gotUnbannedFromChannel")) {
-        socketLocal.value?.on("gotUnbannedFromChannel", (channel: string) => {
-          addAlertMessage(`You've been unbanned from "${channel}" channel`, 1);
-        });
-      }
+        }
+        addAlertMessage(`You've been banned from "${channel}" channel`, 3);
+      });
+      socketLocal.value?.removeListener("gotUnbannedFromChannel");
+      socketLocal.value?.on("gotUnbannedFromChannel", (channel: string) => {
+        addAlertMessage(`You've been unbanned from "${channel}" channel`, 1);
+      });
     }
   );
+});
+
+onUnmounted(() => {
+  socketLocal.value?.removeListener("noMultiClient");
+  socketLocal.value?.removeListener("updateOneUserStatus");
+  socketLocal.value?.removeListener("customInvite");
+  socketLocal.value?.removeListener("gameConfirmation");
+  socketLocal.value?.removeListener("invitation");
+  socketLocal.value?.removeListener("blocked");
+  socketLocal.value?.removeListener("gameConfirmationTimeout");
+  socketLocal.value?.removeListener("friendshipInvite");
+  socketLocal.value?.removeListener("acceptInvite");
+  socketLocal.value?.removeListener("removeFriend");
+  socketLocal.value?.removeListener("inviteFailure");
+  socketLocal.value?.removeListener("Message to the client");
+  socketLocal.value?.removeListener("messageReceived");
+  socketLocal.value?.removeListener("incomingChannelInvitation");
+  socketLocal.value?.removeListener("gotBannedFromChannel");
+  socketLocal.value?.removeListener("gotUnbannedFromChannel");
 });
 </script>
 

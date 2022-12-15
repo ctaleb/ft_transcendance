@@ -109,8 +109,19 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       if (player) {
         if (this.serverService.playerQueue.find((element) => element.id === player.id)) {
           this.serverService.playerQueue.splice(this.serverService.playerQueue.indexOf(player), 1);
-          this.serverService.userList.splice(this.serverService.userList.indexOf(player), 1);
-          this.serverService.updateStatus(player.id, 'offline');
+          //   this.serverService.userList.splice(this.serverService.userList.indexOf(player), 1);
+          //   this.serverService.updateStatus(player.id, 'offline');
+        } else if (
+          player.gameData.status === 'inCustomLobby' ||
+          player.gameData.status === 'hostingCustomLobby' ||
+          player.gameData.status === 'ready' ||
+          player.gameData.status === 'invited'
+        ) {
+          const game = this.serverService.games.find((gme) => gme.host.socket.id === client.id || gme.client.socket.id === client.id);
+          if (game) {
+            if (game.client.socket.id === client.id) this.serverService.stopCustom(game.host, game.client, game);
+            else this.serverService.stopCustom(game.client, game.host, game);
+          }
         } else {
           this.serverService.games.forEach((element) => {
             if (element.room.status === 'launching') return;
@@ -120,18 +131,21 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
               element.room.status = 'hostForfeit';
             }
           });
-          this.serverService.updateStatus(player.id, 'offline');
-          this.serverService.userList.splice(this.serverService.userList.indexOf(player), 1);
         }
+        // this.serverService.updateStatus(player.id, 'offline');
+        // this.serverService.userList.splice(this.serverService.userList.indexOf(player), 1);
       }
       client.disconnect();
+      //   this.serverService.userList.forEach((element) => {
+      //     if (element.socket && element.socket.id === client.id) this.serverService.userList.splice(this.serverService.userList.indexOf(element), 1);
+      //   });
     }
   }
 
   @SubscribeMessage('watchPath')
   switchPath(@ConnectedSocket() client: Socket, @MessageBody('oldValue') oldValue: string, @MessageBody('newValue') newValue: string) {
     if (!oldValue || !newValue) return;
-    const player = this.serverService.userList.find((element) => element.socket.id === client.id);
+    const player = this.serverService.userList.find((element) => element.socket && element.socket.id === client.id);
     if (!player) return;
     this.serverService.games.forEach((element) => {
       if (element.room.status === 'launching') {
@@ -182,6 +196,9 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
 
   handleDisconnect(@ConnectedSocket() client: Socket) {
     console.log('Socket ' + client.id + ' successfully disconnected');
+    this.serverService.userList.forEach((element) => {
+      if (element.socket && element.socket.id === client.id) this.serverService.userList.splice(this.serverService.userList.indexOf(element), 1);
+    });
   }
 
   gameLoop = (game: Game) => {
@@ -457,12 +474,19 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     if (!getAuthor) return;
     const receiver = this.serverService.userList.find((element) => element.name === friendNickname);
     if (receiver) {
-      requester = await this.userService.getUserByNickname(receiver.name);
+      requester = await this.userService.getUserByNickname(receiver.name).catch(() => {
+        return null;
+      });
     } else {
-      requester = await this.userService.getUserByNickname(friendNickname);
+      requester = await this.userService.getUserByNickname(friendNickname).catch(() => {
+        return null;
+      });
     }
 
-    const author: UserEntity = await this.userService.getUserByNickname(getAuthor.name);
+    const author: UserEntity = await this.userService.getUserByNickname(getAuthor.name).catch(() => {
+      return null;
+    });
+    if (!author || !requester) return;
 
     const conv = await this.privateMessageService.getConv(author.id, requester.id).catch(async () => {
       return await this.privateMessageService.createConv(author.id, requester.id);
@@ -599,6 +623,30 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
                 }
               })
               .catch(() => {});
+          }
+        })
+        .catch(() => {});
+    }
+  }
+
+  @SubscribeMessage('block')
+  async block(@ConnectedSocket() client: Socket, @MessageBody('blocked') blocked: string) {
+    if (blocked) {
+      await this.userService
+        .getUserByNickname(blocked)
+        .then(async (user) => {
+          if (user) {
+            if (await this.friendshipService.getBlockedStatus(client.handshake.auth.user.id, user.id)) {
+              await this.userService
+                .getUserById(client.handshake.auth.user.id)
+                .then((cli) => {
+                  const socket = this.serverService.PlayerToSocket(user.nickname);
+                  if (socket && cli) {
+                    this.server.to(socket.id).emit('blocked', cli.id, cli.nickname);
+                  }
+                })
+                .catch(() => {});
+            }
           }
         })
         .catch(() => {});

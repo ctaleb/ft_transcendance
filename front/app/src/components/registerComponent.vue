@@ -117,11 +117,11 @@ async function createPost() {
     body: formData,
   })
     .then((response) => {
-      if (!response.ok) return Promise.reject();
+      if (!response.ok) return Promise.reject(response.statusText);
       return response.json();
     })
-    .catch(async () => {
-      addAlertMessage("Nickname already in use", 3);
+    .catch(async (err) => {
+      addAlertMessage(err, 3);
       return null;
     });
   if (data) {
