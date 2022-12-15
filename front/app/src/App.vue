@@ -83,8 +83,6 @@ window.addEventListener("keydown", (e) => {
       key: "downSpace",
     });
   }
-  if (e.key === "o") socketLocal?.value?.emit("debugging");
-  if (e.key === "i") socketLocal?.value?.emit("chatting");
 });
 
 window.addEventListener("keyup", (e) => {

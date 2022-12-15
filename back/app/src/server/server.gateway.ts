@@ -65,39 +65,6 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     this.serverService.joinAllChannels(client, client.handshake.auth.user.id);
   }
 
-  //toRemove
-  @SubscribeMessage('debugging')
-  debug(@ConnectedSocket() client: Socket) {
-    console.log('~~~~~~~~~~~ queue ~~~~~~~~~~');
-    console.log(this.serverService.playerQueue.length);
-    this.serverService.playerQueue.forEach((element) => {
-      console.log(element.name + ' - ' + element.socket.id);
-    });
-    console.log(this.serverService.games.length);
-    this.serverService.games.forEach((element) => {
-      console.log(element.room.name + ' - ' + element.room.status);
-      console.log(element.client.name + ' _ ' + element.client.socket.id);
-      console.log(element.host.name + ' _ ' + element.host.socket.id);
-    });
-    console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
-  }
-  //toRemove
-  @SubscribeMessage('chatting')
-  debugchat() {
-    console.log('~~~~~~~~~~~ users + games ~~~~~~~~~~');
-    console.log(this.serverService.userList.length);
-    this.serverService.userList.forEach((element) => {
-      console.log(element.name + ' - ' + element.socket?.id + ' - ' + element.gameData.status);
-    });
-    console.log(this.serverService.games.length);
-    this.serverService.games.forEach((element) => {
-      console.log(element.room.name + ' - ' + element.room.status);
-      console.log(element.client.name + ' _ ' + element.client.socket.id);
-      console.log(element.host.name + ' _ ' + element.host.socket.id);
-    });
-    console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
-  }
-
   @SubscribeMessage('disco')
   disco(@ConnectedSocket() client: Socket) {
     if (client) {
