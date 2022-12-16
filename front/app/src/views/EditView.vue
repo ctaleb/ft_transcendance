@@ -170,7 +170,8 @@ export default defineComponent({
         this.containsLowercase(password) &&
         this.containsSpecial(password) &&
         this.containsNumber(password) &&
-        password.length >= 9
+        password.length >= 9 &&
+        password.length <= 256
       );
     },
 
