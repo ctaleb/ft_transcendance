@@ -1,5 +1,4 @@
 import { Controller, Param, Post } from '@nestjs/common';
-
 import { TwoFactorService } from './twoFactorAuth.service';
 
 @Controller('twofactor')

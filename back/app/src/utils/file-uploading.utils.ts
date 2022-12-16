@@ -1,14 +1,12 @@
 import { UnauthorizedException } from '@nestjs/common';
-import { extname } from 'path';
-import { MessagingConfigurationContext } from 'twilio/lib/rest/verify/v2/service/messagingConfiguration';
 import fileType from 'magic-bytes.js';
-import fs = require('fs');
 import { GuessedFile } from 'magic-bytes.js/dist/model/tree';
+import { extname } from 'path';
+import fs = require('fs');
 
 export const imageFileFilter = (req, file, callback) => {
-  console.log();
   if (!file.originalname.match(/\.(jpg|jpeg|png|gif|JPG|JPEG)$/)) {
-    return callback(new UnauthorizedException('Only image files are allowed!'), false);
+    return callback(new UnauthorizedException('jpg, png, jpeg and gif are allowed'), false);
   }
   callback(null, true);
 };
@@ -26,9 +24,7 @@ export const editFileName = (req, file, callback) => {
 export const check_magic_numbers = (path: string) => {
   const mimetypes: GuessedFile[] = fileType(fs.readFileSync(path));
   if (mimetypes.length < 1) {
-    fs.unlink(path, () => {
-      console.log('Unapropriate file deleted');
-    });
+    fs.unlink(path, () => {});
     return false;
   }
   return true;

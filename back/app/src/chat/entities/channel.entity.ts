@@ -1,9 +1,7 @@
-import { throws } from 'assert';
 import { Exclude, Expose } from 'class-transformer';
 import { MaxLength } from 'class-validator';
 import { AbstractEntity } from 'src/database/abstract.entity';
-import { UserEntity } from 'src/user/user.entity';
-import { Column, Entity, JoinColumn, JoinTable, ManyToMany, OneToMany, OneToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToMany } from 'typeorm';
 import { ChannelMemberEntity } from './channel_member.entity';
 import { ChannelMessageEntity } from './channel_message.entity';
 import { ChannelRestrictionsEntity } from './channel_restrictions.entity';

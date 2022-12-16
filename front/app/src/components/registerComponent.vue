@@ -29,11 +29,11 @@
 </template>
 
 <script lang="ts" setup>
-import { defineComponent, ref, reactive, computed } from "vue";
-import { useRouter } from "vue-router";
+import { addAlertMessage } from "@/functions/funcs";
 import useVuelidate from "@vuelidate/core";
-import { required, minLength, maxLength, sameAs, helpers } from "@vuelidate/validators";
-import { addAlertMessage, fetchJSONDatas } from "@/functions/funcs";
+import { helpers, maxLength, minLength, required, sameAs } from "@vuelidate/validators";
+import { computed, reactive, ref } from "vue";
+import { useRouter } from "vue-router";
 let funcs = require("../functions/funcs");
 
 const emit = defineEmits(["update:modelValue"]);
@@ -116,12 +116,12 @@ async function createPost() {
     method: "POST",
     body: formData,
   })
-    .then((response) => {
-      if (!response.ok) return Promise.reject(response.statusText);
+    .then(async (response) => {
+      if (!response.ok) return Promise.reject(await response.json());
       return response.json();
     })
     .catch(async (err) => {
-      addAlertMessage(err, 3);
+      addAlertMessage(err.message, 3);
       return null;
     });
   if (data) {

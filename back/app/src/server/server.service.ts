@@ -1,15 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { instanceToPlain } from 'class-transformer';
-import { timeout } from 'rxjs';
 import { Server, Socket } from 'socket.io';
 import { ChatService } from 'src/chat/chat.service';
 import { ChannelMemberEntity, ChannelRole } from 'src/chat/entities/channel_member.entity';
 import { UserEntity } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
 import { Repository } from 'typeorm';
-import { CreateMessageDto } from './dto/create-message.dto';
-import { Channel, ChannelType } from './entities/channel';
+import { Channel } from './entities/channel';
 import { GameSummaryData, MatchHistoryEntity } from './entities/match_history.entity';
 import {
   ChatRoom,
@@ -319,23 +317,6 @@ export class ServerService {
     game.gameState.hostBar.size.y = game.gameState.clientBar.size.y;
   }
 
-  printList() {
-    console.log('~~ player list ~~');
-    this.userList.forEach((element) => {
-      console.log(element.name);
-    });
-    console.log('~~ player queue ~~');
-    this.playerQueue.forEach((element) => {
-      console.log(element.name);
-    });
-    console.log('~~ game list ~~');
-    this.games.forEach((element) => {
-      console.log(element.room.name);
-      console.log(element.host.name);
-      console.log(element.client.name);
-    });
-  }
-
   initPower(user: User, gameState: GameState, myBar: IBar, opponentBar: IBar) {
     if (user.gameData.power.name == 'Elastico') user.gameData.power = new PowerElastico(myBar, user.gameData.power.name);
     else if (user.gameData.power.name == 'Exhaust') user.gameData.power = new PowerExhaust(opponentBar, user.gameData.power.name);
@@ -375,7 +356,6 @@ export class ServerService {
       });
       game.gameSummary = await this._matchHistoryRepository.save(match);
     } catch (error) {
-      console.log(error);
     }
   }
 
@@ -541,10 +521,10 @@ export class ServerService {
           if (room.options.smashes) {
             if (host.gameData.smashLeft > 0) {
               ball.speed.x = -1 * M - host.gameData.smashLeft;
-              ball.speed.y = -1 * M + host.gameData.smashLeft;
+              ball.speed.y = -1 * M - host.gameData.smashLeft;
             } else if (host.gameData.smashRight > 0) {
               ball.speed.x = 1 * M + host.gameData.smashRight;
-              ball.speed.y = -1 * M + host.gameData.smashRight;
+              ball.speed.y = -1 * M - host.gameData.smashRight;
             } else {
               ball.speed.y *= -1;
             }
@@ -897,7 +877,6 @@ export class ServerService {
   async updateChannelMembers(channelId: number, client: Socket) {
     const member = await ChannelMemberEntity.findOneBy({ channel: { id: channelId }, user: { id: client.handshake.auth.user.id } });
     if (member && member.role !== ChannelRole.MEMBER) {
-      console.log('updateChannelMembers');
       this.server.to(`${channelId}`).emit('updateChannelMembers', channelId);
     }
   }
@@ -909,7 +888,6 @@ export class ServerService {
         if (channel) {
           const member = await ChannelMemberEntity.findOneBy({ channel: { id: channelId }, user: { id: client.handshake.auth.user.id } });
           if (member) {
-            console.log('joinChannelRoom');
             this.server.to(`${channelId}`).emit('updateChannelMembers', channelId);
             client.join(`${channelId}`);
           }
@@ -925,7 +903,6 @@ export class ServerService {
         if (channel) {
           const member = await ChannelMemberEntity.findOneBy({ channel: { id: channelId }, user: { id: client.handshake.auth.user.id } });
           if (!member) {
-            console.log('leaveChannelRoom');
             this.server.to(`${channelId}`).emit('updateChannelMembers', channelId);
             client.leave(`${channelId}`);
           }

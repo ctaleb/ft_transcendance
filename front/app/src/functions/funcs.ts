@@ -108,8 +108,6 @@ export function addAlertMessage(message: string, type: number, second: number = 
   };
   if ((store.user && store.user.status !== "inGame") || !store.user) store.message?.push(x);
 
-  // console.log(x);
-
   setTimeout(() => {
     store.message?.splice(store.message?.indexOf(x), 1);
   }, second * 1000);

@@ -1,13 +1,5 @@
 import { AbstractEntity } from 'src/database/abstract.entity';
-import {
-  Column,
-  Entity,
-  JoinColumn,
-  JoinTable,
-  ManyToMany,
-  ManyToOne,
-  OneToOne,
-} from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { ChannelEntity } from './channel.entity';
 import { ChannelMemberEntity } from './channel_member.entity';
 

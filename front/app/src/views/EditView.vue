@@ -64,7 +64,7 @@
 
 <script lang="ts">
 import { fetchJSONDatas, trySetupUser } from "@/functions/funcs";
-import { useStore } from "@/store";
+import { socketLocal, useStore } from "@/store";
 import { getUserById } from "@/types/User";
 import { defineComponent, ref } from "vue";
 let funcs = require("../functions/funcs");
@@ -102,14 +102,15 @@ export default defineComponent({
       let fetch_ret = await funcs.fetchJSONDatas("api/user/nicknameEdit/" + this.nickname, "PUT").catch(() => {
         return null;
       });
-      if (fetch_ret == null) {
-        funcs.addAlertMessage("Nickname must stay between 3 and 15 chars.", 1);
-        return;
-      }
-      if (fetch_ret.user) {
+
+      if (fetch_ret) {
         localStorage.setItem("user", JSON.stringify(fetch_ret.user));
         localStorage.setItem("token", fetch_ret.token);
         this.user = fetch_ret.user;
+        socketLocal?.value?.emit("newNick", {
+          oldNick: this.store.user!.nickname,
+          newNick: this.nickname,
+        });
         this.store.user!.nickname = this.nickname;
         funcs.addAlertMessage("Nickname successfully updated", 2);
       }
@@ -134,12 +135,12 @@ export default defineComponent({
         method: "PUT",
         body: formData,
       })
-        .then((res) => {
-          if (!res.ok) return Promise.reject();
+        .then(async (res) => {
+          if (!res.ok) return Promise.reject(await res.json());
           return res.json();
         })
         .catch((err) => {
-          funcs.addAlertMessage("Unauthorized", 3);
+          funcs.addAlertMessage(err.message, 3);
           return null;
         });
       if (fetch_ret == null) return;
@@ -182,7 +183,7 @@ export default defineComponent({
       if (!this.isValidPassword(this.password)) {
         this.ValidPasswordFlag = false;
         funcs.addAlertMessage(
-          "Password must contains at least one uppercase, one lowercase, one special character, and be between 9 and 13 characters long.",
+          "Password must contains at least one uppercase, one lowercase, one special character, one digit and be longer than 9 characters.",
           1
         );
         return;
@@ -212,11 +213,9 @@ export default defineComponent({
         this.twoFactorEnabled = true;
         this.setSwitches(true);
       } else {
-        console.log("2fa disabled");
       }
     },
     twoFactorSwitch(event: any) {
-      console.log(this.phone);
       if (this.phone == null || this.phoneFormatError != "") {
         funcs.addAlertMessage("Missing phone number", 1);
         this.setSwitches(false);
@@ -265,7 +264,6 @@ export default defineComponent({
         .catch(() => {});
     },
     formatPhone() {
-      console.log("formatPhone");
       if ((this.phone.match(/\+\d{2}[6,7]\d{8}/) && this.phone.length == 12) || this.phone == "") this.phoneFormatError = "";
       else this.phoneFormatError = "phone must be in format '+33611223344'";
     },

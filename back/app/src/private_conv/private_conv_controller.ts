@@ -1,4 +1,4 @@
-import { Controller, Get, Param, ParseIntPipe, Request, UnprocessableEntityException, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe, Request, UseGuards } from '@nestjs/common';
 import { instanceToPlain } from 'class-transformer';
 import { JwtAuthGuard } from 'src/authentication/jwt-auth.guard';
 import { UserService } from 'src/user/user.service';

@@ -1,5 +1,4 @@
 import { Socket } from 'socket.io';
-import { UserEntity } from 'src/user/user.entity';
 import { MatchHistoryEntity } from './match_history.entity';
 
 export interface IPoint {

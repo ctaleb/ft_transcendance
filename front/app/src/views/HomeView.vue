@@ -99,12 +99,11 @@ const emit = defineEmits(["notification", "twofaSuccessClassicUser", "twofaSucce
 
 onMounted(async () => {
   let isConnected: boolean = await funcs.isConnected(localStorage.getItem("token") || "").catch((err) => {
-    console.log(err);
     return false;
   });
   if (isConnected) {
     router.push("/game");
-  } else console.log("not connected");
+  } 
 
   //get back intra code, if exists
   let code = extractIntraCode();
@@ -118,7 +117,6 @@ function redirectTo(url: string) {
 async function sendCode() {
   await fetchJSONDatas(`api/twofactor/sendCode/${localStorage.getItem("phoneTo2fa")}`, "POST")
     .then((data) => {
-      console.log(data.status);
     })
     .catch(() => {});
 }
@@ -167,7 +165,6 @@ async function getUserAndToken(intraToken: string) {
 }
 
 async function studentLogin(code: string) {
-  console.log("student login");
 
   let userAndToken: { user: User; token: string } = {
     user: <User>{},
@@ -196,8 +193,6 @@ async function studentLogin(code: string) {
     localStorage.setItem("token", userAndToken.token);
     localStorage.setItem("user", JSON.stringify(userAndToken.user));
   } catch (error) {
-    console.log(error);
-    console.log("Can't login the student");
   }
   funcs
     .trySetupUser()

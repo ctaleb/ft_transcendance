@@ -1,4 +1,3 @@
-import { User } from 'src/server/entities/server.entity';
 import { UserEntity } from 'src/user/user.entity';
 
 export class CreatePrivateConvDto {

@@ -9,16 +9,13 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { instanceToPlain } from 'class-transformer';
-import { hostname } from 'os';
 import { Server, Socket } from 'socket.io';
 import { ChatService } from 'src/chat/chat.service';
 import { ChannelMemberEntity, ChannelRole } from 'src/chat/entities/channel_member.entity';
 import { FriendshipService } from 'src/friendship/friendship.service';
-import { ChannelMember } from 'src/server/entities/channel';
 import { UserEntity } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
 import { PrivateConvService } from '../private_conv/private_conv.service';
-import { CreateMessageDto } from './dto/create-message.dto';
 import { Game, GameOptions, IPower } from './entities/server.entity';
 import { ServerService } from './server.service';
 
@@ -66,40 +63,6 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     }
     // New stuff
     this.serverService.joinAllChannels(client, client.handshake.auth.user.id);
-    console.log('Socket ' + client.id + ' successfully connected');
-  }
-
-  //toRemove
-  @SubscribeMessage('debugging')
-  debug(@ConnectedSocket() client: Socket) {
-    console.log('~~~~~~~~~~~ queue ~~~~~~~~~~');
-    console.log(this.serverService.playerQueue.length);
-    this.serverService.playerQueue.forEach((element) => {
-      console.log(element.name + ' - ' + element.socket.id);
-    });
-    console.log(this.serverService.games.length);
-    this.serverService.games.forEach((element) => {
-      console.log(element.room.name + ' - ' + element.room.status);
-      console.log(element.client.name + ' _ ' + element.client.socket.id);
-      console.log(element.host.name + ' _ ' + element.host.socket.id);
-    });
-    console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
-  }
-  //toRemove
-  @SubscribeMessage('chatting')
-  debugchat() {
-    console.log('~~~~~~~~~~~ users + games ~~~~~~~~~~');
-    console.log(this.serverService.userList.length);
-    this.serverService.userList.forEach((element) => {
-      console.log(element.name + ' - ' + element.socket?.id + ' - ' + element.gameData.status);
-    });
-    console.log(this.serverService.games.length);
-    this.serverService.games.forEach((element) => {
-      console.log(element.room.name + ' - ' + element.room.status);
-      console.log(element.client.name + ' _ ' + element.client.socket.id);
-      console.log(element.host.name + ' _ ' + element.host.socket.id);
-    });
-    console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
   }
 
   @SubscribeMessage('disco')
@@ -195,10 +158,7 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   }
 
   handleDisconnect(@ConnectedSocket() client: Socket) {
-    console.log('Socket ' + client.id + ' successfully disconnected');
-    this.serverService.userList.forEach((element) => {
-      if (element.socket && element.socket.id === client.id) this.serverService.userList.splice(this.serverService.userList.indexOf(element), 1);
-    });
+    this.serverService.userList = this.serverService.userList.filter((element) => (element.socket && element.socket.id != client.id) || !element.socket);
   }
 
   gameLoop = (game: Game) => {
@@ -224,6 +184,13 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       this.gameLoop(game);
     }, 10);
   };
+
+  @SubscribeMessage('newNick')
+  changeNick(@MessageBody('oldNick') oldNick: string, @MessageBody('newNick') newNick: string, @ConnectedSocket() client: Socket) {
+    const player = this.serverService.SocketToPlayer(client);
+    if (!player || player.name != oldNick) return;
+    player.name = newNick;
+  }
 
   @SubscribeMessage('key')
   recieveKey(
@@ -303,13 +270,13 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
 
   @SubscribeMessage('playerReady')
   playerReady(@ConnectedSocket() client: Socket) {
-    const player = this.serverService.userList.find((element) => element.socket === client);
+    const player = this.serverService.userList.find((element) => element.socket && element.socket.id === client.id);
     if (player && player.gameData.status === 'inLobby') player.gameData.status = 'readyQ';
   }
 
   @SubscribeMessage('playerNotReady')
   playerNotReady(@ConnectedSocket() client: Socket) {
-    const player = this.serverService.userList.find((element) => element.socket === client);
+    const player = this.serverService.userList.find((element) => element.socket && element.socket.id === client.id);
     if (player && player.gameData.status === 'inLobby') player.gameData.status = 'idle';
   }
 
@@ -318,7 +285,7 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   spectate(@MessageBody('friend') friend: string, @ConnectedSocket() client: Socket) {
     let response = 'na';
     if (!friend) return response;
-    const player = this.serverService.userList.find((element) => element.socket.id === client.id);
+    const player = this.serverService.userList.find((element) => element.socket && element.socket.id === client.id);
     if (!player || player.gameData.status != 'idle') return response;
     this.serverService.games.forEach((element) => {
       if (element.client.name == friend || element.host.name == friend) response = 'inGame';
@@ -329,7 +296,7 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   @SubscribeMessage('readySpectate')
   async readySpectate(@MessageBody('friend') friend: string, @ConnectedSocket() client: Socket) {
     if (!friend) return;
-    const player = this.serverService.userList.find((element) => element.socket.id === client.id);
+    const player = this.serverService.userList.find((element) => element.socket && element.socket.id === client.id);
     const game = this.serverService.games.find((element) => element.client.name === friend || element.host.name === friend);
     if (game) {
       if (player && player.gameData.status === 'idle') {
@@ -350,7 +317,7 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     if (!friend) return;
     let response = 'failure';
     let game: Game;
-    const inviter = this.serverService.userList.find((element) => element.socket === client);
+    const inviter = this.serverService.userList.find((element) => element.socket && element.socket.id === client.id);
     if (!inviter || inviter.gameData.status != 'idle') return response;
     const usr = this.serverService.userList.find((element) => element.name === friend);
     if (!usr) return response;

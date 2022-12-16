@@ -106,7 +106,7 @@ export class UserService implements OnModuleInit {
   }
 
   async updateAvatar(imageDto: ImageDto, userId: number) {
-    if (!check_magic_numbers(imageDto.path)) throw new UnauthorizedException('Mimetype');
+    if (!check_magic_numbers(imageDto.path)) throw new UnauthorizedException("Extension doesn't match with file content");
     const user = await this._usersRepository.findOneBy({ id: userId });
     const oldAvatar = await this._imageService.getImageById(user.avatarId);
     if (oldAvatar.filename != 'pizz.jpeg') {

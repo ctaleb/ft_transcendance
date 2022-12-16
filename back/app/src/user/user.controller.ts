@@ -1,13 +1,9 @@
 import {
   Body,
-  ClassSerializerInterceptor,
   Controller,
   Delete,
-  FileTypeValidator,
   Get,
-  MaxFileSizeValidator,
   Param,
-  ParseFilePipe,
   ParseIntPipe,
   Put,
   Request,
@@ -17,13 +13,11 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { join } from 'path';
 import { Observable, of } from 'rxjs';
 import { JwtAuthGuard } from 'src/authentication/jwt-auth.guard';
-import { ServerService } from 'src/server/server.service';
 import { UserEntity } from 'src/user/user.entity';
 import { editFileName, imageFileFilter } from 'src/utils/file-uploading.utils';
 import { updatePasswordDto } from './dto/updatePassword';
@@ -92,13 +86,13 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @Put('nicknameEdit/:newNickname')
   async editNickname(@Request() req, @Param('newNickname') newNickname: string) {
-    if (newNickname.length > 15 || newNickname.length < 3) throw new UnauthorizedException();
+    if (newNickname.length > 15 || newNickname.length < 3) throw new UnauthorizedException('Nickname must stay between 3 and 15 characters');
     return this._userService.updateNickname(req.user.payload.nickname, newNickname);
   }
   @UseGuards(JwtAuthGuard)
   @Put('phoneEdit/:phone')
   async editPhone(@Request() req, @Param('phone') newPhone: string) {
-    if ((!newPhone.match(/\+\d{2}[1-9]\d{8}/) || newPhone.length != 12) && newPhone != 'delete') throw new UnauthorizedException();
+    if ((!newPhone.match(/\+\d{2}[1-9]\d{8}/) || newPhone.length != 12) && newPhone != 'delete') throw new UnauthorizedException('Bad phone format');
     return this._userService.updatePhone(req.user.payload.nickname, newPhone);
   }
 
@@ -118,8 +112,6 @@ export class UserController {
     avatar: Express.Multer.File,
     @Request() req,
   ) {
-    console.log('photo:');
-    console.log(avatar);
     return this._userService.updateAvatar(
       avatar
         ? {

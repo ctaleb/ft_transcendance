@@ -1,19 +1,12 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { AuthenticationService } from 'src/authentication/authentication.service';
+import { UserEntity } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
+import { intraUser } from './entities/oauth.entity';
 var fs = require('fs');
 var request = require('request');
-import { authorize } from 'passport';
-import { json } from 'stream/consumers';
-import { CreateOauthDto } from './dto/create-oauth.dto';
-import { UpdateOauthDto } from './dto/update-oauth.dto';
-import { imageFileFilter } from 'src/utils/file-uploading.utils';
-import { ConfigService } from '@nestjs/config';
-import { AuthenticationService } from 'src/authentication/authentication.service';
-import { getFileInfo } from 'prettier';
-import { User } from 'src/server/entities/server.entity';
-import { UserEntity } from 'src/user/user.entity';
-import { intraUser } from './entities/oauth.entity';
 
 @Injectable()
 export class OauthService {
@@ -27,7 +20,7 @@ export class OauthService {
   async connect(code: string): Promise<any> {
     const token = await this.getIntraToken(code);
     if (token.access_token == null) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('No access token');
     }
     const user: intraUser = await this.fetchUserFromIntra(token.access_token);
     await this.userService.getIntraUserById(user.id).catch(async () => {
@@ -41,10 +34,7 @@ export class OauthService {
       const intraUser = await this.fetchUserFromIntra(token);
       const user = await this.userService.getIntraUserById(intraUser.id);
       return { token: this.jwtService.sign(user), user: user };
-    } catch (error) {
-      console.log(error);
-      console.log("Can't login the intra user");
-    }
+    } catch (error) {}
   }
 
   //utils
@@ -68,9 +58,7 @@ export class OauthService {
       .then((token) => {
         return token;
       })
-      .catch((err) => {
-        console.log(err);
-      });
+      .catch((err) => {});
     return token;
   }
 
@@ -84,9 +72,7 @@ export class OauthService {
       .then((data) => {
         return data;
       })
-      .catch((err) => {
-        console.log(err);
-      });
+      .catch((err) => {});
     return user;
   }
 
@@ -98,14 +84,16 @@ export class OauthService {
     };
     const filename: string = user.login + '.' + getUrlExtension(user.image.link);
     const file_path: string = 'assets/' + filename;
-    download(user.image.link, file_path, function () {
-      console.log('done');
-    });
-    await this.authenticationService.registration(registrationDto, {
-      filename: filename,
-      path: './assets/' + filename,
-      mimetype: 'image/jpeg',
-    }, true);
+    download(user.image.link, file_path, function () {});
+    await this.authenticationService.registration(
+      registrationDto,
+      {
+        filename: filename,
+        path: './assets/' + filename,
+        mimetype: 'image/jpeg',
+      },
+      true,
+    );
   }
 
   async check42NicknameUsed(originalLogin: string) {
@@ -131,9 +119,6 @@ export class OauthService {
 
 function download(uri, filename, callback) {
   request.head(uri, function (err, res, body) {
-    console.log('content-type:', res.headers['content-type']);
-    console.log('content-length:', res.headers['content-length']);
-
     request(uri).pipe(fs.createWriteStream(filename)).on('close', callback);
   });
 }

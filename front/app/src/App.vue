@@ -32,9 +32,9 @@
 </template>
 
 <script setup lang="ts">
-import { addAlertMessage, trySetupUser, updateStatus, hideUserMenu } from "@/functions/funcs";
 import ChatContextMenu from "@/components/chat/ChatContextMenu.vue";
-import { currentUserProfile, privateConvs, socketLocal, useStore } from "@/store";
+import { addAlertMessage, hideUserMenu, trySetupUser, updateStatus } from "@/functions/funcs";
+import { privateConvs, socketLocal, useStore } from "@/store";
 import { Channel, isChannel } from "@/types/Channel";
 import { Conversation } from "@/types/Conversation";
 import { Alert } from "@/types/GameSummary";
@@ -57,9 +57,7 @@ const failedInvitation = ref(false);
 const multiClientWarning = ref(false);
 const invSender = ref("Placeholder");
 
-trySetupUser().catch((err) => {
-  console.log("Cant't set up user for now");
-});
+trySetupUser().catch((err) => {});
 
 let alertMessages: Alert[] = store.message;
 
@@ -85,8 +83,6 @@ window.addEventListener("keydown", (e) => {
       key: "downSpace",
     });
   }
-  if (e.key === "o") socketLocal?.value?.emit("debugging");
-  if (e.key === "i") socketLocal?.value?.emit("chatting");
 });
 
 window.addEventListener("keyup", (e) => {

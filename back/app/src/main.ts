@@ -1,11 +1,7 @@
-import { APP_FILTER, NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
 import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
 import * as cookieParser from 'cookie-parser';
-import { Server } from 'socket.io';
-import { createServer } from 'http';
-import * as http from 'http';
+import { AppModule } from './app.module';
 
 // const httpServer = createServer();
 // const io = new Server(httpServer, {});
