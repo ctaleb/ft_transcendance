@@ -73,6 +73,7 @@ const rules = computed(() => ({
     firstTry: {
       required,
       minLength: minLength(9),
+      maxLEngth: maxLength(256),
       containsUppercase: helpers.withMessage("Password must contain at least one uppercase", containsUppercase),
       containsLowercase: helpers.withMessage("Password must contain at least one lowercase", containsLowercase),
       containsSpecial: helpers.withMessage("Password must contain at least one of '#?!@$%^&*-'", containsSpecial),
