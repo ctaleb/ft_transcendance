@@ -3,6 +3,8 @@
 /node_modules
 /assets
 
+!pizz.jpeg
+
 # Logs
 logs
 *.log

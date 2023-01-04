@@ -18,11 +18,9 @@ export class FriendshipEntity extends AbstractEntity {
   })
   public addressee: UserEntity;
 
-  // @RelationId('requester')
   @Column({ nullable: true })
   public requesterId: number;
 
-  // @RelationId('addressee')
   @Column({ nullable: true })
   public addresseeId: number;
 

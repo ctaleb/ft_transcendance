@@ -150,7 +150,7 @@ export class ServerService {
 
   async end_game(game: Game) {
     game.room.status = 'gameOver';
-    let elo = 0;
+    let elo: number = 0;
     let spectator: User;
     game.room.opponent = instanceToPlain(await this._userService.getUserByNickname(game.client.name));
     game.room.host = instanceToPlain(await this._userService.getUserByNickname(game.host.name));
@@ -355,8 +355,7 @@ export class ServerService {
         winnerID: victor,
       });
       game.gameSummary = await this._matchHistoryRepository.save(match);
-    } catch (error) {
-    }
+    } catch (error) {}
   }
 
   summarizeEntityToData(sum: MatchHistoryEntity, victor: number) {

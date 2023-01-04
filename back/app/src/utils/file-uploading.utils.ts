@@ -1,4 +1,4 @@
-import { UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import fileType from 'magic-bytes.js';
 import { GuessedFile } from 'magic-bytes.js/dist/model/tree';
 import { extname } from 'path';
@@ -22,10 +22,14 @@ export const editFileName = (req, file, callback) => {
 };
 
 export const check_magic_numbers = (path: string) => {
-  const mimetypes: GuessedFile[] = fileType(fs.readFileSync(path));
-  if (mimetypes.length < 1) {
-    fs.unlink(path, () => {});
-    return false;
+  try {
+    const mimetypes: GuessedFile[] = fileType(fs.readFileSync(path));
+    if (mimetypes.length < 1) {
+      fs.unlink(path, () => {});
+      return false;
+    }
+  } catch (error) {
+    throw new BadRequestException(error.message);
   }
   return true;
 };
