@@ -7,8 +7,8 @@
 
     <input :type="passwordFieldType" v-model="v$.password.firstTry.$model" id="password" name="password" placeholder="Password" />
     <!--<button class="right" type="button" @click.prevent="hidePassword = !hidePassword">show / hide</button>-->
-    <span v-if="v$.password.firstTry.$errors.length > 0">
-      Password must contains at least one uppercase, one lowercase, one special character, one digit and be longer than 9 characters.
+    <span v-if="v$.password.firstTry.$errors.at(0)" :key="v$.password.firstTry.$errors.at(0)!.$uid">
+      {{ v$.password.firstTry.$errors.at(0)!.$message }}
     </span>
     <input type="password" v-model="v$.password.confirmation.$model" autocomplete="off" placeholder="Confirm password" />
     <span v-for="error in v$.password.confirmation.$errors" :key="error.$uid">
@@ -76,8 +76,8 @@ const rules = computed(() => ({
       maxLEngth: maxLength(256),
       containsUppercase: helpers.withMessage("Password must contain at least one uppercase", containsUppercase),
       containsLowercase: helpers.withMessage("Password must contain at least one lowercase", containsLowercase),
-      containsSpecial: helpers.withMessage("Password must contain at least one of '#?!@$%^&*-'", containsSpecial),
       containsNumber: helpers.withMessage("Password must contain at least one digit", containsNumber),
+      containsSpecial: helpers.withMessage("Password must contain at least one of '#?!@$%^&*-'", containsSpecial),
     },
     confirmation: {
       required,

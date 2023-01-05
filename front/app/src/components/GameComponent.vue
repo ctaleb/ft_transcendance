@@ -396,12 +396,11 @@ const Win = (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) => 
   if (store.user!.id === gameRoom.opponent.id) {
     opponent.value = gameRoom.host;
     host.value = gameRoom.opponent;
-    store.user!.elo = summary.client.elo;
   } else {
     opponent.value = gameRoom.opponent;
     host.value = gameRoom.host;
-    store.user!.elo = summary.host.elo;
   }
+  store.user!.elo += elo_diff;
   showSummary(true);
   //   gameBoard.value = false;
   document.querySelector(".canvas")?.classList.add("hidden");
@@ -423,12 +422,11 @@ const Lose = (gameRoom: GameRoom, elo_diff: number, summary: GameSummaryData) =>
   if (store.user!.id === gameRoom.opponent.id) {
     opponent.value = gameRoom.host;
     host.value = gameRoom.opponent;
-    store.user!.elo = summary.client.elo;
   } else {
     opponent.value = gameRoom.opponent;
     host.value = gameRoom.host;
-    store.user!.elo = summary.host.elo;
   }
+  store.user!.elo -= elo_diff;
   showSummary(true);
   //   gameBoard.value = false;
   document.querySelector(".canvas")?.classList.add("hidden");

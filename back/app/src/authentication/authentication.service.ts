@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { unlink } from 'fs';
@@ -34,7 +34,7 @@ export class AuthenticationService {
       if (error?.code === PostgresErrorCode.UniqueViolation) {
         throw new UnauthorizedException('Nickname already exists');
       }
-      throw new InternalServerErrorException();
+      throw new BadRequestException('Registration failed');
     } finally {
       await queryRunner.release();
     }
