@@ -158,7 +158,15 @@ export class ServerGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   }
 
   handleDisconnect(@ConnectedSocket() client: Socket) {
-    this.serverService.userList = this.serverService.userList.filter((element) => (element.socket && element.socket.id != client.id) || !element.socket);
+    const removedUsers = [];
+    this.serverService.userList = this.serverService.userList.filter((element) => {
+      if ((element.socket && element.socket.id != client.id) || !element.socket) {
+        return true;
+      }
+      removedUsers.push(element);
+      return false;
+    });
+    removedUsers.forEach((element) => this.serverService.updateStatus(element.id, 'offline'));
   }
 
   gameLoop = (game: Game) => {
